@@ -3,12 +3,12 @@
   "editors": {
     "mh3g": {
       "repository": "AlexQFMM2/mh3g-saveEdit",
-      "ref": "acbb43ff9a2f49741cab78baa9dbf0170714099c",
+      "ref": "387f21f6517439231ae834f5e00be1438bb82258",
       "executable": "MH3USaveEditorGUI.exe"
     },
     "mh4g": {
       "repository": "AlexQFMM2/mh4g-se",
-      "ref": "e19adfef0d6453f4d9f7dec48a62f7d5f19a11ce",
+      "ref": "b6bff7d10bb89d2f724f15db2c742f08adf16186",
       "executable": "MH4GSaveEditor.exe"
     }
   }
