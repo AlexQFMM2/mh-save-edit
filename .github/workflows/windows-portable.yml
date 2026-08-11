@@ -107,8 +107,12 @@ jobs:
             if (-not (Test-Path $path)) { throw "Unified package is missing: $path" }
           }
 
-          & (Join-Path $packageRoot "MHSaveEditor.exe") --check-install
-          if ($LASTEXITCODE -ne 0) { throw "Launcher installation check failed: $LASTEXITCODE" }
+          $check = Start-Process `
+            -FilePath (Join-Path $packageRoot "MHSaveEditor.exe") `
+            -ArgumentList "--check-install" `
+            -Wait `
+            -PassThru
+          if ($check.ExitCode -ne 0) { throw "Launcher installation check failed: $($check.ExitCode)" }
 
           Compress-Archive -Path $packageRoot -DestinationPath .\MHSaveEditor-windows-portable.zip -Force
 
