@@ -55,15 +55,29 @@ jobs:
             mingw-w64-x86_64-openssl
             mingw-w64-x86_64-qt5
 
-      - name: Build launcher and editors
+      - name: Build launcher
         shell: pwsh
         env:
           MSYS2_LOCATION: ${{ steps.msys2.outputs.msys2-location }}
         run: |
           $qtBin = "$env:MSYS2_LOCATION\mingw64\bin"
-          .\build-windows.ps1 -QtBin $qtBin
-          .\sources\mh3u-se\build-windows.ps1 -QtBin $qtBin
-          .\sources\mh4g-se\build-windows.ps1 -QtBin $qtBin
+          & (Join-Path $env:GITHUB_WORKSPACE "build-windows.ps1") -QtBin $qtBin
+
+      - name: Build MH3G editor
+        shell: pwsh
+        env:
+          MSYS2_LOCATION: ${{ steps.msys2.outputs.msys2-location }}
+        run: |
+          $qtBin = "$env:MSYS2_LOCATION\mingw64\bin"
+          & (Join-Path $env:GITHUB_WORKSPACE "sources\mh3u-se\build-windows.ps1") -QtBin $qtBin
+
+      - name: Build MH4G editor
+        shell: pwsh
+        env:
+          MSYS2_LOCATION: ${{ steps.msys2.outputs.msys2-location }}
+        run: |
+          $qtBin = "$env:MSYS2_LOCATION\mingw64\bin"
+          & (Join-Path $env:GITHUB_WORKSPACE "sources\mh4g-se\build-windows.ps1") -QtBin $qtBin
 
       - name: Assemble unified package
         shell: pwsh
