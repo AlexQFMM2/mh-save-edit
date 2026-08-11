@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "editors": {
+    "mh3g": {
+      "repository": "AlexQFMM2/mh3g-saveEdit",
+      "ref": "acbb43ff9a2f49741cab78baa9dbf0170714099c",
+      "executable": "MH3USaveEditorGUI.exe"
+    },
+    "mh4g": {
+      "repository": "AlexQFMM2/mh4g-se",
+      "ref": "e19adfef0d6453f4d9f7dec48a62f7d5f19a11ce",
+      "executable": "MH4GSaveEditor.exe"
+    }
+  }
+}

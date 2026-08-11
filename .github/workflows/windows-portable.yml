@@ -1,0 +1,111 @@
+name: Unified Windows Portable Build
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    name: Build unified Windows package
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout launcher
+        uses: actions/checkout@v4
+
+      - name: Read pinned editor versions
+        id: versions
+        shell: pwsh
+        run: |
+          $versions = Get-Content .\versions.json -Raw | ConvertFrom-Json
+          "mh3g_ref=$($versions.editors.mh3g.ref)" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          "mh4g_ref=$($versions.editors.mh4g.ref)" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+
+      - name: Checkout MH3G editor
+        uses: actions/checkout@v4
+        with:
+          repository: AlexQFMM2/mh3g-saveEdit
+          ref: ${{ steps.versions.outputs.mh3g_ref }}
+          path: sources/mh3u-se
+
+      - name: Checkout MH4G editor
+        uses: actions/checkout@v4
+        with:
+          repository: AlexQFMM2/mh4g-se
+          ref: ${{ steps.versions.outputs.mh4g_ref }}
+          path: sources/mh4g-se
+
+      - name: Install Qt 5, OpenSSL and MinGW
+        id: msys2
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: >-
+            mingw-w64-x86_64-binutils
+            mingw-w64-x86_64-gcc
+            mingw-w64-x86_64-make
+            mingw-w64-x86_64-openssl
+            mingw-w64-x86_64-qt5
+
+      - name: Build launcher and editors
+        shell: pwsh
+        env:
+          MSYS2_LOCATION: ${{ steps.msys2.outputs.msys2-location }}
+        run: |
+          $qtBin = "$env:MSYS2_LOCATION\mingw64\bin"
+          .\build-windows.ps1 -QtBin $qtBin
+          .\sources\mh3u-se\build-windows.ps1 -QtBin $qtBin
+          .\sources\mh4g-se\build-windows.ps1 -QtBin $qtBin
+
+      - name: Assemble unified package
+        shell: pwsh
+        run: |
+          $packageRoot = Join-Path $PWD "package\MHSaveEditor"
+          $mh3gDir = Join-Path $packageRoot "editors\mh3g"
+          $mh4gDir = Join-Path $packageRoot "editors\mh4g"
+          New-Item -ItemType Directory -Force -Path $mh3gDir, $mh4gDir | Out-Null
+
+          Copy-Item .\release\windows\* $packageRoot -Recurse -Force
+          Copy-Item .\sources\mh3u-se\release\windows\* $mh3gDir -Recurse -Force
+          Copy-Item .\sources\mh4g-se\release\windows\* $mh4gDir -Recurse -Force
+          Copy-Item .\packaging\README.txt (Join-Path $packageRoot "README.txt") -Force
+          Copy-Item .\versions.json (Join-Path $packageRoot "versions.json") -Force
+          Copy-Item .\LICENSE (Join-Path $packageRoot "LICENSE-launcher.txt") -Force
+          Copy-Item .\sources\mh3u-se\LICENSE (Join-Path $mh3gDir "LICENSE.txt") -Force
+          Copy-Item .\sources\mh4g-se\LICENSE (Join-Path $mh4gDir "LICENSE.txt") -Force
+
+          $required = @(
+            (Join-Path $packageRoot "MHSaveEditor.exe"),
+            (Join-Path $mh3gDir "MH3USaveEditorGUI.exe"),
+            (Join-Path $mh3gDir "data"),
+            (Join-Path $mh4gDir "MH4GSaveEditor.exe"),
+            (Join-Path $mh4gDir "data")
+          )
+          foreach ($path in $required) {
+            if (-not (Test-Path $path)) { throw "Unified package is missing: $path" }
+          }
+
+          & (Join-Path $packageRoot "MHSaveEditor.exe") --check-install
+          if ($LASTEXITCODE -ne 0) { throw "Launcher installation check failed: $LASTEXITCODE" }
+
+          Compress-Archive -Path $packageRoot -DestinationPath .\MHSaveEditor-windows-portable.zip -Force
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: MHSaveEditor-windows-portable
+          path: MHSaveEditor-windows-portable.zip
+
+      - name: Upload release asset
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: MHSaveEditor-windows-portable.zip

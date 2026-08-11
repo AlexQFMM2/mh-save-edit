@@ -1,0 +1,8 @@
+/Makefile*
+/bin/
+/build/
+/release/
+/package/
+/sources/
+.qmake.stash
+*.zip
