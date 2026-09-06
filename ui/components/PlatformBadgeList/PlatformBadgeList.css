@@ -1,0 +1,52 @@
+.platform-badge-list {
+  --platform-badge-list-component-gap: 10px;
+  --platform-badge-list-component-icon-size: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--platform-badge-list-component-gap);
+  width: 100%;
+}
+
+.platform-badge-list__label {
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.platform-badge-list__items {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.platform-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.platform-badge__image {
+  width: var(--platform-badge-list-component-icon-size);
+  height: var(--platform-badge-list-component-icon-size);
+  object-fit: contain;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.35));
+}
+
+.platform-badge__image--citra {
+  border-radius: 50%;
+}
+
+.platform-badge__image--yuzu {
+  border-radius: 7px;
+}
+
+@media (max-width: 520px) {
+  .platform-badge__name {
+    display: none;
+  }
+}

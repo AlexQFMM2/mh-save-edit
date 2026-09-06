@@ -1,0 +1,15 @@
+.cemu-logo {
+  --cemu-logo-component-size: 24px;
+  --cemu-logo-component-radius: 10px;
+  display: grid;
+  place-items: center;
+  width: var(--cemu-logo-component-size);
+  height: var(--cemu-logo-component-size);
+  border-radius: var(--cemu-logo-component-radius);
+  color: #fff;
+  background: #58bce8;
+  font-family: Arial, sans-serif;
+  font-size: 16px;
+  font-weight: 900;
+  line-height: 1;
+}

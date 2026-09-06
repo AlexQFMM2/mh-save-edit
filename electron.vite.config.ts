@@ -13,6 +13,7 @@ export default defineConfig({
   },
   renderer: {
     root: resolve(__dirname, 'ui'),
+    base: './',
     plugins: [react()],
     build: { rollupOptions: { input: resolve(__dirname, 'ui/index.html') } },
   },

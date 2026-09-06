@@ -1,2 +1,43 @@
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
-:root{font-family:'IBM Plex Sans',system-ui,sans-serif;color:#e8edf5;background:#101827;font-synthesis:none}*{box-sizing:border-box}body{margin:0;min-width:1040px;min-height:100vh;background:#101827}button{font:inherit;cursor:pointer}.app-shell{display:flex;flex-direction:column;min-height:100vh;background:#101827}.topbar{height:72px;display:flex;align-items:center;gap:12px;padding:0 30px;border-bottom:1px solid #263247;background:#131d2d}.brand-mark{display:grid;place-items:center;width:34px;height:34px;border-radius:8px;color:#0b1725;background:#76e3a2}.eyebrow{margin:0 0 2px;color:#8391a7;font:500 10px/1.2 'JetBrains Mono',monospace;letter-spacing:.08em}h1,h2,h3,p{margin-top:0}h1{margin-bottom:0;font-size:18px}h2{margin-bottom:6px;font-size:27px}h3{margin-bottom:8px;font-size:18px}.topbar-spacer{flex:1}.status-pill{display:inline-flex;align-items:center;gap:7px;padding:7px 10px;border:1px solid #2b3b52;border-radius:6px;color:#aebbd0;font:500 11px 'JetBrains Mono',monospace}.status-dot{width:7px;height:7px;border-radius:50%;background:#76e3a2}.workspace{display:grid;grid-template-columns:290px 1fr;flex:1}.sidebar{padding:28px 18px;border-right:1px solid #263247;background:#121c2b}.section-label{margin:0 12px 12px;color:#7e8da3;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em}.game-list{display:grid;gap:6px}.game-item{display:flex;align-items:center;gap:11px;width:100%;padding:11px 10px;border:1px solid transparent;border-radius:7px;color:#aebbd0;background:transparent;text-align:left;transition:background 180ms ease,border-color 180ms ease}.game-item:hover{background:#19263a;border-color:#2a3b54}.game-item.selected{background:#1d3043;border-color:#385570;color:#f3f7fc}.game-icon{display:grid;place-items:center;width:30px;height:30px;border-radius:6px}.game-icon.teal{color:#7ee6d1;background:#173c42}.game-icon.amber{color:#f6c76b;background:#46351d}.game-icon.violet{color:#c0a5fa;background:#33264b}.game-copy{display:grid;gap:2px;flex:1}.game-copy strong{font-size:12px;font-weight:600}.game-copy small{color:#7d8da4;font-size:11px}.game-chevron{color:#63748d;font-size:20px}.sidebar-note{display:flex;gap:8px;align-items:flex-start;margin:28px 10px 0;padding:11px;border:1px solid #26374d;border-radius:7px;color:#8fa0b7;background:#172336;font-size:11px;line-height:1.45}.sidebar-note svg{flex:0 0 auto;color:#76e3a2;margin-top:1px}.content{padding:38px 44px;max-width:1080px;width:100%}.content-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:20px}.muted{margin-bottom:0;color:#8c9bb0;font-size:13px}.primary-button,.secondary-button{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:38px;padding:0 14px;border-radius:6px;font-size:13px;font-weight:600;transition:background 180ms ease,border-color 180ms ease}.primary-button{border:1px solid #76e3a2;color:#0b1725;background:#76e3a2}.primary-button:hover{background:#8aebb1}.secondary-button{border:1px solid #3a4b63;color:#d7e0ec;background:#1a2638}.secondary-button:hover{background:#23334a;border-color:#58708f}.info-banner{display:flex;align-items:center;gap:9px;margin-top:28px;padding:12px 14px;border:1px solid #39505c;border-radius:7px;color:#b6c8d0;background:#172a31;font-size:12px}.info-banner svg{color:#76e3a2;flex:0 0 auto}.empty-panel{display:grid;justify-items:center;margin-top:20px;padding:100px 24px;border:1px dashed #34465f;border-radius:9px;background:#131f31;text-align:center}.empty-icon{display:grid;place-items:center;width:60px;height:60px;margin-bottom:18px;border-radius:12px;color:#76e3a2;background:#1c3b37}.empty-panel p{max-width:420px;margin-bottom:22px;color:#8493aa;font-size:13px;line-height:1.55}.footer{display:flex;justify-content:space-between;padding:12px 30px;border-top:1px solid #263247;color:#66768d;font:11px 'JetBrains Mono',monospace}button:focus-visible{outline:2px solid #f6c76b;outline-offset:2px}
+:root {
+  color: #f7ead5;
+  background: #21150f;
+  font-family: Inter, "Noto Sans SC", "Microsoft YaHei", system-ui, sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  --global-theme-color-page-background: #3a281d;
+  --global-theme-color-surface-deep: #2a1b13;
+  --global-theme-color-surface: #493022;
+  --global-theme-color-surface-raised: #5a3b28;
+  --global-theme-color-border: rgba(221, 175, 91, 0.24);
+  --global-theme-color-gold: #dfb65d;
+  --global-theme-color-gold-bright: #f1ce7d;
+  --global-theme-color-text-primary: #f7ead5;
+  --global-theme-color-text-secondary: #cdbba3;
+  --global-theme-color-text-muted: #9f8973;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-width: 320px;
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  min-height: 100vh;
+  background: var(--global-theme-color-page-background);
+}
+
+button {
+  font: inherit;
+}
+
+button:focus-visible {
+  outline: 3px solid var(--global-theme-color-gold-bright);
+  outline-offset: 4px;
+}

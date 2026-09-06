@@ -1,0 +1,100 @@
+.game-version-card {
+  --game-version-card-component-media-ratio: 5 / 4;
+  --game-version-card-component-radius: 14px;
+  --game-version-card-component-border: rgba(223, 182, 93, 0.2);
+  --game-version-card-component-hover-strip-height: 68px;
+  display: block;
+  width: 100%;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--game-version-card-component-border);
+  border-radius: var(--game-version-card-component-radius);
+  color: var(--global-theme-color-text-primary);
+  background: var(--global-theme-color-surface);
+  box-shadow: 0 14px 28px rgba(15, 8, 4, 0.2);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 240ms ease, box-shadow 240ms ease, background 240ms ease;
+}
+
+.game-version-card:hover,
+.game-version-card:focus-visible,
+.game-version-card--selected {
+  border-color: var(--global-theme-color-gold);
+  background: var(--global-theme-color-surface-raised);
+  box-shadow: 0 18px 34px rgba(12, 6, 3, 0.36), 0 0 0 1px rgba(223, 182, 93, 0.18);
+}
+
+.game-version-card__media {
+  position: relative;
+  display: block;
+  aspect-ratio: var(--game-version-card-component-media-ratio);
+  overflow: hidden;
+  background: #182026;
+}
+
+.game-version-card__poster {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 300ms ease, filter 300ms ease;
+}
+
+.game-version-card:hover .game-version-card__poster,
+.game-version-card:focus-visible .game-version-card__poster,
+.game-version-card--selected .game-version-card__poster {
+  transform: scale(1.035);
+  filter: saturate(1.08) contrast(1.03);
+}
+
+.game-version-card__platform-strip {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  height: var(--game-version-card-component-hover-strip-height);
+  padding: 12px 14px;
+  background: rgba(8, 6, 5, 0.92);
+  opacity: 0;
+  transform: translateY(100%);
+  transition: opacity 240ms ease, transform 240ms ease;
+}
+
+.game-version-card:hover .game-version-card__platform-strip,
+.game-version-card:focus-visible .game-version-card__platform-strip,
+.game-version-card--selected .game-version-card__platform-strip {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.game-version-card__copy {
+  display: grid;
+  gap: 5px;
+  padding: 16px 17px 18px;
+}
+
+.game-version-card__title {
+  color: var(--global-theme-color-text-primary);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(16px, 1.5vw, 20px);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.game-version-card__subtitle {
+  color: var(--global-theme-color-text-muted);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .game-version-card,
+  .game-version-card__poster,
+  .game-version-card__platform-strip {
+    transition: none;
+  }
+}

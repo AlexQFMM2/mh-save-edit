@@ -1,0 +1,156 @@
+.guild-backdrop {
+  --guild-backdrop-component-gold-opacity: 0.1;
+  --guild-backdrop-component-grain-opacity: 0.055;
+  position: fixed;
+  z-index: 0;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.guild-backdrop__grain {
+  position: absolute;
+  inset: 0;
+  opacity: var(--guild-backdrop-component-grain-opacity);
+  background-image:
+    repeating-linear-gradient(0deg, rgba(255, 232, 191, 0.2) 0 1px, transparent 1px 4px),
+    repeating-linear-gradient(90deg, rgba(35, 15, 6, 0.18) 0 1px, transparent 1px 6px);
+  mix-blend-mode: soft-light;
+}
+
+.guild-backdrop__game-image {
+  position: absolute;
+  inset: 0;
+  background-position: center;
+  background-size: cover;
+}
+
+.guild-backdrop__game-image::after {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(42, 26, 17, 0.82) 0%, rgba(49, 30, 19, 0.56) 48%, rgba(38, 23, 15, 0.7) 100%),
+    linear-gradient(180deg, rgba(42, 27, 18, 0.44), rgba(30, 18, 12, 0.68));
+  content: '';
+}
+
+.guild-backdrop__warm-glow {
+  position: absolute;
+  width: 42vw;
+  height: 42vw;
+  max-width: 700px;
+  max-height: 700px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(185, 111, 54, 0.18), rgba(185, 111, 54, 0) 68%);
+  filter: blur(8px);
+  transition: opacity 260ms ease;
+}
+
+.guild-backdrop__warm-glow--left {
+  top: 22%;
+  left: -22%;
+}
+
+.guild-backdrop__warm-glow--right {
+  right: -20%;
+  bottom: -24%;
+  opacity: 0.72;
+}
+
+.guild-backdrop__seal {
+  position: absolute;
+  top: 15%;
+  right: 7%;
+  display: grid;
+  place-items: center;
+  width: clamp(180px, 20vw, 310px);
+  aspect-ratio: 1;
+  border: 1px solid rgba(223, 182, 93, var(--guild-backdrop-component-gold-opacity));
+  border-radius: 50%;
+  opacity: 0.72;
+  transform: rotate(-14deg);
+  transition: opacity 260ms ease;
+}
+
+.guild-backdrop__seal::before,
+.guild-backdrop__seal::after {
+  position: absolute;
+  width: 125%;
+  height: 1px;
+  background: rgba(223, 182, 93, calc(var(--guild-backdrop-component-gold-opacity) * 0.7));
+  content: '';
+}
+
+.guild-backdrop__seal::after {
+  transform: rotate(90deg);
+}
+
+.guild-backdrop__seal-ring {
+  position: absolute;
+  width: 73%;
+  height: 73%;
+  border: 1px solid rgba(223, 182, 93, calc(var(--guild-backdrop-component-gold-opacity) * 1.2));
+  border-radius: 50%;
+}
+
+.guild-backdrop__seal-mark {
+  position: relative;
+  width: 27%;
+  height: 27%;
+  border: 1px solid rgba(241, 206, 125, calc(var(--guild-backdrop-component-gold-opacity) * 1.4));
+  transform: rotate(45deg);
+}
+
+.guild-backdrop__seal-mark::before,
+.guild-backdrop__seal-mark::after {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 145%;
+  height: 1px;
+  background: rgba(241, 206, 125, calc(var(--guild-backdrop-component-gold-opacity) * 1.5));
+  content: '';
+  transform: translate(-50%, -50%);
+}
+
+.guild-backdrop__seal-mark::after {
+  transform: translate(-50%, -50%) rotate(90deg);
+}
+
+.guild-backdrop__rail {
+  position: absolute;
+  right: 5%;
+  left: 5%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(223, 182, 93, 0.13), transparent);
+  transition: opacity 260ms ease;
+}
+
+.guild-backdrop--game-active .guild-backdrop__warm-glow,
+.guild-backdrop--game-active .guild-backdrop__seal,
+.guild-backdrop--game-active .guild-backdrop__rail {
+  opacity: 0;
+}
+
+.guild-backdrop__rail--top {
+  top: 20%;
+}
+
+.guild-backdrop__rail--bottom {
+  bottom: 10%;
+}
+
+@media (max-width: 700px) {
+  .guild-backdrop__seal {
+    top: 23%;
+    right: -18%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .guild-backdrop__warm-glow,
+  .guild-backdrop__seal,
+  .guild-backdrop__rail {
+    transition: none;
+  }
+}
