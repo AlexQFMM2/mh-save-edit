@@ -1,0 +1,2 @@
+import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
+export const mh4gWeapons = sqliteTable('weapons', { id: integer('id').primaryKey(), name: text('name').notNull() })

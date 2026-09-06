@@ -1,51 +1,24 @@
-# MH Save Edit
+# MH Save Editor
 
-MH3G / MH3U 与 MH4G 存档修改器的统一 Windows 启动和发布仓库。
+统一的 Monster Hunter 存档编辑器，使用 React + Electron + TypeScript，支持 MH3G、MH4G 和 MHGU。
 
-启动 `MHSaveEditor.exe` 后选择游戏，启动器会从各自独立目录运行对应修改器：
+这是一次全新重写。旧 Qt 启动器和旧编辑器不再是运行时依赖，仅作为存档格式、数据库和测试迁移参考。
+
+## 结构
 
 ```text
-MHSaveEditor/
-├─ MHSaveEditor.exe
-└─ editors/
-   ├─ mh3g/
-   │  ├─ MH3USaveEditorGUI.exe
-   │  └─ data/
-   └─ mh4g/
-      ├─ MH4GSaveEditor.exe
-      └─ data/
+ui/       React 界面与公共配装器
+api/      统一业务 API（不是 HTTP 服务）
+desktop/  Electron 主进程与 preload
+data/     三个游戏的只读 SQLite 数据库
+tests/    业务规则和存档格式测试
 ```
 
-两套修改器不会链接进同一个进程。这样可以隔离同名代码、数据集、Qt/OpenSSL
-运行库，也能继续分别发布和维护：
-
-- MH3G / MH3U：[`AlexQFMM2/mh3g-saveEdit`](https://github.com/AlexQFMM2/mh3g-saveEdit)
-- MH4G：[`AlexQFMM2/mh4g-se`](https://github.com/AlexQFMM2/mh4g-se)
-
-## Windows 构建
-
-推送到 `main` 或手动运行 GitHub Actions 的 `Unified Windows Portable Build`，
-即可获得 `MHSaveEditor-windows-portable.zip`。构建使用 `versions.json` 中固定的
-两个源码 commit，确保同一次发布可以重复构建。
-
-本地已安装 Qt 5 MinGW 时，也可以只构建启动器：
-
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\build-windows.ps1 `
-  -QtBin C:\msys64\mingw64\bin
-```
-
-Linux 下可用 Qt 5 检查启动器本身是否能够编译：
+配装器使用逻辑配装模型。装备箱只是读取来源，配装对象不保存装备箱编号或原始实例；只有写入存档时，游戏 adapter 才生成对应格式的存档记录。
 
 ```bash
-qmake launcher/MHSaveEditor.pro
-make -j
+pnpm install
+pnpm dev
+pnpm typecheck
+pnpm test
 ```
-
-## 更新内置编辑器版本
-
-修改 `versions.json` 中对应仓库的完整 commit SHA 后推送。本仓库不复制两套
-编辑器源码；Action 会按 SHA 拉取、分别调用各自的 Windows 构建脚本，再组装
-统一发布包。
-
-修改存档前请备份完整存档目录。
