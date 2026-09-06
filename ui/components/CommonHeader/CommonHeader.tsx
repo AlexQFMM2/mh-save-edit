@@ -1,9 +1,13 @@
 import { Shield } from 'lucide-react'
+import type { GameVersionDefinition } from '../../data/gameVersions'
 import './CommonHeader.css'
 
-type CommonHeaderProps = { saveStatus?: string }
+type CommonHeaderProps = {
+  currentGame?: GameVersionDefinition
+  saveStatus?: string
+}
 
-export function CommonHeader({ saveStatus = '暂未选择存档' }: CommonHeaderProps) {
+export function CommonHeader({ currentGame, saveStatus = '暂未选择存档' }: CommonHeaderProps) {
   return (
     <header className="common-header">
       <div className="common-header__brand" aria-label="MH Save Editor">
@@ -14,8 +18,9 @@ export function CommonHeader({ saveStatus = '暂未选择存档' }: CommonHeader
         </div>
       </div>
       <div className="common-header__status" aria-live="polite">
-        <span className="common-header__status-label">当前存档版本</span>
-        <span className="common-header__status-value">{saveStatus}</span>
+        <span className="common-header__status-label">{currentGame ? '当前游戏' : '当前存档版本'}</span>
+        <span className="common-header__status-value">{currentGame?.title ?? saveStatus}</span>
+        {currentGame ? <span className="common-header__status-detail">{saveStatus}</span> : null}
       </div>
     </header>
   )

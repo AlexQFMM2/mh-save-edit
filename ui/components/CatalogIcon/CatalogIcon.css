@@ -1,0 +1,17 @@
+.catalog-icon {
+  --catalog-icon-component-small-size: 34px;
+  --catalog-icon-component-large-size: 58px;
+  display: inline-grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: var(--catalog-icon-component-small-size);
+  height: var(--catalog-icon-component-small-size);
+  border: 1px solid rgba(223, 182, 93, 0.2);
+  border-radius: 7px;
+  color: var(--global-theme-color-text-muted);
+  background: rgba(22, 13, 8, 0.7);
+}
+.catalog-icon--large { width: var(--catalog-icon-component-large-size); height: var(--catalog-icon-component-large-size); }
+.catalog-icon img { width: 16px; height: 16px; image-rendering: pixelated; transform: scale(1.5); }
+.catalog-icon--large img { transform: scale(2.5); }
+.catalog-icon svg { width: 17px; height: 17px; }

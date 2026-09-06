@@ -1,0 +1,6 @@
+.item-pagination { --item-pagination-component-height: 46px; display: flex; align-items: center; justify-content: space-between; min-height: var(--item-pagination-component-height); padding: 6px 10px; border-top: 1px solid rgba(223,182,93,.15); color: var(--global-theme-color-text-muted); background: rgba(22,13,8,.68); font-size: 11px; }
+.item-pagination div { display: flex; align-items: center; gap: 7px; }
+.item-pagination strong { min-width: 58px; color: var(--global-theme-color-text-secondary); text-align: center; }
+.item-pagination button { display: grid; place-items: center; width: 32px; height: 32px; padding: 0; border: 1px solid var(--global-theme-color-border); border-radius: 6px; color: var(--global-theme-color-gold-bright); background: rgba(73,48,34,.8); cursor: pointer; }
+.item-pagination button:disabled { opacity: .35; cursor: not-allowed; }
+.item-pagination svg { width: 16px; height: 16px; }

@@ -1,0 +1,73 @@
+.game-shell {
+  --game-shell-page-header-height: 78px;
+  --game-shell-page-sidebar-width: 248px;
+  --game-shell-page-sidebar-collapsed-width: 68px;
+  position: relative;
+  height: 100vh;
+  min-height: 0;
+  overflow: hidden;
+  color: var(--global-theme-color-text-primary);
+  background: var(--global-theme-color-page-background);
+}
+
+.game-shell__file-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.game-shell__body {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: var(--game-shell-page-sidebar-width) minmax(0, 1fr);
+  height: calc(100vh - var(--game-shell-page-header-height));
+  min-height: 0;
+  overflow: hidden;
+  transition: grid-template-columns 240ms ease;
+}
+
+.game-shell__skip-link {
+  position: fixed;
+  z-index: 10;
+  top: 10px;
+  left: 10px;
+  padding: 9px 12px;
+  border: 1px solid var(--global-theme-color-gold);
+  border-radius: 7px;
+  color: var(--global-theme-color-text-primary);
+  background: var(--global-theme-color-surface-deep);
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  transform: translateY(-160%);
+}
+
+.game-shell__skip-link:focus {
+  transform: translateY(0);
+}
+
+.game-shell--sidebar-collapsed .game-shell__body {
+  grid-template-columns: var(--game-shell-page-sidebar-collapsed-width) minmax(0, 1fr);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .game-shell__body {
+    transition: none;
+  }
+}
+
+@media (max-width: 800px) {
+  .game-shell__body,
+  .game-shell--sidebar-collapsed .game-shell__body { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 600px) {
+  .game-shell {
+    --game-shell-page-header-height: 130px;
+  }
+}

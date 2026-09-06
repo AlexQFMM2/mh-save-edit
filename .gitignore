@@ -5,6 +5,10 @@ release/
 package/
 data/*.sqlite
 data/*.sqlite-*
+!data/mh3g.sqlite
+!data/mh4g.sqlite
+!data/mhgu.sqlite
 *.log
 .env
+.electron-native/
 .DS_Store

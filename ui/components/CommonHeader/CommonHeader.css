@@ -67,6 +67,11 @@
   font-weight: 600;
 }
 
+.common-header__status-detail {
+  color: var(--global-theme-color-text-muted);
+  font-size: 11px;
+}
+
 @media (max-width: 600px) {
   .common-header {
     align-items: flex-start;

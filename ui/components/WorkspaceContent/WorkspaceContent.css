@@ -1,0 +1,29 @@
+.workspace-content {
+  --workspace-content-component-padding: 0;
+  --workspace-content-component-surface-padding: 8px 12px;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+  padding: var(--workspace-content-component-padding);
+}
+
+.workspace-content__surface {
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  padding: var(--workspace-content-component-surface-padding);
+  border: 1px solid rgba(223, 182, 93, 0.17);
+  border-radius: 0;
+  background: rgba(42, 27, 19, 0.72);
+  box-shadow: 0 20px 50px rgba(15, 8, 4, 0.18);
+  backdrop-filter: blur(5px);
+}
+
+@media (max-width: 800px) {
+  .workspace-content {
+    padding: 0;
+  }
+
+  .workspace-content__surface { height: 100%; }
+}

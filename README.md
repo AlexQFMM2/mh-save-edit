@@ -16,9 +16,15 @@ tests/    业务规则和存档格式测试
 
 配装器使用逻辑配装模型。装备箱只是读取来源，配装对象不保存装备箱编号或原始实例；只有写入存档时，游戏 adapter 才生成对应格式的存档记录。
 
+道具图鉴通过主进程只读 SQLite API 提供，React 不直接访问 SQL 或文件路径。图标统一
+使用 `assetUrl()` 解析 `ui/public/assets/catalog/icons/` 下的内容哈希 PNG。
+
 ```bash
 pnpm install
 pnpm dev
 pnpm typecheck
 pnpm test
 ```
+
+Linux 开发启动脚本会自动清理 Electron 的 Node 调试环境变量，并在开发模式下
+追加 `--noSandbox`。这是 Electron 官方开发参数；正式打包不使用该参数。

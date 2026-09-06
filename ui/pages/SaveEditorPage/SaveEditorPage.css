@@ -1,0 +1,7 @@
+.save-editor-page {
+  --save-editor-page-panel-min-height: 0;
+  --save-editor-panel-component-empty-min-height: var(--save-editor-page-panel-min-height);
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}

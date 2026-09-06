@@ -1,0 +1,5 @@
+.game-home-page {
+  height: 100vh;
+  min-height: 0;
+  overflow: hidden;
+}

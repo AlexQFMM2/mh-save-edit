@@ -3,13 +3,16 @@ import type { PlatformId } from '../../data/gameVersions'
 import { assetUrl } from '../../lib/assetUrl'
 import './PlatformBadgeList.css'
 
-type PlatformBadgeListProps = { platforms: PlatformId[] }
+type PlatformBadgeListProps = {
+  platforms: PlatformId[]
+  showLabel?: boolean
+}
 const platformNames: Record<PlatformId, string> = { citra: 'Citra', cemu: 'Cemu', yuzu: 'Yuzu' }
 
-export function PlatformBadgeList({ platforms }: PlatformBadgeListProps) {
+export function PlatformBadgeList({ platforms, showLabel = true }: PlatformBadgeListProps) {
   return (
     <div className="platform-badge-list" aria-label={`支持平台：${platforms.map((platform) => platformNames[platform]).join('、')}`}>
-      <span className="platform-badge-list__label">支持平台</span>
+      {showLabel ? <span className="platform-badge-list__label">支持平台</span> : null}
       <span className="platform-badge-list__items">
         {platforms.map((platform) => (
           <span className="platform-badge" key={platform} title={platformNames[platform]}>

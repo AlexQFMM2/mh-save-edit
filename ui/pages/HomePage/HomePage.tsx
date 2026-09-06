@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import type { GameId } from '../../../api/core/loadout'
 import { CommonHeader } from '../../components/CommonHeader/CommonHeader'
 import { GuildBackdrop } from '../../components/GuildBackdrop/GuildBackdrop'
@@ -7,6 +8,7 @@ import { gameVersions } from '../../data/gameVersions'
 import './HomePage.css'
 
 export function HomePage() {
+  const navigate = useNavigate()
   const [selectedGameId, setSelectedGameId] = useState<GameId | null>(null)
   const [previewedGameId, setPreviewedGameId] = useState<GameId | null>(null)
   const previewedGame = gameVersions.find((game) => game.id === previewedGameId)
@@ -28,7 +30,10 @@ export function HomePage() {
         <GameVersionGrid
           games={gameVersions}
           selectedGameId={selectedGameId}
-          onSelect={setSelectedGameId}
+          onSelect={(gameId) => {
+            setSelectedGameId(gameId)
+            navigate(`/game/${gameId}/overview`)
+          }}
           onPreviewChange={setPreviewedGameId}
         />
       </section>
