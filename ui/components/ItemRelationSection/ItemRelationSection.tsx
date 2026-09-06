@@ -7,6 +7,7 @@ type ItemRelationSectionProps = {
   title: string
   relations: ItemRelation[]
   onSelectItem: (saveId: number) => void
+  onSelectDecoration?: (saveId: number) => void
 }
 
 export function sortRelationsByProbability(relations: ItemRelation[]): ItemRelation[] {
@@ -23,7 +24,7 @@ export function sortRelationsByProbability(relations: ItemRelation[]): ItemRelat
     .map(({ relation }) => relation)
 }
 
-export function ItemRelationSection({ title, relations, onSelectItem }: ItemRelationSectionProps) {
+export function ItemRelationSection({ title, relations, onSelectItem, onSelectDecoration }: ItemRelationSectionProps) {
   const [expanded, setExpanded] = useState(false)
   const bodyId = useId()
   const sortedRelations = useMemo(() => sortRelationsByProbability(relations), [relations])
@@ -49,7 +50,9 @@ export function ItemRelationSection({ title, relations, onSelectItem }: ItemRela
           {sortedRelations.map((relation) => (
             <li key={relation.id}>
               <span className="item-relation-section__main">
-                <span>{relationLabel(relation)}</span>
+                {relation.usageKind === 'decoration' && onSelectDecoration && relation.metadata.Target_Save_ID
+                  ? <button type="button" onClick={() => onSelectDecoration(Number(relation.metadata.Target_Save_ID))}>{relationLabel(relation)}</button>
+                  : <span>{relationLabel(relation)}</span>}
                 {relation.relatedItems.length > 0 && (
                   <span className="item-relation-section__links">
                     关联道具：

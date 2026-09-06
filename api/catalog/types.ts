@@ -1,9 +1,56 @@
 import type { GameId } from '../core/loadout'
 
 export type ItemIdentity = { gameId: GameId; saveId: number }
+export type DecorationIdentity = { gameId: GameId; saveId: number }
 export type ItemSourceKind = 'combination' | 'monster' | 'location' | 'quest' | 'exchange'
 export type ItemUsageKind = 'weapon' | 'armor' | 'decoration' | 'palico-weapon' | 'palico-armor' | 'kinsect'
 export type ItemRelationTarget = Pick<ItemIdentity, 'gameId' | 'saveId'> & { nameCn: string; nameEn: string }
+export type DecorationSkill = {
+  skillId: number
+  nameCn: string
+  nameEn: string
+  points: number
+  activeSkillNameCn: string | null
+  activeSkillNameEn: string | null
+}
+export type DecorationMaterial = ItemRelationTarget & { quantity: number; recipeIndex: number }
+
+export type DecorationSummary = DecorationIdentity & {
+  dexId: number | null
+  itemSaveId: number | null
+  itemDexId: number | null
+  nameCn: string
+  nameEn: string
+  slots: number
+  price: number | null
+  iconPath: string | null
+  isPlaceholder: boolean
+  skills: Pick<DecorationSkill, 'skillId' | 'nameCn' | 'nameEn' | 'points'>[]
+}
+
+export type DecorationDetail = DecorationSummary & {
+  dexIds: number[]
+  skills: DecorationSkill[]
+  materials: DecorationMaterial[]
+  mappingStatus: string
+}
+
+export type DecorationCatalogFilters = {
+  gameId: GameId
+  targetSaveId?: number
+  query?: string
+  skillId?: number
+  slots?: number
+  includePlaceholders?: boolean
+  sort?: 'saveId' | 'name' | 'slots' | 'skillPoints'
+  page?: number
+  pageSize?: number
+}
+
+export type DecorationCatalogFacets = {
+  slots: number[]
+  skills: Pick<DecorationSkill, 'skillId' | 'nameCn' | 'nameEn'>[]
+}
 
 export type ItemSummary = ItemIdentity & {
   dexId: number | null
@@ -39,6 +86,7 @@ export type ItemDetail = ItemSummary & {
 
 export type ItemCatalogFilters = {
   gameId: GameId
+  targetSaveId?: number
   query?: string
   rarity?: number
   maxStack?: number

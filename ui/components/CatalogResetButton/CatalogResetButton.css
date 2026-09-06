@@ -1,0 +1,42 @@
+.catalog-reset-button {
+  --catalog-reset-button-component-height: 30px;
+  --catalog-reset-button-component-icon-size: 14px;
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 76px;
+  height: var(--catalog-reset-button-component-height);
+  padding: 0 12px;
+  border: 1px solid rgba(223, 182, 93, .38);
+  border-radius: 7px;
+  color: var(--global-theme-color-gold-bright);
+  background: rgba(83, 49, 27, .58);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  transition: border-color 180ms ease, background-color 180ms ease, color 180ms ease;
+}
+
+.catalog-reset-button:hover {
+  border-color: var(--global-theme-color-gold);
+  color: #fff3cf;
+  background: rgba(113, 69, 36, .72);
+}
+
+.catalog-reset-button:active {
+  background: rgba(64, 35, 20, .82);
+}
+
+.catalog-reset-button svg {
+  width: var(--catalog-reset-button-component-icon-size);
+  height: var(--catalog-reset-button-component-icon-size);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .catalog-reset-button {
+    transition: none;
+  }
+}

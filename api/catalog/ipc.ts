@@ -4,7 +4,8 @@ import { createRequire } from 'node:module'
 import { join, resolve } from 'node:path'
 import type { GameId } from '../core/loadout'
 import { ItemCatalogRepository } from './repository'
-import { gameIdSchema, itemCatalogFiltersSchema, itemIdentitySchema } from './schemas'
+import { DecorationCatalogRepository } from './decorationRepository'
+import { decorationCatalogFiltersSchema, decorationIdentitySchema, gameIdSchema, itemCatalogFiltersSchema, itemIdentitySchema } from './schemas'
 import { catalogChannels } from './channels'
 export { catalogChannels }
 
@@ -17,29 +18,43 @@ export function resolveCatalogDataDir(isPackaged: boolean, resourcesPath: string
 }
 
 export function registerCatalogIpc(dataDir: string): () => void {
-  const repositories = new Map<GameId, { db: DatabaseType.Database; repository: ItemCatalogRepository }>()
-  const repository = (gameId: GameId) => {
+  const repositories = new Map<GameId, { db: DatabaseType.Database; repository: ItemCatalogRepository; decorations: DecorationCatalogRepository }>()
+  const repositoryEntry = (gameId: GameId) => {
     const cached = repositories.get(gameId)
-    if (cached) return cached.repository
+    if (cached) return cached
     const file = join(dataDir, `${gameId}.sqlite`)
     const nativeBinding = process.env.MH_SAVE_EDIT_SQLITE_BINDING
     const db = new Database(file, { readonly: true, fileMustExist: true, ...(nativeBinding ? { nativeBinding } : {}) })
     const value = new ItemCatalogRepository(db)
-    repositories.set(gameId, { db, repository: value })
-    return value
+    const decorations = new DecorationCatalogRepository(db)
+    const entry = { db, repository: value, decorations }
+    repositories.set(gameId, entry)
+    return entry
   }
 
   ipcMain.handle(catalogChannels.searchItems, (_event, payload: unknown) => {
     const filters = itemCatalogFiltersSchema.parse(payload)
-    return repository(filters.gameId).searchItems(filters)
+    return repositoryEntry(filters.gameId).repository.searchItems(filters)
   })
   ipcMain.handle(catalogChannels.getItem, (_event, payload: unknown) => {
     const identity = itemIdentitySchema.parse(payload)
-    return repository(identity.gameId).getItem(identity)
+    return repositoryEntry(identity.gameId).repository.getItem(identity)
   })
   ipcMain.handle(catalogChannels.getItemFacets, (_event, payload: unknown) => {
     const gameId = gameIdSchema.parse(payload)
-    return repository(gameId).getItemFacets(gameId)
+    return repositoryEntry(gameId).repository.getItemFacets(gameId)
+  })
+  ipcMain.handle(catalogChannels.searchDecorations, (_event, payload: unknown) => {
+    const filters = decorationCatalogFiltersSchema.parse(payload)
+    return repositoryEntry(filters.gameId).decorations.searchDecorations(filters)
+  })
+  ipcMain.handle(catalogChannels.getDecoration, (_event, payload: unknown) => {
+    const identity = decorationIdentitySchema.parse(payload)
+    return repositoryEntry(identity.gameId).decorations.getDecoration(identity)
+  })
+  ipcMain.handle(catalogChannels.getDecorationFacets, (_event, payload: unknown) => {
+    const gameId = gameIdSchema.parse(payload)
+    return repositoryEntry(gameId).decorations.getDecorationFacets(gameId)
   })
 
   return () => {

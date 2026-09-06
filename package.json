@@ -12,7 +12,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "rebuild:electron-native": "node tools/rebuild-electron-native.mjs",
-    "data:build:items": "node tools/build_item_catalog.mjs"
+    "data:build:items": "node tools/build_item_catalog.mjs",
+    "data:build:decorations": "node tools/build_decoration_catalog.mjs"
   },
   "dependencies": {
     "better-sqlite3": "^11.7.0",

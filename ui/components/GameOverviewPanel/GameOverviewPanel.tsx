@@ -5,7 +5,7 @@ import { PlatformBadgeList } from '../PlatformBadgeList/PlatformBadgeList'
 import './GameOverviewPanel.css'
 
 const overviewLinks = [
-  { title: '资料图鉴', description: '浏览道具、武器、防具、护石与装饰品资料。', path: 'catalog/items', icon: BookOpen },
+  { title: '资料图鉴', description: '浏览道具、武器、防具与装饰品资料。', path: 'catalog/items', icon: BookOpen },
   { title: '修改', description: '读取存档后修改个人信息、装备箱与道具箱。', path: 'edit', icon: Hammer },
   { title: '配装器', description: '手动配装，并在其中使用自动配装功能。', path: 'edit/loadout', icon: Swords },
 ]

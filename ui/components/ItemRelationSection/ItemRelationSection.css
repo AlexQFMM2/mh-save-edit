@@ -83,6 +83,8 @@
 .item-relation-section__links button { margin-left: 5px; padding: 0; border: 0; color: var(--global-theme-color-gold-bright); background: transparent; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
 .item-relation-section__body li small { flex: 0 0 auto; color: var(--global-theme-color-text-muted); }
 .item-relation-section__links button:focus-visible { border-radius: 2px; outline: 2px solid var(--global-theme-color-gold-bright); outline-offset: 2px; }
+.item-relation-section__main > button { padding: 0; border: 0; color: var(--global-theme-color-gold-bright); background: transparent; cursor: pointer; text-align: left; text-decoration: underline; text-underline-offset: 2px; }
+.item-relation-section__main > button:focus-visible { border-radius: 2px; outline: 2px solid var(--global-theme-color-gold-bright); outline-offset: 2px; }
 
 @media (prefers-reduced-motion: reduce) {
   .item-relation-section__toggle,

@@ -10,10 +10,9 @@ describe('workspace navigation', () => {
     ])
     expect(workspaceNavigation[0].items.map(({ id }) => id)).toEqual([
       'items',
+      'decorations',
       'weapons',
       'armor',
-      'charms',
-      'decorations',
     ])
     expect(workspaceNavigation[1].items.map(({ id }) => id)).toEqual([
       'save-editor',

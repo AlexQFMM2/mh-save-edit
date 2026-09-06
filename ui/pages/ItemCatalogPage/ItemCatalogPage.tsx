@@ -6,6 +6,8 @@ import { ItemDetailPanel } from '../../components/ItemDetailPanel/ItemDetailPane
 import { ItemFilterBar } from '../../components/ItemFilterBar/ItemFilterBar'
 import { ItemList } from '../../components/ItemList/ItemList'
 import { ItemPagination } from '../../components/ItemPagination/ItemPagination'
+import { DecorationDetailDrawer } from '../../components/DecorationDetailDrawer/DecorationDetailDrawer'
+import { ItemDetailDrawer } from '../../components/ItemDetailDrawer/ItemDetailDrawer'
 import type { WorkspaceOutletContext } from '../../components/WorkspaceContent/WorkspaceContent'
 import './ItemCatalogPage.css'
 
@@ -26,6 +28,7 @@ export function ItemCatalogPage() {
   const includePlaceholders = params.get('debug') === '1'
   const page = parseNumber(params.get('page')) ?? 1
   const selectedId = parseNumber(params.get('item'))
+  const targetSaveId = parseNumber(params.get('target'))
   const [items, setItems] = useState<ItemSummary[]>([])
   const [detail, setDetail] = useState<ItemDetail | null>(null)
   const [facets, setFacets] = useState<{ rarities: number[]; maxStacks: number[]; relations: { sourceKind: string; usageKind: string | null }[] }>({ rarities: [], maxStacks: [], relations: [] })
@@ -34,13 +37,21 @@ export function ItemCatalogPage() {
   const [detailLoading, setDetailLoading] = useState(false)
   const [error, setError] = useState<string>()
   const [detailError, setDetailError] = useState<string>()
+  const [decorationDrawerId, setDecorationDrawerId] = useState<number | null>(null)
+  const [itemDrawerId, setItemDrawerId] = useState<number | null>(null)
 
   const updateParams = (changes: Record<string, string | number | undefined>) => {
     const next = new URLSearchParams(params)
     for (const [key, value] of Object.entries(changes)) { if (value == null || value === '') next.delete(key); else next.set(key, String(value)) }
     setParams(next)
   }
-  useEffect(() => { const timer = window.setTimeout(() => updateParams({ q: queryInput || undefined, page: undefined, item: undefined }), 280); return () => window.clearTimeout(timer) }, [queryInput])
+  const resetCatalog = () => {
+    setQueryInput('')
+    setDecorationDrawerId(null)
+    setItemDrawerId(null)
+    setParams({})
+  }
+  useEffect(() => { if (queryInput === query) return; const timer = window.setTimeout(() => updateParams({ target: undefined, q: queryInput || undefined, page: undefined, item: undefined }), 280); return () => window.clearTimeout(timer) }, [queryInput, query])
   useEffect(() => { setQueryInput(query) }, [query])
   useEffect(() => {
     let active = true
@@ -49,7 +60,7 @@ export function ItemCatalogPage() {
       try {
         const api = window.mhSaveEditor?.catalog
         if (!api) throw new Error('图鉴 API 尚未连接，请在 Electron 应用中打开。')
-        const result = await api.searchItems({ gameId: game.id, query, rarity, maxStack, sourceKinds: source ? [source as never] : undefined, usageKinds: usage ? [usage as never] : undefined, includePlaceholders, sort, page, pageSize: 100 })
+        const result = await api.searchItems({ gameId: game.id, targetSaveId, query, rarity, maxStack, sourceKinds: source ? [source as never] : undefined, usageKinds: usage ? [usage as never] : undefined, includePlaceholders, sort, page, pageSize: 100 })
         if (!active) return
         setItems(result.items)
         setResultMeta({ total: result.total, pageSize: result.pageSize, hasNext: result.hasNext })
@@ -57,7 +68,7 @@ export function ItemCatalogPage() {
       } catch (cause) { if (active) setError(cause instanceof Error ? cause.message : '道具查询失败') } finally { if (active) setLoading(false) }
     }
     void load(); return () => { active = false }
-  }, [game.id, query, rarity, maxStack, source, usage, includePlaceholders, sort, page])
+  }, [game.id, targetSaveId, query, rarity, maxStack, source, usage, includePlaceholders, sort, page])
   useEffect(() => {
     let active = true
     const api = window.mhSaveEditor?.catalog
@@ -79,11 +90,13 @@ export function ItemCatalogPage() {
   const availableSources = useMemo(() => [...new Set(facets.relations.filter((value) => !value.usageKind).map((value) => value.sourceKind))], [facets])
   const availableUsages = useMemo(() => [...new Set(facets.relations.map((value) => value.usageKind).filter((value): value is string => Boolean(value)))], [facets])
   return <div className="item-catalog-page">
-    <ItemCatalogToolbar query={queryInput} sort={sort} onQueryChange={setQueryInput} onSortChange={(value) => updateParams({ sort: value, page: undefined, item: undefined })} />
-    <ItemFilterBar rarities={facets.rarities} maxStacks={facets.maxStacks} availableSources={availableSources} availableUsages={availableUsages} rarity={rarity} maxStack={maxStack} source={source} usage={usage} includePlaceholders={includePlaceholders} onChange={(key, value) => updateParams({ [key]: value, page: undefined, item: undefined })} />
+    <ItemCatalogToolbar query={queryInput} sort={sort} onQueryChange={setQueryInput} onSortChange={(value) => updateParams({ target: undefined, sort: value, page: undefined, item: undefined })} />
+    <ItemFilterBar rarities={facets.rarities} maxStacks={facets.maxStacks} availableSources={availableSources} availableUsages={availableUsages} rarity={rarity} maxStack={maxStack} source={source} usage={usage} includePlaceholders={includePlaceholders} onChange={(key, value) => updateParams({ target: undefined, [key]: value, page: undefined, item: undefined })} onReset={resetCatalog} />
     <div className="item-catalog-page__layout">
       <section className="item-catalog-page__list" aria-label="道具列表"><ItemList items={items} selectedId={selectedVisible ? selectedId : undefined} loading={loading} error={error} onSelect={(id) => updateParams({ item: id })} /><ItemPagination page={page} pageSize={resultMeta.pageSize} total={resultMeta.total} hasNext={resultMeta.hasNext} onPageChange={(value) => updateParams({ page: value, item: undefined })} /></section>
-      <ItemDetailPanel item={detail} loading={detailLoading} error={detailError} />
+      <ItemDetailPanel item={detail} loading={detailLoading} error={detailError} onSelectItem={(saveId) => { setDecorationDrawerId(null); setItemDrawerId(saveId) }} onSelectDecoration={(saveId) => { setItemDrawerId(null); setDecorationDrawerId(saveId) }} />
     </div>
+    <DecorationDetailDrawer gameId={game.id} decorationSaveId={decorationDrawerId} onClose={() => setDecorationDrawerId(null)} />
+    <ItemDetailDrawer gameId={game.id} itemSaveId={itemDrawerId} onClose={() => setItemDrawerId(null)} />
   </div>
 }

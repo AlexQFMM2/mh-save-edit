@@ -1,6 +1,5 @@
 import {
   BookOpen,
-  Gem,
   Hammer,
   PackageOpen,
   Shield,
@@ -13,7 +12,6 @@ import type { GameId } from '../../api/core/loadout'
 export type WorkspaceNavItemId =
   | 'weapons'
   | 'armor'
-  | 'charms'
   | 'decorations'
   | 'items'
   | 'save-editor'
@@ -49,10 +47,9 @@ export const workspaceNavigation: WorkspaceNavGroup[] = [
     icon: BookOpen,
     items: [
       { id: 'items', label: '道具', description: '查看道具、素材与持有信息', path: 'catalog/items', icon: PackageOpen },
+      { id: 'decorations', label: '装饰品', description: '查看装饰品技能与制作资料', path: 'catalog/decorations', icon: Sparkles },
       { id: 'weapons', label: '武器', description: '查看武器图鉴与属性资料', path: 'catalog/weapons', icon: Swords },
       { id: 'armor', label: '防具', description: '查看防具套装与技能资料', path: 'catalog/armor', icon: Shield },
-      { id: 'charms', label: '护石', description: '查看护石技能与槽位资料', path: 'catalog/charms', icon: Gem },
-      { id: 'decorations', label: '装饰品', description: '查看装饰品技能与制作资料', path: 'catalog/decorations', icon: Sparkles },
     ],
   },
   {

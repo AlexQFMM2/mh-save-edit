@@ -80,7 +80,7 @@ function buildGame(gameId, spec) {
   const attrs = new Map(dexItems.map((row) => [hexInteger(row.Hex), row]))
   const sourceDigest = sha256(fs.readdirSync(spec.dex).filter((file) => file.endsWith('.csv')).sort().map((file) => `${file}\0${fs.readFileSync(path.join(spec.dex, file))}`).join('\0'))
   const iconManifestPath = path.join(root, 'data/manifests', `${gameId}-icons.json`)
-  const buildKey = sha256(`${sourceDigest}:${sha256(fs.readFileSync(iconManifestPath))}:catalog-v2`)
+  const buildKey = sha256(`${sourceDigest}:${sha256(fs.readFileSync(iconManifestPath))}:catalog-v3`)
   createSchema(db)
   const oldItems = db.prepare(`SELECT * FROM ${spec.table} ORDER BY ${spec.table === 'cn__items' ? 'id' : 'save_id'}`).all()
   const existingBuildKey = db.prepare("SELECT value FROM meta WHERE key = 'catalog_build_key'").get()?.value
@@ -92,11 +92,14 @@ function buildGame(gameId, spec) {
   }
   db.prepare('DELETE FROM catalog_item_relations WHERE game_id = ?').run(gameId)
   db.prepare("DELETE FROM sqlite_sequence WHERE name = 'catalog_item_relations'").run()
-  db.prepare('DELETE FROM catalog_items WHERE game_id = ?').run(gameId)
 
   const insertItem = db.prepare(`INSERT INTO catalog_items
     (game_id,save_id,dex_id,name_cn,name_en,name_jp,rarity,max_stack,sell_price,buy_price,hex_id,icon_path,is_placeholder,mapping_status,source)
-    VALUES (@game_id,@save_id,@dex_id,@name_cn,@name_en,@name_jp,@rarity,@max_stack,@sell_price,@buy_price,@hex_id,@icon_path,@is_placeholder,@mapping_status,@source)`)
+    VALUES (@game_id,@save_id,@dex_id,@name_cn,@name_en,@name_jp,@rarity,@max_stack,@sell_price,@buy_price,@hex_id,@icon_path,@is_placeholder,@mapping_status,@source)
+    ON CONFLICT(game_id,save_id) DO UPDATE SET dex_id=excluded.dex_id,name_cn=excluded.name_cn,name_en=excluded.name_en,
+      name_jp=excluded.name_jp,rarity=excluded.rarity,max_stack=excluded.max_stack,sell_price=excluded.sell_price,
+      buy_price=excluded.buy_price,hex_id=excluded.hex_id,icon_path=excluded.icon_path,is_placeholder=excluded.is_placeholder,
+      mapping_status=excluded.mapping_status,source=excluded.source`)
   const manifest = JSON.parse(fs.readFileSync(iconManifestPath, 'utf8'))
   const iconMap = manifest.icons ?? {}
   const optionalLookup = (file, idColumn, pattern) => fs.existsSync(path.join(spec.dex, file)) ? namedLookup(csv(path.join(spec.dex, file)), idColumn, pattern) : new Map()
@@ -163,6 +166,21 @@ function buildGame(gameId, spec) {
     })
     targetNames.set(kind, new Map(names))
   }
+  const jewelNames = new Map(csv(path.join(spec.dex, 'DB_Jew.csv')).map((row) => {
+    const item = dexNames.get(integer(row.Itm_ID))
+    return [integer(row.Jew_ID), clean(item?.Itm_Name_1) || clean(item?.Itm_Name_0)]
+  }).filter(([id, name]) => id != null && name))
+  targetNames.set('decoration', jewelNames)
+  for (const [kind, table] of [['weapon', 'weapons'], ['armor', 'armors']]) {
+    const columns = db.prepare(`PRAGMA table_info(${table})`).all().map((column) => column.name)
+    if (!columns.includes('dex_id')) continue
+    const localNames = new Map(db.prepare(`SELECT dex_id, name_cn, name_en FROM ${table} WHERE dex_id IS NOT NULL`).all().map((row) => [row.dex_id, clean(row.name_cn) || clean(row.name_en)]).filter(([, name]) => name))
+    targetNames.set(kind, new Map([...localNames, ...(targetNames.get(kind) ?? [])]))
+  }
+  const decorationSaveIds = new Map()
+  if (db.prepare("SELECT count(*) count FROM sqlite_master WHERE type='table' AND name='catalog_decoration_dex_sources'").get().count) {
+    for (const row of db.prepare('SELECT dex_id, decoration_save_id FROM catalog_decoration_dex_sources WHERE game_id = ?').all(gameId)) decorationSaveIds.set(row.dex_id, row.decoration_save_id)
+  }
   if (questDisplayRows.size) targetNames.set('quest', new Map([...questDisplayRows].map(([id, row]) => [id, clean(row.Qst_Name)]).filter(([, name]) => Boolean(name))))
   const insertRelation = db.prepare(`INSERT INTO catalog_item_relations
     (game_id,item_save_id,source_kind,usage_kind,target_id,target_name,quantity,probability,rank,metadata,source)
@@ -183,6 +201,7 @@ function buildGame(gameId, spec) {
         const fallbackTarget = sourceKind === 'quest' ? `任务名称待补 · ID ${targetId ?? ''}` : `${label} #${targetId ?? ''}`
         const displayTarget = sourceKind === 'combination' ? `${itemName(row.ItmA_ID)} + ${itemName(row.ItmB_ID)}` : sourceKind === 'exchange' ? `交付 ${itemName(row.ItmIn_ID)}` : namedTarget || fallbackTarget
         const metadata = { ...row }
+        if (sourceKind === 'decoration' && decorationSaveIds.has(targetId)) metadata.Target_Save_ID = String(decorationSaveIds.get(targetId))
         const rankId = integer(row.Rank_ID)
         if (rankNames.has(rankId)) metadata.Rank_Name = rankNames.get(rankId)
         if (sourceKind === 'monster' && monsterGetTypes.has(integer(row.Mon_GetItmType_ID))) metadata.Mon_GetItmType_Name = monsterGetTypes.get(integer(row.Mon_GetItmType_ID))

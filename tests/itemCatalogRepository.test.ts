@@ -59,4 +59,16 @@ describe('ItemCatalogRepository', () => {
     const combination = item?.relations.find((relation) => relation.sourceKind === 'combination')
     expect(combination?.relatedItems.map((target) => target.nameCn)).toEqual(['药草', '蓝蘑菇'])
   })
+
+  it('uses catalog names for equipment and decoration usage relations', () => {
+    const item = repository('mh3g').getItem({ gameId: 'mh3g', saveId: 178 })
+    expect(item?.relations.some((relation) => relation.usageKind === 'weapon' && !relation.targetName.includes('#'))).toBe(true)
+    expect(item?.relations.some((relation) => relation.usageKind === 'armor' && !relation.targetName.includes('#'))).toBe(true)
+    expect(item?.relations.some((relation) => relation.usageKind === 'decoration' && !relation.targetName.includes('#'))).toBe(true)
+  })
+
+  it('filters an exact save target for drawer navigation', () => {
+    const result = repository('mh3g').searchItems({ gameId: 'mh3g', targetSaveId: 178 })
+    expect(result.items.map((item) => item.saveId)).toEqual([178])
+  })
 })

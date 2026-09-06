@@ -20,6 +20,7 @@ export class ItemCatalogRepository {
     const page = Math.max(filters.page ?? 1, 1)
     const values: unknown[] = [filters.gameId]
     const where = ['game_id = ?']
+    if (filters.targetSaveId != null) { where.push('save_id = ?'); values.push(filters.targetSaveId) }
     if (!filters.includePlaceholders) where.push('is_placeholder = 0')
     if (filters.query?.trim()) {
       where.push('(name_cn LIKE ? OR name_en LIKE ? OR CAST(save_id AS TEXT) = ? OR lower(hex_id) = lower(?))')

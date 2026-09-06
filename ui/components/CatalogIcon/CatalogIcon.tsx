@@ -1,5 +1,5 @@
 import { PackageOpen } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { assetUrl } from '../../lib/assetUrl'
 import './CatalogIcon.css'
 
@@ -7,6 +7,7 @@ type CatalogIconProps = { path: string | null; name: string; size?: 'small' | 'l
 
 export function CatalogIcon({ path, name, size = 'small' }: CatalogIconProps) {
   const [failed, setFailed] = useState(false)
+  useEffect(() => setFailed(false), [path])
   const source = failed ? undefined : assetUrl(path)
   return (
     <span className={`catalog-icon catalog-icon--${size}`} aria-hidden="true">
