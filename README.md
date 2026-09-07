@@ -10,14 +10,15 @@
 ui/       React 界面与公共配装器
 api/      统一业务 API（不是 HTTP 服务）
 desktop/  Electron 主进程与 preload
-data/     三个游戏的只读 SQLite 数据库
+data/     本地生成的只读 SQLite 挂载目录（数据不入 Git）
 tests/    业务规则和存档格式测试
 ```
 
 配装器使用逻辑配装模型。装备箱只是读取来源，配装对象不保存装备箱编号或原始实例；只有写入存档时，游戏 adapter 才生成对应格式的存档记录。
 
 道具图鉴通过主进程只读 SQLite API 提供，React 不直接访问 SQL 或文件路径。图标统一
-使用 `assetUrl()` 解析 `ui/public/assets/catalog/icons/` 下的内容哈希 PNG。
+使用 `assetUrl()` 解析 `ui/public/assets/catalog/icons/` 下的内容哈希 PNG。数据库、manifest
+和图标是从私有 `research` 输入生成的本地运行资产，不进入公开 Git 历史。
 
 ```bash
 pnpm install

@@ -205,4 +205,13 @@ research/mhgu/dex/mhxx-dex    <- D:\MH\unpack\mhxx-dex
 2. 从游戏 RomFS/ExeFS 补充并交叉验证图标、贴图、原生表、资源键和版本差异。
 3. 建立 Dex ID、游戏资源 ID、存档 ID 的显式 crosswalk，禁止按行号、文件顺序或名称相似度直接等同。
 4. 为每个输入保存来源、来源 manifest 和审计报告；关系端点、图标和可读名称未闭合时不得开始对应 UI。
-5. 生成后的 SQLite、PNG 和平台无关 manifest 才进入 `mh-save-edit/data` 与 `ui/public/assets`；原始 Dex、ROM 和完整解包文件仍只留在宿主机或 `research`。
+5. 生成后的 SQLite、PNG、manifest、crosswalk 和审计报告也默认属于私有研究产物，只保存在 `research`；未取得用户对具体文件的明确发布授权前，不得进入 `mh-save-edit/data`、`ui/public/assets`、GitHub Action artifact 或 Release。
+
+## 研究产物与公开仓库边界
+
+- `mh-save-edit` 公开 Git 历史只保存源代码、构建器、schema、不含受限数据的测试和文档。
+- 从 Dex、游戏本体、存档或旧修改器整理出的数据库、图标、图片、CSV、JSON manifest、crosswalk、审计报告、`.resources` 和其他中间产物一律默认为私有，不得被 Git 跟踪。
+- 本地构建需要的生成产物放在 `/home/alexqfmm/workPlace/mh3gabout/research/generated/mh-save-edit/`，可按需复制到项目的已忽略路径，但不能用 `.gitignore` 反向规则强制加入。
+- 工作区最外层不得散落 `.resources`、CSV、SQLite、图标导出目录或临时分析结果；发现后应按游戏和用途归档到 `research`，无法判定归属时放入 `research/archive/unclassified/`。
+- 每次提交前必须用 `git status --short`、`git diff --cached --name-only` 和 `git check-ignore -v` 检查数据边界；发现上述文件必须停止推送。
+- 技术上可重建、可打包不等于可公开分发。只有用户明确批准的独立发布包才能包含指定数据产物，且不得由公开 Git 历史或公开 Action artifact 中转。

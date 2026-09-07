@@ -76,19 +76,19 @@ pnpm install --frozen-lockfile
 pnpm typecheck
 pnpm test
 pnpm build
-数据 manifest 和图标引用校验
+在受控的私有数据注入环境中执行 manifest 和图标引用校验
 ```
 
 发布 workflow 在版本 tag 上：
 
-1. 在干净 Windows runner 构建 Electron portable。
-2. 校验三个 SQLite、manifest、图标包和 preload 安全设置。
+1. 仅在已获得数据分发授权的受控 Windows runner 中注入私有数据并构建 Electron portable。
+2. 在不上传数据中间产物的前提下，校验三个 SQLite、manifest、图标包和 preload 安全设置。
 3. 执行公开合成夹具和不含私人样本的回归测试。
 4. 生成版本说明、文件 SHA-256 和支持格式清单。
-5. 创建 GitHub Release 并上传产物。
+5. 只有用户明确批准该版本所含数据的发布方案后，才创建 Release 并上传产物。
 
-私有真实存档、Dex 可执行文件、CCI/RomFS、`.resources` 原始提取物和未经确认许可的素材不能上传
-Action artifact 或 GitHub Release。
+私有真实存档、Dex 可执行文件、CCI/RomFS、`.resources`、生成 SQLite、manifest、
+crosswalk、审计报告和未经确认许可的图标素材不能上传公开 Git 历史、Action artifact 或 GitHub Release。
 
 ## 7. UI 与在线验收
 
@@ -99,4 +99,3 @@ Action artifact 或 GitHub Release。
 - 登录过期、版本冲突和服务端错误具有可恢复状态。
 - 发布/导入的配装在本地重新计算结果与服务端适配器一致。
 - 正式包不包含研究目录和私有样本。
-

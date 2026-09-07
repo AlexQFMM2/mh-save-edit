@@ -23,6 +23,10 @@ data/mh4g.sqlite   # MH4G 内容
 data/mhgu.sqlite   # MHGU/MHXX 共用内容，按语言/平台 profile 取名
 ```
 
+上述路径是本地运行挂载位置，不是公开仓库产物目录。SQLite、生成 manifest、
+crosswalk、审计报告和导出图标统一归档到 `research/generated/mh-save-edit/catalog/`，
+按需注入上述已忽略路径，不得被 Git 跟踪或上传公开 Action artifact。
+
 MHGU 与 MHXX 的存档 adapter 分开，内容库可以共用。若后续确认两平台确实存在实体差异，再在同库
 增加 `content_profile`，不要先复制两套会漂移的 SQLite。
 

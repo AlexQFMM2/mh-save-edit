@@ -5,9 +5,8 @@ release/
 package/
 data/*.sqlite
 data/*.sqlite-*
-!data/mh3g.sqlite
-!data/mh4g.sqlite
-!data/mhgu.sqlite
+data/manifests/
+ui/public/assets/catalog/icons/
 *.log
 .env
 .electron-native/
