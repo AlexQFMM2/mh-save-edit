@@ -8,6 +8,7 @@ import { ItemList } from '../../components/ItemList/ItemList'
 import { ItemPagination } from '../../components/ItemPagination/ItemPagination'
 import { DecorationDetailDrawer } from '../../components/DecorationDetailDrawer/DecorationDetailDrawer'
 import { ItemDetailDrawer } from '../../components/ItemDetailDrawer/ItemDetailDrawer'
+import { WeaponDetailDrawer } from '../../components/WeaponDetailDrawer/WeaponDetailDrawer'
 import type { WorkspaceOutletContext } from '../../components/WorkspaceContent/WorkspaceContent'
 import './ItemCatalogPage.css'
 
@@ -39,6 +40,7 @@ export function ItemCatalogPage() {
   const [detailError, setDetailError] = useState<string>()
   const [decorationDrawerId, setDecorationDrawerId] = useState<number | null>(null)
   const [itemDrawerId, setItemDrawerId] = useState<number | null>(null)
+  const [weaponDrawerKey, setWeaponDrawerKey] = useState<string | null>(null)
 
   const updateParams = (changes: Record<string, string | number | undefined>) => {
     const next = new URLSearchParams(params)
@@ -49,6 +51,7 @@ export function ItemCatalogPage() {
     setQueryInput('')
     setDecorationDrawerId(null)
     setItemDrawerId(null)
+    setWeaponDrawerKey(null)
     setParams({})
   }
   useEffect(() => { if (queryInput === query) return; const timer = window.setTimeout(() => updateParams({ target: undefined, q: queryInput || undefined, page: undefined, item: undefined }), 280); return () => window.clearTimeout(timer) }, [queryInput, query])
@@ -94,9 +97,10 @@ export function ItemCatalogPage() {
     <ItemFilterBar rarities={facets.rarities} maxStacks={facets.maxStacks} availableSources={availableSources} availableUsages={availableUsages} rarity={rarity} maxStack={maxStack} source={source} usage={usage} includePlaceholders={includePlaceholders} onChange={(key, value) => updateParams({ target: undefined, [key]: value, page: undefined, item: undefined })} onReset={resetCatalog} />
     <div className="item-catalog-page__layout">
       <section className="item-catalog-page__list" aria-label="道具列表"><ItemList items={items} selectedId={selectedVisible ? selectedId : undefined} loading={loading} error={error} onSelect={(id) => updateParams({ item: id })} /><ItemPagination page={page} pageSize={resultMeta.pageSize} total={resultMeta.total} hasNext={resultMeta.hasNext} onPageChange={(value) => updateParams({ page: value, item: undefined })} /></section>
-      <ItemDetailPanel item={detail} loading={detailLoading} error={detailError} onSelectItem={(saveId) => { setDecorationDrawerId(null); setItemDrawerId(saveId) }} onSelectDecoration={(saveId) => { setItemDrawerId(null); setDecorationDrawerId(saveId) }} />
+      <ItemDetailPanel item={detail} loading={detailLoading} error={detailError} onSelectItem={(saveId) => { setDecorationDrawerId(null); setWeaponDrawerKey(null); setItemDrawerId(saveId) }} onSelectDecoration={(saveId) => { setItemDrawerId(null); setWeaponDrawerKey(null); setDecorationDrawerId(saveId) }} onSelectWeapon={(weapon) => { setItemDrawerId(null); setDecorationDrawerId(null); setWeaponDrawerKey(weapon.weaponKey) }} />
     </div>
     <DecorationDetailDrawer gameId={game.id} decorationSaveId={decorationDrawerId} onClose={() => setDecorationDrawerId(null)} />
     <ItemDetailDrawer gameId={game.id} itemSaveId={itemDrawerId} onClose={() => setItemDrawerId(null)} />
+    <WeaponDetailDrawer gameId={game.id} weaponKey={weaponDrawerKey} onClose={() => setWeaponDrawerKey(null)} />
   </div>
 }

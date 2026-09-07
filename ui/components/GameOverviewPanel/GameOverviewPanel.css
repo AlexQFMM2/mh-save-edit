@@ -14,7 +14,7 @@
 .game-overview-panel__eyebrow {
   margin: 0 0 5px;
   color: var(--global-theme-color-gold);
-  font-size: 11px;
+  font-size: var(--global-typography-font-size-small);
   font-weight: 800;
   letter-spacing: 0.16em;
 }
@@ -23,14 +23,14 @@
   margin: 0;
   color: var(--global-theme-color-text-primary);
   font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(24px, 2.8vw, 34px);
+  font-size: var(--global-typography-font-size-display);
   line-height: 1.1;
 }
 
 .game-overview-panel__description {
   margin: 7px 0 0;
   color: var(--global-theme-color-text-secondary);
-  font-size: 12px;
+  font-size: var(--global-typography-font-size-small);
 }
 
 .game-overview-panel__open-save {
@@ -43,7 +43,7 @@
   border-radius: 8px;
   color: var(--global-theme-color-text-muted);
   background: rgba(223, 182, 93, 0.08);
-  font-size: 13px;
+  font-size: var(--global-typography-font-size-small);
   font-weight: 700;
   cursor: not-allowed;
 }
@@ -51,7 +51,7 @@
 .game-overview-panel__open-save span {
   margin-left: 2px;
   color: var(--global-theme-color-gold);
-  font-size: 10px;
+  font-size: var(--global-typography-font-size-caption);
   font-weight: 600;
 }
 
@@ -64,7 +64,7 @@
   border-radius: 10px;
   color: var(--global-theme-color-text-muted);
   background: rgba(223, 182, 93, 0.05);
-  font-size: 12px;
+  font-size: var(--global-typography-font-size-small);
   font-weight: 700;
 }
 
@@ -119,12 +119,12 @@
 .game-overview-panel__feature-copy strong {
   color: var(--global-theme-color-text-primary);
   font-family: Georgia, "Times New Roman", serif;
-  font-size: 15px;
+  font-size: var(--global-typography-font-size-body);
 }
 
 .game-overview-panel__feature-copy small {
   color: var(--global-theme-color-text-muted);
-  font-size: 12px;
+  font-size: var(--global-typography-font-size-small);
   line-height: 1.5;
 }
 

@@ -14,7 +14,7 @@
   color: var(--global-theme-color-gold-bright);
   background: rgba(83, 49, 27, .58);
   cursor: pointer;
-  font-size: 12px;
+  font-size: var(--global-typography-font-size-small);
   font-weight: 700;
   white-space: nowrap;
   transition: border-color 180ms ease, background-color 180ms ease, color 180ms ease;

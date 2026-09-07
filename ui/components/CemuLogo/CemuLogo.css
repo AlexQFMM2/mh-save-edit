@@ -9,7 +9,7 @@
   color: #fff;
   background: #58bce8;
   font-family: Arial, sans-serif;
-  font-size: 16px;
+  font-size: var(--global-typography-font-size-body);
   font-weight: 900;
   line-height: 1;
 }

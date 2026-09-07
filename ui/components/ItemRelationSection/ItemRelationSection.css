@@ -37,16 +37,16 @@
   align-items: center;
   gap: 8px;
   color: var(--global-theme-color-gold-bright);
-  font-size: 13px;
+  font-size: var(--global-typography-font-size-small);
   font-weight: 700;
 }
 
 .item-relation-section__count {
   padding: 1px 6px;
   border-radius: 20px;
-  color: var(--global-theme-color-text-secondary);
+  color: var(--global-theme-color-data);
   background: rgba(223, 182, 93, 0.1);
-  font-size: 10px;
+  font-size: var(--global-typography-font-size-caption);
   font-weight: 400;
 }
 
@@ -76,12 +76,12 @@
   padding: 7px 9px;
   border-radius: 6px;
   background: rgba(255, 255, 255, 0.025);
-  font-size: 12px;
+  font-size: var(--global-typography-font-size-small);
 }
 .item-relation-section__main { display: grid; min-width: 0; gap: 4px; }
-.item-relation-section__links { color: var(--global-theme-color-text-muted); font-size: 11px; }
+.item-relation-section__links { color: var(--global-theme-color-text-muted); font-size: var(--global-typography-font-size-small); }
 .item-relation-section__links button { margin-left: 5px; padding: 0; border: 0; color: var(--global-theme-color-gold-bright); background: transparent; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
-.item-relation-section__body li small { flex: 0 0 auto; color: var(--global-theme-color-text-muted); }
+.item-relation-section__body li small { flex: 0 0 auto; color: var(--global-theme-color-data); font-weight: 600; }
 .item-relation-section__links button:focus-visible { border-radius: 2px; outline: 2px solid var(--global-theme-color-gold-bright); outline-offset: 2px; }
 .item-relation-section__main > button { padding: 0; border: 0; color: var(--global-theme-color-gold-bright); background: transparent; cursor: pointer; text-align: left; text-decoration: underline; text-underline-offset: 2px; }
 .item-relation-section__main > button:focus-visible { border-radius: 2px; outline: 2px solid var(--global-theme-color-gold-bright); outline-offset: 2px; }

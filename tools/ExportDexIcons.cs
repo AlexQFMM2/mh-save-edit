@@ -9,8 +9,8 @@ using System.Security.Cryptography;
 using System.Text;
 
 /// <summary>
-/// Exports only Itm_XXXX bitmaps from a .NET .resources file. The output is
-/// content-addressed so identical icons are stored once across all games.
+/// Exports selected bitmap key prefixes from a .NET .resources file. The
+/// output is content-addressed so identical icons are stored once across games.
 /// </summary>
 internal static class ExportDexIcons
 {
@@ -30,16 +30,26 @@ internal static class ExportDexIcons
         }
     }
 
+    private static bool MatchesPrefix(string key, string[] prefixes)
+    {
+        foreach (var prefix in prefixes)
+        {
+            if (key.StartsWith(prefix, StringComparison.Ordinal)) return true;
+        }
+        return false;
+    }
+
     public static int Main(string[] args)
     {
-        if (args.Length != 3)
+        if (args.Length != 3 && args.Length != 4)
         {
-            Console.Error.WriteLine("usage: ExportDexIcons <input.resources> <output-dir> <manifest.json>");
+            Console.Error.WriteLine("usage: ExportDexIcons <input.resources> <output-dir> <manifest.json> [prefixes]");
             return 2;
         }
 
         Directory.CreateDirectory(args[1]);
         var entries = new SortedDictionary<string, string>(StringComparer.Ordinal);
+        var prefixes = (args.Length == 4 ? args[3] : "Itm_").Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
 
         using (var reader = new ResourceReader(args[0]))
         {
@@ -47,7 +57,7 @@ internal static class ExportDexIcons
             {
                 var key = entry.Key as string;
                 var image = entry.Value as Image;
-                if (key == null || image == null || !key.StartsWith("Itm_", StringComparison.Ordinal)) continue;
+                if (key == null || image == null || !MatchesPrefix(key, prefixes)) continue;
 
                 using (image)
                 using (var stream = new MemoryStream())
@@ -68,6 +78,7 @@ internal static class ExportDexIcons
             writer.WriteLine("{");
             writer.WriteLine("  \"format\": \"mh-save-edit-icon-manifest-v1\",");
             writer.WriteLine("  \"source\": " + Json(Path.GetFileName(args[0])) + ",");
+            writer.WriteLine("  \"prefixes\": [" + String.Join(",", Array.ConvertAll(prefixes, Json)) + "],");
             writer.WriteLine("  \"count\": " + entries.Count + ",");
             writer.WriteLine("  \"icons\": {");
             var index = 0;
@@ -80,7 +91,7 @@ internal static class ExportDexIcons
             writer.WriteLine("}");
         }
 
-        Console.WriteLine("exported " + entries.Count + " item resources");
+        Console.WriteLine("exported " + entries.Count + " catalog resources");
         return 0;
     }
 }

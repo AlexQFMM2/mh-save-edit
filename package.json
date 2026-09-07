@@ -13,9 +13,11 @@
     "test:watch": "vitest",
     "rebuild:electron-native": "node tools/rebuild-electron-native.mjs",
     "data:build:items": "node tools/build_item_catalog.mjs",
-    "data:build:decorations": "node tools/build_decoration_catalog.mjs"
+    "data:build:decorations": "node tools/build_decoration_catalog.mjs",
+    "data:build:weapons": "node tools/build_weapon_catalog.mjs"
   },
   "dependencies": {
+    "@xyflow/react": "^12.11.6",
     "better-sqlite3": "^11.7.0",
     "drizzle-orm": "^0.36.4",
     "lucide-react": "^0.468.0",
@@ -26,6 +28,8 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.7",
     "@types/better-sqlite3": "^7.6.12",
     "@types/node": "^22.10.2",
     "@types/react": "^18.3.12",
@@ -33,6 +37,7 @@
     "@vitejs/plugin-react": "^4.3.4",
     "electron": "^33.2.1",
     "electron-vite": "^2.3.0",
+    "jsdom": "^30.0.1",
     "typescript": "^5.7.2",
     "vite": "^5.4.11",
     "vitest": "^2.1.8"

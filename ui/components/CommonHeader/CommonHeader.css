@@ -42,7 +42,7 @@
 .common-header__kicker,
 .common-header__status-label {
   color: var(--global-theme-color-text-muted);
-  font-size: 10px;
+  font-size: var(--global-typography-font-size-caption);
   font-weight: 700;
   letter-spacing: 0.13em;
 }
@@ -50,7 +50,7 @@
 .common-header__name {
   color: var(--global-theme-color-gold-bright);
   font-family: Georgia, "Times New Roman", serif;
-  font-size: 21px;
+  font-size: var(--global-typography-font-size-title);
   font-weight: 700;
   letter-spacing: 0.02em;
 }
@@ -62,14 +62,14 @@
 }
 
 .common-header__status-value {
-  color: var(--global-theme-color-text-primary);
-  font-size: 13px;
+  color: var(--global-theme-color-data);
+  font-size: var(--global-typography-font-size-small);
   font-weight: 600;
 }
 
 .common-header__status-detail {
   color: var(--global-theme-color-text-muted);
-  font-size: 11px;
+  font-size: var(--global-typography-font-size-small);
 }
 
 @media (max-width: 600px) {

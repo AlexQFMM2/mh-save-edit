@@ -1,5 +1,5 @@
 import type { GameId } from '../api/core/loadout'
-import type { DecorationCatalogFacets, DecorationCatalogFilters, DecorationDetail, DecorationIdentity, DecorationSummary, ItemCatalogFilters, ItemDetail, ItemIdentity, ItemSummary, PageResult } from '../api/catalog/types'
+import type { DecorationCatalogFacets, DecorationCatalogFilters, DecorationDetail, DecorationIdentity, DecorationSummary, ItemCatalogFilters, ItemDetail, ItemIdentity, ItemSummary, PageResult, WeaponCatalogFacets, WeaponCatalogFilters, WeaponDetail, WeaponIdentity, WeaponSummary, WeaponTreeResult } from '../api/catalog/types'
 
 declare global {
   interface Window {
@@ -12,6 +12,10 @@ declare global {
         searchDecorations(filters: DecorationCatalogFilters): Promise<PageResult<DecorationSummary>>
         getDecoration(identity: DecorationIdentity): Promise<DecorationDetail | null>
         getDecorationFacets(gameId: GameId): Promise<DecorationCatalogFacets>
+        searchWeapons(filters: WeaponCatalogFilters): Promise<PageResult<WeaponSummary>>
+        getWeapon(identity: WeaponIdentity): Promise<WeaponDetail | null>
+        getWeaponFacets(gameId: GameId): Promise<WeaponCatalogFacets>
+        getWeaponTree(gameId: GameId, weaponTypeId: number): Promise<WeaponTreeResult>
       }
     }
   }

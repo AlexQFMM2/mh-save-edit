@@ -41,7 +41,7 @@
   border-radius: 7px;
   color: var(--global-theme-color-text-primary);
   background: var(--global-theme-color-surface-deep);
-  font-size: 13px;
+  font-size: var(--global-typography-font-size-small);
   font-weight: 700;
   text-decoration: none;
   transform: translateY(-160%);

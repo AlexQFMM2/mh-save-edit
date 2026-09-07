@@ -5,7 +5,8 @@ import { join, resolve } from 'node:path'
 import type { GameId } from '../core/loadout'
 import { ItemCatalogRepository } from './repository'
 import { DecorationCatalogRepository } from './decorationRepository'
-import { decorationCatalogFiltersSchema, decorationIdentitySchema, gameIdSchema, itemCatalogFiltersSchema, itemIdentitySchema } from './schemas'
+import { WeaponCatalogRepository } from './weaponRepository'
+import { decorationCatalogFiltersSchema, decorationIdentitySchema, gameIdSchema, itemCatalogFiltersSchema, itemIdentitySchema, weaponCatalogFiltersSchema, weaponIdentitySchema, weaponTreeRequestSchema } from './schemas'
 import { catalogChannels } from './channels'
 export { catalogChannels }
 
@@ -18,7 +19,7 @@ export function resolveCatalogDataDir(isPackaged: boolean, resourcesPath: string
 }
 
 export function registerCatalogIpc(dataDir: string): () => void {
-  const repositories = new Map<GameId, { db: DatabaseType.Database; repository: ItemCatalogRepository; decorations: DecorationCatalogRepository }>()
+  const repositories = new Map<GameId, { db: DatabaseType.Database; repository: ItemCatalogRepository; decorations: DecorationCatalogRepository; weapons: WeaponCatalogRepository }>()
   const repositoryEntry = (gameId: GameId) => {
     const cached = repositories.get(gameId)
     if (cached) return cached
@@ -27,7 +28,8 @@ export function registerCatalogIpc(dataDir: string): () => void {
     const db = new Database(file, { readonly: true, fileMustExist: true, ...(nativeBinding ? { nativeBinding } : {}) })
     const value = new ItemCatalogRepository(db)
     const decorations = new DecorationCatalogRepository(db)
-    const entry = { db, repository: value, decorations }
+    const weapons = new WeaponCatalogRepository(db)
+    const entry = { db, repository: value, decorations, weapons }
     repositories.set(gameId, entry)
     return entry
   }
@@ -55,6 +57,22 @@ export function registerCatalogIpc(dataDir: string): () => void {
   ipcMain.handle(catalogChannels.getDecorationFacets, (_event, payload: unknown) => {
     const gameId = gameIdSchema.parse(payload)
     return repositoryEntry(gameId).decorations.getDecorationFacets(gameId)
+  })
+  ipcMain.handle(catalogChannels.searchWeapons, (_event, payload: unknown) => {
+    const filters = weaponCatalogFiltersSchema.parse(payload)
+    return repositoryEntry(filters.gameId).weapons.searchWeapons(filters)
+  })
+  ipcMain.handle(catalogChannels.getWeapon, (_event, payload: unknown) => {
+    const identity = weaponIdentitySchema.parse(payload)
+    return repositoryEntry(identity.gameId).weapons.getWeapon(identity)
+  })
+  ipcMain.handle(catalogChannels.getWeaponFacets, (_event, payload: unknown) => {
+    const gameId = gameIdSchema.parse(payload)
+    return repositoryEntry(gameId).weapons.getWeaponFacets(gameId)
+  })
+  ipcMain.handle(catalogChannels.getWeaponTree, (_event, payload: unknown) => {
+    const request = weaponTreeRequestSchema.parse(payload)
+    return repositoryEntry(request.gameId).weapons.getWeaponTree(request.gameId, request.weaponTypeId)
   })
 
   return () => {

@@ -79,14 +79,14 @@
 .game-version-card__title {
   color: var(--global-theme-color-text-primary);
   font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(16px, 1.5vw, 20px);
+  font-size: var(--global-typography-font-size-display);
   font-weight: 700;
   line-height: 1.2;
 }
 
 .game-version-card__subtitle {
   color: var(--global-theme-color-text-muted);
-  font-size: 12px;
+  font-size: var(--global-typography-font-size-small);
   font-weight: 600;
   letter-spacing: 0.04em;
 }

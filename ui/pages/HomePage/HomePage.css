@@ -24,7 +24,7 @@
 .home-page__eyebrow {
   margin: 0 0 14px;
   color: var(--global-theme-color-gold);
-  font-size: 11px;
+  font-size: var(--global-typography-font-size-small);
   font-weight: 800;
   letter-spacing: 0.2em;
 }
@@ -33,7 +33,7 @@
   margin: 0;
   color: var(--global-theme-color-text-primary);
   font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(36px, 5vw, 62px);
+  font-size: var(--global-typography-font-size-display);
   font-weight: 700;
   letter-spacing: -0.035em;
   line-height: 1.08;
@@ -43,7 +43,7 @@
   max-width: 530px;
   margin: 20px 0 0;
   color: var(--global-theme-color-text-secondary);
-  font-size: 15px;
+  font-size: var(--global-typography-font-size-body);
   line-height: 1.8;
 }
 

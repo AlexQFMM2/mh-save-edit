@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react'
 import { HomePage } from './pages/HomePage/HomePage'
 import { HashRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { GameHomePage } from './pages/GameHomePage/GameHomePage'
@@ -7,6 +8,8 @@ import { workspaceNavigation } from './data/workspaceNavigation'
 import { SaveEditorPage } from './pages/SaveEditorPage/SaveEditorPage'
 import { ItemCatalogPage } from './pages/ItemCatalogPage/ItemCatalogPage'
 import { DecorationCatalogPage } from './pages/DecorationCatalogPage/DecorationCatalogPage'
+
+const WeaponCatalogPage = lazy(async () => ({ default: (await import('./pages/WeaponCatalogPage/WeaponCatalogPage')).WeaponCatalogPage }))
 
 export default function App() {
   return (
@@ -20,7 +23,7 @@ export default function App() {
             <Route
               key={item.id}
               path={item.path}
-              element={item.id === 'save-editor' ? <SaveEditorPage /> : item.id === 'items' ? <ItemCatalogPage /> : item.id === 'decorations' ? <DecorationCatalogPage /> : <WorkspaceFeaturePage pageId={item.id} />}
+              element={item.id === 'save-editor' ? <SaveEditorPage /> : item.id === 'items' ? <ItemCatalogPage /> : item.id === 'decorations' ? <DecorationCatalogPage /> : item.id === 'weapons' ? <Suspense fallback={<WorkspaceFeaturePage pageId="weapons" />}><WeaponCatalogPage /></Suspense> : <WorkspaceFeaturePage pageId={item.id} />}
             />
           ))}
           <Route path="*" element={<Navigate to="overview" replace />} />

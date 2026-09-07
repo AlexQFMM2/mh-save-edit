@@ -32,17 +32,17 @@
   margin: 0;
   color: var(--global-theme-color-text-primary);
   font-family: Georgia, "Times New Roman", serif;
-  font-size: 20px;
+  font-size: var(--global-typography-font-size-title);
 }
 
 .workspace-placeholder__empty p {
   margin: 7px 0 0;
   color: var(--global-theme-color-text-secondary);
-  font-size: 12px;
+  font-size: var(--global-typography-font-size-small);
 }
 
 .workspace-placeholder__hint {
   margin-top: 12px;
   color: var(--global-theme-color-text-muted);
-  font-size: 12px;
+  font-size: var(--global-typography-font-size-small);
 }

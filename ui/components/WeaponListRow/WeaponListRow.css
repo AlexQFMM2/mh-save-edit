@@ -1,0 +1,16 @@
+.weapon-list-row { display: grid; grid-template-columns: var(--weapon-list-component-columns); align-items: center; gap: 8px; width: 100%; min-height: var(--weapon-list-component-row-height); padding: 6px 10px; border: 0; border-bottom: 1px solid rgba(223, 182, 93, .09); color: var(--global-theme-color-text); text-align: left; background: transparent; cursor: pointer; }
+.weapon-list-row:hover { background: rgba(223, 182, 93, .07); }
+.weapon-list-row[aria-selected=true] { box-shadow: inset 3px 0 var(--global-theme-color-gold-bright); background: rgba(171, 112, 48, .16); }
+.weapon-list-row:focus-visible { position: relative; z-index: 1; outline: 2px solid var(--global-theme-color-gold-bright); outline-offset: -2px; }
+.weapon-list-row__identity { display: grid; grid-template-columns: 30px minmax(0, 1fr); align-items: center; gap: 7px; min-width: 0; }
+.weapon-list-row__identity > span:last-child { display: grid; min-width: 0; }
+.weapon-list-row__identity strong,
+.weapon-list-row__identity small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.weapon-list-row__identity strong { font-size: var(--global-typography-font-size-small); }
+.weapon-list-row__identity small { color: var(--global-theme-color-text-muted); font-size: var(--global-typography-font-size-caption); }
+.weapon-list-row__stat { color: var(--global-theme-color-data); text-align: center; font-size: var(--global-typography-font-size-small); font-weight: 600; white-space: nowrap; }
+.weapon-list-row__badges { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 3px; }
+.weapon-list-row__final-badge { padding: 2px 4px; border: 1px solid rgba(223, 182, 93, .3); border-radius: 3px; color: var(--global-theme-color-gold-bright); font-size: var(--global-typography-font-size-caption); }
+.weapon-list-row__type { font-size: var(--global-typography-font-size-small); }
+.weapon-list-row__special { display: grid; gap: 2px; min-width: 0; }
+.weapon-list-row__special > small { overflow: hidden; color: var(--global-theme-color-data); font-size: var(--global-typography-font-size-caption); text-overflow: ellipsis; white-space: nowrap; }

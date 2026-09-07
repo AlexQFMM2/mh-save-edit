@@ -5,4 +5,8 @@ export const catalogChannels = {
   searchDecorations: 'catalog:search-decorations',
   getDecoration: 'catalog:get-decoration',
   getDecorationFacets: 'catalog:get-decoration-facets',
+  searchWeapons: 'catalog:search-weapons',
+  getWeapon: 'catalog:get-weapon',
+  getWeaponFacets: 'catalog:get-weapon-facets',
+  getWeaponTree: 'catalog:get-weapon-tree',
 } as const

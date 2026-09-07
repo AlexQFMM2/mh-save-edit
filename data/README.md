@@ -2,16 +2,17 @@
 
 三套只读 SQLite 数据库放在这里：`mh3g.sqlite`、`mh4g.sqlite`、`mhgu.sqlite`。
 
-数据库除了各作原生数据外，还包含统一的 `catalog_items` 和
-`catalog_item_relations` 表。它们以存档数组的 `save_id` 为主键，用 Dex 的
-`Hex` + 名称交叉验证补充 `dex_id`、稀有度、持有上限、价格、图标和已确认关系。
+数据库除了各作原生数据外，还包含统一的道具、装饰品和武器 `catalog_*` 表。
+武器目录保留存档身份、Dex 节点、派生边、属性、斩味阶段、材料、类型专项数据和
+GU/XX 版本覆盖；MH4G 发掘武器不会写入公共武器目录。
 `data/manifests/` 保存构建来源 hash、条目数和映射审计；原始 Dex、EXE、ROM 和
 存档不进入仓库。
 
-从临时 Dex 导出重新生成图鉴数据：
+从固定研究快照重新生成武器数据：
 
 ```bash
-pnpm data:build:items
+pnpm data:build:weapons -- --research-root ../research
 ```
 
-构建器会在输入和图标 manifest 未变化时跳过数据库写入，确保连续构建结果稳定。
+构建器会先逐文件验证 Dex `source-manifest.json` 的大小和 SHA-256，再生成三库及
+`data/manifests/*-weapons*.json`。正式构建不访问 Windows 宿主机或 `/tmp`。
