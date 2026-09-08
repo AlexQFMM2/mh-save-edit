@@ -1,6 +1,6 @@
 import { useId, useMemo, useState } from 'react'
 import { ChevronDown } from 'lucide-react'
-import type { ItemRelation, WeaponRelationTarget } from '../../../api/catalog/types'
+import type { ArmorRelationTarget, ItemRelation, WeaponRelationTarget } from '../../../api/catalog/types'
 import './ItemRelationSection.css'
 
 type ItemRelationSectionProps = {
@@ -9,6 +9,7 @@ type ItemRelationSectionProps = {
   onSelectItem: (saveId: number) => void
   onSelectDecoration?: (saveId: number) => void
   onSelectWeapon?: (weapon: WeaponRelationTarget) => void
+  onSelectArmor?: (armor: ArmorRelationTarget) => void
 }
 
 export function sortRelationsByProbability(relations: ItemRelation[]): ItemRelation[] {
@@ -25,7 +26,7 @@ export function sortRelationsByProbability(relations: ItemRelation[]): ItemRelat
     .map(({ relation }) => relation)
 }
 
-export function ItemRelationSection({ title, relations, onSelectItem, onSelectDecoration, onSelectWeapon }: ItemRelationSectionProps) {
+export function ItemRelationSection({ title, relations, onSelectItem, onSelectDecoration, onSelectWeapon, onSelectArmor }: ItemRelationSectionProps) {
   const [expanded, setExpanded] = useState(false)
   const bodyId = useId()
   const sortedRelations = useMemo(() => sortRelationsByProbability(relations), [relations])
@@ -53,6 +54,8 @@ export function ItemRelationSection({ title, relations, onSelectItem, onSelectDe
               <span className="item-relation-section__main">
                 {relation.usageKind === 'weapon' && onSelectWeapon && relation.relatedWeapon
                   ? <button type="button" onClick={() => onSelectWeapon(relation.relatedWeapon!)}>{relationLabel(relation)}</button>
+                  : relation.usageKind === 'armor' && onSelectArmor && relation.relatedArmor
+                  ? <button type="button" onClick={() => onSelectArmor(relation.relatedArmor!)}>{relationLabel(relation)}</button>
                   : relation.usageKind === 'decoration' && onSelectDecoration && relation.metadata.Target_Save_ID
                   ? <button type="button" onClick={() => onSelectDecoration(Number(relation.metadata.Target_Save_ID))}>{relationLabel(relation)}</button>
                   : <span>{relationLabel(relation)}</span>}
@@ -88,7 +91,7 @@ function relationLabel(relation: ItemRelation): string {
   const parts: string[] = []
   if (rank) parts.push(rank)
   if (relation.sourceKind === 'exchange') parts.push('山菜爷')
-  parts.push(relation.metadata.Qst_Name ?? relation.relatedWeapon?.nameCn ?? relation.targetName)
+  parts.push(relation.metadata.Qst_Name ?? relation.relatedWeapon?.nameCn ?? relation.relatedArmor?.nameCn ?? relation.targetName)
   if (relation.sourceKind === 'monster' && relation.metadata.Mon_GetItmType_ID) parts.push(relation.metadata.Mon_GetItmType_Name ?? '获取方式未收录')
   if (relation.sourceKind === 'location') {
     if (relation.metadata.Loc_Ara_ID) parts.push(relation.metadata.Loc_Ara_Name ?? '区域未收录')

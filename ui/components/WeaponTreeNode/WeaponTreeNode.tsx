@@ -3,6 +3,7 @@ import { Handle, Position, type Node, type NodeProps } from '@xyflow/react'
 import type { GameId } from '../../../api/core/loadout'
 import type { SharpnessStage, WeaponSummary } from '../../../api/catalog/types'
 import { CatalogIcon } from '../CatalogIcon/CatalogIcon'
+import { EquipmentSlotIndicator } from '../EquipmentSlotIndicator/EquipmentSlotIndicator'
 import { WeaponAttributeList } from '../WeaponAttributeList/WeaponAttributeList'
 import { WeaponProductionBadge } from '../WeaponProductionBadge/WeaponProductionBadge'
 import { WeaponSharpnessComparison } from '../WeaponSharpnessComparison/WeaponSharpnessComparison'
@@ -23,7 +24,7 @@ export function WeaponTreeNodeView({ data }: NodeProps<WeaponFlowNode>) {
     <Handle type="target" position={Position.Left} />
     <button className="nodrag nopan" type="button" data-weapon-key={weapon.weaponKey} tabIndex={selected ? 0 : -1} aria-pressed={selected} aria-label={`${weapon.nameCn}${weapon.displayLevel != null ? ` Lv.${weapon.displayLevel}` : ''}`} onClick={(event) => { event.stopPropagation(); data.onSelect(weapon.weaponKey) }} onKeyDown={onKeyDown}>
       <span className="weapon-tree-node__head"><CatalogIcon path={weapon.iconPath} name={weapon.nameCn} /><span><strong>{weapon.nameCn}{weapon.displayLevel != null ? ` Lv.${weapon.displayLevel}` : ''}</strong><small>RARE {weapon.rarity ?? '—'} · 攻击 {weapon.displayAttack ?? '—'}</small></span></span>
-      <span className="weapon-tree-node__meta"><WeaponAttributeList attributes={weapon.attributes} compact /><span>{weapon.slots ?? 0} 孔</span></span>
+      <span className="weapon-tree-node__meta"><WeaponAttributeList attributes={weapon.attributes} compact /><EquipmentSlotIndicator slots={weapon.slots} compact /></span>
       {weapon.sharpness ? <WeaponSharpnessComparison gameId={data.gameId} profile={weapon.sharpness} selectedStage={data.sharpnessStage} compact /> : <small className="weapon-tree-node__special">{weapon.specialSummary.slice(0, 2).join(' · ')}</small>}
       <span className="weapon-tree-node__badges">{weapon.isDirectlyProducible && <WeaponProductionBadge />}{weapon.isFinalForm && <span className="weapon-tree-node__final-badge"><Flag aria-hidden="true" />最终</span>}</span>
     </button>

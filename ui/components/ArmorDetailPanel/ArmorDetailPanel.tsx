@@ -1,0 +1,17 @@
+import type { ArmorDetail } from '../../../api/catalog/types'
+import { ArmorIcon } from '../ArmorIcon/ArmorIcon'
+import { ArmorMaterialList } from '../ArmorMaterialList/ArmorMaterialList'
+import { ArmorStatsPanel } from '../ArmorStatsPanel/ArmorStatsPanel'
+import './ArmorDetailPanel.css'
+
+const part={head:'头部',chest:'胸部',arms:'腕部',waist:'腰部',legs:'腿部'}
+export function ArmorDetailPanel({ armor, loading, error, onSelectItem, onSelectSkill }: { armor: ArmorDetail|null; loading: boolean; error?: string; onSelectItem?: (saveId:number)=>void; onSelectSkill?: (skillId:number)=>void }) {
+  if(!armor&&loading)return <aside className="armor-detail-panel armor-detail-panel--state" role="status">正在读取防具详情…</aside>
+  if(!armor&&error)return <aside className="armor-detail-panel armor-detail-panel--state" role="alert">{error}</aside>
+  if(!armor)return <aside className="armor-detail-panel armor-detail-panel--state">从左侧选择一件防具查看详情。</aside>
+  return <aside className={`armor-detail-panel${loading?' armor-detail-panel--loading':''}`} aria-busy={loading} aria-label={`${armor.nameCn}详情`}>
+    {loading&&<span className="armor-detail-panel__updating">正在更新…</span>}
+    <section className="armor-detail-panel__craft"><header><ArmorIcon path={armor.iconPath} name={armor.nameCn} size="large"/><div><small>{part[armor.part]} · Dex #{armor.dexId} · 0x{armor.dexId.toString(16).toUpperCase()}</small><h2>{armor.nameCn}</h2><p>{armor.nameEn}</p>{armor.nameJp&&<p>{armor.nameJp}</p>}</div></header><div className="armor-detail-panel__price"><span>制作费用</span><strong>{armor.price==null?'—':`${armor.price} z`}</strong></div>{armor.saveIdentities.length>0&&<p className="armor-detail-panel__identity">存档映射：{armor.saveIdentities.map(value=>`${value.saveType}:${value.saveId}`).join('、')}</p>}<ArmorMaterialList materials={armor.materials} onSelectItem={onSelectItem}/></section>
+    <ArmorStatsPanel armor={armor} onSelectSkill={onSelectSkill}/>
+  </aside>
+}

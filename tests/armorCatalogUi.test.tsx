@@ -1,0 +1,27 @@
+// @vitest-environment jsdom
+import { cleanup,fireEvent,render,screen,waitFor } from '@testing-library/react'
+import { afterEach,describe,expect,it,vi } from 'vitest'
+import { MemoryRouter,Outlet,Route,Routes } from 'react-router-dom'
+import type { ArmorDetail,ArmorSetSummary } from '../api/catalog/types'
+import { ArmorDetailPanel } from '../ui/components/ArmorDetailPanel/ArmorDetailPanel'
+import { ArmorSetMatrix } from '../ui/components/ArmorSetMatrix/ArmorSetMatrix'
+import { ArmorViewToggle } from '../ui/components/ArmorViewToggle/ArmorViewToggle'
+import { EquipmentSlotIndicator } from '../ui/components/EquipmentSlotIndicator/EquipmentSlotIndicator'
+import { ItemRelationSection } from '../ui/components/ItemRelationSection/ItemRelationSection'
+import { gameVersions } from '../ui/data/gameVersions'
+import { ArmorCatalogPage } from '../ui/pages/ArmorCatalogPage/ArmorCatalogPage'
+
+afterEach(cleanup)
+const armor:ArmorDetail={gameId:'mhgu',dexId:1,nameCn:'皮制头饰',nameEn:'Leather Headgear',nameJp:'レザーヘッド',part:'head',combat:'both',gender:'both',rarity:1,slots:1,baseDefense:1,maxDefense:25,fireRes:0,waterRes:0,thunderRes:0,iceRes:0,dragonRes:0,price:240,iconPath:null,isPlaceholder:false,mappingStatus:'confirmed',saveIdentities:[{saveType:1,saveId:1,mappingStatus:'confirmed'}],skills:[{skillId:1,nameCn:'采取',nameEn:'Gathering',points:2,activeSkillNameCn:null,activeSkillNameEn:null}],materials:[{gameId:'mhgu',saveId:1,nameCn:'铁矿石',nameEn:'Iron Ore',quantity:2}]}
+const member={gameId:'mhgu' as const,dexId:1,nameCn:'皮制头饰',nameEn:'Leather Headgear',part:'head' as const,iconPath:null,rarity:1,slots:1,baseDefense:1,maxDefense:25}
+const set:ArmorSetSummary={gameId:'mhgu',setKey:'set:0001',sortOrder:1,rarity:1,totalSlots:5,totalBaseDefense:5,totalMaxDefense:125,rows:[{combat:'blademaster',nameCn:'皮制',members:{head:member}},{combat:'gunner',nameCn:'',members:{head:member}}]}
+
+describe('armor catalog UI primitives',()=>{
+  it('renders equipment slots with the shared OOO notation',()=>{const{rerender}=render(<EquipmentSlotIndicator slots={0}/>);expect(screen.getByRole('img',{name:'0 个孔位'}).textContent).toBe('———');rerender(<EquipmentSlotIndicator slots={2}/>);expect(screen.getByRole('img',{name:'2 个孔位'}).textContent).toBe('OO—');rerender(<EquipmentSlotIndicator slots={3}/>);expect(screen.getByRole('img',{name:'3 个孔位'}).textContent).toBe('OOO')})
+  it('uses pressed native buttons for view switching',()=>{const onChange=vi.fn();render(<ArmorViewToggle value="list" onChange={onChange}/>);expect(screen.getByRole('button',{name:/列表/}).getAttribute('aria-pressed')).toBe('true');fireEvent.click(screen.getByRole('button',{name:/套装/}));expect(onChange).toHaveBeenCalledWith('set')})
+  it('renders two combat rows and selects a set member',()=>{const onSelect=vi.fn();render(<ArmorSetMatrix sets={[set]} selectedDexId={1} loading={false} onSelect={onSelect}/>);expect(screen.getByText('近战')).toBeTruthy();expect(screen.getByText('远程')).toBeTruthy();const buttons=screen.getAllByRole('button',{name:/皮制头饰/});expect(buttons[0].getAttribute('aria-pressed')).toBe('true');fireEvent.click(buttons[1]);expect(onSelect).toHaveBeenCalledWith(1)})
+  it('keeps current details visible while replacement data loads',()=>{render(<ArmorDetailPanel armor={armor} loading/>);expect(screen.getByRole('heading',{name:'皮制头饰'})).toBeTruthy();expect(screen.getByText('正在更新…')).toBeTruthy();expect(screen.getByText('火耐性')).toBeTruthy()})
+  it('turns armor usage into a selectable relation',()=>{const onSelectArmor=vi.fn();render(<ItemRelationSection title="防具用途" onSelectItem={()=>undefined} onSelectArmor={onSelectArmor} relations={[{id:1,sourceKind:'armor',usageKind:'armor',targetId:1,targetName:'皮制头饰',quantity:1,probability:null,rank:null,metadata:{},relatedItems:[],relatedArmor:{gameId:'mhgu',dexId:1,part:'head',nameCn:'皮制头饰',nameEn:'Leather Headgear'}}]}/>);fireEvent.click(screen.getByRole('button',{name:/防具用途/}));fireEvent.click(screen.getByRole('button',{name:/皮制头饰/}));expect(onSelectArmor).toHaveBeenCalledWith(expect.objectContaining({dexId:1}))})
+  it('defaults to set mode and does not send null for absent URL filters',async()=>{const searchArmorSets=vi.fn().mockResolvedValue({items:[],total:0,page:1,pageSize:100,hasNext:false});Object.defineProperty(window,'mhSaveEditor',{configurable:true,value:{version:'test',catalog:{searchArmors:vi.fn(),searchArmorSets,getArmor:vi.fn(),getArmorFacets:vi.fn().mockResolvedValue({rarities:[],slots:[],skills:[]})}}});const game=gameVersions[0];render(<MemoryRouter initialEntries={['/game/mh3g/catalog/armor']}><Routes><Route element={<Outlet context={{game,onOpenSave:()=>undefined}}/>}><Route path="/game/:gameId/catalog/armor" element={<ArmorCatalogPage/>}/></Route></Routes></MemoryRouter>);await waitFor(()=>expect(searchArmorSets).toHaveBeenCalled());const request=searchArmorSets.mock.calls[0][0];expect(request.combat).toBeUndefined();expect(request.gender).toBeUndefined();expect(request.skillId).toBeUndefined()})
+  it('exposes detail skills as relation drawer triggers',()=>{const onSelectSkill=vi.fn();render(<ArmorDetailPanel armor={armor} loading={false} onSelectSkill={onSelectSkill}/>);fireEvent.click(screen.getByRole('button',{name:'采取'}));expect(onSelectSkill).toHaveBeenCalledWith(1)})
+})

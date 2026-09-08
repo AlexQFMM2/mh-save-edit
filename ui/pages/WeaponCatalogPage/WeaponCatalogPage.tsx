@@ -33,7 +33,7 @@ export function WeaponCatalogPage() {
   const sort = (['saveId', 'name', 'rarity', 'attack', 'slots', 'sharpness', 'affinity'].includes(params.get('sort') ?? '') ? params.get('sort') : 'saveId') as WeaponSort
   const direction = (params.get('direction') === 'desc' ? 'desc' : 'asc') as SortDirection
   const sharpnessStage = (['handicraft1', 'handicraft2'].includes(params.get('sharpness') ?? '') ? params.get('sharpness') : 'base') as SharpnessStage
-  const view = (params.get('view') === 'tree' ? 'tree' : 'list') as WeaponViewMode
+  const view = (params.get('view') === 'list' ? 'list' : 'tree') as WeaponViewMode
   const page = numberParam(params.get('page')) || 1
   const selectedKey = weaponKeyParam(params.get('weapon'))
   const targetWeaponKey = weaponKeyParam(params.get('target'))

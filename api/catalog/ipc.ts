@@ -6,7 +6,9 @@ import type { GameId } from '../core/loadout'
 import { ItemCatalogRepository } from './repository'
 import { DecorationCatalogRepository } from './decorationRepository'
 import { WeaponCatalogRepository } from './weaponRepository'
-import { decorationCatalogFiltersSchema, decorationIdentitySchema, gameIdSchema, itemCatalogFiltersSchema, itemIdentitySchema, weaponCatalogFiltersSchema, weaponIdentitySchema, weaponTreeRequestSchema } from './schemas'
+import { ArmorCatalogRepository } from './armorRepository'
+import { SkillCatalogRepository } from './skillRepository'
+import { armorCatalogFiltersSchema, armorIdentitySchema, armorSetFiltersSchema, decorationCatalogFiltersSchema, decorationIdentitySchema, gameIdSchema, itemCatalogFiltersSchema, itemIdentitySchema, skillIdentitySchema, weaponCatalogFiltersSchema, weaponIdentitySchema, weaponTreeRequestSchema } from './schemas'
 import { catalogChannels } from './channels'
 export { catalogChannels }
 
@@ -19,7 +21,7 @@ export function resolveCatalogDataDir(isPackaged: boolean, resourcesPath: string
 }
 
 export function registerCatalogIpc(dataDir: string): () => void {
-  const repositories = new Map<GameId, { db: DatabaseType.Database; repository: ItemCatalogRepository; decorations: DecorationCatalogRepository; weapons: WeaponCatalogRepository }>()
+  const repositories = new Map<GameId, { db: DatabaseType.Database; repository: ItemCatalogRepository; decorations: DecorationCatalogRepository; weapons: WeaponCatalogRepository; armors: ArmorCatalogRepository; skills: SkillCatalogRepository }>()
   const repositoryEntry = (gameId: GameId) => {
     const cached = repositories.get(gameId)
     if (cached) return cached
@@ -29,7 +31,9 @@ export function registerCatalogIpc(dataDir: string): () => void {
     const value = new ItemCatalogRepository(db)
     const decorations = new DecorationCatalogRepository(db)
     const weapons = new WeaponCatalogRepository(db)
-    const entry = { db, repository: value, decorations, weapons }
+    const armors = new ArmorCatalogRepository(db)
+    const skills = new SkillCatalogRepository(db)
+    const entry = { db, repository: value, decorations, weapons, armors, skills }
     repositories.set(gameId, entry)
     return entry
   }
@@ -73,6 +77,26 @@ export function registerCatalogIpc(dataDir: string): () => void {
   ipcMain.handle(catalogChannels.getWeaponTree, (_event, payload: unknown) => {
     const request = weaponTreeRequestSchema.parse(payload)
     return repositoryEntry(request.gameId).weapons.getWeaponTree(request.gameId, request.weaponTypeId)
+  })
+  ipcMain.handle(catalogChannels.searchArmors, (_event, payload: unknown) => {
+    const filters = armorCatalogFiltersSchema.parse(payload)
+    return repositoryEntry(filters.gameId).armors.searchArmors(filters)
+  })
+  ipcMain.handle(catalogChannels.searchArmorSets, (_event, payload: unknown) => {
+    const filters = armorSetFiltersSchema.parse(payload)
+    return repositoryEntry(filters.gameId).armors.searchArmorSets(filters)
+  })
+  ipcMain.handle(catalogChannels.getArmor, (_event, payload: unknown) => {
+    const identity = armorIdentitySchema.parse(payload)
+    return repositoryEntry(identity.gameId).armors.getArmor(identity)
+  })
+  ipcMain.handle(catalogChannels.getArmorFacets, (_event, payload: unknown) => {
+    const gameId = gameIdSchema.parse(payload)
+    return repositoryEntry(gameId).armors.getArmorFacets(gameId)
+  })
+  ipcMain.handle(catalogChannels.getSkill, (_event, payload: unknown) => {
+    const identity = skillIdentitySchema.parse(payload)
+    return repositoryEntry(identity.gameId).skills.getSkill(identity)
   })
 
   return () => {

@@ -10,6 +10,7 @@ import { ItemCatalogPage } from './pages/ItemCatalogPage/ItemCatalogPage'
 import { DecorationCatalogPage } from './pages/DecorationCatalogPage/DecorationCatalogPage'
 
 const WeaponCatalogPage = lazy(async () => ({ default: (await import('./pages/WeaponCatalogPage/WeaponCatalogPage')).WeaponCatalogPage }))
+const ArmorCatalogPage = lazy(async () => ({ default: (await import('./pages/ArmorCatalogPage/ArmorCatalogPage')).ArmorCatalogPage }))
 
 export default function App() {
   return (
@@ -23,7 +24,7 @@ export default function App() {
             <Route
               key={item.id}
               path={item.path}
-              element={item.id === 'save-editor' ? <SaveEditorPage /> : item.id === 'items' ? <ItemCatalogPage /> : item.id === 'decorations' ? <DecorationCatalogPage /> : item.id === 'weapons' ? <Suspense fallback={<WorkspaceFeaturePage pageId="weapons" />}><WeaponCatalogPage /></Suspense> : <WorkspaceFeaturePage pageId={item.id} />}
+              element={item.id === 'save-editor' ? <SaveEditorPage /> : item.id === 'items' ? <ItemCatalogPage /> : item.id === 'decorations' ? <DecorationCatalogPage /> : item.id === 'weapons' ? <Suspense fallback={<WorkspaceFeaturePage pageId="weapons" />}><WeaponCatalogPage /></Suspense> : item.id === 'armor' ? <Suspense fallback={<WorkspaceFeaturePage pageId="armor" />}><ArmorCatalogPage /></Suspense> : <WorkspaceFeaturePage pageId={item.id} />}
             />
           ))}
           <Route path="*" element={<Navigate to="overview" replace />} />

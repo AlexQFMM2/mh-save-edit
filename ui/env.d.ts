@@ -1,5 +1,5 @@
 import type { GameId } from '../api/core/loadout'
-import type { DecorationCatalogFacets, DecorationCatalogFilters, DecorationDetail, DecorationIdentity, DecorationSummary, ItemCatalogFilters, ItemDetail, ItemIdentity, ItemSummary, PageResult, WeaponCatalogFacets, WeaponCatalogFilters, WeaponDetail, WeaponIdentity, WeaponSummary, WeaponTreeResult } from '../api/catalog/types'
+import type { ArmorCatalogFacets, ArmorCatalogFilters, ArmorDetail, ArmorIdentity, ArmorSetFilters, ArmorSetSummary, ArmorSummary, DecorationCatalogFacets, DecorationCatalogFilters, DecorationDetail, DecorationIdentity, DecorationSummary, ItemCatalogFilters, ItemDetail, ItemIdentity, ItemSummary, PageResult, SkillDetail, SkillIdentity, WeaponCatalogFacets, WeaponCatalogFilters, WeaponDetail, WeaponIdentity, WeaponSummary, WeaponTreeResult } from '../api/catalog/types'
 
 declare global {
   interface Window {
@@ -16,6 +16,11 @@ declare global {
         getWeapon(identity: WeaponIdentity): Promise<WeaponDetail | null>
         getWeaponFacets(gameId: GameId): Promise<WeaponCatalogFacets>
         getWeaponTree(gameId: GameId, weaponTypeId: number): Promise<WeaponTreeResult>
+        searchArmors(filters: ArmorCatalogFilters): Promise<PageResult<ArmorSummary>>
+        searchArmorSets(filters: ArmorSetFilters): Promise<PageResult<ArmorSetSummary>>
+        getArmor(identity: ArmorIdentity): Promise<ArmorDetail | null>
+        getArmorFacets(gameId: GameId): Promise<ArmorCatalogFacets>
+        getSkill(identity: SkillIdentity): Promise<SkillDetail | null>
       }
     }
   }

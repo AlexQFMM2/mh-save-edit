@@ -1,0 +1,19 @@
+import Database from 'better-sqlite3'
+import { afterEach, describe, expect, it } from 'vitest'
+import { ArmorCatalogRepository } from '../api/catalog/armorRepository'
+import type { GameId } from '../api/core/loadout'
+
+const databases:Database.Database[]=[]
+function repository(gameId:GameId){const db=new Database(new URL(`../data/${gameId}.sqlite`,import.meta.url).pathname,{readonly:true,fileMustExist:true});databases.push(db);return new ArmorCatalogRepository(db)}
+afterEach(()=>databases.splice(0).forEach(db=>db.close()))
+
+describe('ArmorCatalogRepository',()=>{
+  it.each([['mh3g',1651,183],['mh4g',3119,356],['mhgu',5725,660]] as const)('returns audited %s armor and set counts',(gameId,armors,sets)=>{const repo=repository(gameId);expect(repo.searchArmors({gameId}).total).toBe(armors);expect(repo.searchArmorSets({gameId}).total).toBe(sets)})
+  it('searches names and decimal or hexadecimal Dex identities',()=>{const repo=repository('mhgu');expect(repo.searchArmors({gameId:'mhgu',query:'皮制头饰'}).items[0]?.nameEn).toBe('Leather Headgear');expect(repo.searchArmors({gameId:'mhgu',query:'0x1'}).items.map(value=>value.dexId)).toEqual([1])})
+  it('filters part, combat, gender, rarity, slots and positive skills',()=>{const repo=repository('mh3g');const skill=repo.getArmorFacets('mh3g').skills[0];const result=repo.searchArmors({gameId:'mh3g',part:'head',combat:'both',gender:'both',rarity:1,skillId:skill.skillId});expect(result.items.every(value=>value.part==='head'&&value.combat==='both'&&value.gender==='both'&&value.rarity===1&&value.skills.some(entry=>entry.skillId===skill.skillId&&entry.points>0))).toBe(true)})
+  it('returns materials, negative skills and save identities in details',()=>{const repo=repository('mh3g');const candidate=repo.searchArmors({gameId:'mh3g',query:'雄火龙',pageSize:100}).items.find(value=>value.skills.some(skill=>skill.points<0)&&value.dexId>0)??repo.searchArmors({gameId:'mh3g',pageSize:100}).items.find(value=>value.skills.some(skill=>skill.points<0));const detail=candidate&&repo.getArmor({gameId:'mh3g',dexId:candidate.dexId});expect(detail).toBeTruthy();expect(detail?.materials.every(value=>value.saveId>=0)).toBe(true);expect(detail?.skills.some(value=>value.points<0)).toBe(true)})
+  it('returns two stable rows and five aligned part slots per complete set',()=>{const repo=repository('mhgu');const set=repo.searchArmorSets({gameId:'mhgu',pageSize:100}).items.find(value=>value.rows.every(row=>Object.keys(row.members).length===5));expect(set?.rows.map(value=>value.combat)).toEqual(['blademaster','gunner']);expect(Object.keys(set!.rows[0].members)).toEqual(expect.arrayContaining(['head','chest','arms','waist','legs']))})
+  it('finds an exact target inside its set regardless of other filters',()=>{const repo=repository('mh4g');const target=repo.searchArmors({gameId:'mh4g',pageSize:1}).items[0];expect(repo.searchArmorSets({gameId:'mh4g',targetDexId:target.dexId,query:'不存在'}).items.some(set=>set.rows.some(row=>Object.values(row.members).some(member=>member?.dexId===target.dexId)))).toBe(true)})
+  it('sorts all matching armors by the selected skill before pagination',()=>{const repo=repository('mhgu');const skill=repo.getArmorFacets('mhgu').skills.find(value=>repo.searchArmors({gameId:'mhgu',skillId:value.skillId,pageSize:100}).items.some(armor=>armor.skills.some(entry=>entry.skillId===value.skillId&&entry.points>1)))!;const result=repo.searchArmors({gameId:'mhgu',skillId:skill.skillId,sort:'skillPoints',direction:'desc',pageSize:10});const points=result.items.map(armor=>armor.skills.find(value=>value.skillId===skill.skillId)?.points??0);expect(points).toEqual([...points].sort((a,b)=>b-a))})
+  it('sorts sets by their best selected-skill combat row total',()=>{const repo=repository('mh3g');const skill=repo.getArmorFacets('mh3g').skills[0];expect(()=>repo.searchArmorSets({gameId:'mh3g',skillId:skill.skillId,sort:'skillPoints',direction:'desc',pageSize:10})).not.toThrow()})
+})

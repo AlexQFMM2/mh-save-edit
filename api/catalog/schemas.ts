@@ -63,3 +63,29 @@ export const weaponCatalogFiltersSchema = z.object({
   }
 })
 export const weaponTreeRequestSchema = z.object({ gameId: gameIdSchema, weaponTypeId: z.number().int().min(1).max(14) }).strict()
+
+export const armorIdentitySchema = z.object({ gameId: gameIdSchema, dexId: z.number().int().min(1).max(65535) }).strict()
+export const skillIdentitySchema = z.object({ gameId: gameIdSchema, skillId: z.number().int().min(0).max(65535) }).strict()
+const armorCommonFilters = {
+  gameId: gameIdSchema,
+  targetDexId: z.number().int().min(1).max(65535).optional(),
+  query: z.string().trim().max(120).optional(),
+  combat: z.enum(['both', 'blademaster', 'gunner']).optional(),
+  gender: z.enum(['both', 'male', 'female']).optional(),
+  rarity: z.number().int().min(0).max(20).optional(),
+  slots: z.number().int().min(0).max(9).optional(),
+  skillId: z.number().int().min(0).max(65535).optional(),
+  includePlaceholders: z.boolean().optional(),
+  direction: z.enum(['asc', 'desc']).optional(),
+  page: z.number().int().min(1).max(100000).optional(),
+  pageSize: z.number().int().min(1).max(100).optional(),
+}
+export const armorCatalogFiltersSchema = z.object({
+  ...armorCommonFilters,
+  part: z.enum(['head', 'chest', 'arms', 'waist', 'legs']).optional(),
+  sort: z.enum(['dexId', 'name', 'rarity', 'slots', 'baseDefense', 'maxDefense', 'fireRes', 'waterRes', 'thunderRes', 'iceRes', 'dragonRes', 'skillPoints']).optional(),
+}).strict()
+export const armorSetFiltersSchema = z.object({
+  ...armorCommonFilters,
+  sort: z.enum(['source', 'name', 'rarity', 'slots', 'baseDefense', 'maxDefense', 'skillPoints']).optional(),
+}).strict()

@@ -64,7 +64,7 @@ describe('ItemCatalogRepository', () => {
     const item = repository('mh3g').getItem({ gameId: 'mh3g', saveId: 178 })
     expect(item?.relations.some((relation) => relation.usageKind === 'weapon' && !relation.targetName.includes('#'))).toBe(true)
     expect(item?.relations.some((relation) => relation.usageKind === 'weapon' && relation.relatedWeapon?.weaponKey)).toBe(true)
-    expect(item?.relations.some((relation) => relation.usageKind === 'armor' && !relation.targetName.includes('#'))).toBe(true)
+    expect(item?.relations.some((relation) => relation.usageKind === 'armor' && !relation.targetName.includes('#') && relation.relatedArmor?.nameCn)).toBe(true)
     expect(item?.relations.some((relation) => relation.usageKind === 'decoration' && !relation.targetName.includes('#'))).toBe(true)
   })
 

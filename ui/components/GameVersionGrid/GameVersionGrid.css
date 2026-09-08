@@ -9,11 +9,13 @@
 @media (max-width: 1020px) {
   .game-version-grid {
     --game-version-grid-component-column-count: 2;
+    grid-template-columns: repeat(var(--game-version-grid-component-column-count), minmax(0, 1fr));
   }
 }
 
 @media (max-width: 560px) {
   .game-version-grid {
     --game-version-grid-component-column-count: 1;
+    grid-template-columns: minmax(0, 1fr);
   }
 }

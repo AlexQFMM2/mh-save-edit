@@ -1,6 +1,7 @@
 import type { GameId } from '../../../api/core/loadout'
 import type { SharpnessStage, WeaponKind, WeaponSummary } from '../../../api/catalog/types'
 import { CatalogIcon } from '../CatalogIcon/CatalogIcon'
+import { EquipmentSlotIndicator } from '../EquipmentSlotIndicator/EquipmentSlotIndicator'
 import { WeaponAttributeList } from '../WeaponAttributeList/WeaponAttributeList'
 import { WeaponProductionBadge } from '../WeaponProductionBadge/WeaponProductionBadge'
 import { WeaponSharpnessComparison } from '../WeaponSharpnessComparison/WeaponSharpnessComparison'
@@ -18,7 +19,7 @@ export function WeaponListRow({ gameId, item, selected, selectedKind, sharpnessS
     <span className="weapon-list-row__stat">{item.displayAttack ?? '—'}</span>
     <WeaponAttributeList attributes={item.attributes} compact />
     <span className="weapon-list-row__stat">{item.affinity == null ? '—' : `${item.affinity}%`}</span>
-    <span className="weapon-list-row__stat">{item.slots ?? '—'}</span>
+    <span className="weapon-list-row__stat"><EquipmentSlotIndicator slots={item.slots} compact /></span>
     <span className="weapon-list-row__badges">{item.isDirectlyProducible && <WeaponProductionBadge />}{item.isFinalForm && <span className="weapon-list-row__final-badge">最终</span>}</span>
     {special}
   </button>

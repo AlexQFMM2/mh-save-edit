@@ -14,7 +14,8 @@
     "rebuild:electron-native": "node tools/rebuild-electron-native.mjs",
     "data:build:items": "node tools/build_item_catalog.mjs",
     "data:build:decorations": "node tools/build_decoration_catalog.mjs",
-    "data:build:weapons": "node tools/build_weapon_catalog.mjs"
+    "data:build:weapons": "node tools/build_weapon_catalog.mjs",
+    "data:build:armors": "node tools/build_armor_catalog.mjs"
   },
   "dependencies": {
     "@xyflow/react": "^12.11.6",

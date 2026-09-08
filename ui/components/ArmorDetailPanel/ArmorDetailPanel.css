@@ -1,0 +1,26 @@
+.armor-detail-panel {
+  --armor-detail-panel-component-height: 100%;
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  height: var(--armor-detail-panel-component-height);
+  overflow: auto;
+  background: rgba(18, 10, 6, .22);
+  scrollbar-color: rgba(223, 182, 93, .25) transparent;
+  scrollbar-width: thin;
+}
+.armor-detail-panel__craft { min-width: 0; padding: 13px; border-bottom: 1px solid rgba(223, 182, 93, .14); }
+.armor-detail-panel__craft header { display: flex; gap: 10px; }
+.armor-detail-panel__craft header > div { min-width: 0; }
+.armor-detail-panel__craft h2 { margin: 3px 0; color: var(--global-theme-color-text-primary); font-size: var(--global-typography-font-size-title); line-height: 1.2; }
+.armor-detail-panel__craft p,
+.armor-detail-panel__craft small { display: block; margin: 2px 0; overflow: hidden; color: var(--global-theme-color-text-secondary); font-size: var(--global-typography-font-size-small); text-overflow: ellipsis; white-space: nowrap; }
+.armor-detail-panel__price { display: flex; justify-content: space-between; margin: 13px 0; padding: 9px; border-radius: 6px; color: var(--global-theme-color-text-secondary); background: rgba(223, 182, 93, .06); }
+.armor-detail-panel__price strong { color: var(--global-theme-color-data); }
+.armor-detail-panel__craft .armor-detail-panel__identity { white-space: normal; }
+.armor-detail-panel__updating { position: absolute; z-index: 2; top: 8px; right: 8px; padding: 3px 7px; border-radius: 20px; color: #2b1a0e; background: var(--global-theme-color-gold-bright); font-size: var(--global-typography-font-size-caption); font-weight: 700; }
+.armor-detail-panel--state { display: grid; place-items: center; padding: 20px; color: var(--global-theme-color-text-muted); text-align: center; }
+.armor-detail-panel--loading { opacity: .78; }
+.armor-detail-panel::-webkit-scrollbar { width: 7px; }
+.armor-detail-panel::-webkit-scrollbar-thumb { border-radius: 8px; background: rgba(223, 182, 93, .25); }
+.armor-detail-panel::-webkit-scrollbar-track { background: transparent; }
