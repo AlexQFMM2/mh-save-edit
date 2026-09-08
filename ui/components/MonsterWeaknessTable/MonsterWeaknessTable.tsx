@@ -1,0 +1,3 @@
+import type { MonsterWeakness } from '../../../api/catalog/types'
+import './MonsterWeaknessTable.css'
+export function MonsterWeaknessTable({ rows }: { rows: MonsterWeakness[] }) {return <div className="monster-weakness-table"><table><thead><tr><th>部位</th><th>状态 / 条件</th><th>斩</th><th>打</th><th>弹</th><th>火</th><th>水</th><th>雷</th><th>冰</th><th>龙</th><th>气绝</th></tr></thead><tbody>{rows.map(row=><tr key={row.id}><th>{row.partNameCn}</th><td>{row.conditionCn||'通常'}</td>{[row.cut,row.impact,row.shot,row.fire,row.water,row.thunder,row.ice,row.dragon,row.stun].map((value,index)=><td key={index}>{value}</td>)}</tr>)}</tbody></table></div>}

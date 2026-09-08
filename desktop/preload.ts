@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { catalogChannels } from '../api/catalog/channels'
-import type { ArmorCatalogFilters, ArmorIdentity, ArmorSetFilters, DecorationCatalogFilters, DecorationIdentity, ItemCatalogFilters, ItemIdentity, SkillIdentity, WeaponCatalogFilters, WeaponIdentity } from '../api/catalog/types'
+import type { ArmorCatalogFilters, ArmorIdentity, ArmorSetFilters, DecorationCatalogFilters, DecorationIdentity, ItemCatalogFilters, ItemIdentity, MonsterCatalogFilters, MonsterIdentity, QuestIdentity, SkillIdentity, WeaponCatalogFilters, WeaponIdentity } from '../api/catalog/types'
 import type { GameId } from '../api/core/loadout'
 
 contextBridge.exposeInMainWorld('mhSaveEditor', {
@@ -21,5 +21,9 @@ contextBridge.exposeInMainWorld('mhSaveEditor', {
     getArmor: (identity: ArmorIdentity) => ipcRenderer.invoke(catalogChannels.getArmor, identity),
     getArmorFacets: (gameId: GameId) => ipcRenderer.invoke(catalogChannels.getArmorFacets, gameId),
     getSkill: (identity: SkillIdentity) => ipcRenderer.invoke(catalogChannels.getSkill, identity),
+    searchMonsters: (filters: MonsterCatalogFilters) => ipcRenderer.invoke(catalogChannels.searchMonsters, filters),
+    getMonster: (identity: MonsterIdentity) => ipcRenderer.invoke(catalogChannels.getMonster, identity),
+    getMonsterFacets: (gameId: GameId) => ipcRenderer.invoke(catalogChannels.getMonsterFacets, gameId),
+    getQuest: (identity: QuestIdentity) => ipcRenderer.invoke(catalogChannels.getQuest, identity),
   },
 })

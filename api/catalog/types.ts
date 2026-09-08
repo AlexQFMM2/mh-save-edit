@@ -5,6 +5,8 @@ export type DecorationIdentity = { gameId: GameId; saveId: number }
 export type WeaponIdentity = { gameId: GameId; weaponKey: string }
 export type ArmorIdentity = { gameId: GameId; dexId: number }
 export type SkillIdentity = { gameId: GameId; skillId: number }
+export type MonsterIdentity = { gameId: GameId; monsterId: number }
+export type QuestIdentity = { gameId: GameId; questKey: string }
 export type ArmorPartId = 'head' | 'chest' | 'arms' | 'waist' | 'legs'
 export type ArmorCombatType = 'both' | 'blademaster' | 'gunner'
 export type ArmorGender = 'both' | 'male' | 'female'
@@ -16,6 +18,8 @@ export type ItemUsageKind = 'weapon' | 'armor' | 'decoration' | 'palico-weapon' 
 export type ItemRelationTarget = Pick<ItemIdentity, 'gameId' | 'saveId'> & { nameCn: string; nameEn: string }
 export type WeaponRelationTarget = WeaponIdentity & { typeId: number; nameCn: string; nameEn: string }
 export type ArmorRelationTarget = ArmorIdentity & { part: ArmorPartId; nameCn: string; nameEn: string }
+export type MonsterRelationTarget = MonsterIdentity & { nameCn: string; nameEn: string; iconPath: string | null }
+export type QuestRelationTarget = QuestIdentity & { nameCn: string; nameEn: string }
 export type DecorationSkill = {
   skillId: number
   nameCn: string
@@ -86,6 +90,121 @@ export type ItemRelation = {
   relatedItems: ItemRelationTarget[]
   relatedWeapon?: WeaponRelationTarget | null
   relatedArmor?: ArmorRelationTarget | null
+  relatedMonster?: MonsterRelationTarget | null
+  relatedQuest?: QuestRelationTarget | null
+}
+
+export type QuestAvailability = 'common' | 'mhgu' | 'mhxx'
+export type MonsterCatalogTab = 'weakness' | 'ailments' | 'drops' | 'quests'
+export type MonsterCatalogFilters = {
+  gameId: GameId
+  targetMonsterId?: number
+  query?: string
+  includePlaceholders?: boolean
+}
+export type MonsterSummary = MonsterIdentity & {
+  nameCn: string
+  nameEn: string
+  nameJp: string
+  iconSmallPath: string | null
+  iconLargePath: string | null
+  isPlaceholder: boolean
+}
+export type MonsterWeakness = {
+  id: number
+  partId: number
+  partOrder: number
+  partNameCn: string
+  partNameEn: string
+  conditionCn: string
+  conditionEn: string
+  cut: number
+  impact: number
+  shot: number
+  fire: number
+  water: number
+  thunder: number
+  ice: number
+  dragon: number
+  stun: number
+}
+export type MonsterAilment = {
+  id: number
+  statusId: number
+  nameCn: string
+  nameEn: string
+  toleranceInitial: number | null
+  toleranceIncrease: number | null
+  toleranceMax: number | null
+  duration: number | null
+  damage: number | null
+}
+export type MonsterTrap = {
+  id: number
+  trapId: number
+  nameCn: string
+  nameEn: string
+  isEffective: boolean
+  duration: number | null
+  durationEnraged: number | null
+  durationFatigued: number | null
+}
+export type MonsterDrop = {
+  id: number
+  rankId: number
+  rankNameCn: string
+  rankNameEn: string
+  methodId: number
+  methodNameCn: string
+  methodNameEn: string
+  item: ItemRelationTarget
+  quantity: number
+  probability: number
+}
+export type QuestMonsterTarget = MonsterRelationTarget & { slot: number; sourceKind: string }
+export type QuestModifier = { markerId: number; nameCn: string; slot: number }
+export type MonsterQuestAppearance = QuestIdentity & {
+  dexId: number | null
+  nativeId: string | null
+  availability: QuestAvailability
+  nameCn: string
+  nameEn: string
+  nameJp: string
+  goalCn: string
+  goalEn: string
+  subGoalCn: string
+  subGoalEn: string
+  levelId: number
+  levelNameCn: string
+  levelNameEn: string
+  questTypeId: number
+  questTypeNameCn: string
+  questTypeNameEn: string
+  locationId: number
+  locationNameCn: string
+  locationNameEn: string
+  timeMinutes: number | null
+  fee: number | null
+  reward: number | null
+  reward2: number | null
+  hrp: number | null
+  hrp2: number | null
+  monsters: QuestMonsterTarget[]
+  modifiers: QuestModifier[]
+}
+export type QuestDetail = MonsterQuestAppearance
+export type MonsterDetail = MonsterSummary & {
+  weakness: MonsterWeakness[]
+  ailments: MonsterAilment[]
+  traps: MonsterTrap[]
+  drops: MonsterDrop[]
+  quests: MonsterQuestAppearance[]
+}
+export type MonsterCatalogFacets = {
+  monsterCount: number
+  statusNames: { statusId: number; nameCn: string; nameEn: string }[]
+  trapNames: { trapId: number; nameCn: string; nameEn: string }[]
+  questAvailabilities: QuestAvailability[]
 }
 
 export type ArmorSkill = {

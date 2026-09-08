@@ -1,14 +1,16 @@
 .catalog-reset-button {
   --catalog-reset-button-component-height: 30px;
   --catalog-reset-button-component-icon-size: 14px;
+  --catalog-reset-button-component-min-width: 76px;
+  --catalog-reset-button-component-horizontal-padding: 12px;
   display: inline-flex;
   flex: 0 0 auto;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  min-width: 76px;
+  min-width: var(--catalog-reset-button-component-min-width);
   height: var(--catalog-reset-button-component-height);
-  padding: 0 12px;
+  padding: 0 var(--catalog-reset-button-component-horizontal-padding);
   border: 1px solid rgba(223, 182, 93, .38);
   border-radius: 7px;
   color: var(--global-theme-color-gold-bright);

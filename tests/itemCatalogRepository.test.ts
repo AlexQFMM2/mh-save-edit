@@ -72,4 +72,12 @@ describe('ItemCatalogRepository', () => {
     const result = repository('mh3g').searchItems({ gameId: 'mh3g', targetSaveId: 178 })
     expect(result.items.map((item) => item.saveId)).toEqual([178])
   })
+
+  it('resolves monster and quest sources to stable catalog targets', () => {
+    const repo = repository('mhgu')
+    const monsterItem = repo.searchItems({ gameId: 'mhgu', sourceKinds: ['monster'], pageSize: 1 }).items[0]
+    const questItem = repo.searchItems({ gameId: 'mhgu', sourceKinds: ['quest'], pageSize: 1 }).items[0]
+    expect(repo.getItem(monsterItem)?.relations.some((relation) => relation.sourceKind === 'monster' && relation.relatedMonster?.monsterId)).toBe(true)
+    expect(repo.getItem(questItem)?.relations.some((relation) => relation.sourceKind === 'quest' && relation.relatedQuest?.questKey.startsWith('dex:'))).toBe(true)
+  })
 })

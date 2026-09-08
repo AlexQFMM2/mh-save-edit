@@ -66,6 +66,15 @@ export const weaponTreeRequestSchema = z.object({ gameId: gameIdSchema, weaponTy
 
 export const armorIdentitySchema = z.object({ gameId: gameIdSchema, dexId: z.number().int().min(1).max(65535) }).strict()
 export const skillIdentitySchema = z.object({ gameId: gameIdSchema, skillId: z.number().int().min(0).max(65535) }).strict()
+export const monsterIdentitySchema = z.object({ gameId: gameIdSchema, monsterId: z.number().int().min(1).max(65535) }).strict()
+export const monsterCatalogFiltersSchema = z.object({
+  gameId: gameIdSchema,
+  targetMonsterId: z.number().int().min(1).max(65535).optional(),
+  query: z.string().trim().max(120).optional(),
+  includePlaceholders: z.boolean().optional(),
+}).strict()
+export const questKeySchema = z.string().trim().min(5).max(32).regex(/^(?:dex:\d+|mhgu:q\d{7})$/)
+export const questIdentitySchema = z.object({ gameId: gameIdSchema, questKey: questKeySchema }).strict()
 const armorCommonFilters = {
   gameId: gameIdSchema,
   targetDexId: z.number().int().min(1).max(65535).optional(),

@@ -1,0 +1,11 @@
+import type { QuestDetail } from '../../../api/catalog/types'
+import { MonsterIcon } from '../MonsterIcon/MonsterIcon'
+import './QuestDetailPanel.css'
+
+const availability=(value:QuestDetail['availability'])=>value==='common'?'共通':value==='mhgu'?'MHGU':'MHXX'
+export function QuestDetailPanel({ quest, loading, error, onSelectMonster }: { quest:QuestDetail|null;loading:boolean;error?:string;onSelectMonster:(id:number)=>void }) {
+  if(loading)return <section className="quest-detail-panel quest-detail-panel--state" aria-live="polite">正在读取任务资料…</section>
+  if(error)return <section className="quest-detail-panel quest-detail-panel--state" role="alert">{error}</section>
+  if(!quest)return <section className="quest-detail-panel quest-detail-panel--state">未找到任务资料。</section>
+  return <section className="quest-detail-panel"><header><small>{availability(quest.availability)} · {quest.questKey}</small><h2>{quest.nameCn}</h2>{quest.nameEn&&<p>{quest.nameEn}</p>}{quest.nameJp&&<p>{quest.nameJp}</p>}</header><dl className="quest-detail-panel__stats"><div><dt>位阶</dt><dd>{quest.levelNameCn}</dd></div><div><dt>类型</dt><dd>{quest.questTypeNameCn}</dd></div><div><dt>地图</dt><dd>{quest.locationNameCn}</dd></div><div><dt>时间</dt><dd>{quest.timeMinutes==null?'—':`${quest.timeMinutes} 分钟`}</dd></div><div><dt>契约金</dt><dd>{quest.fee==null?'—':`${quest.fee} z`}</dd></div><div><dt>主报酬</dt><dd>{quest.reward==null?'—':`${quest.reward} z`}</dd></div><div><dt>副报酬</dt><dd>{quest.reward2==null?'—':`${quest.reward2} z`}</dd></div><div><dt>HRP</dt><dd>{quest.hrp??'—'} / {quest.hrp2??'—'}</dd></div></dl><section className="quest-detail-panel__goals"><h3>任务目标</h3><p>{quest.goalCn||'未收录'}</p>{quest.subGoalCn&&quest.subGoalCn!=='无'&&<p>次要：{quest.subGoalCn}</p>}</section>{quest.modifiers.length>0&&<section className="quest-detail-panel__modifiers"><h3>任务状态</h3><p>{quest.modifiers.map(value=>value.nameCn).join('、')}</p></section>}<section className="quest-detail-panel__monsters"><h3>出现怪物</h3><div>{quest.monsters.map(monster=><button key={`${monster.monsterId}-${monster.slot}-${monster.sourceKind}`} type="button" onClick={()=>onSelectMonster(monster.monsterId)}><MonsterIcon path={monster.iconPath} name={monster.nameCn}/><span>{monster.nameCn}</span></button>)}</div></section></section>
+}

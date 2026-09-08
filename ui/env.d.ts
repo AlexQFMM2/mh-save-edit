@@ -1,5 +1,5 @@
 import type { GameId } from '../api/core/loadout'
-import type { ArmorCatalogFacets, ArmorCatalogFilters, ArmorDetail, ArmorIdentity, ArmorSetFilters, ArmorSetSummary, ArmorSummary, DecorationCatalogFacets, DecorationCatalogFilters, DecorationDetail, DecorationIdentity, DecorationSummary, ItemCatalogFilters, ItemDetail, ItemIdentity, ItemSummary, PageResult, SkillDetail, SkillIdentity, WeaponCatalogFacets, WeaponCatalogFilters, WeaponDetail, WeaponIdentity, WeaponSummary, WeaponTreeResult } from '../api/catalog/types'
+import type { ArmorCatalogFacets, ArmorCatalogFilters, ArmorDetail, ArmorIdentity, ArmorSetFilters, ArmorSetSummary, ArmorSummary, DecorationCatalogFacets, DecorationCatalogFilters, DecorationDetail, DecorationIdentity, DecorationSummary, ItemCatalogFilters, ItemDetail, ItemIdentity, ItemSummary, MonsterCatalogFacets, MonsterCatalogFilters, MonsterDetail, MonsterIdentity, MonsterSummary, PageResult, QuestDetail, QuestIdentity, SkillDetail, SkillIdentity, WeaponCatalogFacets, WeaponCatalogFilters, WeaponDetail, WeaponIdentity, WeaponSummary, WeaponTreeResult } from '../api/catalog/types'
 
 declare global {
   interface Window {
@@ -21,6 +21,10 @@ declare global {
         getArmor(identity: ArmorIdentity): Promise<ArmorDetail | null>
         getArmorFacets(gameId: GameId): Promise<ArmorCatalogFacets>
         getSkill(identity: SkillIdentity): Promise<SkillDetail | null>
+        searchMonsters(filters: MonsterCatalogFilters): Promise<MonsterSummary[]>
+        getMonster(identity: MonsterIdentity): Promise<MonsterDetail | null>
+        getMonsterFacets(gameId: GameId): Promise<MonsterCatalogFacets>
+        getQuest(identity: QuestIdentity): Promise<QuestDetail | null>
       }
     }
   }

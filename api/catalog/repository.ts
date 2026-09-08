@@ -1,6 +1,6 @@
 import type Database from 'better-sqlite3'
 import type { GameId } from '../core/loadout'
-import type { ArmorRelationTarget, ItemCatalogFilters, ItemDetail, ItemIdentity, ItemRelation, ItemRelationTarget, ItemSummary, PageResult, WeaponRelationTarget } from './types'
+import type { ArmorRelationTarget, ItemCatalogFilters, ItemDetail, ItemIdentity, ItemRelation, ItemRelationTarget, ItemSummary, MonsterRelationTarget, PageResult, QuestRelationTarget, WeaponRelationTarget } from './types'
 
 type RawItem = Record<string, unknown>
 type RawRelation = Record<string, unknown>
@@ -69,7 +69,21 @@ export class ItemCatalogRepository {
       const armorRows = this.db.prepare(`SELECT dex_id,part,name_cn,name_en FROM catalog_armors WHERE game_id=? AND dex_id IN (${marks})`).all(identity.gameId, ...armorDexIds) as RawItem[]
       for (const armor of armorRows) armorsByDex.set(int(armor.dex_id) ?? -1, { gameId: identity.gameId, dexId: int(armor.dex_id) ?? 0, part: armor.part as ArmorRelationTarget['part'], nameCn: String(armor.name_cn), nameEn: String(armor.name_en) })
     }
-    return { ...toSummary(row), nameJp: String(row.name_jp ?? ''), sellPrice: int(row.sell_price), buyPrice: int(row.buy_price), hexId: row.hex_id ? String(row.hex_id) : null, mappingStatus: String(row.mapping_status ?? ''), relations: relations.map((relation) => toRelation(relation, relatedByDex, weaponsByDex, armorsByDex)) }
+    const monstersById = new Map<number, MonsterRelationTarget>()
+    const monsterIds = [...new Set(relations.filter((relation) => String(relation.source_kind) === 'monster').map((relation) => int(relation.target_id)).filter((value): value is number => value != null))]
+    if (monsterIds.length && this.tableExists('catalog_monsters')) {
+      const marks = monsterIds.map(() => '?').join(',')
+      const monsterRows = this.db.prepare(`SELECT monster_id,name_cn,name_en,icon_small_path FROM catalog_monsters WHERE game_id=? AND monster_id IN (${marks})`).all(identity.gameId, ...monsterIds) as RawItem[]
+      for (const monster of monsterRows) monstersById.set(int(monster.monster_id) ?? -1, { gameId: identity.gameId, monsterId: int(monster.monster_id) ?? 0, nameCn: String(monster.name_cn), nameEn: String(monster.name_en), iconPath: monster.icon_small_path ? String(monster.icon_small_path) : null })
+    }
+    const questsById = new Map<number, QuestRelationTarget>()
+    const questIds = [...new Set(relations.filter((relation) => String(relation.source_kind) === 'quest').map((relation) => int(relation.target_id)).filter((value): value is number => value != null))]
+    if (questIds.length && this.tableExists('catalog_quests')) {
+      const marks = questIds.map(() => '?').join(',')
+      const questRows = this.db.prepare(`SELECT dex_id,quest_key,name_cn,name_en FROM catalog_quests WHERE game_id=? AND dex_id IN (${marks})`).all(identity.gameId, ...questIds) as RawItem[]
+      for (const quest of questRows) questsById.set(int(quest.dex_id) ?? -1, { gameId: identity.gameId, questKey: String(quest.quest_key), nameCn: String(quest.name_cn), nameEn: String(quest.name_en) })
+    }
+    return { ...toSummary(row), nameJp: String(row.name_jp ?? ''), sellPrice: int(row.sell_price), buyPrice: int(row.buy_price), hexId: row.hex_id ? String(row.hex_id) : null, mappingStatus: String(row.mapping_status ?? ''), relations: relations.map((relation) => toRelation(relation, relatedByDex, weaponsByDex, armorsByDex, monstersById, questsById)) }
   }
 
   getItemFacets(gameId: GameId) {
@@ -78,6 +92,10 @@ export class ItemCatalogRepository {
     const maxStacks = (this.db.prepare('SELECT DISTINCT max_stack FROM catalog_items WHERE game_id = ? AND max_stack IS NOT NULL ORDER BY max_stack').all(...values) as RawItem[]).map((row) => int(row.max_stack)).filter((value): value is number => value != null)
     const relations = (this.db.prepare('SELECT DISTINCT source_kind, usage_kind FROM catalog_item_relations WHERE game_id = ?').all(...values) as RawRelation[]).map((row) => ({ sourceKind: row.source_kind as string, usageKind: row.usage_kind as string | null }))
     return { rarities, maxStacks, relations }
+  }
+
+  private tableExists(name: string): boolean {
+    return Boolean(this.db.prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name=?").get(name))
   }
 }
 
@@ -97,10 +115,10 @@ function rankName(rank: number | null): string | undefined {
   return rank == null ? undefined : ({ 1: '下位', 2: '上位', 3: 'G级' } as Record<number, string>)[rank] ?? `位阶 ${rank}`
 }
 
-function toRelation(row: RawRelation, relatedByDex: Map<number, ItemRelationTarget>, weaponsByDex: Map<number, WeaponRelationTarget>, armorsByDex: Map<number, ArmorRelationTarget>): ItemRelation {
+function toRelation(row: RawRelation, relatedByDex: Map<number, ItemRelationTarget>, weaponsByDex: Map<number, WeaponRelationTarget>, armorsByDex: Map<number, ArmorRelationTarget>, monstersById: Map<number, MonsterRelationTarget>, questsById: Map<number, QuestRelationTarget>): ItemRelation {
   const metadata = json(row.metadata)
   const targetId = int(row.target_id)
-  const relation: ItemRelation = { id: int(row.id) ?? 0, sourceKind: String(row.source_kind) as ItemRelation['sourceKind'], usageKind: row.usage_kind ? String(row.usage_kind) as ItemRelation['usageKind'] : null, targetId, targetName: String(row.target_name ?? ''), quantity: int(row.quantity), probability: row.probability == null ? null : Number(row.probability), rank: int(row.rank), metadata, relatedItems: relationRelatedDexIds(row).map((dexId) => relatedByDex.get(dexId)).filter((value): value is ItemRelationTarget => value != null), relatedWeapon: targetId == null ? null : weaponsByDex.get(targetId) ?? null, relatedArmor: targetId == null ? null : armorsByDex.get(targetId) ?? null }
+  const relation: ItemRelation = { id: int(row.id) ?? 0, sourceKind: String(row.source_kind) as ItemRelation['sourceKind'], usageKind: row.usage_kind ? String(row.usage_kind) as ItemRelation['usageKind'] : null, targetId, targetName: String(row.target_name ?? ''), quantity: int(row.quantity), probability: row.probability == null ? null : Number(row.probability), rank: int(row.rank), metadata, relatedItems: relationRelatedDexIds(row).map((dexId) => relatedByDex.get(dexId)).filter((value): value is ItemRelationTarget => value != null), relatedWeapon: targetId == null ? null : weaponsByDex.get(targetId) ?? null, relatedArmor: targetId == null ? null : armorsByDex.get(targetId) ?? null, relatedMonster: targetId == null ? null : monstersById.get(targetId) ?? null, relatedQuest: targetId == null ? null : questsById.get(targetId) ?? null }
   const namedRank = metadata.Rank_Name || rankName(relation.rank)
   if (namedRank) relation.metadata.rankName = namedRank
   return relation
