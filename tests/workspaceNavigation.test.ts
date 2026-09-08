@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { isGameId } from '../ui/pages/GameHomePage/GameHomePage'
-import { getSaveEditSections, workspaceNavigation, workspacePath } from '../ui/data/workspaceNavigation'
+import { getSaveEditSections, getWorkspaceNavigation, workspaceNavigation, workspacePath } from '../ui/data/workspaceNavigation'
 
 describe('workspace navigation', () => {
   it('keeps the catalog and edit groups in their intended order', () => {
@@ -14,11 +14,19 @@ describe('workspace navigation', () => {
       'weapons',
       'armor',
       'monsters',
+      'quests',
+      'hunter-arts',
     ])
     expect(workspaceNavigation[1].items.map(({ id }) => id)).toEqual([
       'save-editor',
       'loadout',
     ])
+  })
+
+  it('shows Hunter Arts only for MHGU/XX content',()=>{
+    expect(getWorkspaceNavigation('mhgu')[0].items.some(item=>item.id==='hunter-arts')).toBe(true)
+    expect(getWorkspaceNavigation('mh3g')[0].items.some(item=>item.id==='hunter-arts')).toBe(false)
+    expect(getWorkspaceNavigation('mh4g')[0].items.some(item=>item.id==='hunter-arts')).toBe(false)
   })
 
   it('uses game-aware horizontal edit sections after a save is loaded', () => {

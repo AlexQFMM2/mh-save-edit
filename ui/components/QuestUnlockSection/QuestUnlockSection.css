@@ -1,0 +1,47 @@
+.quest-unlock-section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.quest-unlock-section__empty {
+  margin: 0;
+  color: var(--global-theme-color-text-secondary);
+}
+
+.quest-unlock-section__group {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.quest-unlock-section__heading {
+  margin: 0;
+  color: var(--global-theme-color-gold-bright);
+  font-size: var(--global-typography-font-size-body);
+}
+
+.quest-unlock-section__items {
+  display: grid;
+  gap: 6px;
+}
+
+.quest-unlock-section__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--global-theme-color-border);
+  border-radius: 6px;
+  color: var(--global-theme-color-text-primary);
+  background: rgba(18, 10, 6, 0.3);
+  text-align: left;
+  cursor: pointer;
+}
+
+.quest-unlock-section__source {
+  color: var(--global-theme-color-data);
+  font-size: var(--global-typography-font-size-caption);
+}

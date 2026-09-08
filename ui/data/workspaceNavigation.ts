@@ -6,6 +6,8 @@ import {
   Sparkles,
   Swords,
   PawPrint,
+  ScrollText,
+  Zap,
   type LucideIcon,
 } from 'lucide-react'
 import type { GameId } from '../../api/core/loadout'
@@ -16,6 +18,8 @@ export type WorkspaceNavItemId =
   | 'decorations'
   | 'items'
   | 'monsters'
+  | 'quests'
+  | 'hunter-arts'
   | 'save-editor'
   | 'loadout'
 
@@ -33,6 +37,7 @@ export type WorkspaceNavItem = {
   description: string
   path: string
   icon: LucideIcon
+  supportedGames?: GameId[]
 }
 
 export type WorkspaceNavGroup = {
@@ -53,6 +58,8 @@ export const workspaceNavigation: WorkspaceNavGroup[] = [
       { id: 'weapons', label: '武器', description: '查看武器图鉴与属性资料', path: 'catalog/weapons', icon: Swords },
       { id: 'armor', label: '防具', description: '查看防具套装与技能资料', path: 'catalog/armor', icon: Shield },
       { id: 'monsters', label: '怪物', description: '查看怪物肉质、异常、掉落与任务', path: 'catalog/monsters', icon: PawPrint },
+      { id: 'quests', label: '任务', description: '查看任务目标、报酬与解锁关系', path: 'catalog/quests', icon: ScrollText },
+      { id: 'hunter-arts', label: '狩技', description: '查看狩技说明与解锁条件', path: 'catalog/hunter-arts', icon: Zap, supportedGames: ['mhgu'] },
     ],
   },
   {
@@ -79,4 +86,8 @@ export function getSaveEditSections(gameId: GameId): SaveEditSection[] {
 
 export function workspacePath(gameId: GameId, path: string): string {
   return `/game/${gameId}/${path}`
+}
+
+export function getWorkspaceNavigation(gameId: GameId): WorkspaceNavGroup[] {
+  return workspaceNavigation.map(group=>({...group,items:group.items.filter(item=>!item.supportedGames||item.supportedGames.includes(gameId))})).filter(group=>group.items.length>0)
 }

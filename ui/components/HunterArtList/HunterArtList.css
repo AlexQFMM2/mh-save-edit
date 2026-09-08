@@ -1,0 +1,66 @@
+.hunter-art-list {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: auto;
+  border-right: 1px solid rgba(223, 182, 93, 0.14);
+  scrollbar-color: rgba(223, 182, 93, 0.22) transparent;
+  scrollbar-width: thin;
+}
+
+.hunter-art-list__state {
+  margin: auto;
+  padding: 20px;
+  color: var(--global-theme-color-text-secondary);
+}
+
+.hunter-art-list__item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 58px;
+  padding: 9px 10px;
+  border: 0;
+  border-bottom: 1px solid rgba(223, 182, 93, 0.1);
+  color: var(--global-theme-color-text-primary);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.hunter-art-list__item[aria-selected='true'] {
+  background: rgba(223, 182, 93, 0.12);
+  box-shadow: inset 3px 0 var(--global-theme-color-gold);
+}
+
+.hunter-art-list__names {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.hunter-art-list__name {
+  font-size: var(--global-typography-font-size-body);
+}
+
+.hunter-art-list__alternate-name {
+  overflow: hidden;
+  color: var(--global-theme-color-text-secondary);
+  font-size: var(--global-typography-font-size-caption);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hunter-art-list__match {
+  color: var(--global-theme-color-data);
+  font-size: var(--global-typography-font-size-caption);
+  font-style: normal;
+}
+
+.hunter-art-list__meta {
+  flex: 0 0 auto;
+  color: var(--global-theme-color-data);
+  font-size: var(--global-typography-font-size-small);
+}

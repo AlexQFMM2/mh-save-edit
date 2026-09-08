@@ -3,7 +3,7 @@ import type { GameId } from '../core/loadout'
 import type {
   MonsterAilment, MonsterCatalogFacets, MonsterCatalogFilters, MonsterDetail, MonsterDrop,
   MonsterIdentity, MonsterQuestAppearance, MonsterSummary, MonsterTrap, MonsterWeakness,
-  QuestAvailability, QuestDetail, QuestIdentity, QuestModifier, QuestMonsterTarget,
+  QuestAvailability, QuestIdentity, QuestModifier, QuestMonsterTarget,
 } from './types'
 
 type Row = Record<string, unknown>
@@ -60,7 +60,7 @@ export class MonsterCatalogRepository {
     return { monsterCount, statusNames, trapNames, questAvailabilities }
   }
 
-  getQuest(identity: QuestIdentity): QuestDetail | null {
+  getQuest(identity: QuestIdentity): MonsterQuestAppearance | null {
     const row = this.db.prepare('SELECT * FROM catalog_quests WHERE game_id=? AND quest_key=?').get(identity.gameId, identity.questKey) as Row | undefined
     return row ? this.decorateQuests(identity.gameId, [row])[0] : null
   }

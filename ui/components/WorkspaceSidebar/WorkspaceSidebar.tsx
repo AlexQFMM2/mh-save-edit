@@ -1,7 +1,7 @@
 import { ArrowLeft, ChevronLeft, ChevronRight, Gamepad2 } from 'lucide-react'
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import type { GameVersionDefinition } from '../../data/gameVersions'
-import { workspaceNavigation, workspacePath } from '../../data/workspaceNavigation'
+import { getWorkspaceNavigation, workspacePath } from '../../data/workspaceNavigation'
 import './WorkspaceSidebar.css'
 
 type WorkspaceSidebarProps = {
@@ -58,7 +58,7 @@ export function WorkspaceSidebar({ game, collapsed, onCollapsedChange }: Workspa
           <span>游戏总览</span>
         </NavLink>
 
-        {workspaceNavigation.map((group) => {
+        {getWorkspaceNavigation(game.id).map((group) => {
           const GroupIcon = group.icon
           const groupIsActive = group.items.some((item) => location.pathname === workspacePath(game.id, item.path))
 

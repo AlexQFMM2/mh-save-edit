@@ -30,6 +30,6 @@ export function ItemDetailDrawer({ gameId, itemSaveId, onClose }: Props) {
     onSelectWeapon={(weapon) => go(`/game/${gameId}/catalog/weapons?target=${encodeURIComponent(weapon.weaponKey)}&type=${weapon.typeId}&weapon=${encodeURIComponent(weapon.weaponKey)}`)}
     onSelectArmor={(armor) => go(`/game/${gameId}/catalog/armor?target=${armor.dexId}&armor=${armor.dexId}`)}
     onSelectMonster={(monster) => go(`/game/${gameId}/catalog/monsters?target=${monster.monsterId}&monster=${monster.monsterId}`)}
-    onSelectQuest={(quest) => go(`/game/${gameId}/catalog/monsters?tab=quests&quest=${encodeURIComponent(quest.questKey)}`)}
+    onSelectQuest={(quest) => go(`/game/${gameId}/catalog/quests?target=${encodeURIComponent(quest.questKey)}&quest=${encodeURIComponent(quest.questKey)}`)}
   /></DetailDrawer></div>
 }

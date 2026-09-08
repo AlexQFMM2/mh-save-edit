@@ -1,11 +1,76 @@
-import type { QuestDetail } from '../../../api/catalog/types'
-import { MonsterIcon } from '../MonsterIcon/MonsterIcon'
+import type { KeyboardEvent } from 'react'
+import type { QuestDetail, QuestDetailTab } from '../../../api/catalog/types'
+import { QuestInfoSection } from '../QuestInfoSection/QuestInfoSection'
+import { QuestRewardsSection } from '../QuestRewardsSection/QuestRewardsSection'
+import { QuestUnlockSection } from '../QuestUnlockSection/QuestUnlockSection'
 import './QuestDetailPanel.css'
 
-const availability=(value:QuestDetail['availability'])=>value==='common'?'共通':value==='mhgu'?'MHGU':'MHXX'
-export function QuestDetailPanel({ quest, loading, error, onSelectMonster }: { quest:QuestDetail|null;loading:boolean;error?:string;onSelectMonster:(id:number)=>void }) {
-  if(loading)return <section className="quest-detail-panel quest-detail-panel--state" aria-live="polite">正在读取任务资料…</section>
-  if(error)return <section className="quest-detail-panel quest-detail-panel--state" role="alert">{error}</section>
-  if(!quest)return <section className="quest-detail-panel quest-detail-panel--state">未找到任务资料。</section>
-  return <section className="quest-detail-panel"><header><small>{availability(quest.availability)} · {quest.questKey}</small><h2>{quest.nameCn}</h2>{quest.nameEn&&<p>{quest.nameEn}</p>}{quest.nameJp&&<p>{quest.nameJp}</p>}</header><dl className="quest-detail-panel__stats"><div><dt>位阶</dt><dd>{quest.levelNameCn}</dd></div><div><dt>类型</dt><dd>{quest.questTypeNameCn}</dd></div><div><dt>地图</dt><dd>{quest.locationNameCn}</dd></div><div><dt>时间</dt><dd>{quest.timeMinutes==null?'—':`${quest.timeMinutes} 分钟`}</dd></div><div><dt>契约金</dt><dd>{quest.fee==null?'—':`${quest.fee} z`}</dd></div><div><dt>主报酬</dt><dd>{quest.reward==null?'—':`${quest.reward} z`}</dd></div><div><dt>副报酬</dt><dd>{quest.reward2==null?'—':`${quest.reward2} z`}</dd></div><div><dt>HRP</dt><dd>{quest.hrp??'—'} / {quest.hrp2??'—'}</dd></div></dl><section className="quest-detail-panel__goals"><h3>任务目标</h3><p>{quest.goalCn||'未收录'}</p>{quest.subGoalCn&&quest.subGoalCn!=='无'&&<p>次要：{quest.subGoalCn}</p>}</section>{quest.modifiers.length>0&&<section className="quest-detail-panel__modifiers"><h3>任务状态</h3><p>{quest.modifiers.map(value=>value.nameCn).join('、')}</p></section>}<section className="quest-detail-panel__monsters"><h3>出现怪物</h3><div>{quest.monsters.map(monster=><button key={`${monster.monsterId}-${monster.slot}-${monster.sourceKind}`} type="button" onClick={()=>onSelectMonster(monster.monsterId)}><MonsterIcon path={monster.iconPath} name={monster.nameCn}/><span>{monster.nameCn}</span></button>)}</div></section></section>
+const tabs: { id: QuestDetailTab; label: string }[] = [
+  { id: 'info', label: '任务信息' },
+  { id: 'rewards', label: '报酬' },
+  { id: 'unlocks', label: '解锁关系' },
+]
+const availability = (value: QuestDetail['availability']) => value === 'common' ? '共通' : value === 'mhgu' ? 'MHGU' : 'MHXX'
+const keyStatus = (value: QuestDetail['keyStatus']) => value === 'key' ? '关键任务' : value === 'urgent' ? '紧急任务' : '普通任务'
+
+type Props = {
+  quest: QuestDetail | null
+  loading: boolean
+  error?: string
+  tab?: QuestDetailTab
+  onTabChange?: (tab: QuestDetailTab) => void
+  onSelectMonster: (id: number) => void
+  onSelectItem?: (id: number) => void
+  onSelectQuest?: (key: string) => void
+  onSelectHunterArt?: (id: number) => void
+}
+
+export function QuestDetailPanel({ quest, loading, error, tab = 'info', onTabChange = () => undefined, onSelectMonster, onSelectItem = () => undefined, onSelectQuest = () => undefined, onSelectHunterArt = () => undefined }: Props) {
+  if (error) return <section className="quest-detail-panel quest-detail-panel--state" role="alert">{error}</section>
+  if (!quest) return <section className="quest-detail-panel quest-detail-panel--state">{loading ? '正在读取任务资料…' : '未找到任务资料。'}</section>
+
+  const moveTab = (event: KeyboardEvent<HTMLButtonElement>, current: QuestDetailTab) => {
+    const index = tabs.findIndex(value => value.id === current)
+    const next = event.key === 'ArrowRight' ? index + 1 : event.key === 'ArrowLeft' ? index - 1 : -1
+    if (next === -1) return
+    event.preventDefault()
+    const nextTab = tabs[(next + tabs.length) % tabs.length]
+    onTabChange(nextTab.id)
+    event.currentTarget.parentElement?.querySelector<HTMLButtonElement>(`#quest-detail-tab-${nextTab.id}`)?.focus()
+  }
+
+  return (
+    <section className="quest-detail-panel" aria-busy={loading}>
+      <header className="quest-detail-panel__header">
+        <small className="quest-detail-panel__eyebrow">{availability(quest.availability)} · {quest.questKey}</small>
+        <div className="quest-detail-panel__title-row">
+          <h2 className="quest-detail-panel__title">{quest.nameCn}</h2>
+          <span className={`quest-detail-panel__key quest-detail-panel__key--${quest.keyStatus}`}>{keyStatus(quest.keyStatus)}</span>
+        </div>
+        {quest.nameEn && <p className="quest-detail-panel__alternate-name">{quest.nameEn}</p>}
+        {quest.nameJp && <p className="quest-detail-panel__alternate-name">{quest.nameJp}</p>}
+        {loading && <em className="quest-detail-panel__updating">正在更新…</em>}
+      </header>
+      <div className="quest-detail-panel__tabs" role="tablist" aria-label="任务详情">
+        {tabs.map(value => (
+          <button
+            className="quest-detail-panel__tab"
+            id={`quest-detail-tab-${value.id}`}
+            key={value.id}
+            type="button"
+            role="tab"
+            aria-selected={tab === value.id}
+            tabIndex={tab === value.id ? 0 : -1}
+            onClick={() => onTabChange(value.id)}
+            onKeyDown={event => moveTab(event, value.id)}
+          >{value.label}</button>
+        ))}
+      </div>
+      <div className="quest-detail-panel__body" role="tabpanel" aria-labelledby={`quest-detail-tab-${tab}`}>
+        {tab === 'info' && <QuestInfoSection quest={quest} onSelectMonster={onSelectMonster} />}
+        {tab === 'rewards' && <QuestRewardsSection quest={quest} onSelectItem={onSelectItem} onSelectHunterArt={onSelectHunterArt} />}
+        {tab === 'unlocks' && <QuestUnlockSection quest={quest} onSelectQuest={onSelectQuest} onSelectHunterArt={onSelectHunterArt} />}
+      </div>
+    </section>
+  )
 }

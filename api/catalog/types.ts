@@ -7,6 +7,7 @@ export type ArmorIdentity = { gameId: GameId; dexId: number }
 export type SkillIdentity = { gameId: GameId; skillId: number }
 export type MonsterIdentity = { gameId: GameId; monsterId: number }
 export type QuestIdentity = { gameId: GameId; questKey: string }
+export type HunterArtIdentity = { gameId: 'mhgu'; hunterArtId: number }
 export type ArmorPartId = 'head' | 'chest' | 'arms' | 'waist' | 'legs'
 export type ArmorCombatType = 'both' | 'blademaster' | 'gunner'
 export type ArmorGender = 'both' | 'male' | 'female'
@@ -95,6 +96,10 @@ export type ItemRelation = {
 }
 
 export type QuestAvailability = 'common' | 'mhgu' | 'mhxx'
+export type QuestKeyStatus = 'normal' | 'key' | 'urgent'
+export type QuestDetailTab = 'info' | 'rewards' | 'unlocks'
+export type QuestRank = 'low' | 'high' | 'g' | 'other'
+export type QuestSearchMatchKind = 'name' | 'id' | 'goal' | 'subGoal' | 'map' | 'monster' | 'reward' | 'hunterArt' | 'special' | 'relatedQuest'
 export type MonsterCatalogTab = 'weakness' | 'ailments' | 'drops' | 'quests'
 export type MonsterCatalogFilters = {
   gameId: GameId
@@ -192,7 +197,146 @@ export type MonsterQuestAppearance = QuestIdentity & {
   monsters: QuestMonsterTarget[]
   modifiers: QuestModifier[]
 }
-export type QuestDetail = MonsterQuestAppearance
+export type QuestSearchMatch = { kind: QuestSearchMatchKind; label: string; reason: string }
+export type QuestSummary = QuestIdentity & {
+  dexId: number | null
+  availability: QuestAvailability
+  nameCn: string
+  nameEn: string
+  levelId: number
+  levelNameCn: string
+  systemKey: string
+  systemNameCn: string
+  rank: QuestRank
+  star: number | null
+  questTypeId: number
+  questTypeNameCn: string
+  locationId: number
+  locationNameCn: string
+  goalCn: string
+  keyStatus: QuestKeyStatus
+  isPlaceholder: boolean
+  match: QuestSearchMatch | null
+}
+export type QuestReward = {
+  id: number
+  groupKey: string
+  region: string
+  item: ItemRelationTarget
+  quantity: number
+  probability: number
+}
+export type EvidenceStatus = 'verified' | 'wiki_only' | 'conflict'
+export type QuestSpecialReward = {
+  id: number
+  kind: string
+  nameCn: string
+  nameEn: string
+  nameJp: string
+  hunterArt?: Pick<HunterArtIdentity, 'hunterArtId'> & { nameCn: string; nameEn: string } | null
+  evidenceStatus: EvidenceStatus
+}
+export type QuestRelation = {
+  id: number
+  direction: 'prerequisite' | 'unlocks'
+  operator: 'all' | 'any'
+  quest: QuestRelationTarget
+  sourceText: string
+  evidenceStatus: EvidenceStatus
+}
+export type QuestDetail = MonsterQuestAppearance & {
+  keyStatus: QuestKeyStatus
+  systemKey: string
+  systemNameCn: string
+  rank: QuestRank
+  star: number | null
+  rewards: QuestReward[]
+  specialRewards: QuestSpecialReward[]
+  relations: QuestRelation[]
+}
+export type QuestCatalogFilters = {
+  gameId: GameId
+  targetQuestKey?: string
+  query?: string
+  system?: string
+  levelId?: number
+  rank?: QuestRank
+  questTypeId?: number
+  locationId?: number
+  keyStatus?: QuestKeyStatus
+  availability?: QuestAvailability
+  includePlaceholders?: boolean
+  page?: number
+  pageSize?: number
+}
+export type QuestCatalogFacets = {
+  systems: { key: string; nameCn: string }[]
+  levels: { id: number; nameCn: string }[]
+  ranks: QuestRank[]
+  questTypes: { id: number; nameCn: string }[]
+  locations: { id: number; nameCn: string }[]
+  availabilities: QuestAvailability[]
+}
+
+export type HunterArtUnlockKind = 'initial' | 'quest' | 'hunterRank' | 'contribution' | 'palicoLevel' | 'monster' | 'npc' | 'compound' | 'other'
+export type HunterArtUnlockCondition =
+  | { kind: 'initial' }
+  | { kind: 'quest'; questKey: string; nameCn: string; nameEn: string; afterNpcConversation: boolean }
+  | { kind: 'all' | 'any'; conditions: HunterArtUnlockCondition[] }
+  | { kind: 'hunterRank'; minimum: number }
+  | { kind: 'villageContribution'; village: string; minimum: number }
+  | { kind: 'villageQuestCount'; village: string; minimum: number }
+  | { kind: 'palicoLevel'; minimum: number }
+  | { kind: 'huntMonster'; monsterId: number; nameCn: string; nameEn: string; quantity: number }
+  | { kind: 'npcConversation'; npcName: string }
+  | { kind: 'arenaQuest'; name: string }
+  | { kind: 'sourceText'; text: string }
+export type HunterArtUnlock = {
+  id: number
+  kind: HunterArtUnlockKind
+  condition: HunterArtUnlockCondition
+  sourceText: string
+  evidenceStatus: EvidenceStatus
+  sourceTitle: string
+  sourceRevision: number
+}
+export type HunterArtSummary = HunterArtIdentity & {
+  nameCn: string
+  nameEn: string
+  nameJp: string
+  weaponTypeId: number
+  weaponTypeNameCn: string
+  weaponTypeNameEn: string
+  level: number | null
+  contentVariant: 'common'
+  isPlaceholder: boolean
+  unlockKind: HunterArtUnlockKind | null
+  match: { kind: string; label: string; reason: string } | null
+}
+export type HunterArtDetail = HunterArtSummary & {
+  shortDescriptionCn: string
+  longDescriptionCn: string
+  shortDescriptionEn: string
+  longDescriptionEn: string
+  shortDescriptionJp: string
+  longDescriptionJp: string
+  unlocks: HunterArtUnlock[]
+  quests: (QuestRelationTarget & { relationOrder: number; operator: 'all' | 'any'; afterNpcConversation: boolean; evidenceStatus: EvidenceStatus })[]
+}
+export type HunterArtCatalogFilters = {
+  gameId: GameId
+  targetHunterArtId?: number
+  query?: string
+  weaponTypeId?: number
+  level?: number | 'none'
+  unlockKind?: HunterArtUnlockKind
+  includePlaceholders?: boolean
+}
+export type HunterArtCatalogFacets = {
+  weaponTypes: { id: number; nameCn: string; nameEn: string }[]
+  levels: number[]
+  unlockKinds: HunterArtUnlockKind[]
+}
 export type MonsterDetail = MonsterSummary & {
   weakness: MonsterWeakness[]
   ailments: MonsterAilment[]

@@ -18,4 +18,9 @@ export const catalogChannels = {
   getMonster: 'catalog:get-monster',
   getMonsterFacets: 'catalog:get-monster-facets',
   getQuest: 'catalog:get-quest',
+  searchQuests: 'catalog:search-quests',
+  getQuestFacets: 'catalog:get-quest-facets',
+  searchHunterArts: 'catalog:search-hunter-arts',
+  getHunterArt: 'catalog:get-hunter-art',
+  getHunterArtFacets: 'catalog:get-hunter-art-facets',
 } as const

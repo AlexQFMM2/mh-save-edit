@@ -75,6 +75,31 @@ export const monsterCatalogFiltersSchema = z.object({
 }).strict()
 export const questKeySchema = z.string().trim().min(5).max(32).regex(/^(?:dex:\d+|mhgu:q\d{7})$/)
 export const questIdentitySchema = z.object({ gameId: gameIdSchema, questKey: questKeySchema }).strict()
+export const questCatalogFiltersSchema = z.object({
+  gameId: gameIdSchema,
+  targetQuestKey: questKeySchema.optional(),
+  query: z.string().trim().max(120).optional(),
+  system: z.string().trim().min(1).max(32).regex(/^[a-z-]+$/).optional(),
+  levelId: z.number().int().min(-1).max(65535).optional(),
+  rank: z.enum(['low','high','g','other']).optional(),
+  questTypeId: z.number().int().min(-1).max(65535).optional(),
+  locationId: z.number().int().min(-1).max(65535).optional(),
+  keyStatus: z.enum(['normal','key','urgent']).optional(),
+  availability: z.enum(['common','mhgu','mhxx']).optional(),
+  includePlaceholders: z.boolean().optional(),
+  page: z.number().int().min(1).max(100000).optional(),
+  pageSize: z.number().int().min(1).max(100).optional(),
+}).strict()
+export const hunterArtIdentitySchema = z.object({ gameId: z.literal('mhgu'), hunterArtId: z.number().int().min(0).max(190) }).strict()
+export const hunterArtCatalogFiltersSchema = z.object({
+  gameId: gameIdSchema,
+  targetHunterArtId: z.number().int().min(0).max(190).optional(),
+  query: z.string().trim().max(120).optional(),
+  weaponTypeId: z.number().int().min(0).max(14).optional(),
+  level: z.union([z.number().int().min(1).max(3),z.literal('none')]).optional(),
+  unlockKind: z.enum(['initial','quest','hunterRank','contribution','palicoLevel','monster','npc','compound','other']).optional(),
+  includePlaceholders: z.boolean().optional(),
+}).strict().superRefine((value,context)=>{if(value.gameId!=='mhgu')context.addIssue({code:z.ZodIssueCode.custom,path:['gameId'],message:'当前游戏没有狩技图鉴'})})
 const armorCommonFilters = {
   gameId: gameIdSchema,
   targetDexId: z.number().int().min(1).max(65535).optional(),

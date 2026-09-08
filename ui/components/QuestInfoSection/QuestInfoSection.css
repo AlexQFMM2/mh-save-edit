@@ -1,0 +1,59 @@
+.quest-info-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.quest-info-section__stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  margin: 0;
+}
+
+.quest-info-section__stat,
+.quest-info-section__group {
+  padding: 8px;
+  border: 1px solid rgba(223, 182, 93, 0.12);
+  border-radius: 6px;
+  background: rgba(16, 8, 5, 0.2);
+}
+
+.quest-info-section__stat-label {
+  color: var(--global-theme-color-text-muted);
+  font-size: var(--global-typography-font-size-small);
+}
+
+.quest-info-section__stat-value {
+  margin: 2px 0 0;
+  color: var(--global-theme-color-data);
+}
+
+.quest-info-section__heading {
+  margin: 0 0 5px;
+  font-size: var(--global-typography-font-size-body);
+}
+
+.quest-info-section__text {
+  margin: 3px 0;
+  color: var(--global-theme-color-text-secondary);
+}
+
+.quest-info-section__monsters {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.quest-info-section__monster {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 44px;
+  padding: 5px 7px;
+  border: 1px solid rgba(223, 182, 93, 0.14);
+  border-radius: 6px;
+  color: var(--global-theme-color-data);
+  background: rgba(223, 182, 93, 0.04);
+  cursor: pointer;
+}

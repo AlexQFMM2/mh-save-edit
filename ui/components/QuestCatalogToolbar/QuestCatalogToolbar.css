@@ -1,0 +1,49 @@
+.quest-catalog-toolbar {
+  --quest-catalog-toolbar-component-control-height: 34px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-color: rgba(223, 182, 93, 0.2) transparent;
+  scrollbar-width: thin;
+}
+
+.quest-catalog-toolbar__field,
+.quest-catalog-toolbar__debug {
+  --searchable-select-component-control-height: var(--quest-catalog-toolbar-component-control-height);
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 5px;
+  color: var(--global-theme-color-text-secondary);
+  font-size: var(--global-typography-font-size-small);
+}
+
+.quest-catalog-toolbar__search {
+  position: relative;
+  flex: 1 0 250px;
+}
+
+.quest-catalog-toolbar__search-icon {
+  position: absolute;
+  left: 10px;
+  width: 16px;
+  color: var(--global-theme-color-text-muted);
+}
+
+.quest-catalog-toolbar__search-input {
+  width: 100%;
+  height: var(--quest-catalog-toolbar-component-control-height);
+  padding: 0 10px 0 33px;
+  border: 1px solid var(--global-theme-color-border);
+  border-radius: 7px;
+  color: var(--global-theme-color-text-primary);
+  background: rgba(18, 10, 6, 0.55);
+  font-size: var(--global-typography-font-size-small);
+}
+
+.quest-catalog-toolbar__debug-input {
+  accent-color: var(--global-theme-color-gold);
+}

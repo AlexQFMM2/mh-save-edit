@@ -1,0 +1,7 @@
+import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import type { HunterArtDetail } from '../../../api/catalog/types'
+import { DetailDrawer } from '../DetailDrawer/DetailDrawer'
+import { HunterArtDetailPanel } from '../HunterArtDetailPanel/HunterArtDetailPanel'
+import './HunterArtDetailDrawer.css'
+export function HunterArtDetailDrawer({gameId,hunterArtId,onClose}:{gameId:'mhgu';hunterArtId:number|null;onClose:()=>void}){const navigate=useNavigate();const[art,setArt]=useState<HunterArtDetail|null>(null);const[loading,setLoading]=useState(false);const[error,setError]=useState<string>();useEffect(()=>{if(hunterArtId==null)return;let active=true;setLoading(true);setError(undefined);void window.mhSaveEditor.catalog.getHunterArt({gameId,hunterArtId}).then(value=>{if(active)setArt(value)}).catch(cause=>{if(active)setError(cause instanceof Error?cause.message:'狩技详情读取失败')}).finally(()=>{if(active)setLoading(false)});return()=>{active=false}},[gameId,hunterArtId]);if(hunterArtId==null)return null;const go=(path:string)=>{onClose();navigate(path)};return <div className="hunter-art-detail-drawer"><DetailDrawer title="狩技详情" onClose={onClose}><HunterArtDetailPanel art={art} loading={loading} error={error} onSelectQuest={questKey=>go(`/game/${gameId}/catalog/quests?target=${encodeURIComponent(questKey)}&quest=${encodeURIComponent(questKey)}&tab=unlocks`)} onSelectMonster={monsterId=>go(`/game/${gameId}/catalog/monsters?target=${monsterId}&monster=${monsterId}`)}/></DetailDrawer></div>}

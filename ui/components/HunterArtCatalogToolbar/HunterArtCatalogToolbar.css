@@ -1,0 +1,49 @@
+.hunter-art-catalog-toolbar {
+  --hunter-art-catalog-toolbar-component-control-height: 36px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-color: rgba(223, 182, 93, 0.2) transparent;
+  scrollbar-width: thin;
+}
+
+.hunter-art-catalog-toolbar__field,
+.hunter-art-catalog-toolbar__debug {
+  --searchable-select-component-control-height: var(--hunter-art-catalog-toolbar-component-control-height);
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 6px;
+  color: var(--global-theme-color-text-secondary);
+  font-size: var(--global-typography-font-size-small);
+}
+
+.hunter-art-catalog-toolbar__search {
+  position: relative;
+  flex: 1 0 280px;
+}
+
+.hunter-art-catalog-toolbar__search-icon {
+  position: absolute;
+  left: 10px;
+  width: 16px;
+  color: var(--global-theme-color-text-muted);
+}
+
+.hunter-art-catalog-toolbar__search-input {
+  width: 100%;
+  height: var(--hunter-art-catalog-toolbar-component-control-height);
+  padding: 0 11px 0 34px;
+  border: 1px solid var(--global-theme-color-border);
+  border-radius: 7px;
+  color: var(--global-theme-color-text-primary);
+  background: rgba(18, 10, 6, 0.55);
+  font-size: var(--global-typography-font-size-small);
+}
+
+.hunter-art-catalog-toolbar__debug-input {
+  accent-color: var(--global-theme-color-gold);
+}

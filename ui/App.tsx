@@ -12,6 +12,8 @@ import { DecorationCatalogPage } from './pages/DecorationCatalogPage/DecorationC
 const WeaponCatalogPage = lazy(async () => ({ default: (await import('./pages/WeaponCatalogPage/WeaponCatalogPage')).WeaponCatalogPage }))
 const ArmorCatalogPage = lazy(async () => ({ default: (await import('./pages/ArmorCatalogPage/ArmorCatalogPage')).ArmorCatalogPage }))
 const MonsterCatalogPage = lazy(async () => ({ default: (await import('./pages/MonsterCatalogPage/MonsterCatalogPage')).MonsterCatalogPage }))
+const QuestCatalogPage = lazy(async () => ({ default: (await import('./pages/QuestCatalogPage/QuestCatalogPage')).QuestCatalogPage }))
+const HunterArtCatalogPage = lazy(async () => ({ default: (await import('./pages/HunterArtCatalogPage/HunterArtCatalogPage')).HunterArtCatalogPage }))
 
 export default function App() {
   return (
@@ -25,7 +27,7 @@ export default function App() {
             <Route
               key={item.id}
               path={item.path}
-              element={item.id === 'save-editor' ? <SaveEditorPage /> : item.id === 'items' ? <ItemCatalogPage /> : item.id === 'decorations' ? <DecorationCatalogPage /> : item.id === 'weapons' ? <Suspense fallback={<WorkspaceFeaturePage pageId="weapons" />}><WeaponCatalogPage /></Suspense> : item.id === 'armor' ? <Suspense fallback={<WorkspaceFeaturePage pageId="armor" />}><ArmorCatalogPage /></Suspense> : item.id === 'monsters' ? <Suspense fallback={<WorkspaceFeaturePage pageId="monsters" />}><MonsterCatalogPage /></Suspense> : <WorkspaceFeaturePage pageId={item.id} />}
+              element={item.id === 'save-editor' ? <SaveEditorPage /> : item.id === 'items' ? <ItemCatalogPage /> : item.id === 'decorations' ? <DecorationCatalogPage /> : item.id === 'weapons' ? <Suspense fallback={<WorkspaceFeaturePage pageId="weapons" />}><WeaponCatalogPage /></Suspense> : item.id === 'armor' ? <Suspense fallback={<WorkspaceFeaturePage pageId="armor" />}><ArmorCatalogPage /></Suspense> : item.id === 'monsters' ? <Suspense fallback={<WorkspaceFeaturePage pageId="monsters" />}><MonsterCatalogPage /></Suspense> : item.id === 'quests' ? <Suspense fallback={<WorkspaceFeaturePage pageId="quests" />}><QuestCatalogPage /></Suspense> : item.id === 'hunter-arts' ? <Suspense fallback={<WorkspaceFeaturePage pageId="hunter-arts" />}><HunterArtCatalogPage /></Suspense> : <WorkspaceFeaturePage pageId={item.id} />}
             />
           ))}
           <Route path="*" element={<Navigate to="overview" replace />} />

@@ -1,1 +1,95 @@
-.quest-detail-panel{display:flex;flex-direction:column;gap:11px;min-height:100%;padding:12px;color:var(--global-theme-color-text-primary)}.quest-detail-panel--state{display:grid;place-items:center;color:var(--global-theme-color-text-secondary)}.quest-detail-panel header{padding-bottom:9px;border-bottom:1px solid rgba(223,182,93,.16)}.quest-detail-panel header small{color:var(--global-theme-color-data);font-size:var(--global-typography-font-size-small)}.quest-detail-panel h2{margin:3px 0;font-size:var(--global-typography-font-size-title)}.quest-detail-panel header p{margin:2px 0;color:var(--global-theme-color-text-secondary);font-size:var(--global-typography-font-size-small)}.quest-detail-panel__stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin:0}.quest-detail-panel__stats div{padding:7px;border:1px solid rgba(223,182,93,.12);border-radius:6px;background:rgba(16,8,5,.26)}.quest-detail-panel__stats dt{color:var(--global-theme-color-text-muted);font-size:var(--global-typography-font-size-small)}.quest-detail-panel__stats dd{margin:2px 0 0;color:var(--global-theme-color-data)}.quest-detail-panel h3{margin:0 0 5px;color:var(--global-theme-color-text-primary);font-size:var(--global-typography-font-size-body)}.quest-detail-panel__goals,.quest-detail-panel__modifiers,.quest-detail-panel__monsters{padding:9px;border:1px solid rgba(223,182,93,.12);border-radius:7px}.quest-detail-panel__goals p,.quest-detail-panel__modifiers p{margin:4px 0;color:var(--global-theme-color-text-secondary)}.quest-detail-panel__monsters>div{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.quest-detail-panel__monsters button{display:flex;align-items:center;gap:8px;min-height:48px;padding:5px;border:1px solid rgba(223,182,93,.14);border-radius:6px;color:var(--global-theme-color-gold-bright);background:rgba(223,182,93,.05);font:inherit;cursor:pointer}
+.quest-detail-panel {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  min-width: 0;
+  min-height: 100%;
+  color: var(--global-theme-color-text-primary);
+}
+
+.quest-detail-panel--state {
+  place-items: center;
+  padding: 20px;
+  color: var(--global-theme-color-text-secondary);
+}
+
+.quest-detail-panel__header {
+  position: relative;
+  padding: 12px 13px 9px;
+  border-bottom: 1px solid rgba(223, 182, 93, 0.14);
+}
+
+.quest-detail-panel__eyebrow {
+  color: var(--global-theme-color-data);
+  font-size: var(--global-typography-font-size-small);
+}
+
+.quest-detail-panel__title-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.quest-detail-panel__title {
+  margin: 3px 0;
+  font-size: var(--global-typography-font-size-title);
+}
+
+.quest-detail-panel__alternate-name {
+  margin: 2px 0;
+  color: var(--global-theme-color-text-secondary);
+  font-size: var(--global-typography-font-size-small);
+}
+
+.quest-detail-panel__updating {
+  position: absolute;
+  right: 12px;
+  bottom: 9px;
+  color: var(--global-theme-color-data);
+  font-size: var(--global-typography-font-size-caption);
+  font-style: normal;
+}
+
+.quest-detail-panel__key {
+  padding: 3px 7px;
+  border: 1px solid var(--global-theme-color-border);
+  border-radius: 999px;
+  color: var(--global-theme-color-data);
+  font-size: var(--global-typography-font-size-caption);
+}
+
+.quest-detail-panel__key--urgent {
+  border-color: rgba(224, 109, 63, 0.5);
+  color: #ffe0b5;
+}
+
+.quest-detail-panel__tabs {
+  display: flex;
+  gap: 3px;
+  padding: 6px 10px;
+  border-bottom: 1px solid rgba(223, 182, 93, 0.12);
+}
+
+.quest-detail-panel__tab {
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: var(--global-theme-color-text-secondary);
+  background: transparent;
+  cursor: pointer;
+}
+
+.quest-detail-panel__tab[aria-selected='true'] {
+  border-color: var(--global-theme-color-border);
+  color: var(--global-theme-color-data);
+  background: rgba(223, 182, 93, 0.09);
+}
+
+.quest-detail-panel__body {
+  min-height: 0;
+  overflow: auto;
+  padding: 11px 12px;
+  scrollbar-color: rgba(223, 182, 93, 0.22) transparent;
+  scrollbar-width: thin;
+}

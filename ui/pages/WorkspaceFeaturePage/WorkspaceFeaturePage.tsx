@@ -12,6 +12,8 @@ const featureContent: Record<WorkspaceFeaturePageId, { title: string; descriptio
   decorations: { title: '装饰品图鉴', description: '集中查看装饰品技能、槽位和制作资料。' },
   items: { title: '道具图鉴', description: '集中查看道具、素材和道具箱相关资料。' },
   monsters: { title: '怪物图鉴', description: '集中查看怪物肉质、异常耐性、掉落物和出没任务。' },
+  quests: { title: '任务图鉴', description: '集中查看任务目标、报酬和解锁关系。' },
+  'hunter-arts': { title: '狩技图鉴', description: '集中查看 MHGU/XX 狩技与解锁条件。' },
   loadout: { title: '配装器', description: '未来将在这里手动组合装备、护石和装饰品，并提供自动配装功能。' },
 }
 

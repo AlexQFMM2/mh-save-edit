@@ -1,0 +1,103 @@
+.quest-list {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.quest-list__state {
+  display: grid;
+  min-height: 100%;
+  place-items: center;
+  padding: 20px;
+  color: var(--global-theme-color-text-secondary);
+}
+
+.quest-list__scroller {
+  height: 100%;
+  overflow: auto;
+  scrollbar-color: rgba(223, 182, 93, 0.22) rgba(18, 10, 6, 0.18);
+  scrollbar-width: thin;
+}
+
+.quest-list__table {
+  width: 100%;
+  min-width: 850px;
+  border-collapse: collapse;
+}
+
+.quest-list__heading,
+.quest-list__cell {
+  padding: 7px 9px;
+  border-bottom: 1px solid rgba(223, 182, 93, 0.1);
+  font-size: var(--global-typography-font-size-small);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.quest-list__heading {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  color: var(--global-theme-color-gold-bright);
+  background: #332117;
+}
+
+.quest-list__cell--data {
+  color: var(--global-theme-color-data);
+}
+
+.quest-list__goal {
+  max-width: 250px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.quest-list__row--selected {
+  background: rgba(223, 182, 93, 0.11);
+}
+
+.quest-list__select {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  width: 100%;
+  min-width: 190px;
+  padding: 0;
+  border: 0;
+  color: var(--global-theme-color-text-primary);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.quest-list__alternate-name {
+  color: var(--global-theme-color-text-secondary);
+  font-size: var(--global-typography-font-size-caption);
+}
+
+.quest-list__match {
+  max-width: 260px;
+  overflow: hidden;
+  color: var(--global-theme-color-data);
+  font-size: var(--global-typography-font-size-caption);
+  font-style: normal;
+  text-overflow: ellipsis;
+}
+
+.quest-list__badge {
+  display: inline-flex;
+  padding: 3px 7px;
+  border: 1px solid var(--global-theme-color-border);
+  border-radius: 999px;
+  color: var(--global-theme-color-data);
+  background: rgba(223, 182, 93, 0.08);
+  font-size: var(--global-typography-font-size-caption);
+}
+
+.quest-list__badge--urgent {
+  border-color: rgba(224, 109, 63, 0.5);
+  color: #ffe0b5;
+  background: rgba(150, 57, 28, 0.25);
+}

@@ -1,5 +1,5 @@
 import type { GameId } from '../api/core/loadout'
-import type { ArmorCatalogFacets, ArmorCatalogFilters, ArmorDetail, ArmorIdentity, ArmorSetFilters, ArmorSetSummary, ArmorSummary, DecorationCatalogFacets, DecorationCatalogFilters, DecorationDetail, DecorationIdentity, DecorationSummary, ItemCatalogFilters, ItemDetail, ItemIdentity, ItemSummary, MonsterCatalogFacets, MonsterCatalogFilters, MonsterDetail, MonsterIdentity, MonsterSummary, PageResult, QuestDetail, QuestIdentity, SkillDetail, SkillIdentity, WeaponCatalogFacets, WeaponCatalogFilters, WeaponDetail, WeaponIdentity, WeaponSummary, WeaponTreeResult } from '../api/catalog/types'
+import type { ArmorCatalogFacets, ArmorCatalogFilters, ArmorDetail, ArmorIdentity, ArmorSetFilters, ArmorSetSummary, ArmorSummary, DecorationCatalogFacets, DecorationCatalogFilters, DecorationDetail, DecorationIdentity, DecorationSummary, HunterArtCatalogFacets, HunterArtCatalogFilters, HunterArtDetail, HunterArtIdentity, HunterArtSummary, ItemCatalogFilters, ItemDetail, ItemIdentity, ItemSummary, MonsterCatalogFacets, MonsterCatalogFilters, MonsterDetail, MonsterIdentity, MonsterSummary, PageResult, QuestCatalogFacets, QuestCatalogFilters, QuestDetail, QuestIdentity, QuestSummary, SkillDetail, SkillIdentity, WeaponCatalogFacets, WeaponCatalogFilters, WeaponDetail, WeaponIdentity, WeaponSummary, WeaponTreeResult } from '../api/catalog/types'
 
 declare global {
   interface Window {
@@ -25,6 +25,11 @@ declare global {
         getMonster(identity: MonsterIdentity): Promise<MonsterDetail | null>
         getMonsterFacets(gameId: GameId): Promise<MonsterCatalogFacets>
         getQuest(identity: QuestIdentity): Promise<QuestDetail | null>
+        searchQuests(filters: QuestCatalogFilters): Promise<PageResult<QuestSummary>>
+        getQuestFacets(gameId: GameId): Promise<QuestCatalogFacets>
+        searchHunterArts(filters: HunterArtCatalogFilters): Promise<HunterArtSummary[]>
+        getHunterArt(identity: HunterArtIdentity): Promise<HunterArtDetail | null>
+        getHunterArtFacets(gameId: GameId): Promise<HunterArtCatalogFacets>
       }
     }
   }

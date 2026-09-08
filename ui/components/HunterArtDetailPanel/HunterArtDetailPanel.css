@@ -1,0 +1,138 @@
+.hunter-art-detail-panel {
+  position: relative;
+  min-width: 0;
+  min-height: 100%;
+  overflow: hidden;
+  color: var(--global-theme-color-text-primary);
+}
+
+.hunter-art-detail-panel--state {
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  color: var(--global-theme-color-text-secondary);
+}
+
+.hunter-art-detail-panel__header {
+  position: relative;
+  padding: 14px;
+  border-bottom: 1px solid rgba(223, 182, 93, 0.14);
+}
+
+.hunter-art-detail-panel__eyebrow {
+  color: var(--global-theme-color-data);
+  font-size: var(--global-typography-font-size-small);
+}
+
+.hunter-art-detail-panel__title {
+  margin: 4px 0;
+  font-size: var(--global-typography-font-size-title);
+}
+
+.hunter-art-detail-panel__alternate-name,
+.hunter-art-detail-panel__description,
+.hunter-art-detail-panel__source-text,
+.hunter-art-detail-panel__condition-text {
+  margin: 5px 0;
+  color: var(--global-theme-color-text-secondary);
+  line-height: 1.55;
+}
+
+.hunter-art-detail-panel__alternate-name {
+  margin: 2px 0;
+  font-size: var(--global-typography-font-size-small);
+}
+
+.hunter-art-detail-panel__updating {
+  position: absolute;
+  right: 13px;
+  bottom: 10px;
+  color: var(--global-theme-color-data);
+  font-size: var(--global-typography-font-size-caption);
+  font-style: normal;
+}
+
+.hunter-art-detail-panel__body {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+  height: calc(100% - 112px);
+  overflow: auto;
+  padding: 12px;
+  scrollbar-color: rgba(223, 182, 93, 0.22) transparent;
+  scrollbar-width: thin;
+}
+
+.hunter-art-detail-panel__section {
+  padding: 11px;
+  border: 1px solid rgba(223, 182, 93, 0.13);
+  border-radius: 7px;
+  background: rgba(18, 10, 6, 0.24);
+}
+
+.hunter-art-detail-panel__section-title {
+  margin: 0 0 8px;
+  color: var(--global-theme-color-gold-bright);
+  font-size: var(--global-typography-font-size-body);
+}
+
+.hunter-art-detail-panel__translation-summary {
+  color: var(--global-theme-color-data);
+  cursor: pointer;
+}
+
+.hunter-art-detail-panel__unlock {
+  display: grid;
+  gap: 6px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(223, 182, 93, 0.1);
+}
+
+.hunter-art-detail-panel__unlock:last-child {
+  border-bottom: 0;
+}
+
+.hunter-art-detail-panel__unlock-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.hunter-art-detail-panel__source-badge {
+  padding: 2px 6px;
+  border: 1px solid var(--global-theme-color-border);
+  border-radius: 999px;
+  color: var(--global-theme-color-data);
+  font-size: var(--global-typography-font-size-caption);
+}
+
+.hunter-art-detail-panel__relation-button {
+  padding: 8px 9px;
+  border: 1px solid var(--global-theme-color-border);
+  border-radius: 6px;
+  color: var(--global-theme-color-data);
+  background: rgba(223, 182, 93, 0.06);
+  text-align: left;
+  cursor: pointer;
+}
+
+.hunter-art-detail-panel__condition-group,
+.hunter-art-detail-panel__quests {
+  display: grid;
+  gap: 5px;
+}
+
+.hunter-art-detail-panel__quests {
+  gap: 6px;
+}
+
+.hunter-art-detail-panel__quests .hunter-art-detail-panel__relation-button {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.hunter-art-detail-panel__relation-meta {
+  color: var(--global-theme-color-text-secondary);
+  font-size: var(--global-typography-font-size-caption);
+}
