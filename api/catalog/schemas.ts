@@ -76,6 +76,17 @@ export const weaponMotionFiltersSchema = z.object({
 
 export const armorIdentitySchema = z.object({ gameId: gameIdSchema, dexId: z.number().int().min(1).max(65535) }).strict()
 export const skillIdentitySchema = z.object({ gameId: gameIdSchema, skillId: z.number().int().min(0).max(65535) }).strict()
+export const skillCatalogFiltersSchema = z.object({
+  gameId: gameIdSchema,
+  targetSkillId: z.number().int().min(0).max(65535).optional(),
+  query: z.string().trim().max(120).optional(),
+  direction: z.enum(['positive','negative','special']).optional(),
+  source: z.enum(['armor','decoration','talisman','all']).optional(),
+  includePlaceholders: z.boolean().optional(),
+  sort: z.enum(['skillId','name','activationCount']).optional(),
+  page: z.number().int().min(1).max(100000).optional(),
+  pageSize: z.number().int().min(1).max(100).optional(),
+}).strict()
 export const monsterIdentitySchema = z.object({ gameId: gameIdSchema, monsterId: z.number().int().min(1).max(65535) }).strict()
 export const monsterCatalogFiltersSchema = z.object({
   gameId: gameIdSchema,

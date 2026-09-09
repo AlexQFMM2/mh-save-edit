@@ -1,5 +1,5 @@
 import type { GameId } from '../api/core/loadout'
-import type { ArmorCatalogFacets, ArmorCatalogFilters, ArmorDetail, ArmorIdentity, ArmorSetFilters, ArmorSetSummary, ArmorSummary, DecorationCatalogFacets, DecorationCatalogFilters, DecorationDetail, DecorationIdentity, DecorationSummary, HunterArtCatalogFacets, HunterArtCatalogFilters, HunterArtDetail, HunterArtIdentity, HunterArtSummary, ItemCatalogFilters, ItemDetail, ItemIdentity, ItemSummary, MonsterCatalogFacets, MonsterCatalogFilters, MonsterDetail, MonsterIdentity, MonsterSummary, PageResult, QuestCatalogFacets, QuestCatalogFilters, QuestDetail, QuestIdentity, QuestSummary, SkillDetail, SkillIdentity, WeaponCatalogFacets, WeaponCatalogFilters, WeaponDetail, WeaponIdentity, WeaponMotionCatalogResult, WeaponMotionFacets, WeaponMotionFilters, WeaponSummary, WeaponTreeResult } from '../api/catalog/types'
+import type { ArmorCatalogFacets, ArmorCatalogFilters, ArmorDetail, ArmorIdentity, ArmorSetFilters, ArmorSetSummary, ArmorSummary, DecorationCatalogFacets, DecorationCatalogFilters, DecorationDetail, DecorationIdentity, DecorationSummary, HunterArtCatalogFacets, HunterArtCatalogFilters, HunterArtDetail, HunterArtIdentity, HunterArtSummary, ItemCatalogFilters, ItemDetail, ItemIdentity, ItemSummary, MonsterCatalogFacets, MonsterCatalogFilters, MonsterDetail, MonsterIdentity, MonsterSummary, PageResult, QuestCatalogFacets, QuestCatalogFilters, QuestDetail, QuestIdentity, QuestSummary, SkillCatalogFacets, SkillCatalogFilters, SkillDetail, SkillIdentity, SkillSummary, WeaponCatalogFacets, WeaponCatalogFilters, WeaponDetail, WeaponIdentity, WeaponMotionCatalogResult, WeaponMotionFacets, WeaponMotionFilters, WeaponSummary, WeaponTreeResult } from '../api/catalog/types'
 
 declare global {
   interface Window {
@@ -23,6 +23,8 @@ declare global {
         getArmor(identity: ArmorIdentity): Promise<ArmorDetail | null>
         getArmorFacets(gameId: GameId): Promise<ArmorCatalogFacets>
         getSkill(identity: SkillIdentity): Promise<SkillDetail | null>
+        searchSkills(filters: SkillCatalogFilters): Promise<PageResult<SkillSummary>>
+        getSkillFacets(gameId: GameId): Promise<SkillCatalogFacets>
         searchMonsters(filters: MonsterCatalogFilters): Promise<MonsterSummary[]>
         getMonster(identity: MonsterIdentity): Promise<MonsterDetail | null>
         getMonsterFacets(gameId: GameId): Promise<MonsterCatalogFacets>

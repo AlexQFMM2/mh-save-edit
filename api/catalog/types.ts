@@ -429,16 +429,28 @@ export type ArmorCatalogFacets = {
   skills: Pick<ArmorSkill, 'skillId' | 'nameCn' | 'nameEn'>[]
 }
 
-export type SkillActivation = { nameCn: string; nameEn: string }
+export type SkillActivationLink = { activationKey: string; nameCn: string; nameEn: string; direction: 'positive' | 'negative' | 'special' }
+export type SkillActivation = { activationKey: string; dexActivationId: number; threshold: number; direction: 'positive' | 'negative' | 'special'; nameCn: string; nameEn: string; nameJp: string; descriptionCn: string; descriptionEn: string; descriptionJp: string; components: SkillActivationLink[] }
 export type SkillDecorationRelation = DecorationIdentity & { nameCn: string; nameEn: string; points: number; slots: number; iconPath: string | null }
-export type SkillArmorRelation = ArmorIdentity & { nameCn: string; nameEn: string; points: number; part: ArmorPartId; iconPath: string | null }
+export type SkillArmorRelation = ArmorIdentity & { nameCn: string; nameEn: string; points: number; slots: number; part: ArmorPartId; iconPath: string | null }
+export type SkillTalismanRelation = { rangeKey: string; skillId: number; skillNameCn: string; talismanId: number; talismanNameCn: string; talismanNameEn: string; position: 'A' | 'B'; slotCount: number | null; minPoints: number; maxPoints: number; maxSlots: number | null; rangeStatus: 'exact' | 'rule' | 'unknown'; source: string }
+export type SkillCatalogTab = 'armor' | 'decoration' | 'talisman'
 export type SkillDetail = SkillIdentity & {
   nameCn: string
   nameEn: string
+  nameJp: string
+  descriptionCn: string | null
+  descriptionEn: string | null
+  descriptionJp: string | null
   activations: SkillActivation[]
+  components: SkillActivationLink[]
   decorations: SkillDecorationRelation[]
   armors: SkillArmorRelation[]
+  talismans: SkillTalismanRelation[]
 }
+export type SkillSummary = SkillIdentity & { nameCn: string; nameEn: string; nameJp: string; activationCount: number; positiveActivationCount: number; negativeActivationCount: number; specialActivationCount: number; armorCount: number; decorationCount: number; talismanCount: number; isPlaceholder: boolean }
+export type SkillCatalogFilters = { gameId: GameId; targetSkillId?: number; query?: string; direction?: 'positive' | 'negative' | 'special'; source?: 'armor' | 'decoration' | 'talisman' | 'all'; includePlaceholders?: boolean; sort?: 'skillId' | 'name' | 'activationCount'; page?: number; pageSize?: number }
+export type SkillCatalogFacets = { directions: ('positive' | 'negative' | 'special')[]; sources: ('armor' | 'decoration' | 'talisman')[] }
 
 export type ItemDetail = ItemSummary & {
   nameJp: string

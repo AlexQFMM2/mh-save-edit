@@ -1,0 +1,4 @@
+import type { KeyboardEvent } from 'react'
+import type { SkillSummary } from '../../../api/catalog/types'
+import './SkillListRow.css'
+export function SkillListRow({ skill, selected, tabIndex, onSelect, onKeyDown }: { skill: SkillSummary; selected: boolean; tabIndex: number; onSelect: () => void; onKeyDown: (event: KeyboardEvent<HTMLButtonElement>) => void }) { return <button data-skill-id={skill.skillId} type="button" role="option" aria-selected={selected} tabIndex={tabIndex} className={selected ? 'skill-list-row skill-list-row--selected' : 'skill-list-row'} onClick={onSelect} onKeyDown={onKeyDown}><span className="skill-list-row__copy"><strong className="skill-list-row__name">{skill.nameCn}</strong><small className="skill-list-row__subtitle">{skill.nameEn}</small></span><em className="skill-list-row__count" aria-label={`${skill.activationCount} 个发动效果`}>{skill.activationCount}</em></button> }

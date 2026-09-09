@@ -16,6 +16,8 @@ export const catalogChannels = {
   getArmor: 'catalog:get-armor',
   getArmorFacets: 'catalog:get-armor-facets',
   getSkill: 'catalog:get-skill',
+  searchSkills: 'catalog:search-skills',
+  getSkillFacets: 'catalog:get-skill-facets',
   searchMonsters: 'catalog:search-monsters',
   getMonster: 'catalog:get-monster',
   getMonsterFacets: 'catalog:get-monster-facets',

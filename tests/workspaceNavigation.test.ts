@@ -11,6 +11,7 @@ describe('workspace navigation', () => {
     expect(workspaceNavigation[0].items.map(({ id }) => id)).toEqual([
       'items',
       'decorations',
+      'skills',
       'weapons',
       'armor',
       'monsters',

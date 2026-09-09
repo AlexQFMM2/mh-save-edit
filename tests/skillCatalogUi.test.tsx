@@ -1,0 +1,14 @@
+// @vitest-environment jsdom
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import type { SkillDetail, SkillSummary } from '../api/catalog/types'
+import { SkillDetailPanel } from '../ui/components/SkillDetailPanel/SkillDetailPanel'
+import { SkillSearchList } from '../ui/components/SkillSearchList/SkillSearchList'
+afterEach(cleanup)
+const summary: SkillSummary = { gameId: 'mhgu', skillId: 71, nameCn: '痛击', nameEn: 'Tenderizer', nameJp: '痛撃', activationCount: 1, positiveActivationCount: 1, negativeActivationCount: 0, specialActivationCount: 0, armorCount: 1, decorationCount: 1, talismanCount: 2, isPlaceholder: false }
+const detail: SkillDetail = { ...summary, descriptionCn: null, descriptionEn: null, descriptionJp: null, activations: [{ activationKey: 'dex:115', dexActivationId: 115, threshold: 10, direction: 'positive', nameCn: '弱点特效', nameEn: 'Weakness Exploit', nameJp: '弱点特効', descriptionCn: '攻击弱点时会提升会心率。', descriptionEn: '', descriptionJp: '', components: [] }], components: [], armors: [], decorations: [], talismans: [{ rangeKey: '10:A:71:2:6', skillId: 71, skillNameCn: '痛击', talismanId: 10, talismanNameCn: '天之护石', talismanNameEn: 'Creator Talisman', position: 'A', slotCount: null, minPoints: 2, maxPoints: 6, maxSlots: 3, rangeStatus: 'rule', source: 'test' }] }
+describe('skill catalog UI', () => {
+  it('keeps activations visible while switching source tabs with the keyboard', () => { const onTabChange = vi.fn(); render(<SkillDetailPanel skill={detail} loading={false} tab="armor" onTabChange={onTabChange} onSelectArmor={() => undefined} onSelectDecoration={() => undefined} />); expect(screen.getByText('弱点特效')).toBeTruthy(); fireEvent.keyDown(screen.getByRole('tab', { name: /相关防具/ }), { key: 'ArrowRight' }); expect(onTabChange).toHaveBeenCalledWith('decoration') })
+  it('renders separate talisman position and legal range', () => { render(<SkillDetailPanel skill={detail} loading={false} tab="talisman" onSelectArmor={() => undefined} onSelectDecoration={() => undefined} />); expect(screen.getByText('天之护石')).toBeTruthy(); expect(screen.getByText('+2～+6')).toBeTruthy(); expect(screen.getByText('A')).toBeTruthy() })
+  it('supports roving keyboard selection', () => { const onSelect = vi.fn(); render(<SkillSearchList items={[summary, { ...summary, skillId: 72, nameCn: '连击' }]} selectedId={71} loading={false} page={1} pageSize={100} total={2} hasNext={false} onSelect={onSelect} onPageChange={() => undefined} />); fireEvent.keyDown(screen.getByRole('option', { name: /痛击/ }), { key: 'ArrowDown' }); expect(onSelect).toHaveBeenCalledWith(72) })
+})

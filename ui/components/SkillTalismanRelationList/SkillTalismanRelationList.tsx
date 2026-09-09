@@ -1,0 +1,6 @@
+import type { SkillTalismanRelation } from '../../../api/catalog/types'
+import { EquipmentSlotIndicator } from '../EquipmentSlotIndicator/EquipmentSlotIndicator'
+import './SkillTalismanRelationList.css'
+const status = { exact: '精确组合', rule: '规则范围', unknown: '待确认' }
+const points = (value: number) => `${value > 0 ? '+' : ''}${value}`
+export function SkillTalismanRelationList({ rows }: { rows: SkillTalismanRelation[] }) { return rows.length ? <div className="skill-talisman-relation-list"><table><thead><tr><th>护石品级</th><th>技能位</th><th>技能系</th><th>合法点数范围</th><th>孔位</th><th>证据</th></tr></thead><tbody>{rows.map(row => <tr key={row.rangeKey}><td><strong>{row.talismanNameCn}</strong><small>{row.talismanNameEn}</small></td><td><b>{row.position}</b></td><td>{row.skillNameCn}</td><td><b>{row.minPoints === row.maxPoints ? points(row.minPoints) : `${points(row.minPoints)}～${points(row.maxPoints)}`}</b></td><td>{row.slotCount == null ? row.maxSlots == null ? '未确认' : <span>上限 <EquipmentSlotIndicator slots={row.maxSlots} /></span> : <EquipmentSlotIndicator slots={row.slotCount} />}</td><td><span title={row.source}>{status[row.rangeStatus]}</span></td></tr>)}</tbody></table></div> : <p className="skill-talisman-relation-list__empty">该技能系没有合法护石范围。</p> }

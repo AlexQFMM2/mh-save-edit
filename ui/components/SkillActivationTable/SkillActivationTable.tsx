@@ -1,0 +1,5 @@
+import type { SkillActivation } from '../../../api/catalog/types'
+import { SkillComponentList } from '../SkillComponentList/SkillComponentList'
+import './SkillActivationTable.css'
+const directionName = { positive: '正面', negative: '负面', special: '特殊' }
+export function SkillActivationTable({ activations }: { activations: SkillActivation[] }) { return <section className="skill-activation-table"><h3>发动效果 <span>{activations.length}</span></h3>{activations.length ? <div className="skill-activation-table__scroll"><table><thead><tr><th>阈值</th><th>方向</th><th>发动技能</th><th>英文 / 日文</th><th>说明</th><th>复合效果</th></tr></thead><tbody>{activations.map(activation => <tr key={activation.activationKey}><td><strong>{activation.threshold > 0 ? '+' : ''}{activation.threshold}</strong></td><td><span data-direction={activation.direction}>{directionName[activation.direction]}</span></td><td>{activation.nameCn}</td><td><small>{activation.nameEn}</small><small>{activation.nameJp}</small></td><td>{activation.descriptionCn || '—'}</td><td><SkillComponentList components={activation.components} /></td></tr>)}</tbody></table></div> : <p>没有发动效果。</p>}</section> }

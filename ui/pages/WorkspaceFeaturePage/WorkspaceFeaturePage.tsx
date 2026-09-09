@@ -10,6 +10,7 @@ const featureContent: Record<WorkspaceFeaturePageId, { title: string; descriptio
   weapons: { title: '武器图鉴', description: '集中查看当前游戏可用武器及其属性、派生和制作资料。' },
   armor: { title: '防具图鉴', description: '集中查看防具部位、套装技能和制作资料。' },
   decorations: { title: '装饰品图鉴', description: '集中查看装饰品技能、槽位和制作资料。' },
+  skills: { title: '技能图鉴', description: '集中查看技能发动效果以及防具、装饰品和护石来源。' },
   items: { title: '道具图鉴', description: '集中查看道具、素材和道具箱相关资料。' },
   monsters: { title: '怪物图鉴', description: '集中查看怪物肉质、异常耐性、掉落物和出没任务。' },
   quests: { title: '任务图鉴', description: '集中查看任务目标、报酬和解锁关系。' },

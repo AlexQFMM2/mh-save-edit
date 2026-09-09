@@ -221,7 +221,7 @@ function buildGame(gameId, spec) {
   const insertDecoration = db.prepare(`INSERT INTO catalog_decorations
     (game_id,save_id,dex_id,item_save_id,item_dex_id,name_cn,name_en,slots,price,icon_path,is_placeholder,mapping_status,source)
     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`)
-  const insertSkill = db.prepare('INSERT INTO catalog_skills(game_id,skill_id,name_cn,name_en,source) VALUES(?,?,?,?,?)')
+  const insertSkill = db.prepare('INSERT OR IGNORE INTO catalog_skills(game_id,skill_id,name_cn,name_en,source) VALUES(?,?,?,?,?)')
   const insertDecorationSkill = db.prepare(`INSERT OR REPLACE INTO catalog_decoration_skills
     (game_id,decoration_save_id,skill_id,name_cn,name_en,points,active_skill_name_cn,active_skill_name_en,source)
     VALUES (?,?,?,?,?,?,?,?,?)`)
@@ -236,7 +236,6 @@ function buildGame(gameId, spec) {
     db.prepare('DELETE FROM catalog_decoration_dex_sources WHERE game_id = ?').run(gameId)
     db.prepare("DELETE FROM sqlite_sequence WHERE name = 'catalog_decoration_materials'").run()
     db.prepare('DELETE FROM catalog_decoration_skills WHERE game_id = ?').run(gameId)
-    db.prepare('DELETE FROM catalog_skills WHERE game_id = ?').run(gameId)
     db.prepare('DELETE FROM catalog_decorations WHERE game_id = ?').run(gameId)
     for (const skill of source.skills) insertSkill.run(gameId, skill.id, clean(skill.name_cn), clean(skill.name_en), clean(skill.source) || 'existing-content-db')
 

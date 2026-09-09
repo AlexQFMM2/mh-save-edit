@@ -14,6 +14,8 @@
     "rebuild:electron-native": "node tools/rebuild-electron-native.mjs",
     "data:build:items": "node tools/build_item_catalog.mjs",
     "data:build:decorations": "node tools/build_decoration_catalog.mjs",
+    "data:build:skills": "node tools/build_skill_catalog.mjs",
+    "data:audit:skills": "node tools/audit_skill_catalog.mjs",
     "data:build:weapons": "node tools/build_weapon_catalog.mjs",
     "data:build:weapon-motions": "node tools/build_weapon_motion_catalog.mjs",
     "data:audit:weapon-motions": "node tools/audit_weapon_motion_catalog.mjs",

@@ -11,7 +11,7 @@ import { ArmorCatalogRepository } from './armorRepository'
 import { SkillCatalogRepository } from './skillRepository'
 import { MonsterCatalogRepository } from './monsterRepository'
 import { HunterArtCatalogRepository, QuestCatalogRepository } from './questRepository'
-import { armorCatalogFiltersSchema, armorIdentitySchema, armorSetFiltersSchema, decorationCatalogFiltersSchema, decorationIdentitySchema, gameIdSchema, hunterArtCatalogFiltersSchema, hunterArtIdentitySchema, itemCatalogFiltersSchema, itemIdentitySchema, monsterCatalogFiltersSchema, monsterIdentitySchema, questCatalogFiltersSchema, questIdentitySchema, skillIdentitySchema, weaponCatalogFiltersSchema, weaponIdentitySchema, weaponMotionFiltersSchema, weaponTreeRequestSchema } from './schemas'
+import { armorCatalogFiltersSchema, armorIdentitySchema, armorSetFiltersSchema, decorationCatalogFiltersSchema, decorationIdentitySchema, gameIdSchema, hunterArtCatalogFiltersSchema, hunterArtIdentitySchema, itemCatalogFiltersSchema, itemIdentitySchema, monsterCatalogFiltersSchema, monsterIdentitySchema, questCatalogFiltersSchema, questIdentitySchema, skillCatalogFiltersSchema, skillIdentitySchema, weaponCatalogFiltersSchema, weaponIdentitySchema, weaponMotionFiltersSchema, weaponTreeRequestSchema } from './schemas'
 import { catalogChannels } from './channels'
 export { catalogChannels }
 
@@ -113,6 +113,14 @@ export function registerCatalogIpc(dataDir: string): () => void {
   ipcMain.handle(catalogChannels.getSkill, (_event, payload: unknown) => {
     const identity = skillIdentitySchema.parse(payload)
     return repositoryEntry(identity.gameId).skills.getSkill(identity)
+  })
+  ipcMain.handle(catalogChannels.searchSkills, (_event, payload: unknown) => {
+    const filters = skillCatalogFiltersSchema.parse(payload)
+    return repositoryEntry(filters.gameId).skills.searchSkills(filters)
+  })
+  ipcMain.handle(catalogChannels.getSkillFacets, (_event, payload: unknown) => {
+    const gameId = gameIdSchema.parse(payload)
+    return repositoryEntry(gameId).skills.getSkillFacets(gameId)
   })
   ipcMain.handle(catalogChannels.searchMonsters, (_event, payload: unknown) => {
     const filters = monsterCatalogFiltersSchema.parse(payload)

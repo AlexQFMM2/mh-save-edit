@@ -1,5 +1,5 @@
 import { Check, ChevronDown, Search } from 'lucide-react'
-import { useEffect, useId, useMemo, useRef, useState } from 'react'
+import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import './SearchableSelect.css'
 
@@ -63,6 +63,19 @@ export function SearchableSelect(props: Props) {
     }
   }, [open])
 
+  useLayoutEffect(() => {
+    if (!open || !triggerRef.current || !menuRef.current) return
+    const trigger = triggerRef.current.getBoundingClientRect()
+    const menu = menuRef.current.getBoundingClientRect()
+    const gutter = 8
+    const gap = 4
+    const width = Math.max(trigger.width, 210)
+    const left = Math.max(gutter, Math.min(trigger.left, window.innerWidth - width - gutter))
+    const fitsBelow = trigger.bottom + gap + menu.height <= window.innerHeight - gutter
+    const top = fitsBelow ? trigger.bottom + gap : Math.max(gutter, trigger.top - menu.height - gap)
+    setMenuPosition((current) => current.left === left && current.top === top && current.width === width ? current : { left, top, width })
+  }, [open, filteredOptions.length])
+
   useEffect(() => {
     setActiveIndex((current) => Math.min(Math.max(current, 0), Math.max(filteredOptions.length - 1, 0)))
   }, [filteredOptions.length])
@@ -89,9 +102,7 @@ export function SearchableSelect(props: Props) {
     if (rect) {
       const width = Math.max(rect.width, 210)
       const left = Math.min(rect.left, Math.max(8, window.innerWidth - width - 8))
-      const estimatedHeight = Math.min(318, window.innerHeight - 16)
-      const top = rect.bottom + estimatedHeight <= window.innerHeight ? rect.bottom + 4 : Math.max(8, rect.top - estimatedHeight - 4)
-      setMenuPosition({ left, top, width })
+      setMenuPosition({ left, top: rect.bottom + 4, width })
     }
     setOpen(true)
     setQuery('')

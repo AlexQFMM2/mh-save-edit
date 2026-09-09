@@ -1,27 +1,18 @@
-import type { SkillArmorRelation, SkillDecorationRelation, SkillDetail } from '../../../api/catalog/types'
-import { ArmorIcon } from '../ArmorIcon/ArmorIcon'
-import { CatalogIcon } from '../CatalogIcon/CatalogIcon'
-import { EquipmentSlotIndicator } from '../EquipmentSlotIndicator/EquipmentSlotIndicator'
+import type { SkillArmorRelation, SkillCatalogTab, SkillDecorationRelation, SkillDetail } from '../../../api/catalog/types'
+import { SkillActivationTable } from '../SkillActivationTable/SkillActivationTable'
+import { SkillArmorRelationList } from '../SkillArmorRelationList/SkillArmorRelationList'
+import { SkillDecorationRelationList } from '../SkillDecorationRelationList/SkillDecorationRelationList'
+import { SkillSourceTabs } from '../SkillSourceTabs/SkillSourceTabs'
+import { SkillTalismanRelationList } from '../SkillTalismanRelationList/SkillTalismanRelationList'
 import './SkillDetailPanel.css'
 
-type Props = {
-  skill: SkillDetail | null
-  loading: boolean
-  error?: string
-  onSelectDecoration: (decoration: SkillDecorationRelation) => void
-  onSelectArmor: (armor: SkillArmorRelation) => void
-}
-
-export function SkillDetailPanel({ skill, loading, error, onSelectDecoration, onSelectArmor }: Props) {
-  if (loading) return <div className="skill-detail-panel skill-detail-panel--state" role="status">正在读取技能关联资料…</div>
-  if (error) return <div className="skill-detail-panel skill-detail-panel--state" role="alert">{error}</div>
-  if (!skill) return <div className="skill-detail-panel skill-detail-panel--state">没有找到该技能。</div>
-  return <div className="skill-detail-panel">
-    <header className="skill-detail-panel__header"><small className="skill-detail-panel__identity">技能树 #{skill.skillId}</small><h2 className="skill-detail-panel__title">{skill.nameCn}</h2>{skill.nameEn && <p className="skill-detail-panel__subtitle">{skill.nameEn}</p>}</header>
-    <div className="skill-detail-panel__scroll">
-      {skill.activations.length > 0 && <section className="skill-detail-panel__section"><h3 className="skill-detail-panel__section-title">发动技能</h3><ul className="skill-detail-panel__activation-list">{skill.activations.map((activation, index) => <li className="skill-detail-panel__activation" key={`${activation.nameCn}-${index}`}><strong className="skill-detail-panel__activation-name">{activation.nameCn}</strong>{activation.nameEn && <small className="skill-detail-panel__activation-subtitle">{activation.nameEn}</small>}</li>)}</ul></section>}
-      <section className="skill-detail-panel__section"><h3 className="skill-detail-panel__section-title">关联装饰品 <span className="skill-detail-panel__count">{skill.decorations.length}</span></h3>{skill.decorations.length ? <ul className="skill-detail-panel__relation-list">{skill.decorations.map(decoration => <li className="skill-detail-panel__relation" key={decoration.saveId}><button className="skill-detail-panel__relation-button" type="button" onClick={() => onSelectDecoration(decoration)}><span className="skill-detail-panel__relation-icon"><CatalogIcon path={decoration.iconPath} name={decoration.nameCn}/></span><span className="skill-detail-panel__relation-copy"><strong className="skill-detail-panel__relation-name">{decoration.nameCn}</strong><small className="skill-detail-panel__relation-subtitle">{decoration.nameEn}</small></span><EquipmentSlotIndicator slots={decoration.slots}/><b className="skill-detail-panel__points">{decoration.points > 0 ? '+' : ''}{decoration.points}</b></button></li>)}</ul> : <p className="skill-detail-panel__empty">没有关联装饰品。</p>}</section>
-      <section className="skill-detail-panel__section"><h3 className="skill-detail-panel__section-title">关联防具 <span className="skill-detail-panel__count">{skill.armors.length}</span></h3>{skill.armors.length ? <ul className="skill-detail-panel__relation-list">{skill.armors.map(armor => <li className="skill-detail-panel__relation" key={armor.dexId}><button className="skill-detail-panel__relation-button" type="button" onClick={() => onSelectArmor(armor)}><span className="skill-detail-panel__relation-icon"><ArmorIcon path={armor.iconPath} name={armor.nameCn}/></span><span className="skill-detail-panel__relation-copy"><strong className="skill-detail-panel__relation-name">{armor.nameCn}</strong><small className="skill-detail-panel__relation-subtitle">{armor.nameEn}</small></span><b className="skill-detail-panel__points">{armor.points > 0 ? '+' : ''}{armor.points}</b></button></li>)}</ul> : <p className="skill-detail-panel__empty">没有关联防具。</p>}</section>
-    </div>
-  </div>
+type Props = { skill: SkillDetail | null; loading: boolean; error?: string; tab?: SkillCatalogTab; onTabChange?: (tab: SkillCatalogTab) => void; onSelectDecoration: (decoration: SkillDecorationRelation) => void; onSelectArmor: (armor: SkillArmorRelation) => void }
+export function SkillDetailPanel({ skill, loading, error, tab = 'armor', onTabChange = () => undefined, onSelectDecoration, onSelectArmor }: Props) {
+  if (!skill && loading) return <div className="skill-detail-panel skill-detail-panel--state" role="status">正在读取技能关联资料…</div>
+  if (error && !skill) return <div className="skill-detail-panel skill-detail-panel--state" role="alert">{error}</div>
+  if (!skill) return <div className="skill-detail-panel skill-detail-panel--state">从左侧选择技能系查看详情。</div>
+  return <article className="skill-detail-panel" aria-label={`${skill.nameCn}技能详情`}>
+    <header className="skill-detail-panel__header"><div><small className="skill-detail-panel__identity">技能系 #{skill.skillId} · 0x{skill.skillId.toString(16).toUpperCase()}</small><h2 className="skill-detail-panel__title">{skill.nameCn}</h2><p className="skill-detail-panel__subtitle">{[skill.nameEn, skill.nameJp].filter(Boolean).join(' · ')}</p></div>{loading && <span className="skill-detail-panel__updating" role="status">正在更新资料…</span>}</header>
+    <div className="skill-detail-panel__scroll">{skill.descriptionCn && <p className="skill-detail-panel__description">{skill.descriptionCn}</p>}<SkillActivationTable activations={skill.activations} /><SkillSourceTabs value={tab} counts={{ armor: skill.armors.length, decoration: skill.decorations.length, talisman: skill.talismans.length }} onChange={onTabChange} /><div className="skill-detail-panel__sources" role="tabpanel" aria-label={tab === 'armor' ? '相关防具' : tab === 'decoration' ? '相关装饰品' : '相关护石'}>{tab === 'armor' ? <SkillArmorRelationList rows={skill.armors} onSelect={onSelectArmor} /> : tab === 'decoration' ? <SkillDecorationRelationList rows={skill.decorations} onSelect={onSelectDecoration} /> : <SkillTalismanRelationList rows={skill.talismans} />}</div></div>
+  </article>
 }
