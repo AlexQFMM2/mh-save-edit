@@ -465,7 +465,7 @@ export type ItemCatalogFilters = {
 
 export type PageResult<T> = { items: T[]; page: number; pageSize: number; total: number; hasNext: boolean }
 
-export type WeaponViewMode = 'list' | 'tree'
+export type WeaponViewMode = 'list' | 'tree' | 'motion'
 export type WeaponSort = 'saveId' | 'name' | 'rarity' | 'attack' | 'slots' | 'sharpness' | 'affinity'
 export type SortDirection = 'asc' | 'desc'
 export type SharpnessStage = 'base' | 'handicraft1' | 'handicraft2'
@@ -641,6 +641,96 @@ export type WeaponTreeResult = {
   dataVersion: string
   nodes: WeaponTreeNode[]
   edges: WeaponTreeEdge[]
+}
+
+export type WeaponStyleId = 'guild' | 'striker' | 'aerial' | 'adept' | 'alchemy' | 'valor'
+export type WeaponMotionCategory = 'standard' | 'style' | 'hunterArt'
+export type WeaponMotionSort = 'source' | 'motionValue' | 'stun' | 'exhaust'
+
+export type WeaponMotionFilters = {
+  gameId: 'mhgu'
+  weaponTypeId: number
+  query?: string
+  styleIds?: WeaponStyleId[]
+  category?: WeaponMotionCategory
+  sort?: WeaponMotionSort
+  direction?: SortDirection
+}
+
+export type WeaponMotionHit = {
+  sequence: number
+  motionValue: number | null
+  attackType: string | null
+  sharpnessModifier: number | null
+  exhaust: number | null
+  stun: number | null
+  isDamage: boolean
+}
+
+export type WeaponMotionVariant = {
+  variantId: string
+  labelCn: string
+  conditionCn: string
+  styleId: WeaponStyleId | null
+  motionValueTotal: number | null
+  hits: WeaponMotionHit[]
+}
+
+export type WeaponMotionBase = {
+  gameId: 'mhgu'
+  motionKey: string
+  weaponTypeId: number
+  nativeActionId: string
+  nameCn: string
+  nameEn: string
+  nameJp: string
+  category: WeaponMotionCategory
+  styles: WeaponStyleId[]
+  hitCountMin: number
+  hitCountMax: number
+  motionValueMin: number | null
+  motionValueMax: number | null
+  motionValueTotal: number | null
+  notes: string
+  hunterArtId: number | null
+  evidenceStatus: string
+  variants: WeaponMotionVariant[]
+}
+
+export type MeleeWeaponMotion = WeaponMotionBase & {
+  resultKind: 'melee'
+  attackType: string | null
+  sharpnessModifier: number | null
+  exhaust: number | null
+  stun: number | null
+}
+
+export type BowgunWeaponMotion = WeaponMotionBase & {
+  resultKind: 'bowgun'
+  projectileKind: string
+  rapidFireModifier: number | null
+  siegeModifier: number | null
+  nativeModifierText: string
+}
+
+export type BowWeaponMotion = WeaponMotionBase & {
+  resultKind: 'bow'
+  shotType: string | null
+  chargeLevel: number | null
+  chargeModifier: number | null
+  coatingModifier: number | null
+  distanceModifier: string | null
+}
+
+export type WeaponMotionCatalogResult =
+  | { kind: 'melee'; weaponType: WeaponTypeDefinition; motions: MeleeWeaponMotion[] }
+  | { kind: 'bowgun'; weaponType: WeaponTypeDefinition; motions: BowgunWeaponMotion[] }
+  | { kind: 'bow'; weaponType: WeaponTypeDefinition; motions: BowWeaponMotion[] }
+
+export type WeaponMotionFacets = {
+  weaponTypes: WeaponTypeDefinition[]
+  styles: { id: WeaponStyleId; nameCn: string; nameEn: string }[]
+  categories: WeaponMotionCategory[]
 }
 
 export const sourceKindLabels: Record<string, string> = {

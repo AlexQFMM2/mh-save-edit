@@ -10,16 +10,25 @@ export type SearchableSelectOption = {
   disabled?: boolean
 }
 
-type Props = {
-  value: string
+type CommonProps = {
   options: SearchableSelectOption[]
-  onChange: (value: string) => void
   placeholder?: string
   ariaLabel: string
   disabled?: boolean
 }
 
-export function SearchableSelect({ value, options, onChange, placeholder = '请选择', ariaLabel, disabled = false }: Props) {
+type Props = CommonProps & ({
+  value: string
+  onChange: (value: string) => void
+  multiple?: false
+} | {
+  value: string[]
+  onChange: (value: string[]) => void
+  multiple: true
+})
+
+export function SearchableSelect(props: Props) {
+  const { value, options, placeholder = '请选择', ariaLabel, disabled = false } = props
   const rootRef = useRef<HTMLDivElement>(null)
   const triggerRef = useRef<HTMLButtonElement>(null)
   const menuRef = useRef<HTMLDivElement>(null)
@@ -29,7 +38,8 @@ export function SearchableSelect({ value, options, onChange, placeholder = '请�
   const [query, setQuery] = useState('')
   const [activeIndex, setActiveIndex] = useState(0)
   const [menuPosition, setMenuPosition] = useState({ left: 0, top: 0, width: 210 })
-  const selected = options.find((option) => option.value === value)
+  const selectedValues = Array.isArray(value) ? value : [value]
+  const selected = options.filter((option) => selectedValues.includes(option.value))
   const normalizedQuery = query.trim().toLocaleLowerCase()
   const filteredOptions = useMemo(() => {
     if (!normalizedQuery) return options
@@ -65,8 +75,12 @@ export function SearchableSelect({ value, options, onChange, placeholder = '请�
 
   const select = (option: SearchableSelectOption) => {
     if (option.disabled) return
-    onChange(option.value)
-    close(true)
+    if (props.multiple) {
+      props.onChange(selectedValues.includes(option.value) ? selectedValues.filter((item) => item !== option.value) : [...selectedValues, option.value])
+    } else {
+      props.onChange(option.value)
+      close(true)
+    }
   }
 
   const openMenu = () => {
@@ -81,7 +95,7 @@ export function SearchableSelect({ value, options, onChange, placeholder = '请�
     }
     setOpen(true)
     setQuery('')
-    setActiveIndex(Math.max(options.findIndex((option) => option.value === value), 0))
+    setActiveIndex(Math.max(options.findIndex((option) => selectedValues.includes(option.value)), 0))
   }
 
   const handleTriggerKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>) => {
@@ -119,16 +133,17 @@ export function SearchableSelect({ value, options, onChange, placeholder = '请�
 
   return <div ref={rootRef} className={`searchable-select${open ? ' searchable-select--open' : ''}`}>
     <button ref={triggerRef} type="button" className="searchable-select__trigger" aria-label={ariaLabel} aria-haspopup="listbox" aria-expanded={open} aria-controls={listId} disabled={disabled} onClick={() => open ? close() : openMenu()} onKeyDown={handleTriggerKeyDown}>
-      <span className={selected ? '' : 'searchable-select__placeholder'}>{selected?.label ?? placeholder}</span>
-      <ChevronDown aria-hidden="true" />
+      <span className={`searchable-select__value${selected.length ? '' : ' searchable-select__placeholder'}`}>{selected.length ? (props.multiple ? selected.map((option) => option.label).join('、') : selected[0].label) : placeholder}</span>
+      <ChevronDown className="searchable-select__chevron" aria-hidden="true" />
     </button>
     {open && createPortal(<div ref={menuRef} className="searchable-select__menu" style={menuPosition}>
-      <label className="searchable-select__search"><Search aria-hidden="true" /><input ref={searchRef} role="combobox" aria-expanded="true" aria-controls={listId} aria-activedescendant={filteredOptions[activeIndex]?`${listId}-option-${activeIndex}`:undefined} value={query} onChange={(event) => { setQuery(event.target.value); setActiveIndex(0) }} onKeyDown={handleSearchKeyDown} placeholder="输入关键词筛选" aria-label={`${ariaLabel}关键词`} /></label>
-      <div className="searchable-select__options" id={listId} role="listbox" aria-label={ariaLabel}>
-        {filteredOptions.length ? filteredOptions.map((option, index) => <button id={`${listId}-option-${index}`} type="button" role="option" tabIndex={-1} aria-selected={option.value === value} disabled={option.disabled} className={`searchable-select__option${index === activeIndex ? ' searchable-select__option--active' : ''}`} key={`${option.value}-${index}`} onMouseEnter={() => setActiveIndex(index)} onClick={() => select(option)}>
-          <span>{option.label}</span>{option.value === value && <Check aria-hidden="true" />}
+      <label className="searchable-select__search"><Search className="searchable-select__search-icon" aria-hidden="true" /><input className="searchable-select__search-input" ref={searchRef} role="combobox" aria-expanded="true" aria-controls={listId} aria-activedescendant={filteredOptions[activeIndex]?`${listId}-option-${activeIndex}`:undefined} value={query} onChange={(event) => { setQuery(event.target.value); setActiveIndex(0) }} onKeyDown={handleSearchKeyDown} placeholder="输入关键词筛选" aria-label={`${ariaLabel}关键词`} /></label>
+      <div className="searchable-select__options" id={listId} role="listbox" aria-multiselectable={props.multiple || undefined} aria-label={ariaLabel}>
+        {filteredOptions.length ? filteredOptions.map((option, index) => <button id={`${listId}-option-${index}`} type="button" role="option" tabIndex={-1} aria-selected={selectedValues.includes(option.value)} disabled={option.disabled} className={`searchable-select__option${index === activeIndex ? ' searchable-select__option--active' : ''}`} key={`${option.value}-${index}`} onMouseEnter={() => setActiveIndex(index)} onClick={() => select(option)}>
+          <span className="searchable-select__option-label">{option.label}</span>{selectedValues.includes(option.value) && <Check className="searchable-select__check" aria-hidden="true" />}
         </button>) : <p className="searchable-select__empty">无匹配选项</p>}
       </div>
+      {props.multiple && <button className="searchable-select__done" type="button" onClick={() => close(true)}>完成（已选 {selected.length}）</button>}
     </div>, document.body)}
   </div>
 }

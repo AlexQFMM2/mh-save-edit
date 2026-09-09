@@ -9,6 +9,8 @@ export const catalogChannels = {
   getWeapon: 'catalog:get-weapon',
   getWeaponFacets: 'catalog:get-weapon-facets',
   getWeaponTree: 'catalog:get-weapon-tree',
+  searchWeaponMotions: 'catalog:search-weapon-motions',
+  getWeaponMotionFacets: 'catalog:get-weapon-motion-facets',
   searchArmors: 'catalog:search-armors',
   searchArmorSets: 'catalog:search-armor-sets',
   getArmor: 'catalog:get-armor',

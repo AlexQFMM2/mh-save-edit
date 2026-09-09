@@ -182,6 +182,16 @@ Yuzu 的“转储 RomFS”就是本项目需要的 Switch 游戏资源解包方�
 
 不得把大型 `partition0.cxi`、`romfs.bin`、完整 ROM、ExeFS 或整棵 RomFS 复制进仓库。只提取当前任务需要且许可允许分发的最小数据、图标或映射结果。
 
+### GU/XX 武器动作资源
+
+- 动作值研究固定入口为 `research/mhgu/motion-values`，不得从项目根目录、`Downloads` 或 `/tmp` 直接构建。
+- `native/mhgu`、`native/mhxx` 保存 14 类猎人武器的 `w00`～`w14`（跳过不存在的 `w05`）及 `wbc` 最小 ARC；`styles/<版本>` 保存每类 `m0`～`m5` 六风格命令包。
+- `localization` 保存简中、英文、日文 `HN_WeaponControlsMsg_*.gmd`；动作名必须按 GMD 稳定键交叉映射，不能机器翻译后冒充原生文本。
+- 用户提供的动作值图片只放在 `references/user-images` 做私有抽样，公开交叉验证快照只放 `references`；两者都不是运行时资源。
+- 动作值表述必须保留变体和顺序 Hit，不能只保存合计；HDP、HDS、LMT、FUP 或 XFS 未确认的字段保持为空并进入后续审计，不按截图或字段位置猜测。
+- 猎猫 `w15` 不进入猎人武器动作值图鉴；MH3G、MH4G 不得复用 GU/XX 动作值。
+- ARC、GMD、参考图片、真实动作值 SQLite/CSV/JSON、manifest 和 crosswalk 均为私有研究产物，不得进入 GitHub。
+
 ### 选择性复制到研究区
 
 Windows OpenSSH 路径已经验证使用 `/D:/...` 形式。只复制明确需要的小文件到 `/tmp` 或 `research`，例如：

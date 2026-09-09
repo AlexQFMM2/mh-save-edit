@@ -1,6 +1,6 @@
 # 三作武器图鉴与派生画布实施计划
 
-状态：武器数据、Repository/IPC、列表与派生画布第一版已完成；性能专项验收待继续  
+状态：武器数据、Repository/IPC、列表、派生画布及 GU/XX 动作值第三模式第一版已完成；性能专项验收待继续
 计划日期：2026-09-07  
 适用内容库：MH3G/MH3U、MH4G、MHGU/MHXX
 
@@ -25,6 +25,13 @@
 - 已接通武器材料到道具抽屉，以及道具武器用途到武器抽屉；继续遵守“正文打开一级抽屉，抽屉内再次点击改为跳转”的规则。
 - 全项目排版现已收敛到五档全局字号，业务数据统一使用亮金色语义令牌，并由 `tests/designTokens.test.ts` 防止回归。
 - 当前 TypeScript、65 项 Vitest、Electron Vite build 和 diff 检查通过。尚未完成最大 MHGU/XX 单类派生树的 React Profiler 性能实测，因此不把性能专项标记为完成。
+
+### 2026-09-08 GU/XX 动作值模式
+
+- 仅 `mhgu` 内容库新增“动作值”第三模式，覆盖 14 种猎人武器并排除猎猫。
+- 已接入六风格可搜索多选、动作分类、动作值/气绝/减气排序、URL 状态、行内变体与 Hit 展开，以及攻击型狩技一级详情抽屉。
+- GU/XX 公共 HDP、六风格命令资源、远程 HDS 和三语 WeaponControls GMD 已固定到私有 research 并纳入来源审计；原生逐事件参数 crosswalk 仍待精修，未确认字段保持为空。
+- 详细数据边界、构建命令与后续原生字段精修见 [11-weapon-motion-catalog.md](11-weapon-motion-catalog.md)。
 
 ## 1. 目标与本轮边界
 

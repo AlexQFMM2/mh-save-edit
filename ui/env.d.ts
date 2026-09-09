@@ -1,5 +1,5 @@
 import type { GameId } from '../api/core/loadout'
-import type { ArmorCatalogFacets, ArmorCatalogFilters, ArmorDetail, ArmorIdentity, ArmorSetFilters, ArmorSetSummary, ArmorSummary, DecorationCatalogFacets, DecorationCatalogFilters, DecorationDetail, DecorationIdentity, DecorationSummary, HunterArtCatalogFacets, HunterArtCatalogFilters, HunterArtDetail, HunterArtIdentity, HunterArtSummary, ItemCatalogFilters, ItemDetail, ItemIdentity, ItemSummary, MonsterCatalogFacets, MonsterCatalogFilters, MonsterDetail, MonsterIdentity, MonsterSummary, PageResult, QuestCatalogFacets, QuestCatalogFilters, QuestDetail, QuestIdentity, QuestSummary, SkillDetail, SkillIdentity, WeaponCatalogFacets, WeaponCatalogFilters, WeaponDetail, WeaponIdentity, WeaponSummary, WeaponTreeResult } from '../api/catalog/types'
+import type { ArmorCatalogFacets, ArmorCatalogFilters, ArmorDetail, ArmorIdentity, ArmorSetFilters, ArmorSetSummary, ArmorSummary, DecorationCatalogFacets, DecorationCatalogFilters, DecorationDetail, DecorationIdentity, DecorationSummary, HunterArtCatalogFacets, HunterArtCatalogFilters, HunterArtDetail, HunterArtIdentity, HunterArtSummary, ItemCatalogFilters, ItemDetail, ItemIdentity, ItemSummary, MonsterCatalogFacets, MonsterCatalogFilters, MonsterDetail, MonsterIdentity, MonsterSummary, PageResult, QuestCatalogFacets, QuestCatalogFilters, QuestDetail, QuestIdentity, QuestSummary, SkillDetail, SkillIdentity, WeaponCatalogFacets, WeaponCatalogFilters, WeaponDetail, WeaponIdentity, WeaponMotionCatalogResult, WeaponMotionFacets, WeaponMotionFilters, WeaponSummary, WeaponTreeResult } from '../api/catalog/types'
 
 declare global {
   interface Window {
@@ -16,6 +16,8 @@ declare global {
         getWeapon(identity: WeaponIdentity): Promise<WeaponDetail | null>
         getWeaponFacets(gameId: GameId): Promise<WeaponCatalogFacets>
         getWeaponTree(gameId: GameId, weaponTypeId: number): Promise<WeaponTreeResult>
+        searchWeaponMotions(filters: WeaponMotionFilters): Promise<WeaponMotionCatalogResult>
+        getWeaponMotionFacets(gameId: GameId): Promise<WeaponMotionFacets>
         searchArmors(filters: ArmorCatalogFilters): Promise<PageResult<ArmorSummary>>
         searchArmorSets(filters: ArmorSetFilters): Promise<PageResult<ArmorSetSummary>>
         getArmor(identity: ArmorIdentity): Promise<ArmorDetail | null>

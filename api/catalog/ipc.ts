@@ -6,11 +6,12 @@ import type { GameId } from '../core/loadout'
 import { ItemCatalogRepository } from './repository'
 import { DecorationCatalogRepository } from './decorationRepository'
 import { WeaponCatalogRepository } from './weaponRepository'
+import { WeaponMotionCatalogRepository } from './weaponMotionRepository'
 import { ArmorCatalogRepository } from './armorRepository'
 import { SkillCatalogRepository } from './skillRepository'
 import { MonsterCatalogRepository } from './monsterRepository'
 import { HunterArtCatalogRepository, QuestCatalogRepository } from './questRepository'
-import { armorCatalogFiltersSchema, armorIdentitySchema, armorSetFiltersSchema, decorationCatalogFiltersSchema, decorationIdentitySchema, gameIdSchema, hunterArtCatalogFiltersSchema, hunterArtIdentitySchema, itemCatalogFiltersSchema, itemIdentitySchema, monsterCatalogFiltersSchema, monsterIdentitySchema, questCatalogFiltersSchema, questIdentitySchema, skillIdentitySchema, weaponCatalogFiltersSchema, weaponIdentitySchema, weaponTreeRequestSchema } from './schemas'
+import { armorCatalogFiltersSchema, armorIdentitySchema, armorSetFiltersSchema, decorationCatalogFiltersSchema, decorationIdentitySchema, gameIdSchema, hunterArtCatalogFiltersSchema, hunterArtIdentitySchema, itemCatalogFiltersSchema, itemIdentitySchema, monsterCatalogFiltersSchema, monsterIdentitySchema, questCatalogFiltersSchema, questIdentitySchema, skillIdentitySchema, weaponCatalogFiltersSchema, weaponIdentitySchema, weaponMotionFiltersSchema, weaponTreeRequestSchema } from './schemas'
 import { catalogChannels } from './channels'
 export { catalogChannels }
 
@@ -23,7 +24,7 @@ export function resolveCatalogDataDir(isPackaged: boolean, resourcesPath: string
 }
 
 export function registerCatalogIpc(dataDir: string): () => void {
-  const repositories = new Map<GameId, { db: DatabaseType.Database; repository: ItemCatalogRepository; decorations: DecorationCatalogRepository; weapons: WeaponCatalogRepository; armors: ArmorCatalogRepository; skills: SkillCatalogRepository; monsters: MonsterCatalogRepository; quests: QuestCatalogRepository; hunterArts: HunterArtCatalogRepository }>()
+  const repositories = new Map<GameId, { db: DatabaseType.Database; repository: ItemCatalogRepository; decorations: DecorationCatalogRepository; weapons: WeaponCatalogRepository; weaponMotions: WeaponMotionCatalogRepository; armors: ArmorCatalogRepository; skills: SkillCatalogRepository; monsters: MonsterCatalogRepository; quests: QuestCatalogRepository; hunterArts: HunterArtCatalogRepository }>()
   const repositoryEntry = (gameId: GameId) => {
     const cached = repositories.get(gameId)
     if (cached) return cached
@@ -33,12 +34,13 @@ export function registerCatalogIpc(dataDir: string): () => void {
     const value = new ItemCatalogRepository(db)
     const decorations = new DecorationCatalogRepository(db)
     const weapons = new WeaponCatalogRepository(db)
+    const weaponMotions = new WeaponMotionCatalogRepository(db)
     const armors = new ArmorCatalogRepository(db)
     const skills = new SkillCatalogRepository(db)
     const monsters = new MonsterCatalogRepository(db)
     const quests = new QuestCatalogRepository(db)
     const hunterArts = new HunterArtCatalogRepository(db)
-    const entry = { db, repository: value, decorations, weapons, armors, skills, monsters, quests, hunterArts }
+    const entry = { db, repository: value, decorations, weapons, weaponMotions, armors, skills, monsters, quests, hunterArts }
     repositories.set(gameId, entry)
     return entry
   }
@@ -82,6 +84,15 @@ export function registerCatalogIpc(dataDir: string): () => void {
   ipcMain.handle(catalogChannels.getWeaponTree, (_event, payload: unknown) => {
     const request = weaponTreeRequestSchema.parse(payload)
     return repositoryEntry(request.gameId).weapons.getWeaponTree(request.gameId, request.weaponTypeId)
+  })
+  ipcMain.handle(catalogChannels.searchWeaponMotions, (_event, payload: unknown) => {
+    const filters = weaponMotionFiltersSchema.parse(payload)
+    return repositoryEntry(filters.gameId).weaponMotions.searchWeaponMotions(filters)
+  })
+  ipcMain.handle(catalogChannels.getWeaponMotionFacets, (_event, payload: unknown) => {
+    const gameId = gameIdSchema.parse(payload)
+    if (gameId !== 'mhgu') throw new Error('当前游戏没有动作值图鉴')
+    return repositoryEntry(gameId).weaponMotions.getWeaponMotionFacets(gameId)
   })
   ipcMain.handle(catalogChannels.searchArmors, (_event, payload: unknown) => {
     const filters = armorCatalogFiltersSchema.parse(payload)

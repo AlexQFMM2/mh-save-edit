@@ -63,6 +63,16 @@ export const weaponCatalogFiltersSchema = z.object({
   }
 })
 export const weaponTreeRequestSchema = z.object({ gameId: gameIdSchema, weaponTypeId: z.number().int().min(1).max(14) }).strict()
+const weaponStyleSchema = z.enum(['guild','striker','aerial','adept','alchemy','valor'])
+export const weaponMotionFiltersSchema = z.object({
+  gameId: z.literal('mhgu'),
+  weaponTypeId: z.number().int().min(1).max(14),
+  query: z.string().trim().max(120).optional(),
+  styleIds: z.array(weaponStyleSchema).max(6).optional(),
+  category: z.enum(['standard','style','hunterArt']).optional(),
+  sort: z.enum(['source','motionValue','stun','exhaust']).optional(),
+  direction: z.enum(['asc','desc']).optional(),
+}).strict()
 
 export const armorIdentitySchema = z.object({ gameId: gameIdSchema, dexId: z.number().int().min(1).max(65535) }).strict()
 export const skillIdentitySchema = z.object({ gameId: gameIdSchema, skillId: z.number().int().min(0).max(65535) }).strict()
