@@ -1,0 +1,12 @@
+.loadout-skill-matrix { display: grid; grid-template-rows: auto auto minmax(0, 1fr); min-height: 0; border: 1px solid rgba(223, 182, 93, .18); border-radius: 8px; background: rgba(18, 10, 6, .35); overflow: hidden; }
+.loadout-skill-matrix__title { padding: 8px 10px; color: var(--global-theme-color-data); font-size: var(--global-typography-font-size-body); font-weight: 700; }
+.loadout-skill-matrix__head, .loadout-skill-matrix__row { display: grid; grid-template-columns: minmax(120px, 1.2fr) minmax(220px, 2fr) 70px minmax(150px, 1fr); gap: 8px; align-items: center; padding: 7px 10px; }
+.loadout-skill-matrix__head { border-top: 1px solid rgba(223, 182, 93, .15); border-bottom: 1px solid rgba(223, 182, 93, .15); color: var(--global-theme-color-text-muted); font-size: var(--global-typography-font-size-caption); }
+.loadout-skill-matrix__body { overflow: auto; }
+.loadout-skill-matrix__row { border-bottom: 1px solid rgba(223, 182, 93, .1); font-size: var(--global-typography-font-size-small); }
+.loadout-skill-matrix__name { color: var(--global-theme-color-data); }
+.loadout-skill-matrix__contributions { display: flex; gap: 8px; color: var(--global-theme-color-text-secondary); font-variant-numeric: tabular-nums; }
+.loadout-skill-matrix__contribution { min-width: 16px; text-align: center; font-style: normal; }
+.loadout-skill-matrix__decoration, .loadout-skill-matrix__total { color: var(--global-theme-color-data); font-variant-numeric: tabular-nums; }
+.loadout-skill-matrix__total--active { color: #b9dc93; font-weight: 700; }
+.loadout-skill-matrix__empty { padding: 14px; color: var(--global-theme-color-text-muted); font-size: var(--global-typography-font-size-small); }

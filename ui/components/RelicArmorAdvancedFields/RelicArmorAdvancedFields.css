@@ -1,0 +1,11 @@
+.relic-armor-advanced-fields { display: grid; gap: 8px; }
+.relic-armor-advanced-fields__group { display: grid; grid-template-columns: repeat(2, minmax(220px, 1fr)); gap: 7px 12px; padding: 10px; border: 1px solid rgba(223, 182, 93, .18); color: var(--global-theme-color-text-secondary); }
+.relic-armor-advanced-fields__legend { color: var(--global-theme-color-data); font-size: var(--global-typography-font-size-small); }
+.relic-armor-advanced-fields__field { display: grid; grid-template-columns: minmax(100px, 1fr) 76px 58px; align-items: center; gap: 5px; font-size: var(--global-typography-font-size-small); }
+.relic-armor-advanced-fields__label { color: var(--global-theme-color-text-secondary); }
+.relic-armor-advanced-fields__input { width: 76px; height: 34px; padding: 0 6px; border: 1px solid var(--global-theme-color-border); border-radius: 6px; color: var(--global-theme-color-data); background: rgba(18, 10, 6, .55); font: inherit; font-variant-numeric: tabular-nums; }
+.relic-armor-advanced-fields__hex { color: var(--global-theme-color-data); font-size: var(--global-typography-font-size-caption); font-variant-numeric: tabular-nums; }
+.relic-armor-advanced-fields__check { display: flex; align-items: center; gap: 7px; min-height: 34px; font-size: var(--global-typography-font-size-small); }
+.relic-armor-advanced-fields__checkbox { width: 18px; height: 18px; accent-color: var(--global-theme-color-gold-bright); }
+.relic-armor-advanced-fields__note { color: var(--global-theme-color-text-muted); font-size: var(--global-typography-font-size-caption); }
+@media (max-width: 760px) { .relic-armor-advanced-fields__group { grid-template-columns: 1fr; } }

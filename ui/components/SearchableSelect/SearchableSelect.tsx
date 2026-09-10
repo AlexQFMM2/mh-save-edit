@@ -1,5 +1,5 @@
 import { Check, ChevronDown, Search } from 'lucide-react'
-import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import './SearchableSelect.css'
 
@@ -15,6 +15,7 @@ type CommonProps = {
   placeholder?: string
   ariaLabel: string
   disabled?: boolean
+  className?: string
 }
 
 type Props = CommonProps & ({
@@ -28,7 +29,7 @@ type Props = CommonProps & ({
 })
 
 export function SearchableSelect(props: Props) {
-  const { value, options, placeholder = '请选择', ariaLabel, disabled = false } = props
+  const { value, options, placeholder = '请选择', ariaLabel, disabled = false, className = '' } = props
   const rootRef = useRef<HTMLDivElement>(null)
   const triggerRef = useRef<HTMLButtonElement>(null)
   const menuRef = useRef<HTMLDivElement>(null)
@@ -46,26 +47,13 @@ export function SearchableSelect(props: Props) {
     return options.filter((option) => [option.label, ...(option.keywords ?? [])].join(' ').toLocaleLowerCase().includes(normalizedQuery))
   }, [normalizedQuery, options])
 
-  useEffect(() => {
-    if (!open) return
-    const closeOnOutsidePointer = (event: PointerEvent) => {
-      if (!rootRef.current?.contains(event.target as Node) && !menuRef.current?.contains(event.target as Node)) setOpen(false)
-    }
-    const closeOnViewportChange = () => setOpen(false)
-    document.addEventListener('pointerdown', closeOnOutsidePointer)
-    window.addEventListener('resize', closeOnViewportChange)
-    window.addEventListener('scroll', closeOnViewportChange, true)
-    searchRef.current?.focus()
-    return () => {
-      document.removeEventListener('pointerdown', closeOnOutsidePointer)
-      window.removeEventListener('resize', closeOnViewportChange)
-      window.removeEventListener('scroll', closeOnViewportChange, true)
-    }
-  }, [open])
-
-  useLayoutEffect(() => {
-    if (!open || !triggerRef.current || !menuRef.current) return
+  const updateMenuPosition = useCallback(() => {
+    if (!triggerRef.current || !menuRef.current) return
     const trigger = triggerRef.current.getBoundingClientRect()
+    if (trigger.bottom < 0 || trigger.top > window.innerHeight || trigger.right < 0 || trigger.left > window.innerWidth) {
+      setOpen(false)
+      return
+    }
     const menu = menuRef.current.getBoundingClientRect()
     const gutter = 8
     const gap = 4
@@ -74,7 +62,34 @@ export function SearchableSelect(props: Props) {
     const fitsBelow = trigger.bottom + gap + menu.height <= window.innerHeight - gutter
     const top = fitsBelow ? trigger.bottom + gap : Math.max(gutter, trigger.top - menu.height - gap)
     setMenuPosition((current) => current.left === left && current.top === top && current.width === width ? current : { left, top, width })
-  }, [open, filteredOptions.length])
+  }, [])
+
+  useEffect(() => {
+    if (!open) return
+    const closeOnOutsidePointer = (event: PointerEvent) => {
+      if (!rootRef.current?.contains(event.target as Node) && !menuRef.current?.contains(event.target as Node)) setOpen(false)
+    }
+    let frame = 0
+    const repositionOnViewportChange = (event: Event) => {
+      if (event.type === 'scroll' && event.target instanceof Node && menuRef.current?.contains(event.target)) return
+      window.cancelAnimationFrame(frame)
+      frame = window.requestAnimationFrame(updateMenuPosition)
+    }
+    document.addEventListener('pointerdown', closeOnOutsidePointer)
+    window.addEventListener('resize', repositionOnViewportChange)
+    window.addEventListener('scroll', repositionOnViewportChange, true)
+    searchRef.current?.focus()
+    return () => {
+      window.cancelAnimationFrame(frame)
+      document.removeEventListener('pointerdown', closeOnOutsidePointer)
+      window.removeEventListener('resize', repositionOnViewportChange)
+      window.removeEventListener('scroll', repositionOnViewportChange, true)
+    }
+  }, [open, updateMenuPosition])
+
+  useLayoutEffect(() => {
+    if (open) updateMenuPosition()
+  }, [open, filteredOptions.length, updateMenuPosition])
 
   useEffect(() => {
     setActiveIndex((current) => Math.min(Math.max(current, 0), Math.max(filteredOptions.length - 1, 0)))
@@ -136,13 +151,22 @@ export function SearchableSelect(props: Props) {
       if (option) select(option)
     } else if (event.key === 'Escape') {
       event.preventDefault()
+      event.stopPropagation()
       close(true)
     } else if (event.key === 'Tab') {
+      event.preventDefault()
+      event.stopPropagation()
+      const trigger = triggerRef.current
+      const scope = trigger?.closest('[role="dialog"]') ?? document
+      const focusable = [...scope.querySelectorAll<HTMLElement>('button:not(:disabled),input:not(:disabled),[href],[tabindex]:not([tabindex="-1"])')]
+      const index = trigger ? focusable.indexOf(trigger) : -1
+      const target = focusable[index + (event.shiftKey ? -1 : 1)] ?? focusable[event.shiftKey ? focusable.length - 1 : 0]
       close()
+      window.requestAnimationFrame(() => target?.focus())
     }
   }
 
-  return <div ref={rootRef} className={`searchable-select${open ? ' searchable-select--open' : ''}`}>
+  return <div ref={rootRef} className={`searchable-select${open ? ' searchable-select--open' : ''}${className ? ` ${className}` : ''}`}>
     <button ref={triggerRef} type="button" className="searchable-select__trigger" aria-label={ariaLabel} aria-haspopup="listbox" aria-expanded={open} aria-controls={listId} disabled={disabled} onClick={() => open ? close() : openMenu()} onKeyDown={handleTriggerKeyDown}>
       <span className={`searchable-select__value${selected.length ? '' : ' searchable-select__placeholder'}`}>{selected.length ? (props.multiple ? selected.map((option) => option.label).join('、') : selected[0].label) : placeholder}</span>
       <ChevronDown className="searchable-select__chevron" aria-hidden="true" />

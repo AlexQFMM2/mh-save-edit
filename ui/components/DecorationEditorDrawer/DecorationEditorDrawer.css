@@ -1,0 +1,18 @@
+.decoration-editor-drawer { display: grid; grid-template-rows: auto auto auto minmax(0, 1fr); gap: 10px; height: 100%; min-height: 0; }
+.decoration-editor-drawer__filters, .decoration-editor-drawer__picker { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.decoration-editor-drawer__filter { display: flex; align-items: center; gap: 5px; color: var(--global-theme-color-text-secondary); font-size: var(--global-typography-font-size-small); }
+.decoration-editor-drawer__label { white-space: nowrap; }
+.decoration-editor-drawer__select { --searchable-select-component-min-width: 160px; }
+.decoration-editor-drawer__candidate-select { flex: 1; }
+.decoration-editor-drawer__add, .decoration-editor-drawer__remove { min-height: 34px; padding: 0 10px; border: 1px solid var(--global-theme-color-border); border-radius: 6px; color: var(--global-theme-color-text-primary); background: var(--global-theme-color-surface); font: inherit; font-size: var(--global-typography-font-size-small); cursor: pointer; }
+.decoration-editor-drawer__add:disabled { opacity: .4; cursor: not-allowed; }
+.decoration-editor-drawer__usage { display: flex; align-items: center; flex-wrap: wrap; gap: 5px; min-height: 48px; padding: 8px; border: 1px solid rgba(223, 182, 93, .16); color: var(--global-theme-color-text-secondary); font-size: var(--global-typography-font-size-small); }
+.decoration-editor-drawer__usage[data-state="invalid"] { border-color: #a76f3f; }
+.decoration-editor-drawer__data { color: var(--global-theme-color-data); }
+.decoration-editor-drawer__warning { flex-basis: 100%; color: #edaa74; }
+.decoration-editor-drawer__list { min-height: 0; margin: 0; padding: 0; overflow: auto; list-style: none; }
+.decoration-editor-drawer__item { display: flex; justify-content: space-between; gap: 8px; padding: 8px 0; border-bottom: 1px solid rgba(223, 182, 93, .1); color: var(--global-theme-color-text-primary); font-size: var(--global-typography-font-size-small); }
+.decoration-editor-drawer__item-body { display: grid; gap: 2px; }
+.decoration-editor-drawer__item-name { color: var(--global-theme-color-data); }
+.decoration-editor-drawer__item-detail { color: var(--global-theme-color-text-muted); font-size: var(--global-typography-font-size-caption); }
+.decoration-editor-drawer__apply { color: #24150e; background: var(--global-theme-color-gold-bright); }

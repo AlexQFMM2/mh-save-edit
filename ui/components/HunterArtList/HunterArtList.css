@@ -4,8 +4,6 @@
   min-height: 0;
   overflow: auto;
   border-right: 1px solid rgba(223, 182, 93, 0.14);
-  scrollbar-color: rgba(223, 182, 93, 0.22) transparent;
-  scrollbar-width: thin;
 }
 
 .hunter-art-list__state {

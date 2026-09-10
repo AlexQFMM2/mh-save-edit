@@ -1,0 +1,7 @@
+.relic-decoration-record-fields { display: grid; gap: 6px; padding: 10px; border: 1px solid rgba(223, 182, 93, .18); color: var(--global-theme-color-text-secondary); }
+.relic-decoration-record-fields__legend { color: var(--global-theme-color-data); font-size: var(--global-typography-font-size-small); }
+.relic-decoration-record-fields__field { display: grid; grid-template-columns: 44px 100px 72px 20px minmax(130px, 1fr); align-items: center; gap: 6px; font-size: var(--global-typography-font-size-small); }
+.relic-decoration-record-fields__label, .relic-decoration-record-fields__hex { color: var(--global-theme-color-data); }
+.relic-decoration-record-fields__input { height: 34px; padding: 0 7px; border: 1px solid var(--global-theme-color-border); border-radius: 6px; color: var(--global-theme-color-data); background: rgba(18, 10, 6, .55); font: inherit; font-variant-numeric: tabular-nums; }
+.relic-decoration-record-fields__checkbox { width: 18px; height: 18px; accent-color: var(--global-theme-color-gold-bright); }
+.relic-decoration-record-fields__fixed { color: var(--global-theme-color-text-muted); }

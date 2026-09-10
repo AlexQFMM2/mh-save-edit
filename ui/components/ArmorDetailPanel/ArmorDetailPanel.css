@@ -6,8 +6,6 @@
   height: var(--armor-detail-panel-component-height);
   overflow: auto;
   background: rgba(18, 10, 6, .22);
-  scrollbar-color: rgba(223, 182, 93, .25) transparent;
-  scrollbar-width: thin;
 }
 .armor-detail-panel__craft { min-width: 0; padding: 13px; border-bottom: 1px solid rgba(223, 182, 93, .14); }
 .armor-detail-panel__craft header { display: flex; gap: 10px; }
@@ -21,6 +19,3 @@
 .armor-detail-panel__updating { position: absolute; z-index: 2; top: 8px; right: 8px; padding: 3px 7px; border-radius: 20px; color: #2b1a0e; background: var(--global-theme-color-gold-bright); font-size: var(--global-typography-font-size-caption); font-weight: 700; }
 .armor-detail-panel--state { display: grid; place-items: center; padding: 20px; color: var(--global-theme-color-text-muted); text-align: center; }
 .armor-detail-panel--loading { opacity: .78; }
-.armor-detail-panel::-webkit-scrollbar { width: 7px; }
-.armor-detail-panel::-webkit-scrollbar-thumb { border-radius: 8px; background: rgba(223, 182, 93, .25); }
-.armor-detail-panel::-webkit-scrollbar-track { background: transparent; }

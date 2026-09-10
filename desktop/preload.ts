@@ -2,6 +2,8 @@ import { contextBridge, ipcRenderer } from 'electron'
 import { catalogChannels } from '../api/catalog/channels'
 import type { ArmorCatalogFilters, ArmorIdentity, ArmorSetFilters, DecorationCatalogFilters, DecorationIdentity, HunterArtCatalogFilters, HunterArtIdentity, ItemCatalogFilters, ItemIdentity, MonsterCatalogFilters, MonsterIdentity, QuestCatalogFilters, QuestIdentity, SkillCatalogFilters, SkillIdentity, WeaponCatalogFilters, WeaponIdentity, WeaponMotionFilters } from '../api/catalog/types'
 import type { GameId } from '../api/core/loadout'
+import { loadoutChannels } from '../api/loadout/channels'
+import type { AutoLoadoutJobFilters, AutoLoadoutJobSummary, AutoLoadoutRequest, LoadoutArmorFilters, LoadoutCharm, LoadoutDecorationFilters, LoadoutWeaponFilters, LogicalLoadout } from '../api/loadout/types'
 
 contextBridge.exposeInMainWorld('mhSaveEditor', {
   version: '0.1.0',
@@ -34,5 +36,31 @@ contextBridge.exposeInMainWorld('mhSaveEditor', {
     searchHunterArts: (filters: HunterArtCatalogFilters) => ipcRenderer.invoke(catalogChannels.searchHunterArts, filters),
     getHunterArt: (identity: HunterArtIdentity) => ipcRenderer.invoke(catalogChannels.getHunterArt, identity),
     getHunterArtFacets: (gameId: GameId) => ipcRenderer.invoke(catalogChannels.getHunterArtFacets, gameId),
+  },
+  loadout: {
+    searchWeapons: (filters: LoadoutWeaponFilters) => ipcRenderer.invoke(loadoutChannels.searchWeapons, filters),
+    searchArmors: (filters: LoadoutArmorFilters) => ipcRenderer.invoke(loadoutChannels.searchArmors, filters),
+    searchDecorations: (filters: LoadoutDecorationFilters) => ipcRenderer.invoke(loadoutChannels.searchDecorations, filters),
+    getFacets: (gameId: GameId) => ipcRenderer.invoke(loadoutChannels.getFacets, gameId),
+    getBootstrap: (gameId: GameId) => ipcRenderer.invoke(loadoutChannels.getBootstrap, gameId),
+    getSnapshot: (gameId: GameId) => ipcRenderer.invoke(loadoutChannels.getSnapshot, gameId),
+    reconcileLoadout: (loadout: LogicalLoadout) => ipcRenderer.invoke(loadoutChannels.reconcileLoadout, loadout),
+    validateCharm: (charm: LoadoutCharm) => ipcRenderer.invoke(loadoutChannels.validateCharm, charm),
+    startAuto: (request: AutoLoadoutRequest) => ipcRenderer.invoke(loadoutChannels.startAuto, request),
+    startAutoLoadout: (request: AutoLoadoutRequest) => ipcRenderer.invoke(loadoutChannels.startAuto, request),
+    listAutoLoadoutJobs: (filters: AutoLoadoutJobFilters) => ipcRenderer.invoke(loadoutChannels.listAutoJobs, filters),
+    getAutoLoadoutJob: (jobId: string) => ipcRenderer.invoke(loadoutChannels.getAutoJob, { jobId }),
+    controlAuto: (jobId: string, action: 'pause' | 'resume' | 'cancel') => ipcRenderer.invoke(loadoutChannels.controlAuto, { jobId, action }),
+    controlAutoLoadoutJob: (jobId: string, action: 'pause' | 'resume' | 'cancel') => ipcRenderer.invoke(loadoutChannels.controlAuto, { jobId, action }),
+    getAutoState: (jobId: string) => ipcRenderer.invoke(loadoutChannels.getAutoState, { jobId }),
+    retryAutoLoadoutJob: (jobId: string) => ipcRenderer.invoke(loadoutChannels.retryAutoJob, { jobId }),
+    deleteAutoLoadoutJobs: (jobIds: string[]) => ipcRenderer.invoke(loadoutChannels.deleteAutoJobs, { jobIds }),
+    markAutoLoadoutJobViewed: (jobId: string) => ipcRenderer.invoke(loadoutChannels.markAutoJobViewed, { jobId }),
+    selectAutoLoadoutJobResult: (jobId: string, fingerprint: string | null) => ipcRenderer.invoke(loadoutChannels.selectAutoJobResult, { jobId, fingerprint }),
+    subscribeAutoLoadoutJobs: (listener: (summary: AutoLoadoutJobSummary) => void) => {
+      const handler = (_event: Electron.IpcRendererEvent, summary: AutoLoadoutJobSummary) => listener(summary)
+      ipcRenderer.on(loadoutChannels.autoJobsChanged, handler)
+      return () => ipcRenderer.removeListener(loadoutChannels.autoJobsChanged, handler)
+    },
   },
 })

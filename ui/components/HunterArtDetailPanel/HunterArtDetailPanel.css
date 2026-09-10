@@ -59,8 +59,6 @@
   height: calc(100% - 112px);
   overflow: auto;
   padding: 12px;
-  scrollbar-color: rgba(223, 182, 93, 0.22) transparent;
-  scrollbar-width: thin;
 }
 
 .hunter-art-detail-panel__section {

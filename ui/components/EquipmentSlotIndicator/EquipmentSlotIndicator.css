@@ -22,8 +22,13 @@
 }
 
 .equipment-slot-indicator__open,
+.equipment-slot-indicator__occupied,
 .equipment-slot-indicator__closed {
   text-align: center;
+}
+
+.equipment-slot-indicator__occupied {
+  color: var(--global-theme-color-text-primary);
 }
 
 .equipment-slot-indicator__closed,

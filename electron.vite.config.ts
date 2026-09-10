@@ -5,7 +5,7 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   main: {
     plugins: [externalizeDepsPlugin()],
-    build: { rollupOptions: { input: { index: resolve(__dirname, 'desktop/main.ts') } } },
+    build: { rollupOptions: { input: { index: resolve(__dirname, 'desktop/main.ts'), 'auto-search-worker': resolve(__dirname, 'api/loadout/autoSearchWorker.ts') } } },
   },
   preload: {
     plugins: [externalizeDepsPlugin()],

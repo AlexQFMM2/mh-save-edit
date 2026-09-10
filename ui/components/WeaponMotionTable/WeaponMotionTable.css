@@ -1,13 +1,8 @@
 .weapon-motion-table {
-  --weapon-motion-table-component-scrollbar-width: 7px;
-  --weapon-motion-table-component-scrollbar-track: rgba(35, 20, 13, .28);
-  --weapon-motion-table-component-scrollbar-thumb: rgba(201, 153, 67, .34);
   position: relative;
   height: 100%;
   min-height: 0;
   overflow: auto;
-  scrollbar-width: thin;
-  scrollbar-color: var(--weapon-motion-table-component-scrollbar-thumb) var(--weapon-motion-table-component-scrollbar-track);
 }
 .weapon-motion-table__table { width: 100%; min-width: 1160px; border-collapse: collapse; }
 .weapon-motion-table__head { position: sticky; top: 0; z-index: 3; background: #2b1a12; box-shadow: 0 1px 0 rgba(223, 182, 93, .24); }
@@ -16,8 +11,3 @@
 .weapon-motion-table__updating { position: sticky; top: 0; z-index: 5; width: max-content; margin-left: auto; padding: 4px 9px; border-radius: 0 0 0 6px; color: #24150e; background: var(--global-theme-color-gold-bright); font-size: var(--global-typography-font-size-caption); }
 .weapon-motion-table__empty, .weapon-motion-table--state { display: grid; height: 100%; min-height: 180px; place-items: center; color: var(--global-theme-color-text-muted); font-size: var(--global-typography-font-size-body); }
 .weapon-motion-table--state[role=alert] { color: #ffb4a6; }
-.weapon-motion-table::-webkit-scrollbar { width: var(--weapon-motion-table-component-scrollbar-width); height: var(--weapon-motion-table-component-scrollbar-width); }
-.weapon-motion-table::-webkit-scrollbar-button { display: none; }
-.weapon-motion-table::-webkit-scrollbar-track { border-radius: 99px; background: var(--weapon-motion-table-component-scrollbar-track); }
-.weapon-motion-table::-webkit-scrollbar-thumb { min-height: 28px; border: 2px solid var(--weapon-motion-table-component-scrollbar-track); border-radius: 99px; background: var(--weapon-motion-table-component-scrollbar-thumb); }
-.weapon-motion-table::-webkit-scrollbar-thumb:hover { background: var(--global-theme-color-gold); }

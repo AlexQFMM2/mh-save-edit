@@ -16,8 +16,6 @@
 .quest-list__scroller {
   height: 100%;
   overflow: auto;
-  scrollbar-color: rgba(223, 182, 93, 0.22) rgba(18, 10, 6, 0.18);
-  scrollbar-width: thin;
 }
 
 .quest-list__table {

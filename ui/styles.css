@@ -16,6 +16,10 @@
   --global-theme-color-text-secondary: #cdbba3;
   --global-theme-color-text-muted: #9f8973;
   --global-theme-color-text: var(--global-theme-color-text-primary);
+  --global-scrollbar-size: 7px;
+  --global-scrollbar-track: rgba(18, 10, 6, 0.28);
+  --global-scrollbar-thumb: rgba(174, 128, 58, 0.48);
+  --global-scrollbar-thumb-hover: var(--global-theme-color-gold);
   --global-typography-font-size-caption: 11px;
   --global-typography-font-size-small: 13px;
   --global-typography-font-size-body: 15px;
@@ -25,6 +29,36 @@
 
 * {
   box-sizing: border-box;
+  scrollbar-color: var(--global-scrollbar-thumb) var(--global-scrollbar-track);
+  scrollbar-width: thin;
+}
+
+*::-webkit-scrollbar {
+  width: var(--global-scrollbar-size);
+  height: var(--global-scrollbar-size);
+}
+
+*::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+*::-webkit-scrollbar-track {
+  border-radius: 99px;
+  background: var(--global-scrollbar-track);
+}
+
+*::-webkit-scrollbar-thumb {
+  min-width: 28px;
+  min-height: 28px;
+  border: 1px solid var(--global-scrollbar-track);
+  border-radius: 99px;
+  background: var(--global-scrollbar-thumb);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--global-scrollbar-thumb-hover);
 }
 
 html,

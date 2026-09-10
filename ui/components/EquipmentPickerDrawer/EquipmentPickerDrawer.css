@@ -1,0 +1,27 @@
+.equipment-picker-drawer { display: grid; grid-template-rows: auto auto minmax(0, 1fr); height: 100%; min-height: 0; gap: 9px; }
+.equipment-picker-drawer__search { display: flex; align-items: center; gap: 8px; color: var(--global-theme-color-text-secondary); font-size: var(--global-typography-font-size-small); }
+.equipment-picker-drawer__label { white-space: nowrap; }
+.equipment-picker-drawer__search-input { flex: 1; min-width: 0; height: 38px; padding: 0 10px; border: 1px solid var(--global-theme-color-border); border-radius: 7px; color: var(--global-theme-color-text-primary); background: rgba(18, 10, 6, .55); font: inherit; }
+.equipment-picker-drawer__count { color: var(--global-theme-color-text-muted); font-size: var(--global-typography-font-size-caption); }
+.equipment-picker-drawer__filters { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+.equipment-picker-drawer__skill-select { --searchable-select-component-min-width: 150px; }
+.equipment-picker-drawer__layout { display: grid; grid-template-columns: minmax(300px, .52fr) minmax(300px, .48fr); gap: 10px; min-height: 0; overflow: hidden; }
+.equipment-picker-drawer__candidate-pane { display: grid; grid-template-rows: minmax(0, 1fr) auto; min-height: 0; overflow: hidden; border: 1px solid rgba(223, 182, 93, .16); border-radius: 7px; }
+.equipment-picker-drawer__body, .equipment-picker-drawer__preview { overflow: auto; min-height: 0; }
+.equipment-picker-drawer__preview { padding: 10px; border: 1px solid rgba(223, 182, 93, .16); border-radius: 7px; }
+.equipment-picker-drawer__preview-title { margin: 0 0 6px; color: var(--global-theme-color-data); font-size: var(--global-typography-font-size-title); }
+.equipment-picker-drawer__preview-line { margin: 4px 0; color: var(--global-theme-color-text-secondary); font-size: var(--global-typography-font-size-small); }
+.equipment-picker-drawer__difference { margin: 8px 0; padding: 7px; border: 1px solid rgba(223, 182, 93, .18); color: var(--global-theme-color-data); font-size: var(--global-typography-font-size-small); }
+.equipment-picker-drawer__item { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto auto; align-items: center; gap: 9px; width: 100%; padding: 8px; border: 0; border-bottom: 1px solid rgba(223, 182, 93, .1); color: var(--global-theme-color-text-primary); background: transparent; text-align: left; cursor: pointer; }
+.equipment-picker-drawer__item:hover, .equipment-picker-drawer__item--selected { background: rgba(223, 182, 93, .11); }
+.equipment-picker-drawer__item--selected { box-shadow: inset 3px 0 var(--global-theme-color-gold-bright); }
+.equipment-picker-drawer__item-copy { display: grid; gap: 2px; min-width: 0; }
+.equipment-picker-drawer__item-name { overflow: hidden; color: var(--global-theme-color-data); font-size: var(--global-typography-font-size-body); text-overflow: ellipsis; white-space: nowrap; }
+.equipment-picker-drawer__item-detail { color: var(--global-theme-color-text-muted); font-size: var(--global-typography-font-size-caption); }
+.equipment-picker-drawer__source { color: var(--global-theme-color-data); font-size: var(--global-typography-font-size-caption); font-style: normal; }
+.equipment-picker-drawer__empty { padding: 20px; color: var(--global-theme-color-text-muted); font-size: var(--global-typography-font-size-small); }
+.equipment-picker-drawer__pagination { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 6px; border-top: 1px solid rgba(223, 182, 93, .14); color: var(--global-theme-color-text-secondary); font-size: var(--global-typography-font-size-caption); }
+.equipment-picker-drawer__pagination-button { min-height: 30px; padding: 0 9px; border: 1px solid var(--global-theme-color-border); border-radius: 5px; color: var(--global-theme-color-text-primary); background: transparent; font: inherit; cursor: pointer; }
+.equipment-picker-drawer__pagination-button:disabled { opacity: .35; cursor: not-allowed; }
+.equipment-picker-drawer__apply { color: #24150e; background: var(--global-theme-color-gold-bright); }
+@media (max-width: 760px) { .equipment-picker-drawer__layout { grid-template-columns: 1fr; grid-template-rows: minmax(240px, 1fr) auto; } .equipment-picker-drawer__preview { max-height: 260px; } }
