@@ -41,6 +41,7 @@ export class LoadoutCatalogRepository {
   private snapshotCache?: LoadoutCatalogSnapshot
   private weaponsCache?: LoadoutWeaponCandidate[]
   private armorsCache?: LoadoutArmorCandidate[]
+  private relicLookupsCache?: LoadoutCalculationSnapshot['relicLookups']
   constructor(private readonly db: Database.Database, private readonly gameId: LoadoutCatalogSnapshot['gameId']) {}
 
   getBootstrap(): LoadoutCalculationSnapshot {
@@ -52,11 +53,7 @@ export class LoadoutCatalogRepository {
       skills: this.getSkills(),
       charmClasses: this.getCharmClasses(),
       charmRanges: (this.db.prepare('SELECT * FROM catalog_skill_talisman_ranges WHERE game_id=? ORDER BY talisman_id,position,skill_id,min_points').all(this.gameId) as Row[]).map(row => ({ rangeKey: text(row.range_key), classId: number(row.talisman_id), skillId: number(row.skill_id), position: row.position === 'B' ? 'B' : 'A', minPoints: number(row.min_points), maxPoints: number(row.max_points), slotCount: row.slot_count == null ? null : number(row.slot_count), maxSlots: row.max_slots == null ? null : number(row.max_slots), status: row.range_status === 'exact' || row.range_status === 'unknown' ? row.range_status : 'rule', source: text(row.source) })),
-      relicLookups: this.tableExists('catalog_loadout_relic_value_lookups') ? (this.db.prepare('SELECT * FROM catalog_loadout_relic_value_lookups WHERE game_id=? ORDER BY lookup_kind,lookup_key').all(this.gameId) as Row[]).map(row => {
-        let payload: Record<string, unknown> = {}
-        try { payload = JSON.parse(text(row.payload_json)) as Record<string, unknown> } catch { payload = {} }
-        return { kind: text(row.lookup_kind), key: text(row.lookup_key), payload, source: text(row.source) }
-      }) : [],
+      relicLookups: this.readRelicLookups(false),
     }
     this.bootstrapCache = bootstrap
     return bootstrap
@@ -71,6 +68,11 @@ export class LoadoutCatalogRepository {
     }
     this.snapshotCache = snapshot
     return snapshot
+  }
+
+  getRelicLookups(): LoadoutCalculationSnapshot['relicLookups'] {
+    if (this.relicLookupsCache) return this.relicLookupsCache
+    return this.relicLookupsCache = this.readRelicLookups(true)
   }
 
   getFacets(): LoadoutFacets {
@@ -108,6 +110,16 @@ export class LoadoutCatalogRepository {
   }
 
   private tableExists(name: string): boolean { return Boolean(this.db.prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name=?").get(name)) }
+
+  private readRelicLookups(includeEditorOptions: boolean): LoadoutCalculationSnapshot['relicLookups'] {
+    if (!this.tableExists('catalog_loadout_relic_value_lookups')) return []
+    const editorClause = includeEditorOptions ? '' : " AND lookup_kind <> 'equipment_lookup'"
+    return (this.db.prepare(`SELECT * FROM catalog_loadout_relic_value_lookups WHERE game_id=?${editorClause} ORDER BY lookup_kind,lookup_key`).all(this.gameId) as Row[]).map(row => {
+      let payload: Record<string, unknown> = {}
+      try { payload = JSON.parse(text(row.payload_json)) as Record<string, unknown> } catch { payload = {} }
+      return { kind: text(row.lookup_kind), key: text(row.lookup_key), payload, source: text(row.source) }
+    })
+  }
 
   private getSkills(): LoadoutSkillDefinition[] {
     const rows = this.db.prepare('SELECT * FROM catalog_skills WHERE game_id=? AND is_placeholder=0 ORDER BY skill_id').all(this.gameId) as Row[]

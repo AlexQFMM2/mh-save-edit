@@ -1,0 +1,9 @@
+.relic-lookup-select {
+  --searchable-select-component-min-width: 0;
+  width: 100%;
+  min-width: 0;
+}
+
+.relic-lookup-select--sharpness {
+  --searchable-select-component-menu-min-width: 360px;
+}

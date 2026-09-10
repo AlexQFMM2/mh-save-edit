@@ -3,7 +3,7 @@ import { StrictMode } from 'react'
 import { cleanup,fireEvent,render,screen,waitFor } from '@testing-library/react'
 import { afterEach,describe,expect,it,vi } from 'vitest'
 import { calculateLoadout } from '../api/loadout/calculator'
-import { createEmptyLogicalLoadout, LOADOUT_SLOTS, type AutoLoadoutJobDetail, type AutoLoadoutJobSummary, type AutoLoadoutResult, type LoadoutArmor, type LoadoutCatalogSnapshot, type LoadoutFacets, type LoadoutWeapon, type LoadoutWeaponCandidate } from '../api/loadout/types'
+import { createEmptyLogicalLoadout, LOADOUT_SLOTS, type AutoLoadoutJobDetail, type AutoLoadoutJobSummary, type AutoLoadoutResult, type LoadoutArmor, type LoadoutCatalogSnapshot, type LoadoutFacets, type LoadoutRelicLookup, type LoadoutWeapon, type LoadoutWeaponCandidate } from '../api/loadout/types'
 import { AutoLoadoutDrawer } from '../ui/components/AutoLoadoutDrawer/AutoLoadoutDrawer'
 import { AutoLoadoutHistoryDrawer } from '../ui/components/AutoLoadoutHistoryDrawer/AutoLoadoutHistoryDrawer'
 import { AutoLoadoutJobProgress } from '../ui/components/AutoLoadoutJobProgress/AutoLoadoutJobProgress'
@@ -11,6 +11,8 @@ import { AutoLoadoutResultList } from '../ui/components/AutoLoadoutResultList/Au
 import { EquipmentPickerDrawer } from '../ui/components/EquipmentPickerDrawer/EquipmentPickerDrawer'
 import { LoadoutSlotIcon } from '../ui/components/LoadoutSlotIcon/LoadoutSlotIcon'
 import { LoadoutWorkspaceDrawer } from '../ui/components/LoadoutWorkspaceDrawer/LoadoutWorkspaceDrawer'
+import { RelicEquipmentEditor } from '../ui/components/RelicEquipmentEditor/RelicEquipmentEditor'
+import { RelicLookupSelect } from '../ui/components/RelicLookupSelect/RelicLookupSelect'
 import { SearchableSelect } from '../ui/components/SearchableSelect/SearchableSelect'
 afterEach(cleanup)
 describe('LoadoutWorkspaceDrawer',()=>{it('uses one modal portal, styles fragment footer actions, focuses the first work control and closes with Escape',()=>{const close=vi.fn();const trigger=document.createElement('button');document.body.append(trigger);trigger.focus();render(<LoadoutWorkspaceDrawer title="选择武器" onClose={close} footer={<><button type="button">取消</button><button type="button">应用</button></>}><button type="button">候选</button></LoadoutWorkspaceDrawer>);expect(screen.getByRole('dialog',{name:'选择武器'}).closest('.loadout-workspace-drawer')).toBeTruthy();expect(screen.getByRole('button',{name:'应用'}).classList.contains('loadout-workspace-drawer__footer-action')).toBe(true);expect(document.activeElement).toBe(screen.getByRole('button',{name:'候选'}));fireEvent.keyDown(document,{key:'Escape'});expect(close).toHaveBeenCalledTimes(1)})})
@@ -145,10 +147,110 @@ describe('EquipmentPickerDrawer', () => {
     const facets: LoadoutFacets = { skills: [], weaponTypes: [{ typeId: 1, nameCn: '大剑' }], weaponRarities: [1], armorRarities: [], charmClasses: [] }
     Object.defineProperty(window, 'mhSaveEditor', { configurable: true, value: { loadout: { searchWeapons: vi.fn().mockResolvedValue({ items: [candidate], page: 1, pageSize: 100, total: 1, hasNext: false }), searchArmors: vi.fn() } } })
     const onApply = vi.fn()
-    render(<EquipmentPickerDrawer gameId="mh3g" slot="weapon" facets={facets} relicLookups={[]} onApply={onApply} onClose={vi.fn()} />)
+    render(<EquipmentPickerDrawer gameId="mh3g" slot="weapon" facets={facets} relicLookups={[]} decorations={[]} onApply={onApply} onClose={vi.fn()} />)
     await screen.findByRole('button', { name: /测试大剑/ })
     fireEvent.doubleClick(screen.getByRole('button', { name: /测试大剑/ }))
     expect(onApply).toHaveBeenCalledWith(candidate)
+  })
+
+  it('loads advanced relic options only after a relic template is selected', async () => {
+    const candidate: LoadoutWeaponCandidate = { kind: 'weapon', gameId: 'mh4g', candidateKey: 'relic:w:7:1', sourceKind: 'relicTemplate', weaponKey: null, templateKey: 'w:7:1', saveType: 7, saveId: 1, nameCn: '发掘大剑', nameEn: 'Relic GS', typeId: 1, typeNameCn: '大剑', rarity: 1, slots: 0, attack: 110, affinity: 0, defense: 0, iconPath: null, instance: { source: 'catalogTemplate', recordHex: '00'.repeat(28), legality: 'unknown', encoding: 'encodable', issues: [] } }
+    const facets: LoadoutFacets = { skills: [], weaponTypes: [{ typeId: 1, nameCn: '大剑' }], weaponRarities: [1], armorRarities: [], charmClasses: [] }
+    const lookups: LoadoutRelicLookup[] = [
+      { kind: 'equipment_lookup', key: 'attack_tier:7:melee:0', payload: { domain: 'attack_tier', save_type: 7, variant: 'melee', code: 0, name_cn: '110 | |', name_en: '110 | |' }, source: 'test' },
+      { kind: 'equipment_lookup', key: 'attack_tier:7:melee:3', payload: { domain: 'attack_tier', save_type: 7, variant: 'melee', code: 3, name_cn: '140 | |', name_en: '140 | |' }, source: 'test' },
+    ]
+    const getRelicLookups = vi.fn().mockResolvedValue(lookups)
+    const onApply = vi.fn()
+    Object.defineProperty(window, 'mhSaveEditor', { configurable: true, value: { loadout: { searchWeapons: vi.fn().mockResolvedValue({ items: [candidate], page: 1, pageSize: 100, total: 1, hasNext: false }), searchArmors: vi.fn(), getRelicLookups } } })
+
+    render(<EquipmentPickerDrawer gameId="mh4g" slot="weapon" facets={facets} relicLookups={[]} decorations={[]} onApply={onApply} onClose={vi.fn()} />)
+    const row = await screen.findByRole('button', { name: /发掘大剑/ })
+    expect(getRelicLookups).not.toHaveBeenCalled()
+    fireEvent.click(row)
+    await screen.findByText('发掘装备高级编辑')
+    expect(getRelicLookups).toHaveBeenCalledWith('mh4g')
+    fireEvent.click(screen.getByRole('button', { name: '攻击档' }))
+    fireEvent.click(screen.getByRole('option', { name: '攻击 140' }))
+    fireEvent.click(screen.getByRole('button', { name: '应用选择' }))
+    const applied = onApply.mock.calls.at(-1)?.[0] as LoadoutWeaponCandidate
+    expect(applied.instance?.recordHex.slice(26, 28)).toBe('03')
+  })
+})
+
+describe('RelicEquipmentEditor', () => {
+  it('uses named searchable choices and preserves hidden record bytes', () => {
+    const candidate: LoadoutWeaponCandidate = { kind: 'weapon', gameId: 'mh4g', candidateKey: 'relic:w:7:1', sourceKind: 'relicTemplate', weaponKey: null, templateKey: 'w:7:1', saveType: 7, saveId: 1, nameCn: '发掘大剑', nameEn: 'Relic GS', typeId: 1, typeNameCn: '大剑', rarity: 1, slots: 0, attack: 110, affinity: 0, defense: 0, iconPath: null, instance: { source: 'catalogTemplate', recordHex: `${'ab'.repeat(13)}00${'cd'.repeat(14)}`, legality: 'unknown', encoding: 'encodable', issues: [] } }
+    const lookups: LoadoutRelicLookup[] = [
+      { kind: 'equipment_lookup', key: 'attack:0', payload: { domain: 'attack_tier', save_type: 7, variant: 'melee', code: 0, name_cn: '110 | |', name_en: '110 | |' }, source: 'test' },
+      { kind: 'equipment_lookup', key: 'attack:3', payload: { domain: 'attack_tier', save_type: 7, variant: 'melee', code: 3, name_cn: '140 | |', name_en: '140 | |' }, source: 'test' },
+    ]
+    const onChange = vi.fn()
+    render(<RelicEquipmentEditor candidate={candidate} lookups={lookups} decorations={[]} onChange={onChange} />)
+    expect(screen.queryByDisplayValue(candidate.instance!.recordHex)).toBeNull()
+    expect(screen.queryByText(/0x[0-9a-f]/i)).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: '攻击档' }))
+    fireEvent.click(screen.getByRole('option', { name: '攻击 140' }))
+    const changed = onChange.mock.calls.at(-1)?.[0] as LoadoutWeaponCandidate
+    expect(changed.instance?.recordHex.slice(26, 28)).toBe('03')
+    expect(changed.instance?.recordHex.slice(0, 26)).toBe(candidate.instance!.recordHex.slice(0, 26))
+    expect(changed.instance?.recordHex.slice(28)).toBe(candidate.instance!.recordHex.slice(28))
+  })
+})
+
+describe('RelicLookupSelect', () => {
+  it('orders attack choices by displayed attack, affinity and defense values', () => {
+    const lookups: LoadoutRelicLookup[] = [
+      { kind: 'equipment_lookup', key: 'attack:20', payload: { domain: 'attack_tier', save_type: 7, variant: 'melee', code: 20, name_cn: '340 | -25% |', name_en: '340 | -25% |' }, source: 'test' },
+      { kind: 'equipment_lookup', key: 'attack:28', payload: { domain: 'attack_tier', save_type: 7, variant: 'melee', code: 28, name_cn: '255 | +75% | DEF+25', name_en: '255 | +75% | DEF+25' }, source: 'test' },
+      { kind: 'equipment_lookup', key: 'attack:2', payload: { domain: 'attack_tier', save_type: 7, variant: 'melee', code: 2, name_cn: '130 | +10% |', name_en: '130 | +10% |' }, source: 'test' },
+      { kind: 'equipment_lookup', key: 'attack:19', payload: { domain: 'attack_tier', save_type: 7, variant: 'melee', code: 19, name_cn: '310 | | DEF+5', name_en: '310 | | DEF+5' }, source: 'test' },
+      { kind: 'equipment_lookup', key: 'attack:91', payload: { domain: 'attack_tier', save_type: 7, variant: 'melee', code: 91, name_cn: '355 | | DEF+100', name_en: '355 | | DEF+100' }, source: 'test' },
+      { kind: 'equipment_lookup', key: 'attack:0', payload: { domain: 'attack_tier', save_type: 7, variant: 'melee', code: 0, name_cn: '110 | |', name_en: '110 | |' }, source: 'test' },
+    ]
+    render(<RelicLookupSelect lookups={lookups} domain="attack_tier" saveType={7} variant="melee" value={0} ariaLabel="攻击档" onChange={() => {}} />)
+    fireEvent.click(screen.getByRole('button', { name: '攻击档' }))
+    expect(screen.getAllByRole('option').map(option => option.textContent)).toEqual([
+      '攻击 110',
+      '攻击 130 · 会心 +10%',
+      '攻击 255 · 会心 +75% · 防御 +25',
+      '攻击 310 · 防御 +5',
+      '攻击 340 · 会心 -25%',
+      '攻击 355 · 防御 +100',
+    ])
+  })
+
+  it('renders all melee sharpness choices as accessible seven-color bars and keeps the special mapping explicit', () => {
+    const lookups: LoadoutRelicLookup[] = [...Array.from({ length: 22 }, (_, code) => ({
+      kind: 'equipment_lookup' as const,
+      key: `sharpness:${code}`,
+      payload: { domain: 'sharpness', save_type: 7, variant: 'melee', code, name_cn: String(code), name_en: String(code) },
+      source: 'test',
+    })), {
+      kind: 'equipment_lookup',
+      key: 'sharpness:218',
+      payload: { domain: 'sharpness', save_type: 7, variant: 'melee', code: 218, name_cn: 'special', name_en: 'special' },
+      source: 'test',
+    }]
+    const onChange = vi.fn()
+    render(<RelicLookupSelect lookups={lookups} domain="sharpness" saveType={7} variant="melee" value={21} ariaLabel="斩味配置" onChange={onChange} />)
+
+    expect(screen.getByRole('img', { name: /方案 22；红 95、橙 80.*紫 25；合计 450\/450/ })).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: '斩味配置' }))
+    expect(screen.getAllByRole('option')).toHaveLength(23)
+    expect(screen.getAllByRole('img')).toHaveLength(24)
+    fireEvent.change(screen.getByRole('combobox', { name: '斩味配置关键词' }), { target: { value: '紫 215' } })
+    const special = screen.getByRole('option', { name: /特殊方案.*推定映射，待实机确认/ })
+    expect(special.textContent).toContain('推定映射')
+    fireEvent.click(special)
+    expect(onChange).toHaveBeenCalledWith(218)
+  })
+
+  it('does not draw a sharpness bar for ranged configuration domains', () => {
+    const lookups: LoadoutRelicLookup[] = [{ kind: 'equipment_lookup', key: 'magazine:0', payload: { domain: 'sharpness', save_type: 7, variant: 'light_bowgun', code: 0, name_cn: '0', name_en: '0' }, source: 'test' }]
+    render(<RelicLookupSelect lookups={lookups} domain="sharpness" saveType={7} variant="light_bowgun" value={0} ariaLabel="弹匣配置" onChange={() => {}} />)
+    expect(screen.queryByRole('img')).toBeNull()
+    expect(screen.getByText('弹匣配置 1')).toBeTruthy()
   })
 })
 

@@ -5,6 +5,7 @@ export const loadoutChannels = {
   getFacets: 'loadout:get-facets',
   getBootstrap: 'loadout:get-bootstrap',
   getSnapshot: 'loadout:get-snapshot',
+  getRelicLookups: 'loadout:get-relic-lookups',
   reconcileLoadout: 'loadout:reconcile',
   validateCharm: 'loadout:validate-charm',
   startAuto: 'loadout:start-auto',

@@ -1,6 +1,6 @@
 import type { GameId } from '../api/core/loadout'
 import type { ArmorCatalogFacets, ArmorCatalogFilters, ArmorDetail, ArmorIdentity, ArmorSetFilters, ArmorSetSummary, ArmorSummary, DecorationCatalogFacets, DecorationCatalogFilters, DecorationDetail, DecorationIdentity, DecorationSummary, HunterArtCatalogFacets, HunterArtCatalogFilters, HunterArtDetail, HunterArtIdentity, HunterArtSummary, ItemCatalogFilters, ItemDetail, ItemIdentity, ItemSummary, MonsterCatalogFacets, MonsterCatalogFilters, MonsterDetail, MonsterIdentity, MonsterSummary, PageResult, QuestCatalogFacets, QuestCatalogFilters, QuestDetail, QuestIdentity, QuestSummary, SkillCatalogFacets, SkillCatalogFilters, SkillDetail, SkillIdentity, SkillSummary, WeaponCatalogFacets, WeaponCatalogFilters, WeaponDetail, WeaponIdentity, WeaponMotionCatalogResult, WeaponMotionFacets, WeaponMotionFilters, WeaponSummary, WeaponTreeResult } from '../api/catalog/types'
-import type { AutoLoadoutJob, AutoLoadoutJobDetail, AutoLoadoutJobFilters, AutoLoadoutJobState, AutoLoadoutJobSummary, AutoLoadoutRequest, CharmValidationResult, LoadoutArmorCandidate, LoadoutArmorFilters, LoadoutCalculationSnapshot, LoadoutCatalogSnapshot, LoadoutCharm, LoadoutDecoration, LoadoutDecorationFilters, LoadoutFacets, LoadoutPage, LoadoutWeaponCandidate, LoadoutWeaponFilters, LogicalLoadout } from '../api/loadout/types'
+import type { AutoLoadoutJob, AutoLoadoutJobDetail, AutoLoadoutJobFilters, AutoLoadoutJobState, AutoLoadoutJobSummary, AutoLoadoutRequest, CharmValidationResult, LoadoutArmorCandidate, LoadoutArmorFilters, LoadoutCalculationSnapshot, LoadoutCatalogSnapshot, LoadoutCharm, LoadoutDecoration, LoadoutDecorationFilters, LoadoutFacets, LoadoutPage, LoadoutRelicLookup, LoadoutWeaponCandidate, LoadoutWeaponFilters, LogicalLoadout } from '../api/loadout/types'
 
 declare global {
   interface Window {
@@ -43,6 +43,7 @@ declare global {
         getFacets(gameId: GameId): Promise<LoadoutFacets>
         getBootstrap(gameId: GameId): Promise<LoadoutCalculationSnapshot>
         getSnapshot(gameId: GameId): Promise<LoadoutCatalogSnapshot>
+        getRelicLookups(gameId: GameId): Promise<LoadoutRelicLookup[]>
         reconcileLoadout(loadout: LogicalLoadout): Promise<LogicalLoadout>
         validateCharm(charm: LoadoutCharm): Promise<CharmValidationResult>
         startAuto(request: AutoLoadoutRequest): Promise<AutoLoadoutJob>

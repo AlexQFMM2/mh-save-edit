@@ -56,6 +56,8 @@ export type LoadoutWeaponCandidate = {
   directlyProducible?: boolean
   iconPath: string | null
   instance?: LoadoutInstanceState
+  /** Embedded decorations decoded from an editable relic record. */
+  decorations?: LoadoutDecoration[]
 }
 
 export type LoadoutArmorCandidate = {
@@ -84,6 +86,8 @@ export type LoadoutArmorCandidate = {
   iconPath: string | null
   skills: LoadoutSkillPoint[]
   instance?: LoadoutInstanceState
+  /** Embedded decorations decoded from an editable relic record. */
+  decorations?: LoadoutDecoration[]
 }
 
 export type LoadoutCharm = {

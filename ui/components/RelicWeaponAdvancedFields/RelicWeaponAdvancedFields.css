@@ -1,12 +1,13 @@
-.relic-weapon-advanced-fields { display: grid; gap: 8px; }
-.relic-weapon-advanced-fields__group { display: grid; grid-template-columns: repeat(2, minmax(220px, 1fr)); gap: 7px 12px; padding: 10px; border: 1px solid rgba(223, 182, 93, .18); color: var(--global-theme-color-text-secondary); }
+.relic-weapon-advanced-fields { display: grid; gap: 8px; min-width: 0; max-width: 100%; }
+.relic-weapon-advanced-fields__group { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; min-width: 0; max-width: 100%; padding: 10px; border: 1px solid rgba(223, 182, 93, .18); color: var(--global-theme-color-text-secondary); }
 .relic-weapon-advanced-fields__legend { color: var(--global-theme-color-data); font-size: var(--global-typography-font-size-small); }
-.relic-weapon-advanced-fields__field { display: grid; grid-template-columns: minmax(100px, 1fr) 76px 58px; align-items: center; gap: 5px; font-size: var(--global-typography-font-size-small); }
-.relic-weapon-advanced-fields__label { color: var(--global-theme-color-text-secondary); }
-.relic-weapon-advanced-fields__input { width: 76px; height: 34px; padding: 0 6px; border: 1px solid var(--global-theme-color-border); border-radius: 6px; color: var(--global-theme-color-data); background: rgba(18, 10, 6, .55); font: inherit; font-variant-numeric: tabular-nums; }
-.relic-weapon-advanced-fields__hex { color: var(--global-theme-color-data); font-size: var(--global-typography-font-size-caption); font-variant-numeric: tabular-nums; }
-.relic-weapon-advanced-fields__check { display: flex; align-items: center; gap: 7px; min-height: 34px; font-size: var(--global-typography-font-size-small); }
-.relic-weapon-advanced-fields__checkbox { width: 18px; height: 18px; accent-color: var(--global-theme-color-gold-bright); }
-.relic-weapon-advanced-fields__kinsect { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-column: 1 / -1; gap: 7px 12px; }
-.relic-weapon-advanced-fields__note { color: var(--global-theme-color-text-muted); font-size: var(--global-typography-font-size-caption); }
-@media (max-width: 760px) { .relic-weapon-advanced-fields__group, .relic-weapon-advanced-fields__kinsect { grid-template-columns: 1fr; } }
+.relic-weapon-advanced-fields__field { display: grid; grid-template-columns: minmax(112px, .7fr) minmax(0, 1.3fr); align-items: center; gap: 8px; min-width: 0; font-size: var(--global-typography-font-size-small); }
+.relic-weapon-advanced-fields__label { min-width: 0; color: var(--global-theme-color-text-secondary); }
+.relic-weapon-advanced-fields__checks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; min-width: 0; }
+.relic-weapon-advanced-fields__check { display: flex; align-items: center; gap: 7px; min-width: 0; min-height: 34px; font-size: var(--global-typography-font-size-small); }
+.relic-weapon-advanced-fields__checkbox { flex: 0 0 auto; width: 18px; height: 18px; accent-color: var(--global-theme-color-gold-bright); }
+.relic-weapon-advanced-fields__kinsect { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; min-width: 0; }
+.relic-weapon-advanced-fields__number-field { display: grid; grid-template-columns: minmax(54px, 1fr) minmax(64px, .8fr); align-items: center; gap: 8px; min-width: 0; color: var(--global-theme-color-text-secondary); font-size: var(--global-typography-font-size-small); }
+.relic-weapon-advanced-fields__number-input { width: 100%; min-width: 0; height: 34px; padding: 0 7px; border: 1px solid var(--global-theme-color-border); border-radius: 6px; color: var(--global-theme-color-data); background: rgba(18, 10, 6, .55); font: inherit; font-variant-numeric: tabular-nums; }
+.relic-weapon-advanced-fields__note { min-width: 0; overflow-wrap: anywhere; color: var(--global-theme-color-text-muted); font-size: var(--global-typography-font-size-caption); }
+@media (max-width: 520px) { .relic-weapon-advanced-fields__field, .relic-weapon-advanced-fields__checks, .relic-weapon-advanced-fields__kinsect { grid-template-columns: minmax(0, 1fr); } }

@@ -1,5 +1,5 @@
 import { Check, ChevronDown, Search } from 'lucide-react'
-import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import './SearchableSelect.css'
 
@@ -16,6 +16,8 @@ type CommonProps = {
   ariaLabel: string
   disabled?: boolean
   className?: string
+  renderOption?: (option: SearchableSelectOption) => ReactNode
+  renderValue?: (option: SearchableSelectOption) => ReactNode
 }
 
 type Props = CommonProps & ({
@@ -29,7 +31,7 @@ type Props = CommonProps & ({
 })
 
 export function SearchableSelect(props: Props) {
-  const { value, options, placeholder = '请选择', ariaLabel, disabled = false, className = '' } = props
+  const { value, options, placeholder = '请选择', ariaLabel, disabled = false, className = '', renderOption, renderValue } = props
   const rootRef = useRef<HTMLDivElement>(null)
   const triggerRef = useRef<HTMLButtonElement>(null)
   const menuRef = useRef<HTMLDivElement>(null)
@@ -57,7 +59,8 @@ export function SearchableSelect(props: Props) {
     const menu = menuRef.current.getBoundingClientRect()
     const gutter = 8
     const gap = 4
-    const width = Math.max(trigger.width, 210)
+    const declaredMinimum = Number.parseFloat(getComputedStyle(rootRef.current ?? triggerRef.current).getPropertyValue('--searchable-select-component-menu-min-width')) || 210
+    const width = Math.max(trigger.width, declaredMinimum)
     const left = Math.max(gutter, Math.min(trigger.left, window.innerWidth - width - gutter))
     const fitsBelow = trigger.bottom + gap + menu.height <= window.innerHeight - gutter
     const top = fitsBelow ? trigger.bottom + gap : Math.max(gutter, trigger.top - menu.height - gap)
@@ -115,7 +118,8 @@ export function SearchableSelect(props: Props) {
     if (disabled) return
     const rect = triggerRef.current?.getBoundingClientRect()
     if (rect) {
-      const width = Math.max(rect.width, 210)
+      const declaredMinimum = Number.parseFloat(getComputedStyle(rootRef.current ?? triggerRef.current!).getPropertyValue('--searchable-select-component-menu-min-width')) || 210
+      const width = Math.max(rect.width, declaredMinimum)
       const left = Math.min(rect.left, Math.max(8, window.innerWidth - width - 8))
       setMenuPosition({ left, top: rect.bottom + 4, width })
     }
@@ -168,14 +172,14 @@ export function SearchableSelect(props: Props) {
 
   return <div ref={rootRef} className={`searchable-select${open ? ' searchable-select--open' : ''}${className ? ` ${className}` : ''}`}>
     <button ref={triggerRef} type="button" className="searchable-select__trigger" aria-label={ariaLabel} aria-haspopup="listbox" aria-expanded={open} aria-controls={listId} disabled={disabled} onClick={() => open ? close() : openMenu()} onKeyDown={handleTriggerKeyDown}>
-      <span className={`searchable-select__value${selected.length ? '' : ' searchable-select__placeholder'}`}>{selected.length ? (props.multiple ? selected.map((option) => option.label).join('、') : selected[0].label) : placeholder}</span>
+      <span className={`searchable-select__value${selected.length ? '' : ' searchable-select__placeholder'}`}>{selected.length ? (props.multiple ? selected.map((option) => option.label).join('、') : renderValue?.(selected[0]) ?? selected[0].label) : placeholder}</span>
       <ChevronDown className="searchable-select__chevron" aria-hidden="true" />
     </button>
     {open && createPortal(<div ref={menuRef} className="searchable-select__menu" style={menuPosition}>
       <label className="searchable-select__search"><Search className="searchable-select__search-icon" aria-hidden="true" /><input className="searchable-select__search-input" ref={searchRef} role="combobox" aria-expanded="true" aria-controls={listId} aria-activedescendant={filteredOptions[activeIndex]?`${listId}-option-${activeIndex}`:undefined} value={query} onChange={(event) => { setQuery(event.target.value); setActiveIndex(0) }} onKeyDown={handleSearchKeyDown} placeholder="输入关键词筛选" aria-label={`${ariaLabel}关键词`} /></label>
       <div className="searchable-select__options" id={listId} role="listbox" aria-multiselectable={props.multiple || undefined} aria-label={ariaLabel}>
         {filteredOptions.length ? filteredOptions.map((option, index) => <button id={`${listId}-option-${index}`} type="button" role="option" tabIndex={-1} aria-selected={selectedValues.includes(option.value)} disabled={option.disabled} className={`searchable-select__option${index === activeIndex ? ' searchable-select__option--active' : ''}`} key={`${option.value}-${index}`} onMouseEnter={() => setActiveIndex(index)} onClick={() => select(option)}>
-          <span className="searchable-select__option-label">{option.label}</span>{selectedValues.includes(option.value) && <Check className="searchable-select__check" aria-hidden="true" />}
+          <span className="searchable-select__option-label">{renderOption?.(option) ?? option.label}</span>{selectedValues.includes(option.value) && <Check className="searchable-select__check" aria-hidden="true" />}
         </button>) : <p className="searchable-select__empty">无匹配选项</p>}
       </div>
       {props.multiple && <button className="searchable-select__done" type="button" onClick={() => close(true)}>完成（已选 {selected.length}）</button>}

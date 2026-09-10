@@ -23,4 +23,24 @@ describe('LoadoutCatalogRepository bootstrap', () => {
     expect(statements.some(sql => sql.includes('FROM catalog_weapons'))).toBe(false)
     expect(statements.some(sql => sql.includes('FROM catalog_armors'))).toBe(false)
   })
+
+  it('keeps editor enums out of bootstrap and exposes them through the lazy endpoint', () => {
+    const statements: string[] = []
+    const lookupRow = { lookup_kind: 'equipment_lookup', lookup_key: 'attack_tier:7:melee:0', payload_json: '{"domain":"attack_tier","save_type":7,"variant":"melee","code":0}', source: 'test' }
+    const db = {
+      prepare(sql: string) {
+        statements.push(sql)
+        return {
+          all: () => sql.includes('catalog_loadout_relic_value_lookups') && !sql.includes("lookup_kind <> 'equipment_lookup'") ? [lookupRow] : [],
+          get: (...parameters: unknown[]) => sql.includes('sqlite_master') && parameters[0] === 'catalog_loadout_relic_value_lookups' ? { exists: 1 } : undefined,
+        }
+      },
+    } as unknown as Database.Database
+    const repository = new LoadoutCatalogRepository(db, 'mh4g')
+
+    expect(repository.getBootstrap().relicLookups).toEqual([])
+    expect(repository.getRelicLookups()).toEqual([{ kind: 'equipment_lookup', key: 'attack_tier:7:melee:0', payload: { domain: 'attack_tier', save_type: 7, variant: 'melee', code: 0 }, source: 'test' }])
+    expect(statements.some(sql => sql.includes("lookup_kind <> 'equipment_lookup'"))).toBe(true)
+    expect(statements.some(sql => sql.includes('catalog_loadout_relic_value_lookups') && !sql.includes("lookup_kind <> 'equipment_lookup'"))).toBe(true)
+  })
 })

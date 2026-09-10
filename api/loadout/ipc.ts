@@ -51,6 +51,7 @@ export function registerLoadoutIpc(dataDir: string, stateDir: string): () => voi
   ipcMain.handle(loadoutChannels.getFacets, (_event, payload: unknown) => { const gameId = gameIdSchema.parse(payload); return repository(gameId).getFacets() })
   ipcMain.handle(loadoutChannels.getBootstrap, (_event, payload: unknown) => { const gameId = gameIdSchema.parse(payload); return repository(gameId).getBootstrap() })
   ipcMain.handle(loadoutChannels.getSnapshot, (_event, payload: unknown) => { const gameId = gameIdSchema.parse(payload); return repository(gameId).getSnapshot() })
+  ipcMain.handle(loadoutChannels.getRelicLookups, (_event, payload: unknown) => { const gameId = gameIdSchema.parse(payload); return repository(gameId).getRelicLookups() })
   ipcMain.handle(loadoutChannels.reconcileLoadout, (_event, payload: unknown) => { const loadout = logicalLoadoutSchema.parse(normalizeLegacyTransientLoadoutFields(payload)); return reconcileImportedLoadout(repository(loadout.gameId).getSnapshot(), loadout) })
   ipcMain.handle(loadoutChannels.validateCharm, (_event, payload: unknown) => { const charm = loadoutCharmSchema.parse(payload); return repository(charm.gameId).validateCharm(charm) })
   ipcMain.handle(loadoutChannels.startAuto, (_event, payload: unknown) => service.start(autoLoadoutRequestSchema.parse(payload)))

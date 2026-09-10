@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import type { ArmorLoadoutSlot, LoadoutArmorCandidate, LoadoutFacets, LoadoutGame, LoadoutPage, LoadoutRelicLookup, LoadoutSlot, LoadoutWeaponCandidate } from '../../../api/loadout/types'
+import type { ArmorLoadoutSlot, LoadoutArmorCandidate, LoadoutDecoration, LoadoutFacets, LoadoutGame, LoadoutPage, LoadoutRelicLookup, LoadoutSlot, LoadoutWeaponCandidate } from '../../../api/loadout/types'
 import { CatalogIcon } from '../CatalogIcon/CatalogIcon'
 import { EquipmentSlotIndicator } from '../EquipmentSlotIndicator/EquipmentSlotIndicator'
 import { LoadoutWorkspaceDrawer } from '../LoadoutWorkspaceDrawer/LoadoutWorkspaceDrawer'
@@ -8,14 +8,14 @@ import { SearchableSelect } from '../SearchableSelect/SearchableSelect'
 import './EquipmentPickerDrawer.css'
 
 type Candidate = LoadoutWeaponCandidate | LoadoutArmorCandidate
-type Props = { gameId: LoadoutGame; slot: LoadoutSlot; facets: LoadoutFacets; relicLookups: LoadoutRelicLookup[]; current?: Candidate | null; onApply: (candidate: Candidate) => void; onClose: () => void }
+type Props = { gameId: LoadoutGame; slot: LoadoutSlot; facets: LoadoutFacets; relicLookups: LoadoutRelicLookup[]; decorations: LoadoutDecoration[]; current?: Candidate | null; onApply: (candidate: Candidate) => void; onClose: () => void }
 const labels: Record<LoadoutSlot, string> = { weapon: '武器', head: '头部', chest: '胸部', arms: '腕部', waist: '腰部', legs: '腿部', charm: '护石' }
 const emptyPage: LoadoutPage<Candidate> = { items: [], page: 1, pageSize: 100, total: 0, hasNext: false }
 
 function numericId(candidate: Candidate) { return candidate.saveId ?? (candidate.kind === 'armor' ? candidate.dexId : null) }
 function formatDelta(value: number) { return value > 0 ? `+${value}` : String(value) }
 
-export function EquipmentPickerDrawer({ gameId, slot, facets, relicLookups, current, onApply, onClose }: Props) {
+export function EquipmentPickerDrawer({ gameId, slot, facets, relicLookups, decorations, current, onApply, onClose }: Props) {
   const candidateButtons = useRef<Array<HTMLButtonElement | null>>([])
   const requestSequence = useRef(0)
   const [query, setQuery] = useState('')
@@ -34,6 +34,8 @@ export function EquipmentPickerDrawer({ gameId, slot, facets, relicLookups, curr
   const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string>()
+  const [advancedLookups, setAdvancedLookups] = useState(relicLookups)
+  const [advancedState, setAdvancedState] = useState<'idle' | 'loading' | 'ready' | 'error'>(relicLookups.some(item => item.kind === 'equipment_lookup') ? 'ready' : 'idle')
   const rarities = slot === 'weapon' ? facets.weaponRarities : facets.armorRarities
 
   useEffect(() => {
@@ -68,7 +70,19 @@ export function EquipmentPickerDrawer({ gameId, slot, facets, relicLookups, curr
   const visible = response.items.map(item => edited[item.candidateKey] ?? item)
   const pageCount = Math.max(1, Math.ceil(response.total / response.pageSize))
   const visibleSelected = visible.some(item => item.candidateKey === selected)
-  const active = visible.find(item => item.candidateKey === selected) ?? (selected ? edited[selected] : undefined) ?? (current?.candidateKey === selected ? current : undefined)
+  const active = (selected ? edited[selected] : undefined) ?? visible.find(item => item.candidateKey === selected) ?? (current?.candidateKey === selected ? current : undefined)
+  const needsAdvancedLookups = active?.sourceKind === 'relicTemplate' && !advancedLookups.some(item => item.kind === 'equipment_lookup')
+  useEffect(() => {
+    if (!needsAdvancedLookups) return
+    let alive = true
+    setAdvancedState('loading')
+    void window.mhSaveEditor.loadout.getRelicLookups(gameId).then(values => {
+      if (!alive) return
+      setAdvancedLookups(values)
+      setAdvancedState(values.some(item => item.kind === 'equipment_lookup') ? 'ready' : 'error')
+    }).catch(() => { if (alive) setAdvancedState('error') })
+    return () => { alive = false }
+  }, [gameId, needsAdvancedLookups])
   const moveCandidate = (event: React.KeyboardEvent<HTMLButtonElement>, index: number) => {
     let next = index
     if (event.key === 'ArrowDown') next = Math.min(visible.length - 1, index + 1)
@@ -147,7 +161,9 @@ export function EquipmentPickerDrawer({ gameId, slot, facets, relicLookups, curr
               <p className="equipment-picker-drawer__preview-line">防御 {active.baseDefense} / {active.maxDefense} · 火 {active.fireRes} 水 {active.waterRes} 雷 {active.thunderRes} 冰 {active.iceRes} 龙 {active.dragonRes}</p>
               <p className="equipment-picker-drawer__preview-line">{active.skills.map(point => `${point.nameCn} ${point.points > 0 ? '+' : ''}${point.points}`).join('、') || '无固有技能'}</p>
             </>}
-          {active.sourceKind === 'relicTemplate' && <RelicEquipmentEditor candidate={active} lookups={relicLookups} onChange={value => setEdited(values => ({ ...values, [value.candidateKey]: value }))} />}
+          {active.sourceKind === 'relicTemplate' && advancedState === 'loading' && <p className="equipment-picker-drawer__advanced-state" role="status">正在加载发掘参数…</p>}
+          {active.sourceKind === 'relicTemplate' && advancedState === 'error' && <p className="equipment-picker-drawer__advanced-state equipment-picker-drawer__advanced-state--error" role="alert">发掘参数选项尚未准备好，请重新构建本地配装资料。</p>}
+          {active.sourceKind === 'relicTemplate' && advancedState === 'ready' && <RelicEquipmentEditor candidate={active} lookups={advancedLookups} decorations={decorations} onChange={value => setEdited(values => ({ ...values, [value.candidateKey]: value }))} />}
         </aside>}
       </div>
     </div>

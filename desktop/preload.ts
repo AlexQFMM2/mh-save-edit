@@ -44,6 +44,7 @@ contextBridge.exposeInMainWorld('mhSaveEditor', {
     getFacets: (gameId: GameId) => ipcRenderer.invoke(loadoutChannels.getFacets, gameId),
     getBootstrap: (gameId: GameId) => ipcRenderer.invoke(loadoutChannels.getBootstrap, gameId),
     getSnapshot: (gameId: GameId) => ipcRenderer.invoke(loadoutChannels.getSnapshot, gameId),
+    getRelicLookups: (gameId: GameId) => ipcRenderer.invoke(loadoutChannels.getRelicLookups, gameId),
     reconcileLoadout: (loadout: LogicalLoadout) => ipcRenderer.invoke(loadoutChannels.reconcileLoadout, loadout),
     validateCharm: (charm: LoadoutCharm) => ipcRenderer.invoke(loadoutChannels.validateCharm, charm),
     startAuto: (request: AutoLoadoutRequest) => ipcRenderer.invoke(loadoutChannels.startAuto, request),
