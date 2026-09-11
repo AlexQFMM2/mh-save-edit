@@ -98,8 +98,9 @@ Electron 原生模块、preload、完整图鉴和界面兼容性，不作为公�
 
 本次经用户明确批准，三套运行时 SQLite 和图标使用密码保护的 `runtime-assets-v1` 私有
 Release 资产保存；密码仅存在于 Actions Secret。Action 先验证干净 checkout 不含私有资产，
-再临时解密并只将三套 SQLite 与 1,941 个内容哈希 PNG 注入便携版。Dex、ROM、GMD、CSV、
-manifest、crosswalk、审计报告和其他研究输入仍禁止上传。
+再临时解密并将三套 SQLite 与 1,941 个内容哈希 PNG 注入便携版。依赖私有 manifest 的
+数据快照套件只在本地执行；Action 执行其余回归测试。Dex、ROM、GMD、CSV、manifest、
+crosswalk、审计报告和其他研究输入仍禁止上传。
 
 ## 7. UI 与在线验收
 

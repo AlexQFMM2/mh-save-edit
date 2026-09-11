@@ -21,8 +21,25 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: Download encrypted runtime test assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUNTIME_ASSETS_PASSWORD: ${{ secrets.RUNTIME_ASSETS_PASSWORD }}
+        run: |
+          test -n "$RUNTIME_ASSETS_PASSWORD"
+          mkdir -p .runtime-assets
+          gh release download runtime-assets-v1 \
+            --pattern mh-save-edit-runtime-assets-v1.zip \
+            --dir .runtime-assets
+          unzip -P "$RUNTIME_ASSETS_PASSWORD" -o \
+            .runtime-assets/mh-save-edit-runtime-assets-v1.zip
+          for database in mh3g.sqlite mh4g.sqlite mhgu.sqlite; do
+            test "$(head -c 15 "data/$database")" = "SQLite format 3"
+          done
+          test "$(find ui/public/assets/catalog/icons -maxdepth 1 -type f -name '*.png' | wc -l)" -eq 1941
       - run: pnpm typecheck
-      - run: pnpm test
+      - name: Test without private manifest snapshots
+        run: pnpm exec vitest run --exclude tests/weaponCatalogData.test.ts --minWorkers=1 --maxWorkers=2
       - run: pnpm build
 
   package-windows:
