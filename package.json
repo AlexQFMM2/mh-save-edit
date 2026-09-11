@@ -81,9 +81,14 @@
         "filter": [
           "*.sqlite"
         ]
+      },
+      {
+        "from": "build/app-icon.ico",
+        "to": "app-icon.ico"
       }
     ],
     "win": {
+      "icon": "build/app-icon.ico",
       "target": [
         {
           "target": "portable",

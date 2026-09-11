@@ -7,6 +7,8 @@ data/*.sqlite
 data/*.sqlite-*
 data/manifests/
 ui/public/assets/catalog/icons/
+build/app-icon.ico
+build/app-icon.png
 *.log
 .env
 .electron-native/
