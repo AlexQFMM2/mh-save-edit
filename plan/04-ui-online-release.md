@@ -92,9 +92,12 @@ crosswalk、审计报告和未经确认许可的图标素材不能上传公开 G
 
 ### 6.1 Windows 预览构建
 
-当前 `main` 分支推送会在私有仓库的 Windows runner 生成开箱即用的 x64 portable，并上传为
-保留 7 天的成员可见 Action artifact，同时附带 SHA-256。该产物用于验证 Windows 启动、
+当前 `main` 分支推送会在私有仓库的 Windows runner 生成开箱即用的 x64 免安装目录版，
+并上传为保留 7 天的成员可见 Action artifact，同时附带 SHA-256。该产物用于验证 Windows 启动、
 Electron 原生模块、preload、完整图鉴和界面兼容性，不作为公开 Release。
+
+不再交付每次启动都需要自解压完整运行时的单文件 portable。目录版由用户下载后一次性
+解压，后续启动直接读取本地 `resources`，避免约 10 秒的重复解压等待。
 
 本次经用户明确批准，三套运行时 SQLite 和图标使用密码保护的 `runtime-assets-v1` 私有
 Release 资产保存；密码仅存在于 Actions Secret。Action 先验证干净 checkout 不含私有资产，

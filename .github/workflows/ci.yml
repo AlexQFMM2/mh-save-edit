@@ -105,18 +105,48 @@ jobs:
           if (!(Test-Path build/app-icon.png -PathType Leaf)) { throw 'Missing application icon preview' }
       - run: pnpm exec electron-builder install-app-deps
       - run: pnpm package:win
+      - name: Validate embedded Windows icons
+        shell: pwsh
+        run: |
+          Add-Type -AssemblyName System.Drawing
+          $sourcePath = (Resolve-Path build/app-icon.ico).Path
+          $targets = @(
+            @{ Name = 'unpacked'; Path = (Resolve-Path 'release/win-unpacked/MH Save Editor.exe').Path }
+          )
+          foreach ($target in $targets) {
+            if ([string]::IsNullOrWhiteSpace($target.Path)) { throw "Missing $($target.Name) executable" }
+            $expectedIcon = [System.Drawing.Icon]::new($sourcePath, 32, 32)
+            $actualIcon = [System.Drawing.Icon]::ExtractAssociatedIcon($target.Path)
+            if ($null -eq $actualIcon) { throw "Unable to extract $($target.Name) icon" }
+            $expected = $expectedIcon.ToBitmap()
+            $actual = $actualIcon.ToBitmap()
+            if ($expected.Width -ne $actual.Width -or $expected.Height -ne $actual.Height) {
+              throw "$($target.Name) icon dimensions do not match"
+            }
+            for ($y = 0; $y -lt $expected.Height; $y++) {
+              for ($x = 0; $x -lt $expected.Width; $x++) {
+                if ($expected.GetPixel($x, $y).ToArgb() -ne $actual.GetPixel($x, $y).ToArgb()) {
+                  throw "$($target.Name) executable does not contain the Tigrex icon"
+                }
+              }
+            }
+            $actual.Save("release/win-unpacked/app-icon-$($target.Name).png", [System.Drawing.Imaging.ImageFormat]::Png)
+            $expected.Dispose()
+            $actual.Dispose()
+            $expectedIcon.Dispose()
+            $actualIcon.Dispose()
+          }
       - name: Write SHA-256
         shell: pwsh
         run: |
-          Get-ChildItem release -Filter *.exe | ForEach-Object {
+          Get-ChildItem release/win-unpacked -Filter *.exe -File | ForEach-Object {
             $hash = (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
             "$hash  $($_.Name)"
-          } | Set-Content release/SHA256SUMS.txt
+          } | Set-Content release/win-unpacked/SHA256SUMS.txt
       - uses: actions/upload-artifact@v4
         with:
           name: mh-save-editor-windows-x64
-          path: |
-            release/*.exe
-            release/SHA256SUMS.txt
+          path: release/win-unpacked/
           if-no-files-found: error
           retention-days: 7
+          compression-level: 6

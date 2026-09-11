@@ -36,10 +36,14 @@ Linux 开发启动脚本会自动清理 Electron 的 Node 调试环境变量，�
 
 ## Windows 便携版
 
-推送到 `main` 后，私有仓库的 GitHub Actions 会生成 `mh-save-editor-windows-x64`
-构建产物，内含开箱即用的 Windows x64 便携版和 SHA-256 文件。运行所需的三套 SQLite
+推送到 `main` 后，私有仓库的 GitHub Actions 会生成 Windows x64 免安装目录版，
+内含 SHA-256 文件。运行所需的三套 SQLite
 和图标来自密码保护的私有 Release 资产，由 Action 临时注入，不进入 Git 历史。
 Windows 可执行文件、启动窗口与任务栏统一使用 GU/XX 轰龙图标。
+
+单文件 portable 会在每次启动时把完整 Electron 和图鉴数据解压到临时目录，因此不再作为
+预览交付格式。下载 Action 自动生成的 ZIP 后只需解压一次，之后直接运行目录中的
+`MH Save Editor.exe`，避免重复自解压造成的启动等待。
 
 该构建当前只用于仓库成员进行 Windows 实机预览，不是公开发行版。Dex、ROM、GMD、
 CSV、manifest、crosswalk 和其他研究产物不会进入桌面包。

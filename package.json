@@ -1,6 +1,6 @@
 {
   "name": "mh-save-edit",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "description": "Monster Hunter save editor for MH3G, MH4G and MHGU.",
   "type": "module",
@@ -8,7 +8,7 @@
   "scripts": {
     "dev": "node tools/electron-vite-dev.mjs dev",
     "build": "electron-vite build",
-    "package:win": "pnpm build && electron-builder --win portable --x64 --publish never",
+    "package:win": "pnpm build && electron-builder --win --x64 --dir --publish never",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -88,16 +88,7 @@
       }
     ],
     "win": {
-      "icon": "build/app-icon.ico",
-      "target": [
-        {
-          "target": "portable",
-          "arch": [
-            "x64"
-          ]
-        }
-      ],
-      "artifactName": "mh-save-editor-${version}-windows-${arch}.${ext}"
+      "icon": "build/app-icon.ico"
     }
   }
 }
