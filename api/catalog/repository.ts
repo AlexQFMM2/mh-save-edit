@@ -1,6 +1,6 @@
 import type Database from 'better-sqlite3'
 import type { GameId } from '../core/loadout'
-import type { ArmorRelationTarget, ItemCatalogFilters, ItemDetail, ItemIdentity, ItemRelation, ItemRelationTarget, ItemSummary, MonsterRelationTarget, PageResult, QuestRelationTarget, WeaponRelationTarget } from './types'
+import type { ArmorRelationTarget, ItemCatalogFilters, ItemDetail, ItemIdentity, ItemRelation, ItemRelationTarget, ItemSummary, MonsterRelationTarget, PageResult, PalicoEquipmentRelationTarget, QuestRelationTarget, WeaponRelationTarget } from './types'
 
 type RawItem = Record<string, unknown>
 type RawRelation = Record<string, unknown>
@@ -69,6 +69,18 @@ export class ItemCatalogRepository {
       const armorRows = this.db.prepare(`SELECT dex_id,part,name_cn,name_en FROM catalog_armors WHERE game_id=? AND dex_id IN (${marks})`).all(identity.gameId, ...armorDexIds) as RawItem[]
       for (const armor of armorRows) armorsByDex.set(int(armor.dex_id) ?? -1, { gameId: identity.gameId, dexId: int(armor.dex_id) ?? 0, part: armor.part as ArmorRelationTarget['part'], nameCn: String(armor.name_cn), nameEn: String(armor.name_en) })
     }
+    const palicoWeaponsByDex = new Map<number, PalicoEquipmentRelationTarget>()
+    const palicoWeaponDexIds = [...new Set(relations.filter(relation => String(relation.usage_kind) === 'palico-weapon').map(relation => int(relation.target_id)).filter((value): value is number => value != null))]
+    if (palicoWeaponDexIds.length && this.tableExists('catalog_palico_weapons')) {
+      const rows = this.db.prepare(`SELECT dex_id,equipment_id,name_cn,name_en,icon_path FROM catalog_palico_weapons WHERE game_id=? AND dex_id IN (${palicoWeaponDexIds.map(()=>'?').join(',')})`).all(identity.gameId,...palicoWeaponDexIds) as RawItem[]
+      for (const value of rows) palicoWeaponsByDex.set(int(value.dex_id)??-1,{gameId:'mhgu',kind:'weapon',equipmentId:int(value.equipment_id)??0,nameCn:String(value.name_cn),nameEn:String(value.name_en),iconPath:value.icon_path?String(value.icon_path):null})
+    }
+    const palicoArmorsByDex = new Map<number, PalicoEquipmentRelationTarget>()
+    const palicoArmorDexIds = [...new Set(relations.filter(relation => String(relation.usage_kind) === 'palico-armor').map(relation => int(relation.target_id)).filter((value): value is number => value != null))]
+    if (palicoArmorDexIds.length && this.tableExists('catalog_palico_armors')) {
+      const rows = this.db.prepare(`SELECT dex_id,equipment_id,name_cn,name_en,icon_path FROM catalog_palico_armors WHERE game_id=? AND dex_id IN (${palicoArmorDexIds.map(()=>'?').join(',')})`).all(identity.gameId,...palicoArmorDexIds) as RawItem[]
+      for (const value of rows) palicoArmorsByDex.set(int(value.dex_id)??-1,{gameId:'mhgu',kind:'armor',equipmentId:int(value.equipment_id)??0,nameCn:String(value.name_cn),nameEn:String(value.name_en),iconPath:value.icon_path?String(value.icon_path):null})
+    }
     const monstersById = new Map<number, MonsterRelationTarget>()
     const monsterIds = [...new Set(relations.filter((relation) => String(relation.source_kind) === 'monster').map((relation) => int(relation.target_id)).filter((value): value is number => value != null))]
     if (monsterIds.length && this.tableExists('catalog_monsters')) {
@@ -83,7 +95,7 @@ export class ItemCatalogRepository {
       const questRows = this.db.prepare(`SELECT dex_id,quest_key,name_cn,name_en FROM catalog_quests WHERE game_id=? AND dex_id IN (${marks})`).all(identity.gameId, ...questIds) as RawItem[]
       for (const quest of questRows) questsById.set(int(quest.dex_id) ?? -1, { gameId: identity.gameId, questKey: String(quest.quest_key), nameCn: String(quest.name_cn), nameEn: String(quest.name_en) })
     }
-    return { ...toSummary(row), nameJp: String(row.name_jp ?? ''), sellPrice: int(row.sell_price), buyPrice: int(row.buy_price), hexId: row.hex_id ? String(row.hex_id) : null, mappingStatus: String(row.mapping_status ?? ''), relations: relations.map((relation) => toRelation(relation, relatedByDex, weaponsByDex, armorsByDex, monstersById, questsById)) }
+    return { ...toSummary(row), nameJp: String(row.name_jp ?? ''), sellPrice: int(row.sell_price), buyPrice: int(row.buy_price), hexId: row.hex_id ? String(row.hex_id) : null, mappingStatus: String(row.mapping_status ?? ''), relations: relations.map((relation) => toRelation(relation, relatedByDex, weaponsByDex, armorsByDex, monstersById, questsById, palicoWeaponsByDex, palicoArmorsByDex)) }
   }
 
   getItemFacets(gameId: GameId) {
@@ -115,10 +127,10 @@ function rankName(rank: number | null): string | undefined {
   return rank == null ? undefined : ({ 1: '下位', 2: '上位', 3: 'G级' } as Record<number, string>)[rank] ?? `位阶 ${rank}`
 }
 
-function toRelation(row: RawRelation, relatedByDex: Map<number, ItemRelationTarget>, weaponsByDex: Map<number, WeaponRelationTarget>, armorsByDex: Map<number, ArmorRelationTarget>, monstersById: Map<number, MonsterRelationTarget>, questsById: Map<number, QuestRelationTarget>): ItemRelation {
+function toRelation(row: RawRelation, relatedByDex: Map<number, ItemRelationTarget>, weaponsByDex: Map<number, WeaponRelationTarget>, armorsByDex: Map<number, ArmorRelationTarget>, monstersById: Map<number, MonsterRelationTarget>, questsById: Map<number, QuestRelationTarget>, palicoWeaponsByDex: Map<number, PalicoEquipmentRelationTarget>, palicoArmorsByDex: Map<number, PalicoEquipmentRelationTarget>): ItemRelation {
   const metadata = json(row.metadata)
   const targetId = int(row.target_id)
-  const relation: ItemRelation = { id: int(row.id) ?? 0, sourceKind: String(row.source_kind) as ItemRelation['sourceKind'], usageKind: row.usage_kind ? String(row.usage_kind) as ItemRelation['usageKind'] : null, targetId, targetName: String(row.target_name ?? ''), quantity: int(row.quantity), probability: row.probability == null ? null : Number(row.probability), rank: int(row.rank), metadata, relatedItems: relationRelatedDexIds(row).map((dexId) => relatedByDex.get(dexId)).filter((value): value is ItemRelationTarget => value != null), relatedWeapon: targetId == null ? null : weaponsByDex.get(targetId) ?? null, relatedArmor: targetId == null ? null : armorsByDex.get(targetId) ?? null, relatedMonster: targetId == null ? null : monstersById.get(targetId) ?? null, relatedQuest: targetId == null ? null : questsById.get(targetId) ?? null }
+  const relation: ItemRelation = { id: int(row.id) ?? 0, sourceKind: String(row.source_kind) as ItemRelation['sourceKind'], usageKind: row.usage_kind ? String(row.usage_kind) as ItemRelation['usageKind'] : null, targetId, targetName: String(row.target_name ?? ''), quantity: int(row.quantity), probability: row.probability == null ? null : Number(row.probability), rank: int(row.rank), metadata, relatedItems: relationRelatedDexIds(row).map((dexId) => relatedByDex.get(dexId)).filter((value): value is ItemRelationTarget => value != null), relatedWeapon: targetId == null ? null : weaponsByDex.get(targetId) ?? null, relatedArmor: targetId == null ? null : armorsByDex.get(targetId) ?? null, relatedMonster: targetId == null ? null : monstersById.get(targetId) ?? null, relatedQuest: targetId == null ? null : questsById.get(targetId) ?? null, relatedPalicoWeapon: targetId == null ? null : palicoWeaponsByDex.get(targetId) ?? null, relatedPalicoArmor: targetId == null ? null : palicoArmorsByDex.get(targetId) ?? null }
   const namedRank = metadata.Rank_Name || rankName(relation.rank)
   if (namedRank) relation.metadata.rankName = namedRank
   return relation

@@ -6,6 +6,7 @@ describe('workspace navigation', () => {
   it('keeps the catalog and edit groups in their intended order', () => {
     expect(workspaceNavigation.map(({ id, label }) => ({ id, label }))).toEqual([
       { id: 'catalog', label: '资料' },
+      { id: 'palico-catalog', label: '猎猫' },
       { id: 'edit', label: '修改' },
     ])
     expect(workspaceNavigation[0].items.map(({ id }) => id)).toEqual([
@@ -19,6 +20,12 @@ describe('workspace navigation', () => {
       'hunter-arts',
     ])
     expect(workspaceNavigation[1].items.map(({ id }) => id)).toEqual([
+      'palico-types',
+      'palico-support-moves',
+      'palico-skills',
+      'palico-equipment',
+    ])
+    expect(workspaceNavigation[2].items.map(({ id }) => id)).toEqual([
       'save-editor',
       'loadout',
     ])
@@ -28,6 +35,12 @@ describe('workspace navigation', () => {
     expect(getWorkspaceNavigation('mhgu')[0].items.some(item=>item.id==='hunter-arts')).toBe(true)
     expect(getWorkspaceNavigation('mh3g')[0].items.some(item=>item.id==='hunter-arts')).toBe(false)
     expect(getWorkspaceNavigation('mh4g')[0].items.some(item=>item.id==='hunter-arts')).toBe(false)
+  })
+
+  it('shows the independent Palico catalog group only for MHGU/XX content',()=>{
+    expect(getWorkspaceNavigation('mhgu').some(group=>group.id==='palico-catalog')).toBe(true)
+    expect(getWorkspaceNavigation('mh3g').some(group=>group.id==='palico-catalog')).toBe(false)
+    expect(getWorkspaceNavigation('mh4g').some(group=>group.id==='palico-catalog')).toBe(false)
   })
 
   it('uses game-aware horizontal edit sections after a save is loaded', () => {

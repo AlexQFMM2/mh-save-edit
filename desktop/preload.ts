@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { catalogChannels } from '../api/catalog/channels'
-import type { ArmorCatalogFilters, ArmorIdentity, ArmorSetFilters, DecorationCatalogFilters, DecorationIdentity, HunterArtCatalogFilters, HunterArtIdentity, ItemCatalogFilters, ItemIdentity, MonsterCatalogFilters, MonsterIdentity, QuestCatalogFilters, QuestIdentity, SkillCatalogFilters, SkillIdentity, WeaponCatalogFilters, WeaponIdentity, WeaponMotionFilters } from '../api/catalog/types'
+import type { ArmorCatalogFilters, ArmorIdentity, ArmorSetFilters, DecorationCatalogFilters, DecorationIdentity, HunterArtCatalogFilters, HunterArtIdentity, ItemCatalogFilters, ItemIdentity, MonsterCatalogFilters, MonsterIdentity, PalicoArmorFilters, PalicoEquipmentIdentity, PalicoSkillFilters, PalicoSkillIdentity, PalicoSupportMoveFilters, PalicoSupportMoveIdentity, PalicoTypeIdentity, PalicoWeaponFilters, QuestCatalogFilters, QuestIdentity, SkillCatalogFilters, SkillIdentity, WeaponCatalogFilters, WeaponIdentity, WeaponMotionFilters } from '../api/catalog/types'
 import type { GameId } from '../api/core/loadout'
 import { loadoutChannels } from '../api/loadout/channels'
 import type { AutoLoadoutJobFilters, AutoLoadoutJobSummary, AutoLoadoutRequest, LoadoutArmorFilters, LoadoutCharm, LoadoutDecorationFilters, LoadoutWeaponFilters, LogicalLoadout } from '../api/loadout/types'
@@ -36,6 +36,17 @@ contextBridge.exposeInMainWorld('mhSaveEditor', {
     searchHunterArts: (filters: HunterArtCatalogFilters) => ipcRenderer.invoke(catalogChannels.searchHunterArts, filters),
     getHunterArt: (identity: HunterArtIdentity) => ipcRenderer.invoke(catalogChannels.getHunterArt, identity),
     getHunterArtFacets: (gameId: GameId) => ipcRenderer.invoke(catalogChannels.getHunterArtFacets, gameId),
+    searchPalicoTypes: () => ipcRenderer.invoke(catalogChannels.searchPalicoTypes, 'mhgu'),
+    getPalicoType: (identity: PalicoTypeIdentity) => ipcRenderer.invoke(catalogChannels.getPalicoType, identity),
+    searchPalicoSupportMoves: (filters: PalicoSupportMoveFilters) => ipcRenderer.invoke(catalogChannels.searchPalicoSupportMoves, filters),
+    getPalicoSupportMove: (identity: PalicoSupportMoveIdentity) => ipcRenderer.invoke(catalogChannels.getPalicoSupportMove, identity),
+    searchPalicoSkills: (filters: PalicoSkillFilters) => ipcRenderer.invoke(catalogChannels.searchPalicoSkills, filters),
+    getPalicoSkill: (identity: PalicoSkillIdentity) => ipcRenderer.invoke(catalogChannels.getPalicoSkill, identity),
+    searchPalicoWeapons: (filters: PalicoWeaponFilters) => ipcRenderer.invoke(catalogChannels.searchPalicoWeapons, filters),
+    getPalicoWeapon: (identity: PalicoEquipmentIdentity) => ipcRenderer.invoke(catalogChannels.getPalicoWeapon, identity),
+    searchPalicoArmors: (filters: PalicoArmorFilters) => ipcRenderer.invoke(catalogChannels.searchPalicoArmors, filters),
+    getPalicoArmor: (identity: PalicoEquipmentIdentity) => ipcRenderer.invoke(catalogChannels.getPalicoArmor, identity),
+    getPalicoCatalogFacets: () => ipcRenderer.invoke(catalogChannels.getPalicoCatalogFacets, 'mhgu'),
   },
   loadout: {
     searchWeapons: (filters: LoadoutWeaponFilters) => ipcRenderer.invoke(loadoutChannels.searchWeapons, filters),

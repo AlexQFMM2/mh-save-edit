@@ -1,0 +1,128 @@
+.palico-equipment-detail-panel {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  height: 100%;
+  min-height: 0;
+  padding: 12px;
+}
+
+.palico-equipment-detail-panel--state {
+  display: grid;
+  place-items: center;
+  color: var(--global-theme-color-text-muted);
+  text-align: center;
+}
+
+.palico-equipment-detail-panel__header {
+  display: flex;
+  align-items: start;
+  gap: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(223, 182, 93, .15);
+}
+
+.palico-equipment-detail-panel__identity {
+  min-width: 0;
+}
+
+.palico-equipment-detail-panel__title {
+  margin: 2px 0;
+  font-size: var(--global-typography-font-size-title);
+}
+
+.palico-equipment-detail-panel__name,
+.palico-equipment-detail-panel__eyebrow {
+  margin: 0;
+  overflow: hidden;
+  color: var(--global-theme-color-text-muted);
+  font-size: var(--global-typography-font-size-caption);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.palico-equipment-detail-panel__scroll {
+  min-height: 0;
+  padding-top: 10px;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.palico-equipment-detail-panel__stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin: 0 0 14px;
+}
+
+.palico-equipment-detail-panel__stat {
+  padding: 7px;
+  border: 1px solid rgba(223, 182, 93, .13);
+  border-radius: 6px;
+}
+
+.palico-equipment-detail-panel__stat-label {
+  color: var(--global-theme-color-text-muted);
+  font-size: var(--global-typography-font-size-caption);
+}
+
+.palico-equipment-detail-panel__stat-value {
+  margin: 2px 0 0;
+  color: var(--global-theme-color-data);
+  font-size: var(--global-typography-font-size-small);
+}
+
+.palico-equipment-detail-panel__section {
+  margin-bottom: 14px;
+}
+
+.palico-equipment-detail-panel__section-title {
+  margin: 0 0 7px;
+  color: var(--global-theme-color-gold-bright);
+  font-size: var(--global-typography-font-size-body);
+}
+
+.palico-equipment-detail-panel__paragraph {
+  margin: 0;
+  line-height: 1.55;
+}
+
+.palico-equipment-detail-panel__secondary {
+  color: var(--global-theme-color-text-muted);
+}
+
+.palico-equipment-detail-panel__materials {
+  display: grid;
+  gap: 5px;
+}
+
+.palico-equipment-detail-panel__material {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 7px 9px;
+  border: 1px solid rgba(223, 182, 93, .14);
+  border-radius: 6px;
+  color: var(--global-theme-color-text-primary);
+  background: rgba(223, 182, 93, .05);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.palico-equipment-detail-panel__material:hover {
+  background: rgba(223, 182, 93, .13);
+}
+
+.palico-equipment-detail-panel__material-name {
+  display: grid;
+}
+
+.palico-equipment-detail-panel__material-subtitle {
+  color: var(--global-theme-color-text-muted);
+  font-size: var(--global-typography-font-size-caption);
+}
+
+.palico-equipment-detail-panel__material-quantity {
+  color: var(--global-theme-color-data);
+}

@@ -249,3 +249,4 @@ research/mhgu/dex/mhxx-dex    <- D:\MH\unpack\mhxx-dex
 - 工作区最外层不得散落 `.resources`、CSV、SQLite、图标导出目录或临时分析结果；发现后应按游戏和用途归档到 `research`，无法判定归属时放入 `research/archive/unclassified/`。
 - 每次提交前必须用 `git status --short`、`git diff --cached --name-only` 和 `git check-ignore -v` 检查数据边界；发现上述文件必须停止推送。
 - 技术上可重建、可打包不等于可公开分发。只有用户明确批准的独立发布包才能包含指定数据产物，且不得由公开 Git 历史或公开 Action artifact 中转。
+- 2026-09-11 用户已明确批准私有仓库的 Windows 预览例外：三套运行时 SQLite 与内容哈希图标可保存为密码保护的私有 Release 资产，并由 Actions Secret 在临时 Windows runner 中解密后注入成员可见、短期保留的预览 artifact。此例外不包含 Dex、ROM、GMD、CSV、manifest、crosswalk、审计报告、存档或其他研究输入，也不授权公开 Release；仓库改为公开可见前必须先禁用该流程并删除相关资产。

@@ -12,6 +12,7 @@ import { WeaponDetailDrawer } from '../../components/WeaponDetailDrawer/WeaponDe
 import { ArmorDetailDrawer } from '../../components/ArmorDetailDrawer/ArmorDetailDrawer'
 import { MonsterDetailDrawer } from '../../components/MonsterDetailDrawer/MonsterDetailDrawer'
 import { QuestDetailDrawer } from '../../components/QuestDetailDrawer/QuestDetailDrawer'
+import { PalicoEquipmentDetailDrawer } from '../../components/PalicoEquipmentDetailDrawer/PalicoEquipmentDetailDrawer'
 import type { WorkspaceOutletContext } from '../../components/WorkspaceContent/WorkspaceContent'
 import './ItemCatalogPage.css'
 
@@ -47,6 +48,7 @@ export function ItemCatalogPage() {
   const [armorDrawerId, setArmorDrawerId] = useState<number | null>(null)
   const [monsterDrawerId, setMonsterDrawerId] = useState<number | null>(null)
   const [questDrawerKey, setQuestDrawerKey] = useState<string | null>(null)
+  const [palicoDrawer, setPalicoDrawer] = useState<{ kind: 'weapon' | 'armor'; id: number } | null>(null)
 
   const updateParams = (changes: Record<string, string | number | undefined>) => {
     const next = new URLSearchParams(params)
@@ -54,7 +56,7 @@ export function ItemCatalogPage() {
     setParams(next)
   }
   const closeRelationDrawers = () => {
-    setDecorationDrawerId(null); setItemDrawerId(null); setWeaponDrawerKey(null); setArmorDrawerId(null); setMonsterDrawerId(null); setQuestDrawerKey(null)
+    setDecorationDrawerId(null); setItemDrawerId(null); setWeaponDrawerKey(null); setArmorDrawerId(null); setMonsterDrawerId(null); setQuestDrawerKey(null); setPalicoDrawer(null)
   }
   const resetCatalog = () => {
     setQueryInput('')
@@ -104,7 +106,7 @@ export function ItemCatalogPage() {
     <ItemFilterBar rarities={facets.rarities} maxStacks={facets.maxStacks} availableSources={availableSources} availableUsages={availableUsages} rarity={rarity} maxStack={maxStack} source={source} usage={usage} includePlaceholders={includePlaceholders} onChange={(key, value) => updateParams({ target: undefined, [key]: value, page: undefined, item: undefined })} onReset={resetCatalog} />
     <div className="item-catalog-page__layout">
       <section className="item-catalog-page__list" aria-label="道具列表"><ItemList items={items} selectedId={selectedVisible ? selectedId : undefined} loading={loading} error={error} onSelect={(id) => updateParams({ item: id })} /><ItemPagination page={page} pageSize={resultMeta.pageSize} total={resultMeta.total} hasNext={resultMeta.hasNext} onPageChange={(value) => updateParams({ page: value, item: undefined })} /></section>
-      <ItemDetailPanel item={detail} loading={detailLoading} error={detailError} onSelectItem={(saveId) => { closeRelationDrawers(); setItemDrawerId(saveId) }} onSelectDecoration={(saveId) => { closeRelationDrawers(); setDecorationDrawerId(saveId) }} onSelectWeapon={(weapon) => { closeRelationDrawers(); setWeaponDrawerKey(weapon.weaponKey) }} onSelectArmor={(armor) => { closeRelationDrawers(); setArmorDrawerId(armor.dexId) }} onSelectMonster={(monster) => { closeRelationDrawers(); setMonsterDrawerId(monster.monsterId) }} onSelectQuest={(quest) => { closeRelationDrawers(); setQuestDrawerKey(quest.questKey) }} />
+      <ItemDetailPanel item={detail} loading={detailLoading} error={detailError} onSelectItem={(saveId) => { closeRelationDrawers(); setItemDrawerId(saveId) }} onSelectDecoration={(saveId) => { closeRelationDrawers(); setDecorationDrawerId(saveId) }} onSelectWeapon={(weapon) => { closeRelationDrawers(); setWeaponDrawerKey(weapon.weaponKey) }} onSelectArmor={(armor) => { closeRelationDrawers(); setArmorDrawerId(armor.dexId) }} onSelectMonster={(monster) => { closeRelationDrawers(); setMonsterDrawerId(monster.monsterId) }} onSelectQuest={(quest) => { closeRelationDrawers(); setQuestDrawerKey(quest.questKey) }} onSelectPalicoEquipment={(equipment) => { closeRelationDrawers(); setPalicoDrawer({ kind: equipment.kind, id: equipment.equipmentId }) }} />
     </div>
     <DecorationDetailDrawer gameId={game.id} decorationSaveId={decorationDrawerId} onClose={() => setDecorationDrawerId(null)} />
     <ItemDetailDrawer gameId={game.id} itemSaveId={itemDrawerId} onClose={() => setItemDrawerId(null)} />
@@ -112,5 +114,6 @@ export function ItemCatalogPage() {
     <ArmorDetailDrawer gameId={game.id} armorDexId={armorDrawerId} onClose={() => setArmorDrawerId(null)} />
     <MonsterDetailDrawer gameId={game.id} monsterId={monsterDrawerId} onClose={() => setMonsterDrawerId(null)} />
     <QuestDetailDrawer gameId={game.id} questKey={questDrawerKey} onClose={() => setQuestDrawerKey(null)} />
+    <PalicoEquipmentDetailDrawer kind={palicoDrawer?.kind ?? 'weapon'} equipmentId={palicoDrawer?.id ?? null} onClose={() => setPalicoDrawer(null)} />
   </div>
 }

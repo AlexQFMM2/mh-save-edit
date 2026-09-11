@@ -15,6 +15,10 @@ const featureContent: Record<WorkspaceFeaturePageId, { title: string; descriptio
   monsters: { title: '怪物图鉴', description: '集中查看怪物肉质、异常耐性、掉落物和出没任务。' },
   quests: { title: '任务图鉴', description: '集中查看任务目标、报酬和解锁关系。' },
   'hunter-arts': { title: '狩技图鉴', description: '集中查看 MHGU/XX 狩技与解锁条件。' },
+  'palico-types': { title: '支援倾向', description: '查看猎猫支援倾向和固有关联。' },
+  'palico-support-moves': { title: '支援行动', description: '查看猎猫支援行动及解锁资料。' },
+  'palico-skills': { title: '随从技能', description: '查看随从技能、记忆槽和解锁资料。' },
+  'palico-equipment': { title: '猫装备', description: '查看猫武器、防具和制作材料。' },
   loadout: { title: '配装器', description: '未来将在这里手动组合装备、护石和装饰品，并提供自动配装功能。' },
 }
 

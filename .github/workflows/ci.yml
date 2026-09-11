@@ -24,3 +24,79 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm build
+
+  package-windows:
+    if: github.event_name == 'push'
+    needs: check
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Guard clean checkout boundary
+        shell: pwsh
+        run: |
+          $privateFiles = @(
+            Get-ChildItem data -Filter *.sqlite -File -ErrorAction SilentlyContinue
+            Get-ChildItem ui/public/assets/catalog/icons -File -ErrorAction SilentlyContinue
+          )
+          if ($privateFiles.Count -gt 0) {
+            $privateFiles | ForEach-Object { Write-Error "Private runtime asset found: $($_.FullName)" }
+            exit 1
+          }
+      - name: Download encrypted runtime assets
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUNTIME_ASSETS_PASSWORD: ${{ secrets.RUNTIME_ASSETS_PASSWORD }}
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:RUNTIME_ASSETS_PASSWORD)) {
+            throw 'RUNTIME_ASSETS_PASSWORD is not configured'
+          }
+          New-Item -ItemType Directory -Path .runtime-assets -Force | Out-Null
+          gh release download runtime-assets-v1 `
+            --pattern mh-save-edit-runtime-assets-v1.zip `
+            --dir .runtime-assets
+          & 7z x .runtime-assets/mh-save-edit-runtime-assets-v1.zip `
+            "-p$env:RUNTIME_ASSETS_PASSWORD" `
+            "-o$PWD" `
+            -y
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Validate injected runtime assets
+        shell: pwsh
+        run: |
+          $expectedDatabases = @('mh3g.sqlite', 'mh4g.sqlite', 'mhgu.sqlite')
+          foreach ($database in $expectedDatabases) {
+            $path = Join-Path data $database
+            if (!(Test-Path $path -PathType Leaf)) { throw "Missing runtime database: $path" }
+            $header = [System.IO.File]::ReadAllBytes($path)[0..15]
+            $signature = [System.Text.Encoding]::ASCII.GetString($header)
+            if (!$signature.StartsWith('SQLite format 3')) { throw "Invalid SQLite database: $path" }
+          }
+          $unexpectedDatabases = Get-ChildItem data -Filter *.sqlite -File | Where-Object Name -NotIn $expectedDatabases
+          if ($unexpectedDatabases.Count -gt 0) { throw 'Unexpected runtime database found' }
+          $icons = @(Get-ChildItem ui/public/assets/catalog/icons -Filter *.png -File)
+          if ($icons.Count -ne 1941) { throw "Expected 1941 catalog icons, found $($icons.Count)" }
+      - run: pnpm exec electron-builder install-app-deps
+      - run: pnpm package:win
+      - name: Write SHA-256
+        shell: pwsh
+        run: |
+          Get-ChildItem release -Filter *.exe | ForEach-Object {
+            $hash = (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+            "$hash  $($_.Name)"
+          } | Set-Content release/SHA256SUMS.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mh-save-editor-windows-x64
+          path: |
+            release/*.exe
+            release/SHA256SUMS.txt
+          if-no-files-found: error
+          retention-days: 7

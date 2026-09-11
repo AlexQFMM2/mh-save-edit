@@ -1,6 +1,6 @@
 import { useId, useMemo, useState } from 'react'
 import { ChevronDown } from 'lucide-react'
-import type { ArmorRelationTarget, ItemRelation, MonsterRelationTarget, QuestRelationTarget, WeaponRelationTarget } from '../../../api/catalog/types'
+import type { ArmorRelationTarget, ItemRelation, MonsterRelationTarget, PalicoEquipmentRelationTarget, QuestRelationTarget, WeaponRelationTarget } from '../../../api/catalog/types'
 import './ItemRelationSection.css'
 
 type ItemRelationSectionProps = {
@@ -12,6 +12,7 @@ type ItemRelationSectionProps = {
   onSelectArmor?: (armor: ArmorRelationTarget) => void
   onSelectMonster?: (monster: MonsterRelationTarget) => void
   onSelectQuest?: (quest: QuestRelationTarget) => void
+  onSelectPalicoEquipment?: (equipment: PalicoEquipmentRelationTarget) => void
 }
 
 export function sortRelationsByProbability(relations: ItemRelation[]): ItemRelation[] {
@@ -28,7 +29,7 @@ export function sortRelationsByProbability(relations: ItemRelation[]): ItemRelat
     .map(({ relation }) => relation)
 }
 
-export function ItemRelationSection({ title, relations, onSelectItem, onSelectDecoration, onSelectWeapon, onSelectArmor, onSelectMonster, onSelectQuest }: ItemRelationSectionProps) {
+export function ItemRelationSection({ title, relations, onSelectItem, onSelectDecoration, onSelectWeapon, onSelectArmor, onSelectMonster, onSelectQuest, onSelectPalicoEquipment }: ItemRelationSectionProps) {
   const [expanded, setExpanded] = useState(false)
   const bodyId = useId()
   const sortedRelations = useMemo(() => sortRelationsByProbability(relations), [relations])
@@ -64,6 +65,10 @@ export function ItemRelationSection({ title, relations, onSelectItem, onSelectDe
                   ? <button type="button" onClick={() => onSelectMonster(relation.relatedMonster!)}>{relationLabel(relation)}</button>
                   : relation.sourceKind === 'quest' && onSelectQuest && relation.relatedQuest
                   ? <button type="button" onClick={() => onSelectQuest(relation.relatedQuest!)}>{relationLabel(relation)}</button>
+                  : relation.usageKind === 'palico-weapon' && onSelectPalicoEquipment && relation.relatedPalicoWeapon
+                  ? <button type="button" onClick={() => onSelectPalicoEquipment(relation.relatedPalicoWeapon!)}>{relationLabel(relation)}</button>
+                  : relation.usageKind === 'palico-armor' && onSelectPalicoEquipment && relation.relatedPalicoArmor
+                  ? <button type="button" onClick={() => onSelectPalicoEquipment(relation.relatedPalicoArmor!)}>{relationLabel(relation)}</button>
                   : <span>{relationLabel(relation)}</span>}
                 {relation.relatedItems.length > 0 && (
                   <span className="item-relation-section__links">
@@ -97,7 +102,7 @@ function relationLabel(relation: ItemRelation): string {
   const parts: string[] = []
   if (rank) parts.push(rank)
   if (relation.sourceKind === 'exchange') parts.push('山菜爷')
-  parts.push(relation.metadata.Qst_Name ?? relation.relatedWeapon?.nameCn ?? relation.relatedArmor?.nameCn ?? relation.relatedMonster?.nameCn ?? relation.relatedQuest?.nameCn ?? relation.targetName)
+  parts.push(relation.metadata.Qst_Name ?? relation.relatedWeapon?.nameCn ?? relation.relatedArmor?.nameCn ?? relation.relatedMonster?.nameCn ?? relation.relatedQuest?.nameCn ?? relation.relatedPalicoWeapon?.nameCn ?? relation.relatedPalicoArmor?.nameCn ?? relation.targetName)
   if (relation.sourceKind === 'monster' && relation.metadata.Mon_GetItmType_ID) parts.push(relation.metadata.Mon_GetItmType_Name ?? '获取方式未收录')
   if (relation.sourceKind === 'location') {
     if (relation.metadata.Loc_Ara_ID) parts.push(relation.metadata.Loc_Ara_Name ?? '区域未收录')

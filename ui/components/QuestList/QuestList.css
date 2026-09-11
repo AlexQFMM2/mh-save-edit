@@ -55,6 +55,24 @@
   background: rgba(223, 182, 93, 0.11);
 }
 
+.quest-list__row {
+  cursor: pointer;
+}
+
+.quest-list__row:hover,
+.quest-list__row:focus-within {
+  background: rgba(223, 182, 93, 0.07);
+}
+
+.quest-list__row--selected:hover,
+.quest-list__row--selected:focus-within {
+  background: rgba(223, 182, 93, 0.14);
+}
+
+.quest-list__row:active {
+  background: rgba(223, 182, 93, 0.17);
+}
+
 .quest-list__select {
   display: flex;
   flex-direction: column;

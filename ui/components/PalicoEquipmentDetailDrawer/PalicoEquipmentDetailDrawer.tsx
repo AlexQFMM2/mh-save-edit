@@ -1,0 +1,7 @@
+import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import type { PalicoArmorDetail, PalicoWeaponDetail } from '../../../api/catalog/types'
+import { DetailDrawer } from '../DetailDrawer/DetailDrawer'
+import { PalicoEquipmentDetailPanel } from '../PalicoEquipmentDetailPanel/PalicoEquipmentDetailPanel'
+import './PalicoEquipmentDetailDrawer.css'
+export function PalicoEquipmentDetailDrawer({kind,equipmentId,onClose}:{kind:'weapon'|'armor';equipmentId:number|null;onClose:()=>void}){const navigate=useNavigate();const[detail,setDetail]=useState<PalicoWeaponDetail|PalicoArmorDetail|null>(null);const[loading,setLoading]=useState(false);const[error,setError]=useState<string>();useEffect(()=>{if(equipmentId==null)return;let active=true;setLoading(true);setError(undefined);const request=kind==='weapon'?window.mhSaveEditor.catalog.getPalicoWeapon({gameId:'mhgu',kind,equipmentId}):window.mhSaveEditor.catalog.getPalicoArmor({gameId:'mhgu',kind,equipmentId});void request.then(value=>{if(active)setDetail(value)}).catch(cause=>{if(active)setError(cause instanceof Error?cause.message:'猫装备读取失败')}).finally(()=>{if(active)setLoading(false)});return()=>{active=false}},[kind,equipmentId]);if(equipmentId==null)return null;return <div className="palico-equipment-detail-drawer"><DetailDrawer title="猫装备详情" onClose={onClose}><PalicoEquipmentDetailPanel detail={detail} loading={loading} error={error} onSelectItem={id=>{onClose();navigate(`/game/mhgu/catalog/items?target=${id}&item=${id}`)}}/></DetailDrawer></div>}

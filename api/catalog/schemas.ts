@@ -144,3 +144,16 @@ export const armorSetFiltersSchema = z.object({
   ...armorCommonFilters,
   sort: z.enum(['source', 'name', 'rarity', 'slots', 'baseDefense', 'maxDefense', 'skillPoints']).optional(),
 }).strict()
+
+const mhguSchema = z.literal('mhgu')
+const palicoId = z.number().int().min(0).max(65535)
+const palicoQuery = z.string().trim().max(120).optional()
+const palicoPage = { page:z.number().int().min(1).max(100000).optional(),pageSize:z.number().int().min(1).max(100).optional() }
+export const palicoTypeIdentitySchema=z.object({gameId:mhguSchema,typeId:z.number().int().min(0).max(7)}).strict()
+export const palicoSupportMoveIdentitySchema=z.object({gameId:mhguSchema,supportMoveId:z.number().int().min(1).max(56)}).strict()
+export const palicoSkillIdentitySchema=z.object({gameId:mhguSchema,palicoSkillId:z.number().int().min(1).max(95)}).strict()
+export const palicoEquipmentIdentitySchema=z.object({gameId:mhguSchema,kind:z.enum(['weapon','armor']),equipmentId:palicoId}).strict()
+export const palicoSupportMoveFiltersSchema=z.object({gameId:mhguSchema,targetSupportMoveId:z.number().int().min(1).max(56).optional(),query:palicoQuery,typeId:z.number().int().min(0).max(7).optional(),gaugeCost:z.number().int().min(0).max(20).optional(),generationGroup:z.enum(['A','B','C','fixed']).optional(),monsterId:palicoId.optional()}).strict()
+export const palicoSkillFiltersSchema=z.object({gameId:mhguSchema,targetPalicoSkillId:z.number().int().min(1).max(95).optional(),query:palicoQuery,memoryCost:z.number().int().min(0).max(20).optional(),generationGroup:z.enum(['A','B','C','fixed']).optional(),learnLevel:z.number().int().min(0).max(99).optional(),unlockKind:z.enum(['initial','innate','monster','level','distribution']).optional()}).strict()
+export const palicoWeaponFiltersSchema=z.object({gameId:mhguSchema,targetEquipmentId:palicoId.optional(),query:palicoQuery,attackType:z.enum(['cut','blunt']).optional(),specializationId:palicoId.optional(),rarity:z.number().int().min(1).max(20).optional(),specialAttackId:z.union([palicoId,z.literal('none')]).optional(),sharpnessId:z.number().int().min(2).max(7).optional(),sort:z.enum(['source','meleeAttack','rangedAttack','affinity','sharpness','defense']).optional(),direction:z.enum(['asc','desc']).optional(),...palicoPage}).strict()
+export const palicoArmorFiltersSchema=z.object({gameId:mhguSchema,targetEquipmentId:palicoId.optional(),query:palicoQuery,part:z.enum(['head','body']).optional(),rarity:z.number().int().min(1).max(20).optional(),sort:z.enum(['source','defense','fireRes','waterRes','thunderRes','iceRes','dragonRes']).optional(),direction:z.enum(['asc','desc']).optional(),...palicoPage}).strict()

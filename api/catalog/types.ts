@@ -21,6 +21,7 @@ export type WeaponRelationTarget = WeaponIdentity & { typeId: number; nameCn: st
 export type ArmorRelationTarget = ArmorIdentity & { part: ArmorPartId; nameCn: string; nameEn: string }
 export type MonsterRelationTarget = MonsterIdentity & { nameCn: string; nameEn: string; iconPath: string | null }
 export type QuestRelationTarget = QuestIdentity & { nameCn: string; nameEn: string }
+export type PalicoEquipmentRelationTarget = { gameId: 'mhgu'; kind: 'weapon' | 'armor'; equipmentId: number; nameCn: string; nameEn: string; iconPath: string | null }
 export type DecorationSkill = {
   skillId: number
   nameCn: string
@@ -93,6 +94,8 @@ export type ItemRelation = {
   relatedArmor?: ArmorRelationTarget | null
   relatedMonster?: MonsterRelationTarget | null
   relatedQuest?: QuestRelationTarget | null
+  relatedPalicoWeapon?: PalicoEquipmentRelationTarget | null
+  relatedPalicoArmor?: PalicoEquipmentRelationTarget | null
 }
 
 export type QuestAvailability = 'common' | 'mhgu' | 'mhxx'
@@ -744,6 +747,33 @@ export type WeaponMotionFacets = {
   styles: { id: WeaponStyleId; nameCn: string; nameEn: string }[]
   categories: WeaponMotionCategory[]
 }
+
+export type PalicoTypeIdentity = { gameId: 'mhgu'; typeId: number }
+export type PalicoSupportMoveIdentity = { gameId: 'mhgu'; supportMoveId: number }
+export type PalicoSkillIdentity = { gameId: 'mhgu'; palicoSkillId: number }
+export type PalicoEquipmentIdentity = { gameId: 'mhgu'; kind: 'weapon' | 'armor'; equipmentId: number }
+export type PalicoEvidenceStatus = 'verified' | 'wiki_only' | 'conflict'
+export type PalicoUnlockKind = 'initial' | 'innate' | 'monster' | 'level' | 'distribution'
+export type PalicoTypeSummary = PalicoTypeIdentity & { typeKey: string; nameCn: string; nameEn: string; nameJp: string; descriptionCn: string }
+export type PalicoTypeMove = PalicoSupportMoveIdentity & { nameCn: string; nameEn: string; relationKind: string }
+export type PalicoTypeSkill = PalicoSkillIdentity & { nameCn: string; nameEn: string; relationKind: string }
+export type PalicoTypeDetail = PalicoTypeSummary & { descriptionEn: string; descriptionJp: string; supportMoves: PalicoTypeMove[]; skills: PalicoTypeSkill[] }
+export type PalicoUnlock = { unlockKey: string; nativeUnlockId: number | null; kind: PalicoUnlockKind; level: number | null; monsterId: number | null; monsterNameCn: string | null; descriptionCn: string; descriptionEn: string; evidenceStatus: PalicoEvidenceStatus; source: string }
+export type PalicoSupportMoveSummary = PalicoSupportMoveIdentity & { nameCn: string; nameEn: string; nameJp: string; generationTier: number | null; generationGroup: string | null; role: string; teachable: boolean; gaugeCost: number | null; evidenceStatus: PalicoEvidenceStatus }
+export type PalicoSupportMoveDetail = PalicoSupportMoveSummary & { descriptionCn: string; descriptionEn: string; descriptionJp: string; types: PalicoTypeSummary[]; unlocks: PalicoUnlock[]; source: string }
+export type PalicoSkillSummary = PalicoSkillIdentity & { nameCn: string; nameEn: string; nameJp: string; generationTier: number | null; generationGroup: string | null; role: string; teachable: boolean; memoryCost: number | null; learnLevel: number | null; evidenceStatus: PalicoEvidenceStatus }
+export type PalicoSkillDetail = PalicoSkillSummary & { descriptionCn: string; descriptionEn: string; descriptionJp: string; types: PalicoTypeSummary[]; unlocks: PalicoUnlock[]; source: string }
+export type PalicoSupportMoveFilters = { gameId: 'mhgu'; targetSupportMoveId?: number; query?: string; typeId?: number; gaugeCost?: number; generationGroup?: 'A' | 'B' | 'C' | 'fixed'; monsterId?: number }
+export type PalicoSkillFilters = { gameId: 'mhgu'; targetPalicoSkillId?: number; query?: string; memoryCost?: number; generationGroup?: 'A' | 'B' | 'C' | 'fixed'; learnLevel?: number; unlockKind?: PalicoUnlockKind }
+export type PalicoMaterial = ItemRelationTarget & { quantity: number }
+export type PalicoWeaponSummary = PalicoEquipmentIdentity & { kind: 'weapon'; dexId: number; saveId: number; nameCn: string; nameEn: string; nameJp: string; rarity: number; attackType: 'cut' | 'blunt'; specializationId: number; specializationCn: string; specializationEn: string; meleeAttack: number; meleeAffinity: number; rangedAttack: number; rangedAffinity: number; specialAttackCn: string | null; specialAttackEn: string | null; specialAttackValue: number | null; defense: number; sharpnessId: 2 | 3 | 4 | 5 | 6 | 7; price: number; iconPath: string | null }
+export type PalicoWeaponDetail = PalicoWeaponSummary & { descriptionCn: string; descriptionEn: string; descriptionJp: string; materials: PalicoMaterial[]; source: string }
+export type PalicoArmorPart = 'head' | 'body'
+export type PalicoArmorSummary = PalicoEquipmentIdentity & { kind: 'armor'; dexId: number; saveId: number; nameCn: string; nameEn: string; nameJp: string; part: PalicoArmorPart; rarity: number; defense: number; fireRes: number; waterRes: number; thunderRes: number; iceRes: number; dragonRes: number; price: number; iconPath: string | null }
+export type PalicoArmorDetail = PalicoArmorSummary & { descriptionCn: string; descriptionEn: string; descriptionJp: string; materials: PalicoMaterial[]; source: string }
+export type PalicoWeaponFilters = { gameId: 'mhgu'; targetEquipmentId?: number; query?: string; attackType?: 'cut' | 'blunt'; specializationId?: number; rarity?: number; specialAttackId?: number | 'none'; sharpnessId?: number; sort?: 'source' | 'meleeAttack' | 'rangedAttack' | 'affinity' | 'sharpness' | 'defense'; direction?: SortDirection; page?: number; pageSize?: number }
+export type PalicoArmorFilters = { gameId: 'mhgu'; targetEquipmentId?: number; query?: string; part?: PalicoArmorPart; rarity?: number; sort?: 'source' | 'defense' | 'fireRes' | 'waterRes' | 'thunderRes' | 'iceRes' | 'dragonRes'; direction?: SortDirection; page?: number; pageSize?: number }
+export type PalicoCatalogFacets = { typeOptions: Pick<PalicoTypeSummary, 'typeId' | 'nameCn' | 'nameEn'>[]; gaugeCosts: number[]; memoryCosts: number[]; learnLevels: number[]; generationGroups: string[]; unlockKinds: PalicoUnlockKind[]; rarities: number[]; specializations: { id: number; nameCn: string; nameEn: string }[]; specialAttacks: { id: number; nameCn: string; nameEn: string }[]; sharpnessIds: number[] }
 
 export const sourceKindLabels: Record<string, string> = {
   combination: '调合', monster: '怪物获取', location: '地图采集', quest: '任务奖励', exchange: '山菜爷',

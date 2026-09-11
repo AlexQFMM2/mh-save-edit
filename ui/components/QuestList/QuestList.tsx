@@ -18,10 +18,10 @@ export function QuestList({ items, selectedKey, loading, error, onSelect }: { it
                 const badge = keyName(item.keyStatus)
                 const selected = item.questKey === selectedKey
                 return (
-                  <tr key={item.questKey} className={selected ? 'quest-list__row quest-list__row--selected' : 'quest-list__row'} aria-selected={selected}>
+                  <tr key={item.questKey} className={selected ? 'quest-list__row quest-list__row--selected' : 'quest-list__row'} aria-selected={selected} onClick={() => onSelect(item.questKey)}>
                     <td className="quest-list__cell quest-list__cell--data">{item.levelNameCn}</td>
                     <th className="quest-list__cell quest-list__name-cell" scope="row">
-                      <button className="quest-list__select" type="button" onClick={() => onSelect(item.questKey)} aria-pressed={selected}>
+                      <button className="quest-list__select" type="button" aria-pressed={selected}>
                         <span>{item.nameCn}</span>
                         {item.nameEn && <small className="quest-list__alternate-name">{item.nameEn}</small>}
                         {item.match && item.match.kind !== 'name' && <em className="quest-list__match">{item.match.reason}</em>}

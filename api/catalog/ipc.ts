@@ -11,7 +11,8 @@ import { ArmorCatalogRepository } from './armorRepository'
 import { SkillCatalogRepository } from './skillRepository'
 import { MonsterCatalogRepository } from './monsterRepository'
 import { HunterArtCatalogRepository, QuestCatalogRepository } from './questRepository'
-import { armorCatalogFiltersSchema, armorIdentitySchema, armorSetFiltersSchema, decorationCatalogFiltersSchema, decorationIdentitySchema, gameIdSchema, hunterArtCatalogFiltersSchema, hunterArtIdentitySchema, itemCatalogFiltersSchema, itemIdentitySchema, monsterCatalogFiltersSchema, monsterIdentitySchema, questCatalogFiltersSchema, questIdentitySchema, skillCatalogFiltersSchema, skillIdentitySchema, weaponCatalogFiltersSchema, weaponIdentitySchema, weaponMotionFiltersSchema, weaponTreeRequestSchema } from './schemas'
+import { PalicoCatalogRepository } from './palicoRepository'
+import { armorCatalogFiltersSchema, armorIdentitySchema, armorSetFiltersSchema, decorationCatalogFiltersSchema, decorationIdentitySchema, gameIdSchema, hunterArtCatalogFiltersSchema, hunterArtIdentitySchema, itemCatalogFiltersSchema, itemIdentitySchema, monsterCatalogFiltersSchema, monsterIdentitySchema, palicoArmorFiltersSchema, palicoEquipmentIdentitySchema, palicoSkillFiltersSchema, palicoSkillIdentitySchema, palicoSupportMoveFiltersSchema, palicoSupportMoveIdentitySchema, palicoTypeIdentitySchema, palicoWeaponFiltersSchema, questCatalogFiltersSchema, questIdentitySchema, skillCatalogFiltersSchema, skillIdentitySchema, weaponCatalogFiltersSchema, weaponIdentitySchema, weaponMotionFiltersSchema, weaponTreeRequestSchema } from './schemas'
 import { catalogChannels } from './channels'
 export { catalogChannels }
 
@@ -24,7 +25,7 @@ export function resolveCatalogDataDir(isPackaged: boolean, resourcesPath: string
 }
 
 export function registerCatalogIpc(dataDir: string): () => void {
-  const repositories = new Map<GameId, { db: DatabaseType.Database; repository: ItemCatalogRepository; decorations: DecorationCatalogRepository; weapons: WeaponCatalogRepository; weaponMotions: WeaponMotionCatalogRepository; armors: ArmorCatalogRepository; skills: SkillCatalogRepository; monsters: MonsterCatalogRepository; quests: QuestCatalogRepository; hunterArts: HunterArtCatalogRepository }>()
+  const repositories = new Map<GameId, { db: DatabaseType.Database; repository: ItemCatalogRepository; decorations: DecorationCatalogRepository; weapons: WeaponCatalogRepository; weaponMotions: WeaponMotionCatalogRepository; armors: ArmorCatalogRepository; skills: SkillCatalogRepository; monsters: MonsterCatalogRepository; quests: QuestCatalogRepository; hunterArts: HunterArtCatalogRepository; palicoes: PalicoCatalogRepository }>()
   const repositoryEntry = (gameId: GameId) => {
     const cached = repositories.get(gameId)
     if (cached) return cached
@@ -40,7 +41,8 @@ export function registerCatalogIpc(dataDir: string): () => void {
     const monsters = new MonsterCatalogRepository(db)
     const quests = new QuestCatalogRepository(db)
     const hunterArts = new HunterArtCatalogRepository(db)
-    const entry = { db, repository: value, decorations, weapons, weaponMotions, armors, skills, monsters, quests, hunterArts }
+    const palicoes = new PalicoCatalogRepository(db)
+    const entry = { db, repository: value, decorations, weapons, weaponMotions, armors, skills, monsters, quests, hunterArts, palicoes }
     repositories.set(gameId, entry)
     return entry
   }
@@ -159,6 +161,17 @@ export function registerCatalogIpc(dataDir: string): () => void {
     if (gameId !== 'mhgu') return { weaponTypes: [], levels: [], unlockKinds: [] }
     return repositoryEntry(gameId).hunterArts.getHunterArtFacets(gameId)
   })
+  ipcMain.handle(catalogChannels.searchPalicoTypes, (_event, payload: unknown) => { const gameId=gameIdSchema.parse(payload);if(gameId!=='mhgu')throw new Error('当前游戏没有猎猫图鉴');return repositoryEntry(gameId).palicoes.searchTypes() })
+  ipcMain.handle(catalogChannels.getPalicoType, (_event,payload:unknown)=>{const value=palicoTypeIdentitySchema.parse(payload);return repositoryEntry(value.gameId).palicoes.getType(value.typeId)})
+  ipcMain.handle(catalogChannels.searchPalicoSupportMoves,(_event,payload:unknown)=>{const value=palicoSupportMoveFiltersSchema.parse(payload);return repositoryEntry(value.gameId).palicoes.searchSupportMoves(value)})
+  ipcMain.handle(catalogChannels.getPalicoSupportMove,(_event,payload:unknown)=>{const value=palicoSupportMoveIdentitySchema.parse(payload);return repositoryEntry(value.gameId).palicoes.getSupportMove(value.supportMoveId)})
+  ipcMain.handle(catalogChannels.searchPalicoSkills,(_event,payload:unknown)=>{const value=palicoSkillFiltersSchema.parse(payload);return repositoryEntry(value.gameId).palicoes.searchSkills(value)})
+  ipcMain.handle(catalogChannels.getPalicoSkill,(_event,payload:unknown)=>{const value=palicoSkillIdentitySchema.parse(payload);return repositoryEntry(value.gameId).palicoes.getSkill(value.palicoSkillId)})
+  ipcMain.handle(catalogChannels.searchPalicoWeapons,(_event,payload:unknown)=>{const value=palicoWeaponFiltersSchema.parse(payload);return repositoryEntry(value.gameId).palicoes.searchWeapons(value)})
+  ipcMain.handle(catalogChannels.getPalicoWeapon,(_event,payload:unknown)=>{const value=palicoEquipmentIdentitySchema.parse(payload);if(value.kind!=='weapon')throw new Error('猫装备类型不匹配');return repositoryEntry(value.gameId).palicoes.getWeapon(value.equipmentId)})
+  ipcMain.handle(catalogChannels.searchPalicoArmors,(_event,payload:unknown)=>{const value=palicoArmorFiltersSchema.parse(payload);return repositoryEntry(value.gameId).palicoes.searchArmors(value)})
+  ipcMain.handle(catalogChannels.getPalicoArmor,(_event,payload:unknown)=>{const value=palicoEquipmentIdentitySchema.parse(payload);if(value.kind!=='armor')throw new Error('猫装备类型不匹配');return repositoryEntry(value.gameId).palicoes.getArmor(value.equipmentId)})
+  ipcMain.handle(catalogChannels.getPalicoCatalogFacets,(_event,payload:unknown)=>{const gameId=gameIdSchema.parse(payload);if(gameId!=='mhgu')throw new Error('当前游戏没有猎猫图鉴');return repositoryEntry(gameId).palicoes.getFacets()})
 
   return () => {
     for (const channel of Object.values(catalogChannels)) ipcMain.removeHandler(channel)

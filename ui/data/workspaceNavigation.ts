@@ -22,6 +22,10 @@ export type WorkspaceNavItemId =
   | 'monsters'
   | 'quests'
   | 'hunter-arts'
+  | 'palico-types'
+  | 'palico-support-moves'
+  | 'palico-skills'
+  | 'palico-equipment'
   | 'save-editor'
   | 'loadout'
 
@@ -43,7 +47,7 @@ export type WorkspaceNavItem = {
 }
 
 export type WorkspaceNavGroup = {
-  id: 'catalog' | 'edit'
+  id: 'catalog' | 'palico-catalog' | 'edit'
   label: string
   icon: LucideIcon
   items: WorkspaceNavItem[]
@@ -63,6 +67,17 @@ export const workspaceNavigation: WorkspaceNavGroup[] = [
       { id: 'monsters', label: '怪物', description: '查看怪物肉质、异常、掉落与任务', path: 'catalog/monsters', icon: PawPrint },
       { id: 'quests', label: '任务', description: '查看任务目标、报酬与解锁关系', path: 'catalog/quests', icon: ScrollText },
       { id: 'hunter-arts', label: '狩技', description: '查看狩技说明与解锁条件', path: 'catalog/hunter-arts', icon: Zap, supportedGames: ['mhgu'] },
+    ],
+  },
+  {
+    id: 'palico-catalog',
+    label: '猎猫',
+    icon: PawPrint,
+    items: [
+      { id: 'palico-types', label: '支援倾向', description: '查看八种猎猫支援倾向', path: 'catalog/palico/types', icon: PawPrint, supportedGames: ['mhgu'] },
+      { id: 'palico-support-moves', label: '支援行动', description: '查看支援行动、分组与解锁条件', path: 'catalog/palico/support-moves', icon: Sparkles, supportedGames: ['mhgu'] },
+      { id: 'palico-skills', label: '随从技能', description: '查看随从技能、记忆槽与解锁条件', path: 'catalog/palico/skills', icon: ListTree, supportedGames: ['mhgu'] },
+      { id: 'palico-equipment', label: '猫装备', description: '查看猫武器与头部、身体防具', path: 'catalog/palico/equipment', icon: Shield, supportedGames: ['mhgu'] },
     ],
   },
   {

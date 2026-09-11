@@ -1,0 +1,100 @@
+.palico-type-detail-panel {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  height: 100%;
+  min-height: 0;
+  padding: 14px;
+}
+
+.palico-type-detail-panel--state {
+  display: grid;
+  place-items: center;
+  color: var(--global-theme-color-text-muted);
+}
+
+.palico-type-detail-panel__header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(223, 182, 93, .16);
+}
+
+.palico-type-detail-panel__title {
+  margin: 3px 0;
+  font-size: var(--global-typography-font-size-title);
+}
+
+.palico-type-detail-panel__names,
+.palico-type-detail-panel__eyebrow {
+  margin: 0;
+  color: var(--global-theme-color-text-muted);
+  font-size: var(--global-typography-font-size-small);
+}
+
+.palico-type-detail-panel__scroll {
+  min-height: 0;
+  padding-top: 12px;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.palico-type-detail-panel__section {
+  margin-bottom: 16px;
+}
+
+.palico-type-detail-panel__section-title {
+  margin: 0 0 8px;
+  color: var(--global-theme-color-gold-bright);
+  font-size: var(--global-typography-font-size-body);
+}
+
+.palico-type-detail-panel__paragraph {
+  margin: 0 0 6px;
+  line-height: 1.6;
+}
+
+.palico-type-detail-panel__secondary {
+  color: var(--global-theme-color-text-secondary);
+}
+
+.palico-type-detail-panel__relations {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 7px;
+}
+
+.palico-type-detail-panel__relation {
+  display: grid;
+  gap: 2px;
+  padding: 8px;
+  border: 1px solid rgba(223, 182, 93, .18);
+  border-radius: 7px;
+  color: var(--global-theme-color-text-primary);
+  background: rgba(223, 182, 93, .06);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.palico-type-detail-panel__relation:hover {
+  background: rgba(223, 182, 93, .14);
+}
+
+.palico-type-detail-panel__relation-meta {
+  color: var(--global-theme-color-text-muted);
+}
+
+.palico-type-detail-panel__readonly {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.palico-type-detail-panel__readonly-tag {
+  padding: 4px 8px;
+  border: 1px solid rgba(223, 182, 93, .15);
+  border-radius: 999px;
+  color: var(--global-theme-color-text-secondary);
+  font-size: var(--global-typography-font-size-small);
+}

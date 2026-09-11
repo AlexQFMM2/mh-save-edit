@@ -5,6 +5,7 @@ import type { HunterArtDetail, QuestDetail } from '../api/catalog/types'
 import { HunterArtDetailPanel } from '../ui/components/HunterArtDetailPanel/HunterArtDetailPanel'
 import { HunterArtList } from '../ui/components/HunterArtList/HunterArtList'
 import { QuestDetailPanel } from '../ui/components/QuestDetailPanel/QuestDetailPanel'
+import { QuestList } from '../ui/components/QuestList/QuestList'
 
 afterEach(cleanup)
 
@@ -28,6 +29,13 @@ const art: HunterArtDetail = {
 }
 
 describe('quest and Hunter Art catalog UI', () => {
+  it('selects a task from every cell in its table row', () => {
+    const onSelect = vi.fn()
+    render(<QuestList items={[{ ...quest, isPlaceholder: false, match: null }]} selectedKey={undefined} loading={false} onSelect={onSelect} />)
+    fireEvent.click(screen.getByText('火山'))
+    expect(onSelect).toHaveBeenCalledWith('dex:783')
+  })
+
   it('keeps task details visible while updating and supports arrow-key tab navigation', () => {
     const onTabChange = vi.fn()
     render(<QuestDetailPanel quest={quest} loading tab="info" onTabChange={onTabChange} onSelectMonster={() => undefined} />)

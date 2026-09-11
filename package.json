@@ -8,6 +8,7 @@
   "scripts": {
     "dev": "node tools/electron-vite-dev.mjs dev",
     "build": "electron-vite build",
+    "package:win": "pnpm build && electron-builder --win portable --x64 --publish never",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -27,7 +28,10 @@
     "data:audit:monsters": "node tools/audit_monster_catalog.mjs",
     "data:build:monsters": "node tools/build_monster_catalog.mjs",
     "data:build:quests": "node tools/build_quest_catalog.mjs",
-    "data:audit:quests": "node tools/audit_quest_catalog.mjs"
+    "data:audit:quests": "node tools/audit_quest_catalog.mjs",
+    "data:extract:palicoes": "node tools/extract_palico_resident.mjs",
+    "data:build:palicoes": "node tools/build_palico_catalog.mjs",
+    "data:audit:palicoes": "node tools/audit_palico_catalog.mjs"
   },
   "dependencies": {
     "@xyflow/react": "^12.11.6",
@@ -49,10 +53,46 @@
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.4",
     "electron": "^33.2.1",
+    "electron-builder": "^26.15.3",
     "electron-vite": "^2.3.0",
     "jsdom": "^30.0.1",
     "typescript": "^5.7.2",
     "vite": "^5.4.11",
     "vitest": "^2.1.8"
+  },
+  "build": {
+    "appId": "com.alexqfmm.mhsaveedit",
+    "productName": "MH Save Editor",
+    "asar": true,
+    "asarUnpack": [
+      "node_modules/better-sqlite3/**/*"
+    ],
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "out/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "data",
+        "to": "data",
+        "filter": [
+          "*.sqlite"
+        ]
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "artifactName": "mh-save-editor-${version}-windows-${arch}.${ext}"
+    }
   }
 }

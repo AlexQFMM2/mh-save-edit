@@ -90,6 +90,17 @@ pnpm build
 私有真实存档、Dex 可执行文件、CCI/RomFS、`.resources`、生成 SQLite、manifest、
 crosswalk、审计报告和未经确认许可的图标素材不能上传公开 Git 历史、Action artifact 或 GitHub Release。
 
+### 6.1 Windows 预览构建
+
+当前 `main` 分支推送会在私有仓库的 Windows runner 生成开箱即用的 x64 portable，并上传为
+保留 7 天的成员可见 Action artifact，同时附带 SHA-256。该产物用于验证 Windows 启动、
+Electron 原生模块、preload、完整图鉴和界面兼容性，不作为公开 Release。
+
+本次经用户明确批准，三套运行时 SQLite 和图标使用密码保护的 `runtime-assets-v1` 私有
+Release 资产保存；密码仅存在于 Actions Secret。Action 先验证干净 checkout 不含私有资产，
+再临时解密并只将三套 SQLite 与 1,941 个内容哈希 PNG 注入便携版。Dex、ROM、GMD、CSV、
+manifest、crosswalk、审计报告和其他研究输入仍禁止上传。
+
 ## 7. UI 与在线验收
 
 - 五种存档格式在每个编辑页面都有持续可见的身份提示。

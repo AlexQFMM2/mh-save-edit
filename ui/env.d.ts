@@ -1,5 +1,5 @@
 import type { GameId } from '../api/core/loadout'
-import type { ArmorCatalogFacets, ArmorCatalogFilters, ArmorDetail, ArmorIdentity, ArmorSetFilters, ArmorSetSummary, ArmorSummary, DecorationCatalogFacets, DecorationCatalogFilters, DecorationDetail, DecorationIdentity, DecorationSummary, HunterArtCatalogFacets, HunterArtCatalogFilters, HunterArtDetail, HunterArtIdentity, HunterArtSummary, ItemCatalogFilters, ItemDetail, ItemIdentity, ItemSummary, MonsterCatalogFacets, MonsterCatalogFilters, MonsterDetail, MonsterIdentity, MonsterSummary, PageResult, QuestCatalogFacets, QuestCatalogFilters, QuestDetail, QuestIdentity, QuestSummary, SkillCatalogFacets, SkillCatalogFilters, SkillDetail, SkillIdentity, SkillSummary, WeaponCatalogFacets, WeaponCatalogFilters, WeaponDetail, WeaponIdentity, WeaponMotionCatalogResult, WeaponMotionFacets, WeaponMotionFilters, WeaponSummary, WeaponTreeResult } from '../api/catalog/types'
+import type { ArmorCatalogFacets, ArmorCatalogFilters, ArmorDetail, ArmorIdentity, ArmorSetFilters, ArmorSetSummary, ArmorSummary, DecorationCatalogFacets, DecorationCatalogFilters, DecorationDetail, DecorationIdentity, DecorationSummary, HunterArtCatalogFacets, HunterArtCatalogFilters, HunterArtDetail, HunterArtIdentity, HunterArtSummary, ItemCatalogFilters, ItemDetail, ItemIdentity, ItemSummary, MonsterCatalogFacets, MonsterCatalogFilters, MonsterDetail, MonsterIdentity, MonsterSummary, PageResult, PalicoArmorDetail, PalicoArmorFilters, PalicoArmorSummary, PalicoCatalogFacets, PalicoEquipmentIdentity, PalicoSkillDetail, PalicoSkillFilters, PalicoSkillIdentity, PalicoSkillSummary, PalicoSupportMoveDetail, PalicoSupportMoveFilters, PalicoSupportMoveIdentity, PalicoSupportMoveSummary, PalicoTypeDetail, PalicoTypeIdentity, PalicoTypeSummary, PalicoWeaponDetail, PalicoWeaponFilters, PalicoWeaponSummary, QuestCatalogFacets, QuestCatalogFilters, QuestDetail, QuestIdentity, QuestSummary, SkillCatalogFacets, SkillCatalogFilters, SkillDetail, SkillIdentity, SkillSummary, WeaponCatalogFacets, WeaponCatalogFilters, WeaponDetail, WeaponIdentity, WeaponMotionCatalogResult, WeaponMotionFacets, WeaponMotionFilters, WeaponSummary, WeaponTreeResult } from '../api/catalog/types'
 import type { AutoLoadoutJob, AutoLoadoutJobDetail, AutoLoadoutJobFilters, AutoLoadoutJobState, AutoLoadoutJobSummary, AutoLoadoutRequest, CharmValidationResult, LoadoutArmorCandidate, LoadoutArmorFilters, LoadoutCalculationSnapshot, LoadoutCatalogSnapshot, LoadoutCharm, LoadoutDecoration, LoadoutDecorationFilters, LoadoutFacets, LoadoutPage, LoadoutRelicLookup, LoadoutWeaponCandidate, LoadoutWeaponFilters, LogicalLoadout } from '../api/loadout/types'
 
 declare global {
@@ -35,6 +35,17 @@ declare global {
         searchHunterArts(filters: HunterArtCatalogFilters): Promise<HunterArtSummary[]>
         getHunterArt(identity: HunterArtIdentity): Promise<HunterArtDetail | null>
         getHunterArtFacets(gameId: GameId): Promise<HunterArtCatalogFacets>
+        searchPalicoTypes(): Promise<PalicoTypeSummary[]>
+        getPalicoType(identity: PalicoTypeIdentity): Promise<PalicoTypeDetail | null>
+        searchPalicoSupportMoves(filters: PalicoSupportMoveFilters): Promise<PalicoSupportMoveSummary[]>
+        getPalicoSupportMove(identity: PalicoSupportMoveIdentity): Promise<PalicoSupportMoveDetail | null>
+        searchPalicoSkills(filters: PalicoSkillFilters): Promise<PalicoSkillSummary[]>
+        getPalicoSkill(identity: PalicoSkillIdentity): Promise<PalicoSkillDetail | null>
+        searchPalicoWeapons(filters: PalicoWeaponFilters): Promise<PageResult<PalicoWeaponSummary>>
+        getPalicoWeapon(identity: PalicoEquipmentIdentity): Promise<PalicoWeaponDetail | null>
+        searchPalicoArmors(filters: PalicoArmorFilters): Promise<PageResult<PalicoArmorSummary>>
+        getPalicoArmor(identity: PalicoEquipmentIdentity): Promise<PalicoArmorDetail | null>
+        getPalicoCatalogFacets(): Promise<PalicoCatalogFacets>
       }
       loadout: {
         searchWeapons(filters: LoadoutWeaponFilters): Promise<LoadoutPage<LoadoutWeaponCandidate>>

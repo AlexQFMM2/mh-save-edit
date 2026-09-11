@@ -31,5 +31,6 @@ export function ItemDetailDrawer({ gameId, itemSaveId, onClose }: Props) {
     onSelectArmor={(armor) => go(`/game/${gameId}/catalog/armor?target=${armor.dexId}&armor=${armor.dexId}`)}
     onSelectMonster={(monster) => go(`/game/${gameId}/catalog/monsters?target=${monster.monsterId}&monster=${monster.monsterId}`)}
     onSelectQuest={(quest) => go(`/game/${gameId}/catalog/quests?target=${encodeURIComponent(quest.questKey)}&quest=${encodeURIComponent(quest.questKey)}`)}
+    onSelectPalicoEquipment={(equipment) => go(`/game/mhgu/catalog/palico/equipment?view=${equipment.kind === 'weapon' ? 'weapon' : 'armor'}&target=${equipment.equipmentId}&equipment=${equipment.equipmentId}`)}
   /></DetailDrawer></div>
 }
