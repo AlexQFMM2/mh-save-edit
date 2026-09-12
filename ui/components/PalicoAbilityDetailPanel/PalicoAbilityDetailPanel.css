@@ -36,6 +36,9 @@
 }
 
 .palico-ability-detail-panel__scroll {
+  display: grid;
+  align-content: start;
+  gap: var(--global-spacing-3);
   min-height: 0;
   padding-top: var(--global-spacing-4);
   overflow: auto;

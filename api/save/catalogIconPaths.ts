@@ -32,6 +32,14 @@ export function defaultLoadoutIconPath(gameId: GameId, slot: 'weapon' | ArmorPar
   return slot === 'weapon' ? value.weapon : slot === 'charm' ? value.charms[0] ?? null : value.armor[slot]
 }
 
+/**
+ * Relic armor has no stable catalog icon of its own. Keep the visual identity
+ * of the armor slot instead of falling back to a generic package icon.
+ */
+export function armorFallbackIconPath(gameId: GameId, part: ArmorPart): string | null {
+  return part in (sets[gameId]?.armor ?? {}) ? defaultLoadoutIconPath(gameId, part) : defaultLoadoutIconPath(gameId, 'head')
+}
+
 // 发掘武器没有固定的图鉴图标；使用同一武器类型的最高级原生图标，
 // 这样编辑器仍然能给出可识别的武器类型，而不会退化成通用文件图标。
 const highestWeaponIcons: Record<GameId, Record<number, string>> = {

@@ -8,7 +8,7 @@
 .save-box-workspace button { color: var(--global-theme-color-text-primary); background: var(--global-theme-color-surface); cursor: pointer; }
 .save-box-workspace__box > header button, .save-box-workspace__box > footer button { display: flex; align-items: center; gap: var(--global-spacing-1); min-height: var(--global-control-height); border: var(--global-border-width) solid var(--global-theme-color-border); border-radius: var(--global-radius-md); }
 .save-box-workspace__grid { display: grid; grid-template-columns: repeat(10,minmax(42px,1fr)); grid-template-rows: repeat(10,minmax(42px,1fr)); gap: var(--global-spacing-1); min-height: 0; }
-.save-box-workspace__grid > button { position: relative; display: grid; place-items: center; min-width: 0; min-height: 0; padding: var(--global-spacing-1); border: var(--global-border-width) solid var(--global-theme-color-border-subtle); border-radius: var(--global-radius-sm); background: var(--global-theme-color-surface-raised); }
+.save-box-workspace__grid > button { position: relative; display: grid; place-items: center; min-width: 0; min-height: 0; padding: var(--global-spacing-1); border: var(--global-border-width) solid var(--global-theme-color-border-subtle); border-radius: var(--global-radius-sm); background: transparent; }
 .save-box-workspace__grid > button[aria-selected=true] { border-color: var(--global-theme-color-gold-bright); box-shadow: inset 0 0 0 1px var(--global-theme-color-gold); }
 .save-box-workspace__grid > button.is-dimmed { opacity: .2; }
 .save-box-workspace__grid > button.is-empty .catalog-icon { opacity: .3; }

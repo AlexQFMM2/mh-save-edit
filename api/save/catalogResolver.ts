@@ -3,13 +3,14 @@ import { createRequire } from 'node:module'
 import { join } from 'node:path'
 import type { GameId } from '../core/loadout'
 import type { SaveEquipmentCell, SaveItemCell, SavePalicoGenerationRules } from './types'
-import { charmIconPath, weaponFallbackIconPath } from './catalogIconPaths'
+import { armorFallbackIconPath, charmIconPath, weaponFallbackIconPath } from './catalogIconPaths'
 
 const require = createRequire(import.meta.url)
 const BetterSqlite = require('better-sqlite3') as typeof Database
 type Row = Record<string, unknown>
 const number = (value: unknown, fallback = 0) => Number.isFinite(Number(value)) ? Number(value) : fallback
 const text = (value: unknown, fallback = '') => value == null ? fallback : String(value)
+const armorPartBySaveType: Record<number, 'head' | 'chest' | 'arms' | 'waist' | 'legs'> = { 1: 'chest', 2: 'arms', 3: 'waist', 4: 'legs', 5: 'head' }
 
 export type SaveCatalogEquipmentIdentity = {
   kind: 'weapon' | 'armor' | 'charm' | 'palico-weapon' | 'palico-head' | 'palico-body'
@@ -72,7 +73,8 @@ export class SaveCatalogResolver {
     const typeId = cell.kind === 'weapon'
       ? number((db.prepare('SELECT type_id FROM catalog_weapon_types WHERE game_id=? AND save_type=? LIMIT 1').get(gameId, cell.saveType) as Row | undefined)?.type_id)
       : 0
-    const iconPath = cell.kind === 'charm' ? charmIconPath(gameId, cell.saveId) : row?.icon_path ? text(row.icon_path) : cell.kind === 'weapon' ? weaponFallbackIconPath(gameId, typeId) : null
+    const armorPart = (text(row?.part) || armorPartBySaveType[cell.saveType]) as 'head' | 'chest' | 'arms' | 'waist' | 'legs' | undefined
+    const iconPath = cell.kind === 'charm' ? charmIconPath(gameId, cell.saveId) : row?.icon_path ? text(row.icon_path) : cell.kind === 'weapon' ? weaponFallbackIconPath(gameId, typeId) : cell.kind === 'armor' && armorPart ? armorFallbackIconPath(gameId, armorPart) : null
     return { ...cell, nameCn: cell.empty ? '空格' : text(row?.name_cn, cell.kind === 'kinsect' ? `猎虫 #${cell.saveId}` : `${typeNameCn || '装备'} #${cell.saveId}`), nameEn: text(row?.name_en), typeNameCn: cell.empty ? '空格' : typeNameCn, iconPath, weaponKey: row?.weapon_key ? text(row.weapon_key) : null, armorDexId: row?.dex_id == null ? null : number(row.dex_id), palicoEquipmentId: row?.equipment_id == null ? null : number(row.equipment_id), decorationLabels, skill1NameCn: skillName(cell.skill1Id), skill2NameCn: skillName(cell.skill2Id), diagnostics }
   }
   palicoLabels(forte: number, target: number) {
