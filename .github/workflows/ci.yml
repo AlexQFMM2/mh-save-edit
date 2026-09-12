@@ -33,6 +33,7 @@ jobs:
             --dir .runtime-assets
           unzip -P "$RUNTIME_ASSETS_PASSWORD" -o \
             .runtime-assets/mh-save-edit-runtime-assets-v1.zip
+          node tools/repair_runtime_catalog.mjs
           for database in mh3g.sqlite mh4g.sqlite mhgu.sqlite; do
             test "$(head -c 15 "data/$database")" = "SQLite format 3"
           done
@@ -86,6 +87,9 @@ jobs:
             "-o$PWD" `
             -y
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Apply runtime catalog migrations
+        shell: pwsh
+        run: node tools/repair_runtime_catalog.mjs
       - name: Validate injected runtime assets
         shell: pwsh
         run: |
