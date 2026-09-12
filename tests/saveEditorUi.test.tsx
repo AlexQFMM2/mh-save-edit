@@ -267,6 +267,7 @@ describe('save editor UI primitives', () => {
   it('requires an explicit emulator environment before opening the native file picker', () => {
     const open = vi.fn()
     render(<SaveEnvironmentPicker gameId="mh3g" busy={false} onOpen={open} />)
+    expect(screen.getByRole('radio', { name: /MH3G · 3DS · Citra/ }).closest('article')?.querySelector('img')?.getAttribute('src')).toContain('assets/home/citra.png')
     const continueButton = screen.getByRole('button', { name: '选择文件并读取' }) as HTMLButtonElement
     expect(continueButton.disabled).toBe(true)
     fireEvent.click(screen.getByRole('radio', { name: /MH3U · Wii U · Cemu/ }))
