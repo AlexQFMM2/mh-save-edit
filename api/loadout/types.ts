@@ -18,6 +18,8 @@ export type LoadoutIssue = {
 
 export type LoadoutInstanceState = {
   source: InstanceSource
+  /** Present for instances imported from a save; catalog relic templates remain MH4G-only. */
+  formatId?: 'mh3g-3ds-citra' | 'mh3u-wiiu-cemu' | 'mh4g-3ds-citra' | 'mhgu-switch-yuzu' | 'mhxx-3ds-citra'
   recordHex: string
   legality: LegalityStatus
   encoding: EncodingStatus
@@ -44,6 +46,8 @@ export type LoadoutWeaponCandidate = {
   templateKey: string | null
   saveType: number
   saveId: number
+  /** Native upgrade level stored beside saveId; required to identify GU/XX weapon rows. */
+  saveLevel?: number
   nameCn: string
   nameEn: string
   typeId: number

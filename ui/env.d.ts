@@ -1,6 +1,7 @@
 import type { GameId } from '../api/core/loadout'
 import type { ArmorCatalogFacets, ArmorCatalogFilters, ArmorDetail, ArmorIdentity, ArmorSetFilters, ArmorSetSummary, ArmorSummary, DecorationCatalogFacets, DecorationCatalogFilters, DecorationDetail, DecorationIdentity, DecorationSummary, HunterArtCatalogFacets, HunterArtCatalogFilters, HunterArtDetail, HunterArtIdentity, HunterArtSummary, ItemCatalogFilters, ItemDetail, ItemIdentity, ItemSummary, MonsterCatalogFacets, MonsterCatalogFilters, MonsterDetail, MonsterIdentity, MonsterSummary, PageResult, PalicoArmorDetail, PalicoArmorFilters, PalicoArmorSummary, PalicoCatalogFacets, PalicoEquipmentIdentity, PalicoSkillDetail, PalicoSkillFilters, PalicoSkillIdentity, PalicoSkillSummary, PalicoSupportMoveDetail, PalicoSupportMoveFilters, PalicoSupportMoveIdentity, PalicoSupportMoveSummary, PalicoTypeDetail, PalicoTypeIdentity, PalicoTypeSummary, PalicoWeaponDetail, PalicoWeaponFilters, PalicoWeaponSummary, QuestCatalogFacets, QuestCatalogFilters, QuestDetail, QuestIdentity, QuestSummary, SkillCatalogFacets, SkillCatalogFilters, SkillDetail, SkillIdentity, SkillSummary, WeaponCatalogFacets, WeaponCatalogFilters, WeaponDetail, WeaponIdentity, WeaponMotionCatalogResult, WeaponMotionFacets, WeaponMotionFilters, WeaponSummary, WeaponTreeResult } from '../api/catalog/types'
 import type { AutoLoadoutJob, AutoLoadoutJobDetail, AutoLoadoutJobFilters, AutoLoadoutJobState, AutoLoadoutJobSummary, AutoLoadoutRequest, CharmValidationResult, LoadoutArmorCandidate, LoadoutArmorFilters, LoadoutCalculationSnapshot, LoadoutCatalogSnapshot, LoadoutCharm, LoadoutDecoration, LoadoutDecorationFilters, LoadoutFacets, LoadoutPage, LoadoutRelicLookup, LoadoutWeaponCandidate, LoadoutWeaponFilters, LogicalLoadout } from '../api/loadout/types'
+import type { SaveBoxWriteTarget, SaveBoxWriteTargetRequest, SaveCatalogEquipmentRequest, SaveCatalogItemRequest, SaveCatalogItemWritePreview, SaveCharacterSummary, SaveCommand, SaveExportRequest, SaveImportApplyRequest, SaveImportPreview, SaveImportRequest, SaveLoadoutWritePreview, SaveLoadoutWriteRequest, SaveMutationResult, SaveOpenRequest, SaveOpenResult, SaveResult, SaveSectionRequest, SaveSectionSnapshot, SaveSessionSnapshot, SaveValidationResult } from '../api/save/types'
 
 declare global {
   interface Window {
@@ -69,6 +70,30 @@ declare global {
         markAutoLoadoutJobViewed(jobId: string): Promise<void>
         selectAutoLoadoutJobResult(jobId: string, fingerprint: string | null): Promise<void>
         subscribeAutoLoadoutJobs(listener: (summary: AutoLoadoutJobSummary) => void): () => void
+      }
+      save: {
+        getSession(): Promise<SaveSessionSnapshot | null>
+        open(request: SaveOpenRequest): Promise<SaveOpenResult>
+        listCharacters(sessionId: string, revision: number): Promise<SaveCharacterSummary[]>
+        selectCharacter(sessionId: string, revision: number, slot: number): Promise<SaveSessionSnapshot>
+        getSection(request: SaveSectionRequest): Promise<SaveSectionSnapshot>
+        applyCommand(command: SaveCommand): Promise<SaveMutationResult>
+        undo(sessionId: string, revision: number): Promise<SaveMutationResult>
+        redo(sessionId: string, revision: number): Promise<SaveMutationResult>
+        validate(sessionId: string, revision: number): Promise<SaveValidationResult>
+        saveCurrent(sessionId: string, revision: number): Promise<SaveResult>
+        saveAs(sessionId: string, revision: number): Promise<SaveResult>
+        close(sessionId: string, revision: number, discard?: boolean): Promise<void>
+        previewImport(request: SaveImportRequest): Promise<SaveImportPreview | null>
+        applyImport(request: SaveImportApplyRequest): Promise<SaveMutationResult>
+        exportBox(request: SaveExportRequest): Promise<{ cancelled: boolean; message: string }>
+        previewBoxWriteTarget(request: SaveBoxWriteTargetRequest): Promise<SaveBoxWriteTarget>
+        previewCatalogItemWrite(request: SaveCatalogItemRequest): Promise<SaveCatalogItemWritePreview>
+        addCatalogItem(request: SaveCatalogItemRequest): Promise<SaveMutationResult>
+        addCatalogEquipment(request: SaveCatalogEquipmentRequest): Promise<SaveMutationResult>
+        previewLoadoutWrite(request: SaveLoadoutWriteRequest): Promise<SaveLoadoutWritePreview>
+        addLoadout(request: SaveLoadoutWriteRequest): Promise<SaveMutationResult>
+        subscribe(listener: (snapshot: SaveSessionSnapshot | null) => void): () => void
       }
     }
   }

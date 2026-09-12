@@ -2,6 +2,7 @@ import { ArrowLeft, ChevronLeft, ChevronRight, Gamepad2 } from 'lucide-react'
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import type { GameVersionDefinition } from '../../data/gameVersions'
 import { getWorkspaceNavigation, workspacePath } from '../../data/workspaceNavigation'
+import { useSaveSession } from '../SaveSessionProvider/SaveSessionProvider'
 import './WorkspaceSidebar.css'
 
 type WorkspaceSidebarProps = {
@@ -13,6 +14,7 @@ type WorkspaceSidebarProps = {
 export function WorkspaceSidebar({ game, collapsed, onCollapsedChange }: WorkspaceSidebarProps) {
   const navigate = useNavigate()
   const location = useLocation()
+  const { navigationBlockReason, notify } = useSaveSession()
 
   return (
     <aside className={`workspace-sidebar${collapsed ? ' workspace-sidebar--collapsed' : ''}`} aria-label="游戏工具导航">
@@ -20,7 +22,7 @@ export function WorkspaceSidebar({ game, collapsed, onCollapsedChange }: Workspa
         <button
           className="workspace-sidebar__back"
           type="button"
-          onClick={() => navigate('/')}
+          onClick={() => navigationBlockReason ? notify(navigationBlockReason, 'warning') : navigate('/')}
           aria-label="返回选择游戏版本"
           title="返回选择游戏版本"
         >

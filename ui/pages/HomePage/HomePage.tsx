@@ -12,7 +12,6 @@ export function HomePage() {
   const [selectedGameId, setSelectedGameId] = useState<GameId | null>(null)
   const [previewedGameId, setPreviewedGameId] = useState<GameId | null>(null)
   const previewedGame = gameVersions.find((game) => game.id === previewedGameId)
-
   return (
     <main className="home-page">
       <GuildBackdrop backgroundImage={previewedGame?.backgroundPath} />

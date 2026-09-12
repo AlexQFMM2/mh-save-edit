@@ -24,7 +24,7 @@ export function ItemDetailDrawer({ gameId, itemSaveId, onClose }: Props) {
   }, [gameId, itemSaveId])
   if (itemSaveId == null) return null
   const go = (path: string) => { onClose(); navigate(path) }
-  return <div className="item-detail-drawer"><DetailDrawer title="关联道具" onClose={onClose}><ItemDetailPanel item={item} loading={loading} error={error}
+  return <div className="item-detail-drawer"><DetailDrawer title="关联道具" onClose={onClose}><ItemDetailPanel item={item} loading={loading} error={error} allowCatalogWrite={false}
     onSelectItem={(saveId) => go(`/game/${gameId}/catalog/items?target=${saveId}&item=${saveId}`)}
     onSelectDecoration={(saveId) => go(`/game/${gameId}/catalog/decorations?target=${saveId}&item=${saveId}`)}
     onSelectWeapon={(weapon) => go(`/game/${gameId}/catalog/weapons?target=${encodeURIComponent(weapon.weaponKey)}&type=${weapon.typeId}&weapon=${encodeURIComponent(weapon.weaponKey)}`)}

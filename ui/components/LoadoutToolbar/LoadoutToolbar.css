@@ -11,6 +11,7 @@
 .loadout-toolbar__action:hover, .loadout-toolbar__file:hover { border-color: var(--global-theme-color-gold); color: var(--global-theme-color-data); }
 .loadout-toolbar__action:disabled { opacity: .35; cursor: not-allowed; }
 .loadout-toolbar__notice { max-width: 190px; overflow: hidden; color: var(--global-theme-color-text-secondary); font-size: var(--global-typography-font-size-caption); text-overflow: ellipsis; white-space: nowrap; }
+.loadout-toolbar__save-write { display: inline-flex; align-items: center; gap: 5px; min-height: var(--loadout-toolbar-component-height); padding: 0 10px; border: 1px solid var(--global-theme-color-gold); border-radius: 7px; color: #24150e; background: var(--global-theme-color-gold-bright); font-size: var(--global-typography-font-size-small); font-weight: 800; cursor: pointer; }
 .loadout-toolbar__primary { color: #24150e; background: var(--global-theme-color-gold-bright); }
 .loadout-toolbar__history { position: relative; }
 .loadout-toolbar__history-icon-wrap { position: relative; display: inline-grid; place-items: center; }

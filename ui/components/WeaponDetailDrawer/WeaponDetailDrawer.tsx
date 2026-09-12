@@ -23,5 +23,5 @@ export function WeaponDetailDrawer({ gameId, weaponKey, onClose }: { gameId: Gam
   if (!weaponKey) return null
   const goItem = (saveId: number) => { onClose(); navigate(`/game/${gameId}/catalog/items?target=${saveId}&item=${saveId}`) }
   const goWeapon = (target: WeaponDetail['parents'][number]) => { onClose(); navigate(`/game/${gameId}/catalog/weapons?target=${encodeURIComponent(target.weaponKey)}&type=${target.typeId}&weapon=${encodeURIComponent(target.weaponKey)}`) }
-  return <div className="weapon-detail-drawer"><DetailDrawer title="关联武器" onClose={onClose}><WeaponDetailPanel gameId={gameId} weapon={weapon} loading={loading} error={error} sharpnessStage="base" onSelectItem={goItem} onSelectWeapon={goWeapon} /></DetailDrawer></div>
+  return <div className="weapon-detail-drawer"><DetailDrawer title="关联武器" onClose={onClose}><WeaponDetailPanel gameId={gameId} weapon={weapon} loading={loading} error={error} sharpnessStage="base" allowCatalogWrite={false} onSelectItem={goItem} onSelectWeapon={goWeapon} /></DetailDrawer></div>
 }

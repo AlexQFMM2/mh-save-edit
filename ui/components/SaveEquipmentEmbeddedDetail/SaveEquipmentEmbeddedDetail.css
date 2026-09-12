@@ -1,0 +1,19 @@
+.save-equipment-embedded-detail { display: grid; gap: 10px; min-width: 0; transition: opacity 120ms ease; }
+.save-equipment-embedded-detail.is-loading { opacity: .68; }
+.save-equipment-embedded-detail__record, .save-equipment-embedded-detail__palico dl, .save-equipment-embedded-detail__installed dl { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 6px; margin: 0; }
+.save-equipment-embedded-detail__record > div, .save-equipment-embedded-detail__palico dl > div, .save-equipment-embedded-detail__installed dl > div { min-width: 0; padding: 7px; border: 1px solid rgba(223,182,93,.12); border-radius: 6px; background: rgba(17,9,5,.28); }
+.save-equipment-embedded-detail dt { color: var(--global-theme-color-text-muted); font-size: var(--global-typography-font-size-caption); }
+.save-equipment-embedded-detail dd { margin: 2px 0 0; color: var(--global-theme-color-data); overflow-wrap: anywhere; }
+.save-equipment-embedded-detail__catalog { min-width: 0; overflow-x: hidden; }
+.save-equipment-embedded-detail__catalog > p { color: var(--global-theme-color-text-secondary); font-size: var(--global-typography-font-size-small); }
+.save-equipment-embedded-detail__catalog .armor-stats-panel { padding: 0; }
+.save-equipment-embedded-detail__state { min-height: 46px; margin: 0; padding: 9px; color: var(--global-theme-color-text-secondary); background: rgba(223,182,93,.05); }
+.save-equipment-embedded-detail__state.is-error { color: var(--global-theme-color-danger); }
+.save-equipment-embedded-detail__installed { display: grid; gap: 7px; }
+.save-equipment-embedded-detail__installed h3, .save-equipment-embedded-detail__installed p { margin: 0; }
+.save-equipment-embedded-detail__installed h3 { color: var(--global-theme-color-gold-bright); font-size: var(--global-typography-font-size-body); }
+.save-equipment-embedded-detail__installed p { color: var(--global-theme-color-text-muted); font-size: var(--global-typography-font-size-small); }
+.save-equipment-embedded-detail__installed ul { display: grid; gap: 5px; margin: 0; padding: 0; list-style: none; }
+.save-equipment-embedded-detail__installed li { display: flex; justify-content: space-between; gap: 8px; padding: 6px 8px; border: 1px solid rgba(223,182,93,.1); border-radius: 6px; }
+.save-equipment-embedded-detail__installed li small { color: var(--global-theme-color-text-muted); }
+@media (prefers-reduced-motion: reduce) { .save-equipment-embedded-detail { transition: none; } }

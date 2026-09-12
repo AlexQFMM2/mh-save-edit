@@ -1,0 +1,16 @@
+.workspace-drawer { --workspace-drawer-component-width: min(72vw,980px); position: fixed; inset: 0; z-index: 90; display: flex; justify-content: flex-end; }
+.workspace-drawer__backdrop { position: absolute; inset: 0; border: 0; background: rgba(20,12,8,.66); cursor: default; }
+.workspace-drawer__panel { position: relative; display: grid; grid-template-rows: auto minmax(0,1fr) auto; width: var(--workspace-drawer-component-width); min-width: 640px; height: 100%; border-left: 1px solid var(--global-theme-color-gold); background: var(--global-theme-color-surface-deep); box-shadow: -16px 0 42px rgba(0,0,0,.42); animation: workspace-drawer-in 180ms ease-out; }
+.workspace-drawer__header,.workspace-drawer__footer { display: flex; align-items: center; gap: 10px; min-height: 64px; padding: 12px 16px; border-bottom: 1px solid var(--global-theme-color-border); background: var(--global-theme-color-surface); }
+.workspace-drawer__header h2 { margin: 0; font-size: var(--global-typography-font-size-title); }
+.workspace-drawer__close { margin-left: auto; }
+.workspace-drawer__icon-button { display: grid; place-items: center; width: 40px; height: 40px; border: 1px solid var(--global-theme-color-border); border-radius: 8px; color: var(--global-theme-color-text-primary); background: var(--global-theme-color-surface-raised); cursor: pointer; }
+.workspace-drawer__icon-button svg { width: 19px; height: 19px; }
+.workspace-drawer__body { min-height: 0; overflow: hidden; padding: 14px 16px; }
+.workspace-drawer__footer { justify-content: flex-end; min-height: 60px; border-top: 1px solid var(--global-theme-color-border); border-bottom: 0; }
+.workspace-drawer__footer-action { min-height: 36px; padding: 0 12px; border: 1px solid var(--global-theme-color-border); border-radius: 7px; color: var(--global-theme-color-text-primary); background: var(--global-theme-color-surface-raised); font: inherit; font-size: var(--global-typography-font-size-small); cursor: pointer; }
+.workspace-drawer__footer-action:disabled { opacity: .4; cursor: not-allowed; }
+@keyframes workspace-drawer-in { from { transform: translateX(24px); opacity: .7; } to { transform: none; opacity: 1; } }
+@media (max-width:1100px) { .workspace-drawer { --workspace-drawer-component-width: 86vw; } }
+@media (max-width:760px) { .workspace-drawer { --workspace-drawer-component-width: 100vw; } .workspace-drawer__panel { min-width:0; } }
+@media (prefers-reduced-motion:reduce) { .workspace-drawer__panel { animation:none; } }

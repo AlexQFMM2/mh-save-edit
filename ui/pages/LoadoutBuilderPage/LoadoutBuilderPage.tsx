@@ -12,17 +12,21 @@ import { DecorationEditorDrawer } from '../../components/DecorationEditorDrawer/
 import { EquipmentPickerDrawer } from '../../components/EquipmentPickerDrawer/EquipmentPickerDrawer'
 import { LoadoutEquipmentTable } from '../../components/LoadoutEquipmentTable/LoadoutEquipmentTable'
 import { LoadoutLegalitySummary } from '../../components/LoadoutLegalitySummary/LoadoutLegalitySummary'
+import { LoadoutSaveWriteDrawer } from '../../components/LoadoutSaveWriteDrawer/LoadoutSaveWriteDrawer'
 import { LoadoutSkillMatrix } from '../../components/LoadoutSkillMatrix/LoadoutSkillMatrix'
 import { LoadoutToolbar } from '../../components/LoadoutToolbar/LoadoutToolbar'
 import type { WorkspaceOutletContext } from '../../components/WorkspaceContent/WorkspaceContent'
+import type { SaveLoadoutWritePreview } from '../../../api/save/types'
+import { useSaveSession } from '../../components/SaveSessionProvider/SaveSessionProvider'
 import './LoadoutBuilderPage.css'
 
-type Drawer = { kind: 'equipment'; slot: 'weapon' | ArmorLoadoutSlot } | { kind: 'charm' } | { kind: 'decorations'; slot: LoadoutSlot } | { kind: 'auto' } | { kind: 'history' } | null
+type Drawer = { kind: 'equipment'; slot: 'weapon' | ArmorLoadoutSlot } | { kind: 'charm' } | { kind: 'decorations'; slot: LoadoutSlot } | { kind: 'auto' } | { kind: 'history' } | { kind: 'save'; preview: SaveLoadoutWritePreview } | null
 const clone = <T,>(value: T): T => structuredClone(value)
 const cycleLock = (lock: LoadoutLock): LoadoutLock => lock === 'unlocked' ? 'equipment' : lock === 'equipment' ? 'equipmentAndDecorations' : 'unlocked'
 
 export function LoadoutBuilderPage() {
   const { game } = useOutletContext<WorkspaceOutletContext>()
+  const saveSession = useSaveSession()
   const [snapshot, setSnapshot] = useState<LoadoutCalculationSnapshot>()
   const [facets, setFacets] = useState<LoadoutFacets>()
   const [loadout, setLoadout] = useState<LogicalLoadout>()
@@ -32,6 +36,7 @@ export function LoadoutBuilderPage() {
   const [notice, setNotice] = useState<string>()
   const [jobs, setJobs] = useState<AutoLoadoutJobSummary[]>([])
   const [currentAutoJobId, setCurrentAutoJobId] = useState<string>()
+  const [writeBusy, setWriteBusy] = useState(false)
   const undo = useRef<LogicalLoadout[]>([])
 
   useEffect(() => {
@@ -89,6 +94,28 @@ export function LoadoutBuilderPage() {
   const newLoadout = () => { if (!snapshot) return; if (loadout) undo.current.push(clone(loadout)); setLoadout(createEmptyLogicalLoadout(game.id, snapshot.dataVersion)); setNotice('已创建新配装') }
   const undoOnce = () => { const previous = undo.current.pop(); if (previous) { setLoadout(previous); setNotice('已撤销上一步') } }
   const applyAutoResult = (value: LogicalLoadout) => { commit(() => value); setDrawer(null); setNotice('已应用自动配装结果，可撤销') }
+  const openWritePreview = async () => {
+    const current = saveSession.session
+    if (!current || !loadout || current.contentGameId !== game.id || current.readOnly) return
+    setWriteBusy(true)
+    try {
+      const preview = await window.mhSaveEditor.save.previewLoadoutWrite({ sessionId: current.sessionId, revision: current.revision, loadout })
+      setDrawer({ kind: 'save', preview })
+    } catch (cause) {
+      saveSession.notify(cause instanceof Error ? cause.message : '无法预览装备箱写入', 'error')
+    } finally { setWriteBusy(false) }
+  }
+  const applyWritePreview = async () => {
+    const current = saveSession.session
+    if (!current || !loadout) return
+    setWriteBusy(true)
+    try {
+      const value = await window.mhSaveEditor.save.addLoadout({ sessionId: current.sessionId, revision: current.revision, loadout })
+      saveSession.notify(value.message)
+      setNotice('整套配装已加入装备箱，尚未保存')
+      setDrawer(null)
+    } catch (cause) { saveSession.notify(cause instanceof Error ? cause.message : '写入装备箱失败', 'error') } finally { setWriteBusy(false) }
+  }
 
   const importFile = async (file: File) => {
     try {
@@ -111,7 +138,7 @@ export function LoadoutBuilderPage() {
   const unreadJobCount = jobs.filter(job => job.status === 'completed' && !job.viewedAt).length
 
   return <div className="loadout-builder-page">
-    <LoadoutToolbar loadout={loadout} result={result} notice={notice} canUndo={undo.current.length > 0} activeJobCount={activeJobCount} unreadJobCount={unreadJobCount} onUndo={undoOnce} onNameChange={value => commit(current => ({ ...current, name: value }))} onGenderChange={value => commit(current => ({ ...current, gender: value }))} onReset={() => { undo.current.push(clone(loadout)); setLoadout(createEmptyLogicalLoadout(game.id, snapshot.dataVersion)); setNotice('已重置配装') }} onNew={newLoadout} onImport={importFile} onExport={exportFile} onOpenAuto={() => setDrawer({ kind: 'auto' })} onOpenHistory={() => setDrawer({ kind: 'history' })} />
+    <LoadoutToolbar loadout={loadout} result={result} notice={notice} canUndo={undo.current.length > 0} activeJobCount={activeJobCount} unreadJobCount={unreadJobCount} onUndo={undoOnce} onNameChange={value => commit(current => ({ ...current, name: value }))} onGenderChange={value => commit(current => ({ ...current, gender: value }))} onReset={() => { undo.current.push(clone(loadout)); setLoadout(createEmptyLogicalLoadout(game.id, snapshot.dataVersion)); setNotice('已重置配装') }} onNew={newLoadout} onImport={importFile} onExport={exportFile} onOpenAuto={() => setDrawer({ kind: 'auto' })} onOpenHistory={() => setDrawer({ kind: 'history' })} onWriteToSave={saveSession.session?.contentGameId === game.id && !saveSession.session.readOnly ? () => void openWritePreview() : undefined} />
     <LoadoutEquipmentTable slots={LOADOUT_SLOTS} loadout={loadout} result={result} onChoose={choose} onClear={clear} onDecorate={slot => setDrawer({ kind: 'decorations', slot })} onToggleLock={toggleLock} />
     <div className="loadout-builder-page__analysis"><LoadoutSkillMatrix skills={result.skills} /><LoadoutLegalitySummary result={result} onIssueClick={path => setNotice(`问题位置：${path}`)} /></div>
     {drawer?.kind === 'equipment' && <EquipmentPickerDrawer gameId={game.id} slot={drawer.slot} facets={facets} relicLookups={snapshot.relicLookups} decorations={snapshot.decorations} current={equipment(drawer.slot) as LoadoutWeaponCandidate | LoadoutArmorCandidate | null} onApply={candidate => applyEquipment(drawer.slot, candidate)} onClose={() => setDrawer(null)} />}
@@ -119,5 +146,6 @@ export function LoadoutBuilderPage() {
     {drawer?.kind === 'decorations' && activeDecoration && <DecorationEditorDrawer decorations={snapshot.decorations} skills={snapshot.skills} current={activeDecoration.decorations} capacity={activeDecoration.slots} onApply={value => applyDecorations(drawer.slot, value)} onClose={() => setDrawer(null)} />}
     {drawer?.kind === 'auto' && <AutoLoadoutDrawer snapshot={snapshot} loadout={loadout} calculation={result} initialJobId={currentAutoJobId} onJobStarted={setCurrentAutoJobId} onApply={applyAutoResult} onClose={() => setDrawer(null)} />}
     {drawer?.kind === 'history' && <AutoLoadoutHistoryDrawer gameId={game.id} snapshot={snapshot} onApply={applyAutoResult} onJobsChanged={refreshJobs} onClose={() => setDrawer(null)} />}
+    {drawer?.kind === 'save' && <LoadoutSaveWriteDrawer preview={drawer.preview} busy={writeBusy} onClose={() => setDrawer(null)} onApply={() => void applyWritePreview()} />}
   </div>
 }

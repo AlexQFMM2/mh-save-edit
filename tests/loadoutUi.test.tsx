@@ -10,12 +10,14 @@ import { AutoLoadoutJobProgress } from '../ui/components/AutoLoadoutJobProgress/
 import { AutoLoadoutResultList } from '../ui/components/AutoLoadoutResultList/AutoLoadoutResultList'
 import { EquipmentPickerDrawer } from '../ui/components/EquipmentPickerDrawer/EquipmentPickerDrawer'
 import { LoadoutSlotIcon } from '../ui/components/LoadoutSlotIcon/LoadoutSlotIcon'
+import { LoadoutSaveWriteDrawer } from '../ui/components/LoadoutSaveWriteDrawer/LoadoutSaveWriteDrawer'
 import { LoadoutWorkspaceDrawer } from '../ui/components/LoadoutWorkspaceDrawer/LoadoutWorkspaceDrawer'
 import { RelicEquipmentEditor } from '../ui/components/RelicEquipmentEditor/RelicEquipmentEditor'
 import { RelicLookupSelect } from '../ui/components/RelicLookupSelect/RelicLookupSelect'
 import { SearchableSelect } from '../ui/components/SearchableSelect/SearchableSelect'
+import { SaveEquipmentEditorDrawer } from '../ui/components/SaveEquipmentEditorDrawer/SaveEquipmentEditorDrawer'
 afterEach(cleanup)
-describe('LoadoutWorkspaceDrawer',()=>{it('uses one modal portal, styles fragment footer actions, focuses the first work control and closes with Escape',()=>{const close=vi.fn();const trigger=document.createElement('button');document.body.append(trigger);trigger.focus();render(<LoadoutWorkspaceDrawer title="选择武器" onClose={close} footer={<><button type="button">取消</button><button type="button">应用</button></>}><button type="button">候选</button></LoadoutWorkspaceDrawer>);expect(screen.getByRole('dialog',{name:'选择武器'}).closest('.loadout-workspace-drawer')).toBeTruthy();expect(screen.getByRole('button',{name:'应用'}).classList.contains('loadout-workspace-drawer__footer-action')).toBe(true);expect(document.activeElement).toBe(screen.getByRole('button',{name:'候选'}));fireEvent.keyDown(document,{key:'Escape'});expect(close).toHaveBeenCalledTimes(1)})})
+describe('LoadoutWorkspaceDrawer',()=>{it('uses one modal portal, styles fragment footer actions, focuses the first work control and closes with Escape',()=>{const close=vi.fn();const trigger=document.createElement('button');document.body.append(trigger);trigger.focus();render(<LoadoutWorkspaceDrawer title="选择武器" onClose={close} footer={<><button type="button">取消</button><button type="button">应用</button></>}><button type="button">候选</button></LoadoutWorkspaceDrawer>);expect(screen.getByRole('dialog',{name:'选择武器'}).closest('.loadout-workspace-drawer')).toBeTruthy();expect(screen.getByRole('button',{name:'应用'}).classList.contains('workspace-drawer__footer-action')).toBe(true);expect(document.activeElement).toBe(screen.getByRole('button',{name:'候选'}));fireEvent.keyDown(document,{key:'Escape'});expect(close).toHaveBeenCalledTimes(1)})})
 
 describe('LoadoutWorkspaceDrawer with searchable controls',()=>{it('closes the select before the drawer when Escape is pressed',()=>{const close=vi.fn();render(<LoadoutWorkspaceDrawer title="编辑条件" onClose={close}><SearchableSelect ariaLabel="技能" value="a" options={[{value:'a',label:'攻击'}]} onChange={()=>{}} /></LoadoutWorkspaceDrawer>);fireEvent.click(screen.getByRole('button',{name:'技能'}));const search=screen.getByRole('combobox',{name:'技能关键词'});fireEvent.keyDown(search,{key:'Escape'});expect(close).not.toHaveBeenCalled();expect(screen.queryByRole('combobox',{name:'技能关键词'})).toBeNull()})})
 
@@ -40,6 +42,24 @@ describe('LoadoutSlotIcon', () => {
     expect(screen.getByRole('img', { name: '腿部防具：未选择' })).toBeTruthy()
     expect(screen.getByRole('img', { name: '护石：未选择' })).toBeTruthy()
     expect(screen.getByRole('img', { name: '武器：测试大剑' }).querySelector('img')).toBeTruthy()
+  })
+})
+
+describe('LoadoutSaveWriteDrawer', () => {
+  it('shows capacity and exact destinations before confirming a whole-loadout write', () => {
+    const apply = vi.fn()
+    const close = vi.fn()
+    render(<LoadoutSaveWriteDrawer busy={false} preview={{ capacity: 1400, nonEmptyCount: 27, requiredSlots: 2, targets: [
+      { loadoutSlot: 'weapon', nameCn: '测试大剑', slot: 28, page: 1, cell: 29 },
+      { loadoutSlot: 'charm', nameCn: '天之护石', slot: 103, page: 2, cell: 4 },
+    ] }} onApply={apply} onClose={close} />)
+    expect(screen.getByText('27 格')).toBeTruthy()
+    expect(screen.getByText('第 1 页第 29 格')).toBeTruthy()
+    expect(screen.getByText('第 2 页第 4 格')).toBeTruthy()
+    expect(screen.getByText(/仍需在修改器页面点击保存/)).toBeTruthy()
+    expect(apply).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByRole('button', { name: '确认加入' }))
+    expect(apply).toHaveBeenCalledOnce()
   })
 })
 
@@ -195,6 +215,44 @@ describe('RelicEquipmentEditor', () => {
     expect(changed.instance?.recordHex.slice(26, 28)).toBe('03')
     expect(changed.instance?.recordHex.slice(0, 26)).toBe(candidate.instance!.recordHex.slice(0, 26))
     expect(changed.instance?.recordHex.slice(28)).toBe(candidate.instance!.recordHex.slice(28))
+  })
+})
+
+describe('SaveEquipmentEditorDrawer', () => {
+  it('hydrates an existing MH4G relic editor from the full save record and writes that instance record back', async () => {
+    const template: LoadoutWeaponCandidate = { kind: 'weapon', gameId: 'mh4g', candidateKey: 'relic:w:7:1', sourceKind: 'relicTemplate', weaponKey: null, templateKey: 'w:7:1', saveType: 7, saveId: 1, nameCn: '发掘大剑', nameEn: 'Relic GS', typeId: 1, typeNameCn: '大剑', rarity: 1, slots: 0, attack: 110, affinity: 0, defense: 0, iconPath: null, instance: { source: 'catalogTemplate', recordHex: '00'.repeat(28), legality: 'unknown', encoding: 'encodable', issues: [] } }
+    const recordHex = `${'ab'.repeat(20)}${'cd'.repeat(8)}`
+    const bootstrap = { gameId: 'mh4g' as const, dataVersion: 'test', decorations: [], skills: [], charmClasses: [], charmRanges: [], relicLookups: [] }
+    const facets: LoadoutFacets = { skills: [], weaponTypes: [{ typeId: 1, nameCn: '大剑' }], weaponRarities: [1], armorRarities: [], charmClasses: [] }
+    Object.defineProperty(window, 'mhSaveEditor', { configurable: true, value: { loadout: { getBootstrap: vi.fn().mockResolvedValue(bootstrap), getFacets: vi.fn().mockResolvedValue(facets), searchWeapons: vi.fn().mockResolvedValue({ items: [template], page: 1, pageSize: 100, total: 1, hasNext: false }), searchArmors: vi.fn() } } })
+    const applyRecord = vi.fn().mockResolvedValue(undefined)
+    render(<SaveEquipmentEditorDrawer gameId="mh4g" domain="hunter-equipment" cell={{ slot: 4, empty: false, kind: 'weapon', saveType: 7, saveId: 1, level: 0, slots: null, appearanceId: null, decorations: [0, 0, 0], skill1Id: null, skill1Points: null, skill2Id: null, skill2Points: null, nameCn: '发掘大剑', nameEn: 'Relic GS', typeNameCn: '大剑', iconPath: null, weaponKey: null, armorDexId: null, palicoEquipmentId: null, decorationLabels: [], skill1NameCn: null, skill2NameCn: null, recordHex, diagnostics: [] }} onApply={vi.fn().mockResolvedValue(undefined)} onApplyRecord={applyRecord} onClose={vi.fn()} />)
+    fireEvent.click(screen.getByRole('button', { name: '编辑实例' }))
+    await screen.findByText(/当前格的完整 28 字节记录/)
+    fireEvent.click(screen.getByRole('button', { name: '应用字段修改' }))
+    await waitFor(() => expect(applyRecord).toHaveBeenCalledWith(recordHex))
+  })
+
+  it('preserves a catalog weapon native save level when replacing a save-box entry', async () => {
+    const candidate: LoadoutWeaponCandidate = { kind: 'weapon', gameId: 'mhgu', candidateKey: 'catalog:greatsword:7:2:3', sourceKind: 'catalog', weaponKey: 'greatsword:7:2:3', templateKey: null, saveType: 7, saveId: 2, saveLevel: 3, nameCn: '强化测试大剑', nameEn: 'Upgraded Test GS', typeId: 1, typeNameCn: '大剑', rarity: 3, slots: 1, attack: 120, affinity: 0, defense: 0, iconPath: null }
+    const bootstrap = { gameId: 'mhgu' as const, dataVersion: 'test', decorations: [], skills: [], charmClasses: [], charmRanges: [], relicLookups: [] }
+    const facets: LoadoutFacets = { skills: [], weaponTypes: [{ typeId: 1, nameCn: '大剑' }], weaponRarities: [3], armorRarities: [], charmClasses: [] }
+    Object.defineProperty(window, 'mhSaveEditor', { configurable: true, value: { loadout: { getBootstrap: vi.fn().mockResolvedValue(bootstrap), getFacets: vi.fn().mockResolvedValue(facets), searchWeapons: vi.fn().mockResolvedValue({ items: [candidate], page: 1, pageSize: 100, total: 1, hasNext: false }), searchArmors: vi.fn() } } })
+    const apply = vi.fn().mockResolvedValue(undefined)
+    render(<SaveEquipmentEditorDrawer gameId="mhgu" domain="hunter-equipment" cell={{ slot: 0, empty: false, kind: 'weapon', saveType: 7, saveId: 1, level: 0, slots: null, appearanceId: null, decorations: [0, 0, 0], skill1Id: null, skill1Points: null, skill2Id: null, skill2Points: null, nameCn: '测试大剑', nameEn: 'Test GS', typeNameCn: '大剑', iconPath: null, weaponKey: 'greatsword:7:1:0', armorDexId: null, palicoEquipmentId: null, decorationLabels: [], skill1NameCn: null, skill2NameCn: null, recordHex: '00'.repeat(36), diagnostics: [] }} onApply={apply} onApplyRecord={vi.fn().mockResolvedValue(undefined)} onClose={vi.fn()} />)
+    const row = await screen.findByRole('button', { name: /强化测试大剑/ })
+    fireEvent.doubleClick(row)
+    await waitFor(() => expect(apply).toHaveBeenCalledWith(expect.objectContaining({ reset: true, saveType: 7, saveId: 2, level: 3 })))
+  })
+
+  it('does not expose instance editing for an empty equipment cell', () => {
+    const bootstrap = { gameId: 'mhgu' as const, dataVersion: 'test', decorations: [], skills: [], charmClasses: [], charmRanges: [], relicLookups: [] }
+    const facets: LoadoutFacets = { skills: [], weaponTypes: [], weaponRarities: [], armorRarities: [], charmClasses: [] }
+    Object.defineProperty(window, 'mhSaveEditor', { configurable: true, value: { loadout: { getBootstrap: vi.fn().mockResolvedValue(bootstrap), getFacets: vi.fn().mockResolvedValue(facets), searchWeapons: vi.fn().mockResolvedValue({ items: [], page: 1, pageSize: 100, total: 0, hasNext: false }), searchArmors: vi.fn() } } })
+    render(<SaveEquipmentEditorDrawer gameId="mhgu" domain="hunter-equipment" cell={{ slot: 0, empty: true, kind: 'empty', saveType: 0, saveId: 0, level: 0, slots: null, appearanceId: null, decorations: [0, 0, 0], skill1Id: null, skill1Points: null, skill2Id: null, skill2Points: null, nameCn: '空格', nameEn: '', typeNameCn: '空格', iconPath: null, weaponKey: null, armorDexId: null, palicoEquipmentId: null, decorationLabels: [], skill1NameCn: null, skill2NameCn: null, recordHex: '00'.repeat(36), diagnostics: [] }} onApply={vi.fn().mockResolvedValue(undefined)} onApplyRecord={vi.fn().mockResolvedValue(undefined)} onClose={vi.fn()} />)
+    const edit = screen.getByRole('button', { name: '编辑实例' }) as HTMLButtonElement
+    expect(edit.disabled).toBe(true)
+    expect(edit.title).toMatch(/空格没有可编辑的实例/)
   })
 })
 

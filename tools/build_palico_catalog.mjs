@@ -18,12 +18,13 @@ const generatedRoot = path.join(researchRoot, 'generated/mh-save-edit/catalog/da
 const manifestRoot = path.join(generatedRoot, 'manifests')
 const dbFile = path.join(generatedRoot, 'mhgu.sqlite')
 const gameDataFile = path.join(researchRoot, 'mhgu/reference-editors/Cotto-MHGU-Editor-source/core/game_data.json')
+const nativeRulesFile = path.join(palicoRoot, 'reference/palico_native_rules.json')
 
 const required = [
   'DB_PeliWpn.csv', 'DB_PeliAmr.csv', 'DB_ItmtoPeliWpn.csv', 'DB_ItmtoPeliAmr.csv',
   'ID_PeliWpn_Name.csv', 'ID_PeliAmr_Name.csv', 'ID_PeliWpn_Type.csv', 'ID_Wpn_SpAtk.csv',
 ].map(name => path.join(dexRoot, name)).concat([
-  gameDataFile,
+  gameDataFile, nativeRulesFile,
   path.join(palicoRoot, 'reference/palico_support_moves_en.csv'),
   path.join(palicoRoot, 'reference/palico_skills_en.csv'),
   path.join(palicoRoot, 'reference/palico_cn_translation.json'),
@@ -75,6 +76,9 @@ const PALICO_TABLE_ORDER = {
   catalog_palico_skills: 'palico_skill_id',
   catalog_palico_type_skills: 'type_id,palico_skill_id',
   catalog_palico_skill_unlocks: 'palico_skill_id,unlock_key',
+  catalog_palico_generation_patterns: 'scope,pattern_id',
+  catalog_palico_forte_grants: 'forte_id,kind,role,entry_id',
+  catalog_palico_generation_pool: 'kind,generation_group,entry_id',
   catalog_palico_weapons: 'equipment_id',
   catalog_palico_weapon_materials: 'equipment_id,row_id',
   catalog_palico_armors: 'equipment_id',
@@ -230,6 +234,19 @@ function ensureSchema(db) {
       PRIMARY KEY(game_id,palico_skill_id,unlock_key),
       FOREIGN KEY(game_id,palico_skill_id) REFERENCES catalog_palico_skills(game_id,palico_skill_id)
     );
+    CREATE TABLE IF NOT EXISTS catalog_palico_generation_patterns (
+      game_id TEXT NOT NULL, scope TEXT NOT NULL, pattern_id INTEGER NOT NULL,
+      sequence TEXT NOT NULL, valid_length INTEGER NOT NULL, weight INTEGER NOT NULL, source TEXT NOT NULL,
+      PRIMARY KEY(game_id,scope,pattern_id), CHECK(scope IN ('normal_move','charisma_move','skill'))
+    );
+    CREATE TABLE IF NOT EXISTS catalog_palico_forte_grants (
+      game_id TEXT NOT NULL, forte_id INTEGER NOT NULL, kind TEXT NOT NULL, role TEXT NOT NULL, entry_id INTEGER NOT NULL, source TEXT NOT NULL,
+      PRIMARY KEY(game_id,forte_id,kind,role,entry_id), CHECK(kind IN ('move','skill'))
+    );
+    CREATE TABLE IF NOT EXISTS catalog_palico_generation_pool (
+      game_id TEXT NOT NULL, kind TEXT NOT NULL, generation_group TEXT NOT NULL, entry_id INTEGER NOT NULL, source TEXT NOT NULL,
+      PRIMARY KEY(game_id,kind,generation_group,entry_id), CHECK(kind IN ('move','skill')), CHECK(generation_group IN ('A','B','C'))
+    );
     CREATE TABLE IF NOT EXISTS catalog_palico_weapons (
       game_id TEXT NOT NULL, equipment_id INTEGER NOT NULL, dex_id INTEGER NOT NULL, save_id INTEGER NOT NULL,
       name_cn TEXT NOT NULL, name_en TEXT NOT NULL, name_jp TEXT NOT NULL,
@@ -288,6 +305,8 @@ const armorNames = new Map(csv(path.join(dexRoot, 'ID_PeliAmr_Name.csv')).map(ro
 const specialNames = new Map(csv(path.join(dexRoot, 'ID_Wpn_SpAtk.csv')).map(row => [integer(row.Wpn_SpAtk_ID), row]))
 const specializations = new Map(csv(path.join(dexRoot, 'ID_PeliWpn_Type.csv')).map(row => [integer(row.PeliWpn_Type_ID), row]))
 const gameData = JSON.parse(fs.readFileSync(gameDataFile, 'utf8'))
+const nativeRules = JSON.parse(fs.readFileSync(nativeRulesFile, 'utf8'))
+if (nativeRules.format !== 'mhxx-palico-native-rules-v1') throw new Error('猎猫原生生成规则版本无法识别')
 const moveMeta = csv(path.join(palicoRoot, 'reference/palico_support_moves_en.csv'))
 const skillMeta = csv(path.join(palicoRoot, 'reference/palico_skills_en.csv'))
 const translations = JSON.parse(fs.readFileSync(path.join(palicoRoot, 'reference/palico_cn_translation.json'), 'utf8'))
@@ -360,6 +379,9 @@ const insertTypeSkill = db.prepare('INSERT INTO catalog_palico_type_skills VALUE
 const insertSkillUnlock = db.prepare(`INSERT INTO catalog_palico_skill_unlocks(
   game_id,palico_skill_id,unlock_key,native_unlock_id,unlock_kind,unlock_level,monster_id,description_cn,description_en,evidence_status,source
 ) VALUES(?,?,?,?,?,?,?,?,?,?,?)`)
+const insertGenerationPattern = db.prepare('INSERT INTO catalog_palico_generation_patterns VALUES(?,?,?,?,?,?,?)')
+const insertForteGrant = db.prepare('INSERT INTO catalog_palico_forte_grants VALUES(?,?,?,?,?,?)')
+const insertGenerationPool = db.prepare('INSERT INTO catalog_palico_generation_pool VALUES(?,?,?,?,?)')
 const insertWeapon = db.prepare('INSERT INTO catalog_palico_weapons VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)')
 const insertWeaponMaterial = db.prepare('INSERT INTO catalog_palico_weapon_materials VALUES(?,?,?,?,?,?)')
 const insertArmor = db.prepare('INSERT INTO catalog_palico_armors VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)')
@@ -367,7 +389,22 @@ const insertArmorMaterial = db.prepare('INSERT INTO catalog_palico_armor_materia
 const insertSource = db.prepare('INSERT INTO catalog_palico_sources VALUES(?,?,?,?)')
 
 const transaction = db.transaction(() => {
-  for (const table of ['catalog_palico_armor_materials','catalog_palico_armors','catalog_palico_weapon_materials','catalog_palico_weapons','catalog_palico_skill_unlocks','catalog_palico_type_skills','catalog_palico_skills','catalog_palico_support_move_unlocks','catalog_palico_type_support_moves','catalog_palico_support_moves','catalog_palico_types','catalog_palico_sources']) db.prepare(`DELETE FROM ${table} WHERE game_id='mhgu'`).run()
+  for (const table of ['catalog_palico_armor_materials','catalog_palico_armors','catalog_palico_weapon_materials','catalog_palico_weapons','catalog_palico_generation_pool','catalog_palico_forte_grants','catalog_palico_generation_patterns','catalog_palico_skill_unlocks','catalog_palico_type_skills','catalog_palico_skills','catalog_palico_support_move_unlocks','catalog_palico_type_support_moves','catalog_palico_support_moves','catalog_palico_types','catalog_palico_sources']) db.prepare(`DELETE FROM ${table} WHERE game_id='mhgu'`).run()
+  for (const scope of ['normal_move', 'charisma_move', 'skill']) {
+    const fixed = scope === 'skill' ? 4 : 6
+    for (const [patternId, weight, sequence] of nativeRules.patterns[scope] ?? []) {
+      if (!Number.isInteger(patternId) || !Number.isInteger(weight) || !/^[ABC]+$/.test(sequence)) throw new Error(`猎猫生成模式无效：${scope}`)
+      insertGenerationPattern.run('mhgu', scope, patternId, sequence, sequence.length + fixed, weight, 'palico_native_rules.json:patterns')
+    }
+  }
+  const fixed = nativeRules.fixed
+  for (const entryId of fixed.common_support ?? []) insertForteGrant.run('mhgu', -1, 'move', 'common', entryId, 'palico_native_rules.json:fixed.common_support')
+  for (let forteId = 0; forteId < 8; forteId += 1) {
+    insertForteGrant.run('mhgu', forteId, 'move', 'primary', fixed.primary_support?.[forteId], 'palico_native_rules.json:fixed.primary_support')
+    for (const entryId of fixed.secondary_support?.[forteId] ?? []) insertForteGrant.run('mhgu', forteId, 'move', forteId === 7 ? 'secondary_fixed' : 'secondary', entryId, 'palico_native_rules.json:fixed.secondary_support')
+    for (const entryId of fixed.fixed_skills?.[forteId] ?? []) insertForteGrant.run('mhgu', forteId, 'skill', 'innate', entryId, 'palico_native_rules.json:fixed.fixed_skills')
+  }
+  for (const [kind, groups] of [['move', moveGroups], ['skill', skillGroups]]) for (const [entryId, value] of groups) insertGenerationPool.run('mhgu', kind, value.group, entryId, 'native otSupportIni*/otSkillIni*.otil')
   for (let typeId = 0; typeId < 8; typeId += 1) insertType.run('mhgu', typeId, typeKeys[typeId], typeNamesCn[typeId], gameData.PalicoForte[typeId], typeNamesJp[typeId], typeCn[typeId] ?? '', typeEn[typeId] ?? '', typeJp[typeId] ?? '', 'OtInfoMsg GMD+game_data.json')
   const innateMoveIds = new Set(gameData.PalicoForteOwnedMoves.flat().filter(id => id >= 1 && id <= 56))
   for (const row of moveMeta) {
@@ -437,7 +474,7 @@ const transaction = db.transaction(() => {
 })
 
 transaction(); db.pragma('optimize')
-const counts = Object.fromEntries(['types','support_moves','support_move_unlocks','skills','skill_unlocks','weapons','armors','weapon_materials','armor_materials'].map(name => [name, db.prepare(`SELECT count(*) count FROM catalog_palico_${name} WHERE game_id='mhgu'`).get().count]))
+const counts = Object.fromEntries(['types','support_moves','support_move_unlocks','skills','skill_unlocks','generation_patterns','forte_grants','generation_pool','weapons','armors','weapon_materials','armor_materials'].map(name => [name, db.prepare(`SELECT count(*) count FROM catalog_palico_${name} WHERE game_id='mhgu'`).get().count]))
 const generationGroups = {
   supportMoves: Object.fromEntries(db.prepare("SELECT COALESCE(generation_group,'unassigned') value,count(*) count FROM catalog_palico_support_moves WHERE game_id='mhgu' GROUP BY generation_group ORDER BY value").all().map(row => [row.value, row.count])),
   skills: Object.fromEntries(db.prepare("SELECT COALESCE(generation_group,'unassigned') value,count(*) count FROM catalog_palico_skills WHERE game_id='mhgu' GROUP BY generation_group ORDER BY value").all().map(row => [row.value, row.count])),

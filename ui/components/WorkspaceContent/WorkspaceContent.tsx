@@ -4,18 +4,14 @@ import './WorkspaceContent.css'
 
 export type WorkspaceOutletContext = {
   game: GameVersionDefinition
-  loadedSaveName?: string
-  onOpenSave: () => void
 }
 
 type WorkspaceContentProps = {
   game: GameVersionDefinition
-  loadedSaveName?: string
-  onOpenSave: () => void
 }
 
-export function WorkspaceContent({ game, loadedSaveName, onOpenSave }: WorkspaceContentProps) {
-  const context: WorkspaceOutletContext = { game, loadedSaveName, onOpenSave }
+export function WorkspaceContent({ game }: WorkspaceContentProps) {
+  const context: WorkspaceOutletContext = { game }
 
   return (
     <section id="workspace-content" className="workspace-content" aria-label={`${game.title} 内容区域`} tabIndex={-1}>

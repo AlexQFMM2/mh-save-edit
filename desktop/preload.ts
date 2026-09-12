@@ -4,6 +4,8 @@ import type { ArmorCatalogFilters, ArmorIdentity, ArmorSetFilters, DecorationCat
 import type { GameId } from '../api/core/loadout'
 import { loadoutChannels } from '../api/loadout/channels'
 import type { AutoLoadoutJobFilters, AutoLoadoutJobSummary, AutoLoadoutRequest, LoadoutArmorFilters, LoadoutCharm, LoadoutDecorationFilters, LoadoutWeaponFilters, LogicalLoadout } from '../api/loadout/types'
+import { saveChannels } from '../api/save/channels'
+import type { SaveBoxWriteTargetRequest, SaveCatalogEquipmentRequest, SaveCatalogItemRequest, SaveCommand, SaveExportRequest, SaveImportApplyRequest, SaveImportRequest, SaveLoadoutWriteRequest, SaveOpenRequest, SaveSectionRequest, SaveSessionSnapshot } from '../api/save/types'
 
 contextBridge.exposeInMainWorld('mhSaveEditor', {
   version: '0.1.0',
@@ -73,6 +75,34 @@ contextBridge.exposeInMainWorld('mhSaveEditor', {
       const handler = (_event: Electron.IpcRendererEvent, summary: AutoLoadoutJobSummary) => listener(summary)
       ipcRenderer.on(loadoutChannels.autoJobsChanged, handler)
       return () => ipcRenderer.removeListener(loadoutChannels.autoJobsChanged, handler)
+    },
+  },
+  save: {
+    getSession: () => ipcRenderer.invoke(saveChannels.getSession),
+    open: (request: SaveOpenRequest) => ipcRenderer.invoke(saveChannels.open, request),
+    listCharacters: (sessionId: string, revision: number) => ipcRenderer.invoke(saveChannels.listCharacters, { sessionId, revision }),
+    selectCharacter: (sessionId: string, revision: number, slot: number) => ipcRenderer.invoke(saveChannels.selectCharacter, { sessionId, revision, slot }),
+    getSection: (request: SaveSectionRequest) => ipcRenderer.invoke(saveChannels.getSection, request),
+    applyCommand: (command: SaveCommand) => ipcRenderer.invoke(saveChannels.applyCommand, command),
+    undo: (sessionId: string, revision: number) => ipcRenderer.invoke(saveChannels.undo, { sessionId, revision }),
+    redo: (sessionId: string, revision: number) => ipcRenderer.invoke(saveChannels.redo, { sessionId, revision }),
+    validate: (sessionId: string, revision: number) => ipcRenderer.invoke(saveChannels.validate, { sessionId, revision }),
+    saveCurrent: (sessionId: string, revision: number) => ipcRenderer.invoke(saveChannels.saveCurrent, { sessionId, revision }),
+    saveAs: (sessionId: string, revision: number) => ipcRenderer.invoke(saveChannels.saveAs, { sessionId, revision }),
+    close: (sessionId: string, revision: number, discard = false) => ipcRenderer.invoke(saveChannels.close, { sessionId, revision, discard }),
+    previewImport: (request: SaveImportRequest) => ipcRenderer.invoke(saveChannels.previewImport, request),
+    applyImport: (request: SaveImportApplyRequest) => ipcRenderer.invoke(saveChannels.applyImport, request),
+    exportBox: (request: SaveExportRequest) => ipcRenderer.invoke(saveChannels.exportBox, request),
+    previewBoxWriteTarget: (request: SaveBoxWriteTargetRequest) => ipcRenderer.invoke(saveChannels.previewBoxWriteTarget, request),
+    previewCatalogItemWrite: (request: SaveCatalogItemRequest) => ipcRenderer.invoke(saveChannels.previewCatalogItemWrite, request),
+    addCatalogItem: (request: SaveCatalogItemRequest) => ipcRenderer.invoke(saveChannels.addCatalogItem, request),
+    addCatalogEquipment: (request: SaveCatalogEquipmentRequest) => ipcRenderer.invoke(saveChannels.addCatalogEquipment, request),
+    previewLoadoutWrite: (request: SaveLoadoutWriteRequest) => ipcRenderer.invoke(saveChannels.previewLoadoutWrite, request),
+    addLoadout: (request: SaveLoadoutWriteRequest) => ipcRenderer.invoke(saveChannels.addLoadout, request),
+    subscribe: (listener: (snapshot: SaveSessionSnapshot | null) => void) => {
+      const handler = (_event: Electron.IpcRendererEvent, snapshot: SaveSessionSnapshot | null) => listener(snapshot)
+      ipcRenderer.on(saveChannels.sessionChanged, handler)
+      return () => ipcRenderer.removeListener(saveChannels.sessionChanged, handler)
     },
   },
 })

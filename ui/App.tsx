@@ -6,6 +6,7 @@ import { GameOverviewPage } from './pages/GameOverviewPage/GameOverviewPage'
 import { WorkspaceFeaturePage } from './pages/WorkspaceFeaturePage/WorkspaceFeaturePage'
 import { workspaceNavigation } from './data/workspaceNavigation'
 import { SaveEditorPage } from './pages/SaveEditorPage/SaveEditorPage'
+import { SaveSessionProvider } from './components/SaveSessionProvider/SaveSessionProvider'
 import { ItemCatalogPage } from './pages/ItemCatalogPage/ItemCatalogPage'
 import { DecorationCatalogPage } from './pages/DecorationCatalogPage/DecorationCatalogPage'
 const WeaponCatalogPage=lazy(async()=>({default:(await import('./pages/WeaponCatalogPage/WeaponCatalogPage')).WeaponCatalogPage}))
@@ -27,4 +28,4 @@ function Feature({item}:{item:typeof workspaceNavigation[number]['items'][number
   const Page=pages[item.id as keyof typeof pages]
   return Page?<Suspense fallback={<WorkspaceFeaturePage pageId={item.id}/>}><Page/></Suspense>:<WorkspaceFeaturePage pageId={item.id}/>
 }
-export default function App(){return <HashRouter><Routes><Route path="/" element={<HomePage/>}/><Route path="/game/:gameId" element={<GameHomePage/>}><Route index element={<Navigate to="overview" replace/>}/><Route path="overview" element={<GameOverviewPage/>}/>{workspaceNavigation.flatMap(group=>group.items).map(item=><Route key={item.id} path={item.path} element={<Feature item={item}/>}/>) }<Route path="*" element={<Navigate to="overview" replace/>}/></Route><Route path="*" element={<Navigate to="/" replace/>}/></Routes></HashRouter>}
+export default function App(){return <SaveSessionProvider><HashRouter><Routes><Route path="/" element={<HomePage/>}/><Route path="/game/:gameId" element={<GameHomePage/>}><Route index element={<Navigate to="overview" replace/>}/><Route path="overview" element={<GameOverviewPage/>}/>{workspaceNavigation.flatMap(group=>group.items).map(item=><Route key={item.id} path={item.path} element={<Feature item={item}/>}/>) }<Route path="*" element={<Navigate to="overview" replace/>}/></Route><Route path="*" element={<Navigate to="/" replace/>}/></Routes></HashRouter></SaveSessionProvider>}

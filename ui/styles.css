@@ -12,6 +12,7 @@
   --global-theme-color-gold: #dfb65d;
   --global-theme-color-gold-bright: #f1ce7d;
   --global-theme-color-data: var(--global-theme-color-gold-bright);
+  --global-theme-color-danger: #ef9b8b;
   --global-theme-color-text-primary: #f7ead5;
   --global-theme-color-text-secondary: #cdbba3;
   --global-theme-color-text-muted: #9f8973;

@@ -1,5 +1,5 @@
 import { describe,expect,it } from 'vitest'
-import { autoLoadoutControlSchema, autoLoadoutDeleteSchema, autoLoadoutJobFiltersSchema, autoLoadoutJobSchema, loadoutArmorFiltersSchema, loadoutWeaponFiltersSchema } from '../api/loadout/schemas'
+import { autoLoadoutControlSchema, autoLoadoutDeleteSchema, autoLoadoutJobFiltersSchema, autoLoadoutJobSchema, loadoutArmorFiltersSchema, loadoutWeaponFiltersSchema, logicalLoadoutSchema } from '../api/loadout/schemas'
 
 describe('loadout IPC schemas', () => {
   it('accepts paged equipment filters and rejects extra path-like fields', () => {
@@ -24,5 +24,18 @@ describe('loadout IPC schemas', () => {
     expect(() => autoLoadoutJobFiltersSchema.parse({ gameId: 'mhxx', statuses: ['waiting'], path: '/tmp/jobs.sqlite' })).toThrow()
     expect(() => autoLoadoutControlSchema.parse({ jobId, action: 'restart' })).toThrow()
     expect(() => autoLoadoutDeleteSchema.parse({ jobIds: [] })).toThrow()
+  })
+
+  it.each([
+    ['mh3g-3ds-citra', 16],
+    ['mh4g-3ds-citra', 28],
+    ['mhgu-switch-yuzu', 36],
+  ] as const)('accepts a complete %s save instance and rejects mismatched record lengths', (formatId, bytes) => {
+    const loadout = {
+      schemaVersion: 1, dataVersion: 'test', gameId: formatId.startsWith('mh3') ? 'mh3g' : formatId.startsWith('mh4') ? 'mh4g' : 'mhgu', name: '实例', gender: 'male', armor: {}, charm: null,
+      weapon: { kind: 'weapon', gameId: formatId.startsWith('mh3') ? 'mh3g' : formatId.startsWith('mh4') ? 'mh4g' : 'mhgu', candidateKey: 'save:weapon', sourceKind: 'catalog', weaponKey: 'w', templateKey: null, saveType: 7, saveId: 1, nameCn: '武器', nameEn: '', typeId: 1, typeNameCn: '大剑', rarity: 1, slots: 0, attack: 100, affinity: 0, defense: 0, iconPath: null, decorations: [], lock: 'unlocked', instance: { source: 'saveInstance', formatId, recordHex: '00'.repeat(bytes), legality: 'unknown', encoding: 'encodable', issues: [] } },
+    }
+    expect(logicalLoadoutSchema.parse(loadout).weapon?.instance?.recordHex).toHaveLength(bytes * 2)
+    expect(() => logicalLoadoutSchema.parse({ ...loadout, weapon: { ...loadout.weapon, instance: { ...loadout.weapon.instance, recordHex: '00'.repeat(bytes === 28 ? 16 : 28) } } })).toThrow(/长度/)
   })
 })

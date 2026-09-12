@@ -12,8 +12,8 @@ if(!fs.existsSync(dbFile))throw new Error(`缺少猎猫图鉴数据库：${dbFil
 const db=new Database(dbFile,{readonly:true,fileMustExist:true})
 const scalar=sql=>Number(db.prepare(sql).pluck().get('mhgu'))
 const sha256=value=>crypto.createHash('sha256').update(value).digest('hex')
-const tableOrder={catalog_palico_types:'type_id',catalog_palico_support_moves:'support_move_id',catalog_palico_type_support_moves:'type_id,support_move_id',catalog_palico_support_move_unlocks:'support_move_id,unlock_key',catalog_palico_skills:'palico_skill_id',catalog_palico_type_skills:'type_id,palico_skill_id',catalog_palico_skill_unlocks:'palico_skill_id,unlock_key',catalog_palico_weapons:'equipment_id',catalog_palico_weapon_materials:'equipment_id,row_id',catalog_palico_armors:'equipment_id',catalog_palico_armor_materials:'equipment_id,row_id',catalog_palico_sources:'source_key'}
-const expected={types:8,support_moves:56,support_move_unlocks:56,skills:95,skill_unlocks:95,weapons:508,armors:1024,weapon_materials:1018,armor_materials:1769}
+const tableOrder={catalog_palico_types:'type_id',catalog_palico_support_moves:'support_move_id',catalog_palico_type_support_moves:'type_id,support_move_id',catalog_palico_support_move_unlocks:'support_move_id,unlock_key',catalog_palico_skills:'palico_skill_id',catalog_palico_type_skills:'type_id,palico_skill_id',catalog_palico_skill_unlocks:'palico_skill_id,unlock_key',catalog_palico_generation_patterns:'scope,pattern_id',catalog_palico_forte_grants:'forte_id,kind,role,entry_id',catalog_palico_generation_pool:'kind,generation_group,entry_id',catalog_palico_weapons:'equipment_id',catalog_palico_weapon_materials:'equipment_id,row_id',catalog_palico_armors:'equipment_id',catalog_palico_armor_materials:'equipment_id,row_id',catalog_palico_sources:'source_key'}
+const expected={types:8,support_moves:56,support_move_unlocks:56,skills:95,skill_unlocks:95,generation_patterns:22,forte_grants:39,generation_pool:75,weapons:508,armors:1024,weapon_materials:1018,armor_materials:1769}
 const counts=Object.fromEntries(Object.keys(expected).map(name=>[name,scalar(`SELECT count(*) FROM catalog_palico_${name} WHERE game_id=?`)]))
 for(const[name,value]of Object.entries(expected))if(counts[name]!==value)throw new Error(`${name} 数量错误：${counts[name]}，预期 ${value}`)
 const heads=scalar("SELECT count(*) FROM catalog_palico_armors WHERE game_id=? AND part='head'"),bodies=scalar("SELECT count(*) FROM catalog_palico_armors WHERE game_id=? AND part='body'")
@@ -26,6 +26,15 @@ const generationGroups={
 }
 const expectedGroups={supportMoves:{A:7,B:13,C:19,unassigned:17},skills:{A:7,B:13,C:16,unassigned:59}}
 if(JSON.stringify(generationGroups)!==JSON.stringify(expectedGroups))throw new Error(`猎猫原生随机池分组错误：${JSON.stringify(generationGroups)}`)
+const patternLengths=Number(db.prepare("SELECT count(*) FROM catalog_palico_generation_patterns WHERE game_id='mhgu' AND valid_length!=length(sequence)+CASE scope WHEN 'skill' THEN 4 ELSE 6 END").pluck().get())
+const incompleteForteRules=Number(db.prepare(`SELECT count(*) FROM catalog_palico_types t WHERE t.game_id='mhgu' AND (
+  (SELECT count(*) FROM catalog_palico_forte_grants g WHERE g.game_id=t.game_id AND g.forte_id=t.type_id AND g.kind='move' AND g.role='primary')!=1 OR
+  (SELECT count(*) FROM catalog_palico_forte_grants g WHERE g.game_id=t.game_id AND g.forte_id=t.type_id AND g.kind='skill' AND g.role='innate')!=2 OR
+  (t.type_id=0 AND (SELECT count(*) FROM catalog_palico_forte_grants g WHERE g.game_id=t.game_id AND g.forte_id=t.type_id AND g.role IN ('secondary','secondary_fixed'))!=0) OR
+  (t.type_id BETWEEN 1 AND 6 AND (SELECT count(*) FROM catalog_palico_forte_grants g WHERE g.game_id=t.game_id AND g.forte_id=t.type_id AND g.role='secondary')!=2) OR
+  (t.type_id=7 AND (SELECT count(*) FROM catalog_palico_forte_grants g WHERE g.game_id=t.game_id AND g.forte_id=t.type_id AND g.role='secondary_fixed')!=1)
+)`).pluck().get())
+if(patternLengths||incompleteForteRules)throw new Error(`猎猫重建规则不闭合：pattern=${patternLengths}, forte=${incompleteForteRules}`)
 const supportUnlockKinds=Object.fromEntries(db.prepare("SELECT unlock_kind,count(*) count FROM catalog_palico_support_move_unlocks WHERE game_id=? GROUP BY unlock_kind ORDER BY unlock_kind").all('mhgu').map(row=>[row.unlock_kind,Number(row.count)]))
 const skillUnlockKinds=Object.fromEntries(db.prepare("SELECT unlock_kind,count(*) count FROM catalog_palico_skill_unlocks WHERE game_id=? GROUP BY unlock_kind ORDER BY unlock_kind").all('mhgu').map(row=>[row.unlock_kind,Number(row.count)]))
 if(JSON.stringify(supportUnlockKinds)!==JSON.stringify({initial:4,innate:8,monster:44}))throw new Error(`支援行动解锁分类错误：${JSON.stringify(supportUnlockKinds)}`)
@@ -59,4 +68,4 @@ if(missingIcons)throw new Error(`存在 ${missingIcons} 条猫装备图标缺失
 if(itemRelations['palico-weapon']!==expected.weapon_materials||itemRelations['palico-armor']!==expected.armor_materials)throw new Error(`道具反向猫装备关系数量错误：${JSON.stringify(itemRelations)}`)
 if(missingReverseRelations)throw new Error(`存在 ${missingReverseRelations} 条制作材料缺少道具反向关系`)
 if(foreignKeys.length)throw new Error(`外键检查失败：${JSON.stringify(foreignKeys.slice(0,5))}`)
-console.log(JSON.stringify({format:'mh-save-edit-palico-audit-v3',counts,armorParts:{head:heads,body:bodies},generationGroups,unlocks:{supportMoves:supportUnlockKinds,skills:skillUnlockKinds,nativeSupportIds:'1-44',incomplete:incompleteUnlocks},itemRelations,missingReverseRelations,iconCoverage:'100%',sharpnessIds:[2,3,4,5,6,7],contentSha256,tableSha256,foreignKeys:'ok'},null,2))
+console.log(JSON.stringify({format:'mh-save-edit-palico-audit-v4',counts,armorParts:{head:heads,body:bodies},generationGroups,rebuildRules:{patterns:'closed',fortes:'closed'},unlocks:{supportMoves:supportUnlockKinds,skills:skillUnlockKinds,nativeSupportIds:'1-44',incomplete:incompleteUnlocks},itemRelations,missingReverseRelations,iconCoverage:'100%',sharpnessIds:[2,3,4,5,6,7],contentSha256,tableSha256,foreignKeys:'ok'},null,2))

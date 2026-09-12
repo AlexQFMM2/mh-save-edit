@@ -16,6 +16,7 @@
 .armor-detail-panel__price { display: flex; justify-content: space-between; margin: 13px 0; padding: 9px; border-radius: 6px; color: var(--global-theme-color-text-secondary); background: rgba(223, 182, 93, .06); }
 .armor-detail-panel__price strong { color: var(--global-theme-color-data); }
 .armor-detail-panel__craft .armor-detail-panel__identity { white-space: normal; }
+.armor-detail-panel__mapping-warning { margin: 10px 13px; padding: 9px; border: 1px solid #a76f3f; border-radius: 7px; color: #edaa74; background: rgba(167, 111, 63, .1); font-size: var(--global-typography-font-size-small); }
 .armor-detail-panel__updating { position: absolute; z-index: 2; top: 8px; right: 8px; padding: 3px 7px; border-radius: 20px; color: #2b1a0e; background: var(--global-theme-color-gold-bright); font-size: var(--global-typography-font-size-caption); font-weight: 700; }
 .armor-detail-panel--state { display: grid; place-items: center; padding: 20px; color: var(--global-theme-color-text-muted); text-align: center; }
 .armor-detail-panel--loading { opacity: .78; }

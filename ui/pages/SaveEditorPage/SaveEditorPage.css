@@ -1,7 +1,138 @@
 .save-editor-page {
-  --save-editor-page-panel-min-height: 0;
-  --save-editor-panel-component-empty-min-height: var(--save-editor-page-panel-min-height);
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  gap: 8px;
   height: 100%;
   min-height: 0;
   overflow: hidden;
+}
+
+.save-editor-page.has-subtabs {
+  grid-template-rows: auto auto auto minmax(0, 1fr);
+}
+
+.save-editor-page__tabs {
+  display: flex;
+  gap: 4px;
+  min-height: 43px;
+  border: 1px solid var(--global-theme-color-border);
+  border-radius: 8px;
+  background: rgba(30, 18, 12, .55);
+}
+
+.save-editor-page__tabs button {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 16px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  color: var(--global-theme-color-text-secondary);
+  background: transparent;
+  cursor: pointer;
+}
+
+.save-editor-page__tabs button[aria-selected=true] {
+  border-color: var(--global-theme-color-gold);
+  color: var(--global-theme-color-gold-bright);
+  background: rgba(223, 182, 93, .07);
+}
+
+.save-editor-page__tabs svg {
+  width: 17px;
+}
+
+.save-editor-page__subtabs {
+  display: flex;
+  gap: 5px;
+}
+
+.save-editor-page__subtabs button {
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid var(--global-theme-color-border);
+  border-radius: 7px;
+  color: var(--global-theme-color-text-secondary);
+  background: var(--global-theme-color-surface-deep);
+  cursor: pointer;
+}
+
+.save-editor-page__subtabs button.is-active {
+  border-color: var(--global-theme-color-gold);
+  color: var(--global-theme-color-gold-bright);
+}
+
+.save-editor-page__section {
+  position: relative;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.save-editor-page__section.is-loading::after {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 34px;
+  height: 3px;
+  background: var(--global-theme-color-gold);
+  animation: save-section-loading 1s ease-in-out infinite;
+  content: "";
+}
+
+.save-editor-page__loading,
+.save-editor-page__error,
+.save-editor-page__mismatch {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  color: var(--global-theme-color-text-secondary);
+}
+
+.save-editor-page__error {
+  position: absolute;
+  z-index: 4;
+  inset: 0;
+  color: var(--global-theme-color-danger);
+  background: rgba(42, 27, 19, .9);
+}
+
+.save-editor-page__mismatch {
+  align-content: center;
+  gap: 12px;
+  text-align: center;
+}
+
+.save-editor-page__mismatch h1,
+.save-editor-page__mismatch p {
+  margin: 0;
+}
+
+.save-editor-page__mismatch button {
+  min-height: 42px;
+  padding: 0 16px;
+  border: 1px solid var(--global-theme-color-gold);
+  border-radius: 8px;
+  color: #28180f;
+  background: var(--global-theme-color-gold);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+@keyframes save-section-loading {
+  0%,
+  100% {
+    opacity: .35;
+    transform: translateX(0);
+  }
+
+  50% {
+    opacity: 1;
+    transform: translateX(-150px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .save-editor-page__section.is-loading::after {
+    animation: none;
+  }
 }
