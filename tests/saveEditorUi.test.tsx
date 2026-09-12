@@ -257,11 +257,12 @@ describe('save editor UI primitives', () => {
   })
 
   it('shows the selected environment and GU character slot without internal revision metadata', () => {
-    render(<SaveSessionHeader session={session({ contentGameId: 'mhgu', formatId: 'mhgu-switch-yuzu', platform: 'switch', emulator: 'yuzu', characterSlot: 1, characterName: 'Beta', capabilities: { ...session().capabilities, hasCharacters: true } })} busy={false} onSelectCharacter={vi.fn()} onUndo={vi.fn()} onRedo={vi.fn()} onSave={vi.fn()} onSaveAs={vi.fn()} onClose={vi.fn()} />)
+    render(<SaveSessionHeader session={session({ contentGameId: 'mhgu', formatId: 'mhgu-switch-yuzu', platform: 'switch', emulator: 'yuzu', characterSlot: 1, characterName: 'Beta', capabilities: { ...session().capabilities, hasCharacters: true } })} busy={false} onSelectCharacter={vi.fn()} onUndo={vi.fn()} onRedo={vi.fn()} onSave={vi.fn()} onClose={vi.fn()} />)
     expect(screen.getByText('MHGU · Switch · Yuzu')).toBeTruthy()
     expect(screen.getByText('角色槽 2：Beta')).toBeTruthy()
     expect(screen.queryByText(/revision/)).toBeNull()
     expect(screen.getByRole('button', { name: '切换角色' })).toBeTruthy()
+    expect(screen.queryByRole('button', { name: '另存为' })).toBeNull()
   })
 
   it('requires an explicit emulator environment before opening the native file picker', () => {
@@ -283,7 +284,7 @@ describe('save editor UI primitives', () => {
 
   it('keeps the user-facing save environment visible and offers GU character switching', () => {
     const switchCharacter = vi.fn()
-    render(<SaveSessionHeader session={session({ contentGameId: 'mhgu', formatId: 'mhxx-3ds-citra', platform: '3ds', emulator: 'citra', characterSlot: 1, capabilities: { ...session().capabilities, hasCharacters: true } })} busy={false} onSelectCharacter={switchCharacter} onUndo={vi.fn()} onRedo={vi.fn()} onSave={vi.fn()} onSaveAs={vi.fn()} onClose={vi.fn()} />)
+    render(<SaveSessionHeader session={session({ contentGameId: 'mhgu', formatId: 'mhxx-3ds-citra', platform: '3ds', emulator: 'citra', characterSlot: 1, capabilities: { ...session().capabilities, hasCharacters: true } })} busy={false} onSelectCharacter={switchCharacter} onUndo={vi.fn()} onRedo={vi.fn()} onSave={vi.fn()} onClose={vi.fn()} />)
     expect(screen.getByText('MHXX · 3DS · Citra')).toBeTruthy()
     expect(screen.getByText(/角色槽 2/)).toBeTruthy()
     fireEvent.click(screen.getByRole('button', { name: '切换角色' }))

@@ -17,7 +17,7 @@ type ContextValue = {
   apply(command: SaveCommandDraft): Promise<SaveMutationResult>
   undo(): Promise<void>
   redo(): Promise<void>
-  save(as?: boolean): Promise<SaveResult | null>
+  save(): Promise<SaveResult | null>
   saveAndClose(): Promise<void>
   close(discard?: boolean): Promise<void>
   notify(message: string, tone?: 'success' | 'warning' | 'error'): void
@@ -108,7 +108,7 @@ export function SaveSessionProvider({ children }: { children: ReactNode }) {
   const apply = useCallback((command: SaveCommandDraft) => perform(async () => { if (!session) throw new Error('存档会话不存在'); const result = await window.mhSaveEditor.save.applyCommand({ ...command, sessionId: session.sessionId, revision: session.revision } as SaveCommand); setSession(result.session); notify(result.message); return result }), [notify, perform, session])
   const undo = useCallback(() => perform(async () => { if (!session) return; const result = await window.mhSaveEditor.save.undo(session.sessionId, session.revision); setSession(result.session); notify(result.message) }), [notify, perform, session])
   const redo = useCallback(() => perform(async () => { if (!session) return; const result = await window.mhSaveEditor.save.redo(session.sessionId, session.revision); setSession(result.session); notify(result.message) }), [notify, perform, session])
-  const save = useCallback((as = false) => perform(async () => { if (!session) return null; const result = as ? await window.mhSaveEditor.save.saveAs(session.sessionId, session.revision) : await window.mhSaveEditor.save.saveCurrent(session.sessionId, session.revision); if (!result.cancelled) { setSession(result.session); notify(result.message) }; return result }), [notify, perform, session])
+  const save = useCallback(() => perform(async () => { if (!session) return null; const result = await window.mhSaveEditor.save.saveCurrent(session.sessionId, session.revision); if (!result.cancelled) { setSession(result.session); notify(result.message) }; return result }), [notify, perform, session])
   const saveAndClose = useCallback(() => perform(async () => {
     const current = sessionRef.current
     if (!current) return
