@@ -3,7 +3,7 @@ import { createRequire } from 'node:module'
 import { join } from 'node:path'
 import type { GameId } from '../core/loadout'
 import type { SaveEquipmentCell, SaveItemCell, SavePalicoGenerationRules } from './types'
-import { charmIconPath } from './catalogIconPaths'
+import { charmIconPath, weaponFallbackIconPath } from './catalogIconPaths'
 
 const require = createRequire(import.meta.url)
 const BetterSqlite = require('better-sqlite3') as typeof Database
@@ -69,7 +69,10 @@ export class SaveCatalogResolver {
       return { saveId, rawValue, nameCn: text(value?.name_cn, `未知装饰珠 #${saveId}`), slots: value?.slots == null ? null : number(value.slots), fixed }
     })
     const skillName = (skillId: number | null) => skillId ? text((db.prepare('SELECT name_cn FROM catalog_skills WHERE game_id=? AND skill_id=? LIMIT 1').get(gameId, skillId) as Row | undefined)?.name_cn, `未知技能 #${skillId}`) : null
-    const iconPath = cell.kind === 'charm' ? charmIconPath(gameId, cell.saveId) : row?.icon_path ? text(row.icon_path) : null
+    const typeId = cell.kind === 'weapon'
+      ? number((db.prepare('SELECT type_id FROM catalog_weapon_types WHERE game_id=? AND save_type=? LIMIT 1').get(gameId, cell.saveType) as Row | undefined)?.type_id)
+      : 0
+    const iconPath = cell.kind === 'charm' ? charmIconPath(gameId, cell.saveId) : row?.icon_path ? text(row.icon_path) : cell.kind === 'weapon' ? weaponFallbackIconPath(gameId, typeId) : null
     return { ...cell, nameCn: cell.empty ? '空格' : text(row?.name_cn, cell.kind === 'kinsect' ? `猎虫 #${cell.saveId}` : `${typeNameCn || '装备'} #${cell.saveId}`), nameEn: text(row?.name_en), typeNameCn: cell.empty ? '空格' : typeNameCn, iconPath, weaponKey: row?.weapon_key ? text(row.weapon_key) : null, armorDexId: row?.dex_id == null ? null : number(row.dex_id), palicoEquipmentId: row?.equipment_id == null ? null : number(row.equipment_id), decorationLabels, skill1NameCn: skillName(cell.skill1Id), skill2NameCn: skillName(cell.skill2Id), diagnostics }
   }
   palicoLabels(forte: number, target: number) {

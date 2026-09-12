@@ -13,5 +13,10 @@ describe('DecorationCatalogRepository', () => {
   it('searches decimal and hexadecimal IDs and filters positive skill points', () => { const repo = repository('mh3g'); expect(repo.searchDecorations({ gameId: 'mh3g', query: '0x0001' }).items[0]?.saveId).toBe(1); const skill = repo.getDecorationFacets('mh3g').skills[0]; const result = repo.searchDecorations({ gameId: 'mh3g', skillId: skill.skillId, sort: 'skillPoints' }); expect(result.items.every((item) => item.skills.some((value) => value.skillId === skill.skillId && value.points > 0))).toBe(true) })
   it('returns negative points and clickable material identities in detail', () => { const item = repository('mhgu').getDecoration({ gameId: 'mhgu', saveId: 2638 }); expect(item?.skills.some((skill) => skill.points < 0)).toBe(true); expect(item?.materials.every((material) => material.saveId > 0 && material.recipeIndex > 0)).toBe(true) })
   it('preserves every Dex recipe source when save IDs are deduplicated', () => { const item = repository('mh3g').getDecoration({ gameId: 'mh3g', saveId: 2 }); expect(item?.dexIds).toEqual([2, 3]) })
+  it('keeps the MH3G shot and power coat save crosswalk distinct', () => {
+    const repo = repository('mh3g')
+    expect(repo.getDecoration({ gameId: 'mh3g', saveId: 40 })).toMatchObject({ saveId: 40, nameCn: '通常弹珠【２】', nameEn: 'ShotPlus Jewel 2', slots: 2, dexIds: [147, 148] })
+    expect(repo.getDecoration({ gameId: 'mh3g', saveId: 173 })).toMatchObject({ saveId: 173, nameCn: '强瓶珠【２】', nameEn: 'Powercoat Jwl 2', slots: 2, dexIds: [160] })
+  })
   it('filters an exact save target for drawer navigation', () => { const result = repository('mh3g').searchDecorations({ gameId: 'mh3g', targetSaveId: 86 }); expect(result.items.map((item) => item.saveId)).toEqual([86]) })
 })

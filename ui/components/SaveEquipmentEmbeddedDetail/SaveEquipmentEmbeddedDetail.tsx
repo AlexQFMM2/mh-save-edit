@@ -4,9 +4,9 @@ import type { GameId } from '../../../api/core/loadout'
 import type { SaveEquipmentCell } from '../../../api/save/types'
 import { ArmorStatsPanel } from '../ArmorStatsPanel/ArmorStatsPanel'
 import { EquipmentSlotIndicator } from '../EquipmentSlotIndicator/EquipmentSlotIndicator'
-import { MeleeSharpnessDetail } from '../MeleeSharpnessDetail/MeleeSharpnessDetail'
 import { PalicoSharpnessLevel } from '../PalicoSharpnessLevel/PalicoSharpnessLevel'
 import { WeaponCoreStats } from '../WeaponCoreStats/WeaponCoreStats'
+import { WeaponTypeDetail } from '../WeaponTypeDetail/WeaponTypeDetail'
 import './SaveEquipmentEmbeddedDetail.css'
 
 type CatalogDetail =
@@ -19,6 +19,7 @@ export function SaveEquipmentEmbeddedDetail({ gameId, cell }: { gameId: GameId; 
   const [detail, setDetail] = useState<CatalogDetail>()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string>()
+  const [tab, setTab] = useState<'detail' | 'decorations'>('detail')
   const request = useRef(0)
 
   useEffect(() => {
@@ -51,24 +52,29 @@ export function SaveEquipmentEmbeddedDetail({ gameId, cell }: { gameId: GameId; 
   }, [cell.armorDexId, cell.kind, cell.palicoEquipmentId, cell.saveId, cell.slot, cell.weaponKey, gameId])
 
   return <div className={`save-equipment-embedded-detail${loading ? ' is-loading' : ''}`} aria-busy={loading}>
+    <nav className="save-equipment-embedded-detail__tabs" aria-label="装备详情分区"><button type="button" className={tab === 'detail' ? 'is-active' : ''} onClick={() => setTab('detail')}>详情</button><button type="button" className={tab === 'decorations' ? 'is-active' : ''} onClick={() => setTab('decorations')}>装饰品{cell.decorationLabels.length ? ` (${cell.decorationLabels.length})` : ''}</button></nav>
+    {tab === 'detail' && <>
     <dl className="save-equipment-embedded-detail__record">
       <div><dt>类别</dt><dd>{cell.typeNameCn}</dd></div>
       <div><dt>存档身份</dt><dd>{cell.saveType}:{cell.saveId}</dd></div>
       <div><dt>实例等级</dt><dd>{cell.level}</dd></div>
       <div><dt>实例孔位</dt><dd><EquipmentSlotIndicator slots={cell.slots} /></dd></div>
     </dl>
-    {detail?.kind === 'weapon' && <section className="save-equipment-embedded-detail__catalog"><WeaponCoreStats weapon={detail.value} />{detail.value.sharpness && <MeleeSharpnessDetail gameId={gameId} profile={detail.value.sharpness} selectedStage="base" />}{detail.value.specialSummary.length > 0 && <p>{detail.value.specialSummary.join(' · ')}</p>}</section>}
+    {detail?.kind === 'weapon' && <section className="save-equipment-embedded-detail__catalog"><WeaponCoreStats weapon={detail.value} /><WeaponTypeDetail gameId={gameId} weapon={detail.value} sharpnessStage="base" />{detail.value.specialSummary.length > 0 && <p>{detail.value.specialSummary.join(' · ')}</p>}</section>}
     {detail?.kind === 'armor' && <section className="save-equipment-embedded-detail__catalog"><ArmorStatsPanel armor={detail.value} /></section>}
     {detail?.kind === 'palico-weapon' && <PalicoWeaponStats value={detail.value} />}
     {detail?.kind === 'palico-armor' && <PalicoArmorStats value={detail.value} />}
     {!detail && loading && <p role="status" className="save-equipment-embedded-detail__state">正在读取图鉴属性…</p>}
     {!detail && !loading && error && <p role="alert" className="save-equipment-embedded-detail__state is-error">{error}</p>}
     {!detail && !loading && !error && !cell.empty && <p className="save-equipment-embedded-detail__state">当前实例没有可关联的图鉴属性；原始记录仍会完整保留。</p>}
-    <section className="save-equipment-embedded-detail__installed">
+    {cell.decorationLabels.length > 0 && <p className="save-equipment-embedded-detail__decoration-summary">已装装饰珠：{cell.decorationLabels.map((value, index) => <span key={`${value.rawValue}-${index}`}>{value.nameCn}{index < cell.decorationLabels.length - 1 ? '、' : ''}</span>)}</p>}
+    {cell.kind === 'charm' && <p className="save-equipment-embedded-detail__decoration-summary">技能：<span>{skill(cell.skill1NameCn, cell.skill1Id, cell.skill1Points)}</span>；<span>{skill(cell.skill2NameCn, cell.skill2Id, cell.skill2Points)}</span></p>}
+    </>}
+    {tab === 'decorations' && <section className="save-equipment-embedded-detail__installed">
       <h3>已装装饰珠</h3>
       {cell.decorationLabels.length ? <ul>{cell.decorationLabels.map((value, index) => <li key={`${value.rawValue}-${index}`}><span>{value.nameCn}{value.fixed ? '（固定 / 内置）' : ''}</span><small>#{value.saveId}{value.slots == null ? '' : ` · ${value.slots} 孔`}</small></li>)}</ul> : <p>未安装装饰珠。</p>}
       {cell.kind === 'charm' && <dl><div><dt>技能 A</dt><dd>{skill(cell.skill1NameCn, cell.skill1Id, cell.skill1Points)}</dd></div><div><dt>技能 B</dt><dd>{skill(cell.skill2NameCn, cell.skill2Id, cell.skill2Points)}</dd></div></dl>}
-    </section>
+    </section>}
   </div>
 }
 

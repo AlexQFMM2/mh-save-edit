@@ -5,10 +5,13 @@ import path from 'node:path'
 import Database from 'better-sqlite3'
 
 const root = path.resolve(import.meta.dirname, '..')
+const args = process.argv.slice(2)
+const researchIndex = args.indexOf('--research-root')
+const researchRoot = path.resolve(root, researchIndex >= 0 ? args[researchIndex + 1] : '../research')
 const specs = {
-  mh3g: { db: 'data/mh3g.sqlite', dex: '/tmp/mh3g-dex-direct-sql', visible: 196 },
-  mh4g: { db: 'data/mh4g.sqlite', dex: '/tmp/mh4g-dex-direct-sql', visible: 289 },
-  mhgu: { db: 'data/mhgu.sqlite', dex: '/tmp/mhxx-dex-direct-sql', visible: 242 },
+  mh3g: { db: 'data/mh3g.sqlite', dex: path.join(researchRoot, 'mh3u/dex/mh3g-dex/direct_sql'), visible: 196 },
+  mh4g: { db: 'data/mh4g.sqlite', dex: path.join(researchRoot, 'mh4g/dex/mh4g-dex/direct_sql'), visible: 289 },
+  mhgu: { db: 'data/mhgu.sqlite', dex: path.join(researchRoot, 'mhgu/dex/mhxx-dex/direct_sql'), visible: 242 },
 }
 
 function csv(file) {
@@ -40,6 +43,16 @@ const integer = (value, fallback = null) => {
 const clean = (value) => String(value ?? '').trim()
 const normalize = (value) => clean(value).normalize('NFKC').toLowerCase().replace(/[^a-z0-9\p{L}]/gu, '')
 const sha256 = (value) => crypto.createHash('sha256').update(value).digest('hex')
+
+// MH3G's save-format display list has two stale/duplicated English labels:
+// save 40 is ShotPlus Jewel 2 (Dex jewels 147/148), and save 173 is
+// Powercoat Jewel 2 (Dex jewel 160).  Keep these explicit Jew_ID overrides because the legacy
+// table does not contain a reliable save-id crosswalk and name-only matching
+// otherwise aliases both records to the first similarly named jewel.
+const mh3gSaveToJewOverrides = new Map([
+  [40, { jewId: 147, nameCn: '通常弹珠【２】' }],
+  [173, { jewId: 160, nameCn: '强瓶珠【２】' }],
+])
 
 function distance(left, right) {
   const previous = Array.from({ length: right.length + 1 }, (_, index) => index)
@@ -151,6 +164,7 @@ function matchGroups(db, gameId, authorityRows, groups) {
   const itemByDex = new Map(catalogItems.map((row) => [row.dex_id, row]))
   const itemBySave = new Map(catalogItems.map((row) => [row.save_id, row]))
   const groupByItemDex = new Map(groups.map((group) => [group.itemDexId, group]))
+  const groupByJewId = new Map(groups.flatMap((group) => group.rows.map((row) => [integer(row.Jew_ID), group])))
   const old3g = gameId === 'mh3g' ? db.prepare('SELECT * FROM decorations ORDER BY dex_id').all() : []
   const old3gBySave = new Map()
   for (const row of old3g) if (row.save_id != null && !old3gBySave.has(row.save_id)) old3gBySave.set(row.save_id, row)
@@ -167,8 +181,12 @@ function matchGroups(db, gameId, authorityRows, groups) {
     let group
     if (!placeholder && gameId === 'mhgu') group = groupByItemDex.get(itemBySave.get(authority.item_save_id)?.dex_id)
     if (!placeholder && gameId === 'mh3g') {
-      const legacy = old3gBySave.get(authority.save_id) ?? old3gByName.get(normalize(authority.name_en || authority.name_cn))
-      group = groupByItemDex.get(legacy?.item_dex_id)
+      const override = mh3gSaveToJewOverrides.get(authority.save_id)
+      if (override != null) group = groupByJewId.get(override.jewId)
+      if (!group) {
+        const legacy = old3gBySave.get(authority.save_id) ?? old3gByName.get(normalize(authority.name_en || authority.name_cn))
+        group = groupByItemDex.get(legacy?.item_dex_id)
+      }
     }
     if (!placeholder && !group) {
       const wanted = normalize(authority.name_en || authority.name_cn)
@@ -246,9 +264,10 @@ function buildGame(gameId, spec) {
       const itemSaveId = integer(item?.save_id ?? authority.item_save_id)
       const itemDexId = integer(group?.itemDexId ?? item?.dex_id)
       const mappingStatus = placeholder ? 'placeholder' : group && item ? 'confirmed-save-dex-item' : 'unmapped'
+      const overrideName = gameId === 'mh3g' ? mh3gSaveToJewOverrides.get(authority.save_id)?.nameCn : null
       insertDecoration.run(
         gameId, authority.save_id, dexId, itemSaveId, itemDexId,
-        clean(group?.name.cn || item?.name_cn || authority.name_cn), clean(group?.name.en || item?.name_en || authority.name_en),
+        clean(overrideName || group?.name.cn || item?.name_cn || authority.name_cn), clean(group?.name.en || item?.name_en || authority.name_en),
         integer(authority.slots ?? representative?.Slot, 0), integer(representative?.Price), clean(item?.icon_path) || null,
         placeholder ? 1 : 0, mappingStatus, `${clean(authority.source) || 'content-db'}+dex-jew`,
       )
@@ -298,8 +317,16 @@ function buildGame(gameId, spec) {
   const missingMaterials = db.prepare(`SELECT count(*) count FROM catalog_decoration_materials m
     LEFT JOIN catalog_items i ON i.game_id=m.game_id AND i.save_id=m.item_save_id
     WHERE m.game_id=? AND i.save_id IS NULL`).get(gameId).count
-  if (stats.visible !== spec.visible || stats.unmapped !== 0 || stats.missing_icons !== 0 || missingMaterials !== 0 || unresolvedMaterialRows !== 0) {
-    throw new Error(`${gameId} decoration audit failed: ${JSON.stringify({ ...stats, missingMaterials, unresolvedMaterialRows })}`)
+  const semanticChecks = gameId === 'mh3g'
+    ? db.prepare('SELECT save_id,dex_id,name_cn,name_en FROM catalog_decorations WHERE game_id=? AND save_id IN (40,173) ORDER BY save_id').all(gameId)
+    : []
+  const semanticChecksOk = gameId !== 'mh3g' || (
+    semanticChecks.length === 2 &&
+    semanticChecks[0].save_id === 40 && semanticChecks[0].dex_id === 147 && semanticChecks[0].name_cn === '通常弹珠【２】' && semanticChecks[0].name_en === 'ShotPlus Jewel 2' &&
+    semanticChecks[1].save_id === 173 && semanticChecks[1].dex_id === 160 && semanticChecks[1].name_cn === '强瓶珠【２】' && semanticChecks[1].name_en === 'Powercoat Jwl 2'
+  )
+  if (stats.visible !== spec.visible || stats.unmapped !== 0 || stats.missing_icons !== 0 || missingMaterials !== 0 || unresolvedMaterialRows !== 0 || !semanticChecksOk) {
+    throw new Error(`${gameId} decoration audit failed: ${JSON.stringify({ ...stats, missingMaterials, unresolvedMaterialRows, semanticChecks, semanticChecksOk })}`)
   }
   const relationStats = {
     skills: db.prepare('SELECT count(*) count FROM catalog_decoration_skills WHERE game_id = ?').get(gameId).count,

@@ -31,3 +31,23 @@ export function defaultLoadoutIconPath(gameId: GameId, slot: 'weapon' | ArmorPar
   if (!value) return null
   return slot === 'weapon' ? value.weapon : slot === 'charm' ? value.charms[0] ?? null : value.armor[slot]
 }
+
+// 发掘武器没有固定的图鉴图标；使用同一武器类型的最高级原生图标，
+// 这样编辑器仍然能给出可识别的武器类型，而不会退化成通用文件图标。
+const highestWeaponIcons: Record<GameId, Record<number, string>> = {
+  mh3g: [
+    'bb315dceb57c1903e9c4f4ba35c7b17c26f4d2e9d53b0f42d4dc7c6a633bcb20','d91d5ace72cddbdb5f7a9e43042db1794b0912f84365d2a504ed90b7f82b736b','dff9052e997502effde80fd0055adecf68822c255a751bc253501e023c1e9e61','2f5c22c41ba8f061042f5864b7392174f96330b7b2be6077356e9cab516049f6','e75a2a8e55b4d39703eb9bdd48ff7b6f581a36a9f0aa0662872b367e8d7736da','55fae6156a0e5cdb7b60baddfd2e2e1103d2d0838e49ad57e3bcc3a4791c8dc9','efe576f056f7ee42033d70d34a4b9e94afb2e958b52f0356a5e29bf03458b85d','4528db2da0934bcf519cdb0a990001220469e6e2f09864480f9da565e8d1b813','bdfc9131be23d79a835fbe3cb401e01abe31178e2f0f5b12a88f9a923a000d0776','3afca35d1e63372d72a64d964eb0f5817ae257908a029d8faf75f192aee9c3cf','2687cb71888fe41466f0ea5a6b7dae771c97db997a4317427231b3ca1b8785c6','2593c94b507fc725bc77ff5b21da5d50081cf3336e81f0b5429a95d20105c127'
+  ].reduce<Record<number,string>>((out, value, index) => { out[index + 1] = icon(value); return out }, {}),
+  mh4g: [
+    'bb315dceb57c1903e9c4f4ba35c7b17c26f4d2e9d53b0f42d4dc7c6a633bcb20','d91d5ace72cddbdb5f7a9e43042db1794b0912f84365d2a504ed90b7f82b736b','dff9052e997502effde80fd0055adecf68822c255a751bc253501e023c1e9e61','2f5c22c41ba8f061042f5864b7392174f96330b7b2be6077356e9cab516049f6','e75a2a8e55b4d39703eb9bdd48ff7b6f581a36a9f0aa0662872b367e8d7736da','55fae6156a0e5cdb7b60baddfd2e2e1103d2d0838e49ad57e3bcc3a4791c8dc9','efe576f056f7ee42033d70d34a4b9e94afb2e958b52f0356a5e29bf03458b85d','4528db2da0934bcf519cdb0a990001220469e6e2f09864480f9da565e8d1b813','bdfc9131be23d79a835fbe3cb401e01abe31178e2f0f5b12a88f9a923a000d0776','60d8da015975b9750dc964eefa432765d7719d5169583a95b12c4718cbf21a88','17eb13726b5351fea63a18dc13f6d7b60e3de03f6a74d4332232b4036a1df729','3afca35d1e63372d72a64d964eb0f5817ae257908a029d8faf75f192aee9c3cf','2687cb71888fe41466f0ea5a6b7dae771c97db997a4317427231b3ca1b8785c6','2593c94b507fc725bc77ff5b21da5d50081cf3336e81f0b5429a95d20105c127'
+  ].reduce<Record<number,string>>((out, value, index) => { out[index + 1] = icon(value); return out }, {}),
+  mhgu: [
+    '73e8cd85cbbcf4d991d64d34c3d7757f67204599cdd81f678a9b5bb7f149ce6e','2732ee87172c63a01801595a2b1c8a71510107dfddd347703a689eb45b5df0e8','d6bc12e6e8cd1793697ebd84605e88b191dd47dbb373c4c5ca1946e99a652e0c','7047163d1c028a47df2659960b7fdcdbc025a6bf44ef01e3fe0cfd1349970646','72375468e1eb1ab5ea630c64981479090dc4cfe530cc6b74f5129b3fa9616ca3','e8f6ce03195fac85bc0486c16f1de6bd2db4dee3cde8dc21acfcdc173e91011a','9cbb7106ebf8e2ea9696f0854826770a9440314cbe56a8d492f10b1536482338','c0f1a7908ad21d80c6f77ce3405d30683c66bb548df4c07e7c4284e07594cc91','396688c59ac7de0d810dc6790790686658cdf94dd2e395a123bd2b032977a9e9','716a38a01647c55acfebc22120c935cd6672751b1d4568d600a534da40044f36','4b6392f838cbf9c51570c1585f1c10b4ba86894102438f6d309ce530d9182071','8954c466e0d716ff986bceca8e33d6116abcad6872247af03b4d9b0f0f699f21','63c3052218b6e5706e959c88f6361e53a3021fe21ec829781bc4b6fc96d0937d','4a79d6259e61e02027c3d878738a9387c158d76013a3156f6d634f10e054edfa'
+  ].reduce<Record<number,string>>((out, value, index) => { out[index + 1] = icon(value); return out }, {}),
+}
+
+export function weaponFallbackIconPath(gameId: GameId, typeId: number): string | null {
+  if ((gameId === 'mh3g' || gameId === 'mh4g') && typeId === 9) return icon('bdfc9131be23d79a835fbe3cb401e01abe31178b0f5b12a88f9a923a000d0776')
+  if (gameId === 'mhgu' && typeId === 14) return icon('4a79d6259e61e02027c3d878738a9387c158d76013a3156f3d634f10e054edfa')
+  return highestWeaponIcons[gameId]?.[typeId] ?? defaultLoadoutIconPath(gameId, 'weapon')
+}

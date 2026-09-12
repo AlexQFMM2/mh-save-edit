@@ -53,15 +53,15 @@ type Props = {
 const hunterKinds = [{ value: 'weapon', label: '武器' }, { value: 'head', label: '头部' }, { value: 'chest', label: '胸部' }, { value: 'arms', label: '腕部' }, { value: 'waist', label: '腰部' }, { value: 'legs', label: '腿部' }, { value: 'charm', label: '护石' }]
 const palicoKinds = [{ value: 'palico-weapon', label: '猫武器' }, { value: 'palico-head', label: '猫头部' }, { value: 'palico-body', label: '猫身体' }]
 
-function initialKind(cell: SaveEquipmentCell, palico: boolean): Kind {
+function initialKind(cell: SaveEquipmentCell, palico: boolean, gameId?: GameId): Kind {
   if (palico) return cell.kind === 'palico-weapon' || cell.kind === 'palico-head' || cell.kind === 'palico-body' ? cell.kind : 'palico-weapon'
-  if (cell.kind === 'armor') return ({ 1: 'head', 2: 'chest', 3: 'arms', 4: 'waist', 5: 'legs' } as Record<number, ArmorLoadoutSlot>)[cell.saveType] ?? 'head'
+  if (cell.kind === 'armor') return ((gameId === 'mhgu' ? { 1: 'head', 2: 'chest', 3: 'arms', 4: 'waist', 5: 'legs' } : { 1: 'chest', 2: 'arms', 3: 'waist', 4: 'legs', 5: 'head' }) as Record<number, ArmorLoadoutSlot>)[cell.saveType] ?? 'head'
   return cell.kind === 'weapon' || cell.kind === 'charm' ? cell.kind : 'weapon'
 }
 
 export function SaveEquipmentEditorDrawer({ gameId, domain, cell, onApply, onApplyRecord, onClose }: Props) {
   const palico = domain === 'palico-equipment'
-  const [kind, setKind] = useState<Kind>(() => initialKind(cell, palico))
+  const [kind, setKind] = useState<Kind>(() => initialKind(cell, palico, gameId))
   const [query, setQuery] = useState('')
   const [items, setItems] = useState<PalicoCandidate[]>([])
   const [selected, setSelected] = useState<PalicoCandidate | EquipmentPickerCandidate>()
@@ -73,7 +73,9 @@ export function SaveEquipmentEditorDrawer({ gameId, domain, cell, onApply, onApp
   const [charmDraft, setCharmDraft] = useState<EditableCharm>()
   const [charmEncoding, setCharmEncoding] = useState<CharmValidationResult['encoding']>('encodable')
   const [advanced, setAdvanced] = useState(cell.kind === 'charm')
-  const [level, setLevel] = useState(cell.level)
+  const [appearanceItems, setAppearanceItems] = useState<LoadoutArmorCandidate[]>([])
+  const [appearanceId, setAppearanceId] = useState(cell.appearanceId ?? 0)
+  const [appearanceQuery, setAppearanceQuery] = useState('')
   const [slots, setSlots] = useState(cell.slots ?? 0)
   const [decorations, setDecorations] = useState([...cell.decorations, 0, 0, 0].slice(0, 3))
   const [charmClassId, setCharmClassId] = useState(cell.kind === 'charm' ? cell.saveId : 0)
@@ -96,12 +98,20 @@ export function SaveEquipmentEditorDrawer({ gameId, domain, cell, onApply, onApp
   }, [gameId, palico])
 
   useEffect(() => {
+    if (gameId !== 'mhgu' || palico || cell.kind !== 'armor') { setAppearanceItems([]); return }
+    let live = true
+    const part = initialKind(cell, false, gameId) as 'head' | 'chest' | 'arms' | 'waist' | 'legs'
+    void window.mhSaveEditor.loadout.searchArmors({ gameId: 'mhgu', part, sourceKind: 'catalog', query: appearanceQuery || undefined, pageSize: 100 }).then(value => { if (live) setAppearanceItems(value.items) }).catch(() => { if (live) setAppearanceItems([]) })
+    return () => { live = false }
+  }, [appearanceQuery, cell.kind, cell.saveType, gameId, palico])
+
+  useEffect(() => {
     if (gameId !== 'mh4g' || palico || (cell.kind !== 'weapon' && cell.kind !== 'armor')) { setExistingRelic(undefined); return }
     let live = true
     const find = async () => {
       const values = cell.kind === 'weapon'
         ? (await window.mhSaveEditor.loadout.searchWeapons({ gameId, query: cell.nameCn, sourceKind: 'relicTemplate', pageSize: 100 })).items
-        : (await window.mhSaveEditor.loadout.searchArmors({ gameId, part: initialKind(cell, false) as ArmorLoadoutSlot, query: cell.nameCn, sourceKind: 'relicTemplate', pageSize: 100 })).items
+        : (await window.mhSaveEditor.loadout.searchArmors({ gameId, part: initialKind(cell, false, gameId) as ArmorLoadoutSlot, query: cell.nameCn, sourceKind: 'relicTemplate', pageSize: 100 })).items
       const candidate = values.find(value => value.saveType === cell.saveType && value.saveId === cell.saveId && value.instance)
       if (!live || !candidate?.instance) return
       setExistingRelic({ ...candidate, instance: { ...candidate.instance, source: 'saveInstance', formatId: 'mh4g-3ds-citra', recordHex: cell.recordHex } })
@@ -160,8 +170,9 @@ export function SaveEquipmentEditorDrawer({ gameId, domain, cell, onApply, onApp
     const creatingCharm = kind === 'charm' && cell.kind !== 'charm'
     await onApply({
       ...(kind === 'charm' ? { ...(creatingCharm ? { reset: true } : {}), saveType: 6, saveId: charmDraft?.classId ?? charmClassId } : {}),
-      ...(kind === 'charm' ? { slots: charmDraft?.slots ?? slots, skill1Id: charmDraft?.skill1?.skillId ?? 0, skill1Points: charmDraft?.skill1?.points ?? 0, skill2Id: charmDraft?.skill2?.skillId ?? 0, skill2Points: charmDraft?.skill2?.points ?? 0 } : { level }),
+      ...(kind === 'charm' ? { slots: charmDraft?.slots ?? slots, skill1Id: charmDraft?.skill1?.skillId ?? 0, skill1Points: charmDraft?.skill1?.points ?? 0, skill2Id: charmDraft?.skill2?.skillId ?? 0, skill2Points: charmDraft?.skill2?.points ?? 0 } : {}),
       decorations,
+      ...(gameId === 'mhgu' && cell.kind === 'armor' ? { appearanceId } : {}),
     })
     onClose()
   }
@@ -184,13 +195,13 @@ export function SaveEquipmentEditorDrawer({ gameId, domain, cell, onApply, onApp
 
   return <WorkspaceDrawer title={`编辑第 ${cell.slot + 1} 格装备`} onClose={onClose} footer={footer}>
     <div className="save-equipment-editor">
-      <nav><button type="button" className={!advanced ? 'is-active' : ''} onClick={() => setAdvanced(false)}>替换装备</button><button type="button" className={advanced ? 'is-active' : ''} disabled={cell.empty} title={cell.empty ? '空格没有可编辑的实例，请先选择装备或创建护石' : undefined} onClick={() => { setKind(initialKind(cell, palico)); setAdvanced(true) }}>编辑实例</button></nav>
+      <nav><button type="button" className={!advanced ? 'is-active' : ''} onClick={() => setAdvanced(false)}>替换装备</button><button type="button" className={advanced ? 'is-active' : ''} disabled={cell.empty} title={cell.empty ? '空格没有可编辑的实例，请先选择装备或创建护石' : undefined} onClick={() => { setKind(initialKind(cell, palico, gameId)); setAdvanced(true) }}>编辑实例</button></nav>
       {advanced ? <div className="save-equipment-editor__advanced">
         <p>实例编辑只修改已确认字段；未知位、固定标记和保留字节保持原样。替换装备则从干净记录创建。</p>
         {activeExistingRelic?.instance ? <div className="save-equipment-editor__existing-relic"><h3>{cell.nameCn}</h3><p>已识别为发掘实例，下面直接编辑当前格的完整 28 字节记录。</p>{snapshot ? <RelicEquipmentEditor candidate={activeExistingRelic} lookups={snapshot.relicLookups} decorations={snapshot.decorations} onChange={setExistingRelic} /> : <p role="status">正在读取发掘参数…</p>}</div> : <div className={kind === 'charm' ? 'save-equipment-editor__advanced-content is-charm' : 'save-equipment-editor__advanced-content'}>
           {kind === 'charm' && snapshot ? <div className="save-equipment-editor__charm"><CharmEditorForm snapshot={snapshot} current={currentCharm} pointMinimum={pointMinimum} pointMaximum={pointMaximum} onChange={updateCharm} /><section className="save-equipment-editor__decoration-section"><h3>护石装饰珠</h3><DecorationEditorContent decorations={snapshot.decorations} skills={snapshot.skills} value={decorations.filter(Boolean)} capacity={charmDraft?.slots ?? slots} interpretFixedBit={gameId === 'mh4g'} onChange={values => setDecorations([...values, 0, 0, 0].slice(0, 3))} /></section></div> : <>
-            <label>等级<input type="number" min="0" max={gameId === 'mhgu' ? 31 : 255} value={level} onChange={event => setLevel(Number(event.target.value))} /></label>
-            {snapshot && !palico && <div className="save-equipment-editor__decoration-content"><DecorationEditorContent decorations={snapshot.decorations} skills={snapshot.skills} value={decorations.filter(Boolean)} capacity={cell.slots} interpretFixedBit={gameId === 'mh4g'} onChange={values => setDecorations([...values, 0, 0, 0].slice(0, 3))} /></div>}
+            {gameId === 'mhgu' && cell.kind === 'armor' && <section className="save-equipment-editor__appearance"><h3>防具幻化</h3><p>只修改显示外观，实际装备和防具属性保持不变。</p><input className="save-equipment-editor__appearance-search" value={appearanceQuery} onChange={event => setAppearanceQuery(event.target.value)} placeholder="搜索幻化防具名称或 ID" /><div className="save-equipment-editor__appearance-grid"><button type="button" className={!appearanceId ? 'is-selected' : ''} onClick={() => setAppearanceId(0)}>取消幻化</button>{appearanceItems.map(item => <button type="button" className={appearanceId === item.saveId ? 'is-selected' : ''} key={item.candidateKey} onClick={() => item.saveId != null && setAppearanceId(item.saveId)}><CatalogIcon path={item.iconPath} name={item.nameCn} /><span>{item.nameCn}</span></button>)}</div></section>}
+            {snapshot && !palico && <div className="save-equipment-editor__decoration-content">{kind !== 'weapon' && cell.kind !== 'weapon' && <DecorationEditorContent decorations={snapshot.decorations} skills={snapshot.skills} value={decorations.filter(Boolean)} capacity={cell.slots} interpretFixedBit={gameId === 'mh4g'} onChange={values => setDecorations([...values, 0, 0, 0].slice(0, 3))} />}</div>}
           </>}
         </div>}
       </div> : <div className="save-equipment-editor__replace">

@@ -1,4 +1,7 @@
 .save-equipment-embedded-detail { display: grid; gap: 10px; min-width: 0; transition: opacity 120ms ease; }
+.save-equipment-embedded-detail__tabs { display: flex; gap: 4px; border-bottom: 1px solid rgba(223,182,93,.16); }
+.save-equipment-embedded-detail__tabs button { min-height: 32px; padding: 0 10px; border: 0; border-bottom: 2px solid transparent; color: var(--global-theme-color-text-secondary); background: transparent; cursor: pointer; }
+.save-equipment-embedded-detail__tabs button.is-active { border-color: var(--global-theme-color-gold-bright); color: var(--global-theme-color-data); }
 .save-equipment-embedded-detail.is-loading { opacity: .68; }
 .save-equipment-embedded-detail__record, .save-equipment-embedded-detail__palico dl, .save-equipment-embedded-detail__installed dl { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 6px; margin: 0; }
 .save-equipment-embedded-detail__record > div, .save-equipment-embedded-detail__palico dl > div, .save-equipment-embedded-detail__installed dl > div { min-width: 0; padding: 7px; border: 1px solid rgba(223,182,93,.12); border-radius: 6px; background: rgba(17,9,5,.28); }
