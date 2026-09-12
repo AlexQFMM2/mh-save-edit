@@ -8,6 +8,7 @@
 .save-equipment-embedded-detail__catalog > p { color: var(--global-theme-color-text-secondary); font-size: var(--global-typography-font-size-small); }
 .save-equipment-embedded-detail__catalog .armor-stats-panel { padding: 0; }
 .save-equipment-embedded-detail__armor-catalog .armor-detail-panel { height: auto; overflow: visible; background: transparent; }
+.save-equipment-embedded-detail__armor-catalog .armor-detail-panel__scroll { overflow: visible; }
 .save-equipment-embedded-detail__state { min-height: 46px; margin: 0; padding: 9px; color: var(--global-theme-color-text-secondary); background: rgba(223,182,93,.05); }
 .save-equipment-embedded-detail__state.is-error { color: var(--global-theme-color-danger); }
 .save-equipment-embedded-detail__decorations { display: grid; gap: 7px; padding-top: 8px; border-top: 1px solid var(--global-theme-color-border); }

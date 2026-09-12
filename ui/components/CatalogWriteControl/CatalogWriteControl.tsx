@@ -1,7 +1,7 @@
 import { PackagePlus } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import type { GameId } from '../../../api/core/loadout'
-import type { SaveBoxWriteTarget, SaveCatalogItemWritePreview } from '../../../api/save/types'
+import { SAVE_BOX_ITEM_STACK_MAX, type SaveBoxWriteTarget, type SaveCatalogItemWritePreview } from '../../../api/save/types'
 import { CatalogWriteDrawer } from '../CatalogWriteDrawer/CatalogWriteDrawer'
 import { useOptionalSaveSession } from '../SaveSessionProvider/SaveSessionProvider'
 import './CatalogWriteControl.css'
@@ -13,9 +13,12 @@ type Props =
 export function CatalogWriteControl(props: Props) {
   const save = useOptionalSaveSession()
   const [open, setOpen] = useState(false)
-  const catalogMaximum = props.kind === 'item' ? props.maxCount ?? 99 : 1
+  // Catalog maxStack describes carried-item limits. A box cell has its own
+  // stack rule, so never let a carried limit or a larger encoding width leak
+  // into the catalog-to-box quantity editor.
+  const catalogMaximum = props.kind === 'item' ? SAVE_BOX_ITEM_STACK_MAX : 1
   const session = save?.session ?? null
-  const maximum = props.kind === 'item' ? Math.min(catalogMaximum, session?.capabilities.itemCountMax ?? catalogMaximum) : 1
+  const maximum = props.kind === 'item' ? Math.min(SAVE_BOX_ITEM_STACK_MAX, session?.capabilities.itemCountMax ?? SAVE_BOX_ITEM_STACK_MAX) : 1
   const [count, setCount] = useState(Math.min(catalogMaximum, 99))
   const [busy, setBusy] = useState(false)
   const [target, setTarget] = useState<SaveBoxWriteTarget | null>(null)
@@ -71,7 +74,7 @@ export function CatalogWriteControl(props: Props) {
         <PackagePlus aria-hidden="true" />
         <h3>{label}</h3>
         <dl><dt>目标版本</dt><dd>{session.contentGameId.toUpperCase()}</dd><dt>目标箱域</dt><dd>{domain === 'items' ? '道具箱' : domain === 'palico-equipment' ? '猫装备箱' : '猎人装备箱'}</dd><dt>箱子容量</dt><dd>{itemPreview ? `${itemPreview.nonEmptyCount} / ${itemPreview.capacity} 格` : target ? `${target.nonEmptyCount} / ${target.capacity} 格` : `${capacity} 格`}</dd><dt>剩余空间</dt><dd>{itemPreview ? `${itemPreview.capacity - itemPreview.nonEmptyCount} 格` : target ? `${target.capacity - target.nonEmptyCount} 格` : '读取中…'}</dd><dt>写入位置</dt><dd>{destination ?? targetError ?? '正在生成写入预览…'}</dd></dl>
-        {props.kind === 'item' && <label>加入数量<input autoFocus type="number" min="1" max={maximum} value={count} onChange={event => setCount(Number(event.target.value))} /><small>允许范围：1～{maximum}</small></label>}
+        {props.kind === 'item' && <label>加入数量<input autoFocus type="number" min="1" max={maximum} value={count} onChange={event => setCount(Number(event.target.value))} /><small>箱格允许范围：1～{maximum}（图鉴中的携带上限不适用于箱子）</small></label>}
         {targetError && <p className="catalog-write-control__error" role="alert">{targetError}</p>}
         <p>确认后只写入内存修改和撤销栈；成功提示会给出页/格，仍需在修改页保存文件。</p>
       </div>

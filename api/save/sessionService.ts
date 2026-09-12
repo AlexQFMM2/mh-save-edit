@@ -8,7 +8,7 @@ import { Mh4gSaveAdapter } from './adapters/mh4g'
 import { MhguSaveAdapter } from './adapters/mhgu'
 import type { SaveDocumentAdapter } from './adapters/types'
 import type { LoadoutSlot, LogicalLoadout } from '../loadout/types'
-import type { SaveBoxDomain, SaveBoxSection, SaveBoxWriteTarget, SaveBoxWriteTargetRequest, SaveCatalogEquipmentRequest, SaveCatalogItemRequest, SaveCatalogItemWritePreview, SaveCharacterSummary, SaveCommand, SaveDiagnostic, SaveExportRequest, SaveFormatId, SaveImportApplyRequest, SaveImportPreview, SaveImportRequest, SaveLoadoutWritePreview, SaveLoadoutWriteRequest, SaveMutationResult, SaveOpenRequest, SaveOpenResult, SavePalicoSection, SavePersonalSection, SaveResult, SaveSectionRequest, SaveSectionSnapshot, SaveSessionSnapshot, SaveValidationResult } from './types'
+import { SAVE_BOX_ITEM_STACK_MAX, type SaveBoxDomain, SaveBoxSection, SaveBoxWriteTarget, SaveBoxWriteTargetRequest, SaveCatalogEquipmentRequest, SaveCatalogItemRequest, SaveCatalogItemWritePreview, SaveCharacterSummary, SaveCommand, SaveDiagnostic, SaveExportRequest, SaveFormatId, SaveImportApplyRequest, SaveImportPreview, SaveImportRequest, SaveLoadoutWritePreview, SaveLoadoutWriteRequest, SaveMutationResult, SaveOpenRequest, SaveOpenResult, SavePalicoSection, SavePersonalSection, SaveResult, SaveSectionRequest, SaveSectionSnapshot, SaveSessionSnapshot, SaveValidationResult } from './types'
 
 type HistoryEntry = { patches: BytePatch[]; section: SaveSectionSnapshot['kind']; message: string }
 type OpenSession = {
@@ -338,7 +338,7 @@ export class SaveSessionService {
     if (this.snapshot()!.readOnly) throw new Error('当前存档处于只读保护')
     if (session.adapter.meta.contentGameId !== request.gameId) throw new Error('图鉴与当前存档版本不一致')
     const item = this.resolver.requireItem(request.gameId, request.saveId)
-    const maximum = Math.min(session.adapter.meta.itemCountMax, item.maxStack ?? session.adapter.meta.itemCountMax)
+    const maximum = Math.min(session.adapter.meta.itemCountMax, SAVE_BOX_ITEM_STACK_MAX)
     if (request.count < 1) throw new Error(`${item.nameCn}的加入数量必须至少为 1`)
     const all = session.adapter.items(0, session.adapter.meta.itemCapacity)
     const nonEmptyCount = all.filter(value => !value.empty).length

@@ -208,7 +208,7 @@ describe('save editor UI primitives', () => {
     fireEvent.click(await screen.findByRole('button', { name: '加入道具箱' }))
     expect(await screen.findByText(/第 2 页 · 第 38 格（\+3）/)).toBeTruthy()
     expect(screen.getByText('1100 格')).toBeTruthy()
-    expect((screen.getByRole('spinbutton') as HTMLInputElement).max).toBe('127')
+    expect((screen.getByRole('spinbutton') as HTMLInputElement).max).toBe('99')
     expect(previewCatalogItemWrite).toHaveBeenCalledWith(expect.objectContaining({ sessionId: snapshot.sessionId, revision: snapshot.revision, gameId: 'mhgu', saveId: 1, count: 99 }))
   })
 

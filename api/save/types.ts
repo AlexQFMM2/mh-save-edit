@@ -5,6 +5,8 @@ export type SaveFormatId = 'mh3g-3ds-citra' | 'mh3u-wiiu-cemu' | 'mh4g-3ds-citra
 export type SaveSectionKey = 'personal-info' | 'item-box' | 'equipment-box' | 'palico'
 export type SaveSessionState = 'closed' | 'opening' | 'selectingCharacter' | 'readyClean' | 'readyDirty' | 'validating' | 'saving' | 'closing'
 export type SaveBoxDomain = 'items' | 'hunter-equipment' | 'palico-equipment'
+/** Item-box stack limit; catalog maxStack describes the pouch limit instead. */
+export const SAVE_BOX_ITEM_STACK_MAX = 99
 
 export type SaveDiagnostic = {
   code: string
