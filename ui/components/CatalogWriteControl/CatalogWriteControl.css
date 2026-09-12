@@ -1,16 +1,19 @@
-.catalog-write-control { margin-top: 10px; }
-.catalog-write-control > button { display: flex; align-items: center; justify-content: center; gap: 7px; width: 100%; min-height: 38px; border: 1px solid var(--global-theme-color-gold); border-radius: 7px; color: var(--global-theme-color-gold-bright); background: rgba(223, 182, 93, .08); cursor: pointer; }
+.catalog-write-control { min-width: 0; }
+.catalog-write-control > button { display: flex; align-items: center; justify-content: center; gap: var(--global-spacing-2); width: 100%; min-height: var(--global-control-height); border: var(--global-border-width) solid var(--global-theme-color-border-strong); border-radius: var(--global-radius-md); color: var(--global-theme-color-accent); background: var(--global-theme-color-surface-interactive); font: inherit; font-size: var(--global-typography-font-size-small); font-weight: var(--global-typography-font-weight-semibold); cursor: pointer; }
+.catalog-write-control > button:hover:not(:disabled) { background: var(--global-theme-color-surface-raised); }
+.catalog-write-control > button:focus-visible { outline: 2px solid var(--global-theme-color-focus-ring); outline-offset: 2px; }
+.catalog-write-control > button:disabled { opacity: .55; cursor: not-allowed; }
 .catalog-write-control > button svg { width: 17px; }
-.catalog-write-control__drawer { display: grid; align-content: start; gap: 12px; height: 100%; overflow: auto; padding: 8px; }
-.catalog-write-control__drawer > svg { width: 34px; height: 34px; color: var(--global-theme-color-gold); }
+.catalog-write-control__drawer { display: grid; align-content: start; gap: var(--global-spacing-4); height: 100%; overflow: auto; padding: var(--global-spacing-3); }
+.catalog-write-control__drawer > svg { width: 34px; height: 34px; color: var(--global-theme-color-accent); }
 .catalog-write-control__drawer h3,
 .catalog-write-control__drawer p { margin: 0; }
 .catalog-write-control__drawer h3 { font-size: var(--global-typography-font-size-title); }
-.catalog-write-control__drawer dl { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 9px 14px; margin: 0; padding: 14px; border: 1px solid var(--global-theme-color-border); border-radius: 9px; background: rgba(42, 27, 19, .55); }
+.catalog-write-control__drawer dl { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--global-spacing-2) var(--global-spacing-4); margin: 0; padding: var(--global-spacing-4); border: var(--global-border-width) solid var(--global-theme-color-border); border-radius: var(--global-radius-lg); background: var(--global-theme-color-surface); }
 .catalog-write-control__drawer dt { color: var(--global-theme-color-text-muted); }
 .catalog-write-control__drawer dd { margin: 0; color: var(--global-theme-color-data); text-align: right; }
-.catalog-write-control__drawer label { display: grid; gap: 6px; color: var(--global-theme-color-text-secondary); }
-.catalog-write-control__drawer input { height: 40px; padding: 0 10px; border: 1px solid var(--global-theme-color-border); border-radius: 7px; color: var(--global-theme-color-text-primary); background: var(--global-theme-color-surface); }
+.catalog-write-control__drawer label { display: grid; gap: var(--global-spacing-2); color: var(--global-theme-color-text-secondary); }
+.catalog-write-control__drawer input { height: var(--global-control-height-tall); padding: 0 var(--global-spacing-3); border: var(--global-border-width) solid var(--global-theme-color-border); border-radius: var(--global-radius-md); color: var(--global-theme-color-text-primary); background: var(--global-theme-color-surface-inset); font: inherit; }
 .catalog-write-control__drawer small,
-.catalog-write-control__drawer p { color: var(--global-theme-color-text-muted); line-height: 1.55; }
-.catalog-write-control__drawer .catalog-write-control__error { color: #ef9b8b; }
+.catalog-write-control__drawer p { color: var(--global-theme-color-text-muted); line-height: var(--global-typography-line-height-relaxed); }
+.catalog-write-control__drawer .catalog-write-control__error { display: grid; min-height: var(--global-state-min-height-compact); place-items: center; padding: var(--global-state-padding-compact); color: var(--global-state-error-color); line-height: var(--global-state-line-height); text-align: center; }

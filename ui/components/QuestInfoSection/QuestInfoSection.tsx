@@ -1,4 +1,5 @@
 import type { QuestDetail } from '../../../api/catalog/types'
+import { DetailSection } from '../DetailSection/DetailSection'
 import { MonsterIcon } from '../MonsterIcon/MonsterIcon'
 import './QuestInfoSection.css'
 
@@ -19,18 +20,16 @@ export function QuestInfoSection({ quest, onSelectMonster }: { quest: QuestDetai
       <dl className="quest-info-section__stats">
         {stats.map(([label, value]) => <div className="quest-info-section__stat" key={label}><dt className="quest-info-section__stat-label">{label}</dt><dd className="quest-info-section__stat-value">{value}</dd></div>)}
       </dl>
-      <section className="quest-info-section__group">
-        <h3 className="quest-info-section__heading">任务目标</h3>
+      <DetailSection title="任务目标" className="quest-info-section__group">
         <p className="quest-info-section__text">{quest.goalCn || '未收录'}</p>
         {quest.subGoalCn && quest.subGoalCn !== '无' && <p className="quest-info-section__text">副目标：{quest.subGoalCn}</p>}
-      </section>
-      {quest.modifiers.length > 0 && <section className="quest-info-section__group"><h3 className="quest-info-section__heading">任务状态</h3><p className="quest-info-section__text">{quest.modifiers.map(value => value.nameCn).join('、')}</p></section>}
-      <section className="quest-info-section__group">
-        <h3 className="quest-info-section__heading">出现怪物</h3>
+      </DetailSection>
+      {quest.modifiers.length > 0 && <DetailSection title="任务状态" className="quest-info-section__group"><p className="quest-info-section__text">{quest.modifiers.map(value => value.nameCn).join('、')}</p></DetailSection>}
+      <DetailSection title="出现怪物" className="quest-info-section__group">
         <div className="quest-info-section__monsters">
           {quest.monsters.map(monster => <button className="quest-info-section__monster" key={`${monster.monsterId}-${monster.slot}-${monster.sourceKind}`} type="button" onClick={() => onSelectMonster(monster.monsterId)}><MonsterIcon path={monster.iconPath} name={monster.nameCn} /><span>{monster.nameCn}</span></button>)}
         </div>
-      </section>
+      </DetailSection>
     </div>
   )
 }

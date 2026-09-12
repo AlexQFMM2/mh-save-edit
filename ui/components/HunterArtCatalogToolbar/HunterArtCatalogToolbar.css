@@ -1,11 +1,11 @@
 .hunter-art-catalog-toolbar {
-  --hunter-art-catalog-toolbar-component-control-height: 36px;
+  --hunter-art-catalog-toolbar-component-control-height: var(--global-control-height);
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--global-spacing-2);
   min-width: 0;
   overflow-x: auto;
-  padding-bottom: 2px;
+  padding-bottom: var(--global-spacing-1);
 }
 
 .hunter-art-catalog-toolbar__field,
@@ -14,7 +14,7 @@
   display: flex;
   flex: 0 0 auto;
   align-items: center;
-  gap: 6px;
+  gap: var(--global-spacing-2);
   color: var(--global-theme-color-text-secondary);
   font-size: var(--global-typography-font-size-small);
 }
@@ -26,7 +26,7 @@
 
 .hunter-art-catalog-toolbar__search-icon {
   position: absolute;
-  left: 10px;
+  left: var(--global-spacing-3);
   width: 16px;
   color: var(--global-theme-color-text-muted);
 }
@@ -34,14 +34,15 @@
 .hunter-art-catalog-toolbar__search-input {
   width: 100%;
   height: var(--hunter-art-catalog-toolbar-component-control-height);
-  padding: 0 11px 0 34px;
-  border: 1px solid var(--global-theme-color-border);
-  border-radius: 7px;
+  padding: 0 var(--global-spacing-3) 0 var(--global-spacing-8);
+  border: var(--global-border-width) solid var(--global-theme-color-border);
+  border-radius: var(--global-radius-md);
   color: var(--global-theme-color-text-primary);
-  background: rgba(18, 10, 6, 0.55);
+  background: var(--global-theme-color-surface-inset);
+  font: inherit;
   font-size: var(--global-typography-font-size-small);
 }
 
 .hunter-art-catalog-toolbar__debug-input {
-  accent-color: var(--global-theme-color-gold);
+  accent-color: var(--global-theme-color-accent);
 }

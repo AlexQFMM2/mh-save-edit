@@ -1,18 +1,24 @@
 .quest-unlock-section {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: var(--global-spacing-4);
 }
 
 .quest-unlock-section__empty {
+  display: grid;
+  min-height: var(--global-state-min-height-compact);
+  place-items: center;
   margin: 0;
-  color: var(--global-theme-color-text-secondary);
+  padding: var(--global-state-padding-compact);
+  color: var(--global-state-color);
+  line-height: var(--global-state-line-height);
+  text-align: center;
 }
 
 .quest-unlock-section__group {
   display: flex;
   flex-direction: column;
-  gap: 7px;
+  gap: var(--global-spacing-2);
 }
 
 .quest-unlock-section__heading {
@@ -23,20 +29,20 @@
 
 .quest-unlock-section__items {
   display: grid;
-  gap: 6px;
+  gap: var(--global-spacing-2);
 }
 
 .quest-unlock-section__item {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: var(--global-spacing-3);
   width: 100%;
-  padding: 8px 10px;
-  border: 1px solid var(--global-theme-color-border);
-  border-radius: 6px;
+  padding: var(--global-spacing-3);
+  border: var(--global-border-width) solid var(--global-theme-color-border);
+  border-radius: var(--global-radius-md);
   color: var(--global-theme-color-text-primary);
-  background: rgba(18, 10, 6, 0.3);
+  background: var(--global-theme-color-surface-inset);
   text-align: left;
   cursor: pointer;
 }

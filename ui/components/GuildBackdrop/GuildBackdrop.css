@@ -8,6 +8,9 @@
   pointer-events: none;
 }
 
+/* The backdrop's gradients are a documented visual exception; layout and motion still use shared contracts. */
+.guild-backdrop { transition: opacity var(--global-motion-normal) ease; }
+
 .guild-backdrop__grain {
   position: absolute;
   inset: 0;
@@ -43,7 +46,7 @@
   border-radius: 50%;
   background: radial-gradient(circle, rgba(185, 111, 54, 0.18), rgba(185, 111, 54, 0) 68%);
   filter: blur(8px);
-  transition: opacity 260ms ease;
+  transition: opacity var(--global-motion-normal) ease;
 }
 
 .guild-backdrop__warm-glow--left {
@@ -69,7 +72,7 @@
   border-radius: 50%;
   opacity: 0.72;
   transform: rotate(-14deg);
-  transition: opacity 260ms ease;
+  transition: opacity var(--global-motion-normal) ease;
 }
 
 .guild-backdrop__seal::before,
@@ -123,7 +126,7 @@
   left: 5%;
   height: 1px;
   background: linear-gradient(90deg, transparent, rgba(223, 182, 93, 0.13), transparent);
-  transition: opacity 260ms ease;
+  transition: opacity var(--global-motion-normal) ease;
 }
 
 .guild-backdrop--game-active .guild-backdrop__warm-glow,
@@ -148,6 +151,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .guild-backdrop { transition: none; }
   .guild-backdrop__warm-glow,
   .guild-backdrop__seal,
   .guild-backdrop__rail {

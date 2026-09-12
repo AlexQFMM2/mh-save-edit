@@ -1,15 +1,2 @@
-.cemu-logo {
-  --cemu-logo-component-size: 24px;
-  --cemu-logo-component-radius: 10px;
-  display: grid;
-  place-items: center;
-  width: var(--cemu-logo-component-size);
-  height: var(--cemu-logo-component-size);
-  border-radius: var(--cemu-logo-component-radius);
-  color: #fff;
-  background: #58bce8;
-  font-family: Arial, sans-serif;
-  font-size: var(--global-typography-font-size-body);
-  font-weight: 900;
-  line-height: 1;
-}
+/* Platform brand color is intentionally retained as an icon-specific exception. */
+.cemu-logo{--cemu-logo-component-size:24px;--cemu-logo-component-radius:var(--global-radius-lg);display:grid;place-items:center;width:var(--cemu-logo-component-size);height:var(--cemu-logo-component-size);border-radius:var(--cemu-logo-component-radius);color:#fff;background:#58bce8;font-family:Arial,sans-serif;font-size:var(--global-typography-font-size-body);font-weight:900;line-height:var(--global-typography-line-height-tight)}

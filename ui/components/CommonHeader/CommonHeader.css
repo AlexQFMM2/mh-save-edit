@@ -7,7 +7,7 @@
   align-items: center;
   justify-content: space-between;
   min-height: var(--common-header-component-height);
-  gap: 24px;
+  gap: var(--global-spacing-7);
   padding: 0 var(--common-header-component-horizontal-padding);
   border-bottom: 1px solid var(--global-theme-color-border);
   background: var(--global-theme-color-surface-deep);
@@ -20,7 +20,7 @@
 }
 
 .common-header__brand {
-  gap: 13px;
+  gap: var(--global-spacing-4);
 }
 
 .common-header__mark {
@@ -28,43 +28,43 @@
   place-items: center;
   width: 38px;
   height: 38px;
-  border: 1px solid rgba(223, 182, 93, 0.55);
-  border-radius: 10px;
-  color: var(--global-theme-color-gold-bright);
-  background: rgba(223, 182, 93, 0.1);
+  border: var(--global-border-width) solid var(--global-theme-color-border-strong);
+  border-radius: var(--global-radius-lg);
+  color: var(--global-theme-color-accent);
+  background: var(--global-theme-color-surface-interactive);
 }
 
 .common-header__brand-copy {
   display: grid;
-  gap: 3px;
+  gap: var(--global-spacing-1);
 }
 
 .common-header__kicker,
 .common-header__status-label {
   color: var(--global-theme-color-text-muted);
   font-size: var(--global-typography-font-size-caption);
-  font-weight: 700;
+  font-weight: var(--global-typography-font-weight-bold);
   letter-spacing: 0.13em;
 }
 
 .common-header__name {
-  color: var(--global-theme-color-gold-bright);
+  color: var(--global-theme-color-accent);
   font-family: Georgia, "Times New Roman", serif;
   font-size: var(--global-typography-font-size-title);
-  font-weight: 700;
+  font-weight: var(--global-typography-font-weight-bold);
   letter-spacing: 0.02em;
 }
 
 .common-header__status {
   flex-direction: column;
   align-items: flex-end;
-  gap: 4px;
+  gap: var(--global-spacing-2);
 }
 
 .common-header__status-value {
   color: var(--global-theme-color-data);
   font-size: var(--global-typography-font-size-small);
-  font-weight: 600;
+  font-weight: var(--global-typography-font-weight-semibold);
 }
 
 .common-header__status-detail {
@@ -76,9 +76,9 @@
   .common-header {
     align-items: flex-start;
     flex-direction: column;
-    gap: 14px;
-    padding-top: 18px;
-    padding-bottom: 18px;
+    gap: var(--global-spacing-4);
+    padding-top: var(--global-spacing-5);
+    padding-bottom: var(--global-spacing-5);
   }
 
   .common-header__status {

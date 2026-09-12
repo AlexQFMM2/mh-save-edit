@@ -1,4 +1,5 @@
 import type { QuestDetail, QuestReward } from '../../../api/catalog/types'
+import { DetailSection } from '../DetailSection/DetailSection'
 import './QuestRewardsSection.css'
 
 export function QuestRewardsSection({ quest, onSelectItem, onSelectHunterArt }: { quest: QuestDetail; onSelectItem: (id: number) => void; onSelectHunterArt: (id: number) => void }) {
@@ -14,20 +15,18 @@ export function QuestRewardsSection({ quest, onSelectItem, onSelectHunterArt }: 
       {[...groups].map(([key, rewards]) => {
         const [group, region] = key.split('\u0000')
         return (
-          <section className="quest-rewards-section__group" key={key}>
-            <h3 className="quest-rewards-section__heading">{group}{region && region !== '—' ? ` · ${region}` : ''}</h3>
+          <DetailSection title={`${group}${region && region !== '—' ? ` · ${region}` : ''}`} className="quest-rewards-section__group" key={key}>
             <div className="quest-rewards-section__table-wrap">
               <table className="quest-rewards-section__table">
                 <thead><tr><th className="quest-rewards-section__cell">道具</th><th className="quest-rewards-section__cell">数量</th><th className="quest-rewards-section__cell">概率</th></tr></thead>
                 <tbody>{rewards.map(reward => <tr key={reward.id}><th className="quest-rewards-section__cell"><button className="quest-rewards-section__item" type="button" onClick={() => onSelectItem(reward.item.saveId)}>{reward.item.nameCn}</button></th><td className="quest-rewards-section__cell quest-rewards-section__data">{reward.quantity}</td><td className="quest-rewards-section__cell quest-rewards-section__data">{formatProbability(reward.probability)}</td></tr>)}</tbody>
               </table>
             </div>
-          </section>
+          </DetailSection>
         )
       })}
       {quest.specialRewards.length > 0 && (
-        <section className="quest-rewards-section__group">
-          <h3 className="quest-rewards-section__heading">特殊完成奖励</h3>
+        <DetailSection title="特殊完成奖励" className="quest-rewards-section__group">
           <div className="quest-rewards-section__specials">
             {quest.specialRewards.map(reward => reward.hunterArt ? (
               <button className="quest-rewards-section__special-button" type="button" key={reward.id} onClick={() => onSelectHunterArt(reward.hunterArt!.hunterArtId)}>
@@ -41,7 +40,7 @@ export function QuestRewardsSection({ quest, onSelectItem, onSelectHunterArt }: 
               </div>
             ))}
           </div>
-        </section>
+        </DetailSection>
       )}
     </div>
   )

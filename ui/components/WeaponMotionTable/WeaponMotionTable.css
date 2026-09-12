@@ -1,13 +1,8 @@
-.weapon-motion-table {
-  position: relative;
-  height: 100%;
-  min-height: 0;
-  overflow: auto;
-}
-.weapon-motion-table__table { width: 100%; min-width: 1160px; border-collapse: collapse; }
-.weapon-motion-table__head { position: sticky; top: 0; z-index: 3; background: #2b1a12; box-shadow: 0 1px 0 rgba(223, 182, 93, .24); }
-.weapon-motion-table__header { height: 38px; padding: 5px 7px; color: var(--global-theme-color-text-muted); font-size: var(--global-typography-font-size-caption); font-weight: 600; text-align: left; white-space: nowrap; }
-.weapon-motion-table__style { min-width: 50px; text-align: center; }
-.weapon-motion-table__updating { position: sticky; top: 0; z-index: 5; width: max-content; margin-left: auto; padding: 4px 9px; border-radius: 0 0 0 6px; color: #24150e; background: var(--global-theme-color-gold-bright); font-size: var(--global-typography-font-size-caption); }
-.weapon-motion-table__empty, .weapon-motion-table--state { display: grid; height: 100%; min-height: 180px; place-items: center; color: var(--global-theme-color-text-muted); font-size: var(--global-typography-font-size-body); }
-.weapon-motion-table--state[role=alert] { color: #ffb4a6; }
+.weapon-motion-table{position:relative;height:100%;min-height:0;overflow:auto;overscroll-behavior:contain}
+.weapon-motion-table__table{width:100%;min-width:1160px;border-collapse:collapse}
+.weapon-motion-table__head{position:sticky;top:0;z-index:3;background:var(--global-theme-color-surface-table-header);box-shadow:0 1px 0 var(--global-theme-color-border)}
+.weapon-motion-table__header{height:var(--global-table-header-height);padding:0 var(--global-spacing-2);border-bottom:var(--global-border-width) solid var(--global-theme-color-border);color:var(--global-theme-color-text-secondary);font-size:var(--global-typography-font-size-caption);font-weight:var(--global-typography-font-weight-semibold);line-height:var(--global-typography-line-height-tight);text-align:left;white-space:nowrap}
+.weapon-motion-table__style{min-width:50px;text-align:center}
+.weapon-motion-table__updating{position:sticky;top:0;z-index:5;width:max-content;margin-left:auto;padding:var(--global-spacing-1) var(--global-spacing-3);border-radius:0 0 0 var(--global-radius-md);color:var(--global-theme-color-text-on-accent);background:var(--global-theme-color-accent);font-size:var(--global-typography-font-size-caption)}
+.weapon-motion-table__empty,.weapon-motion-table--state{display:grid;height:100%;min-height:var(--global-state-min-height);place-items:center;padding:var(--global-state-padding);color:var(--global-state-color);font-size:var(--global-typography-font-size-body);line-height:var(--global-state-line-height);text-align:center}
+.weapon-motion-table--state[role=alert]{color:var(--global-state-error-color)}

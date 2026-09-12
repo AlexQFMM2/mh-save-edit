@@ -8,15 +8,19 @@
 }
 
 .quest-detail-panel--state {
+  display: grid;
   place-items: center;
-  padding: 20px;
-  color: var(--global-theme-color-text-secondary);
+  min-height: var(--global-state-min-height-compact);
+  padding: var(--global-state-padding-compact);
+  color: var(--global-state-color);
+  line-height: var(--global-state-line-height);
+  text-align: center;
 }
 
 .quest-detail-panel__header {
   position: relative;
-  padding: 12px 13px 9px;
-  border-bottom: 1px solid rgba(223, 182, 93, 0.14);
+  padding: var(--global-spacing-4) var(--global-spacing-5) var(--global-spacing-3);
+  border-bottom: var(--global-border-width) solid var(--global-theme-color-border-subtle);
 }
 
 .quest-detail-panel__eyebrow {
@@ -27,16 +31,19 @@
 .quest-detail-panel__title-row {
   display: flex;
   align-items: center;
-  gap: 9px;
+  gap: var(--global-spacing-3);
 }
 
 .quest-detail-panel__title {
-  margin: 3px 0;
+  margin: var(--global-spacing-1) 0;
+  color: var(--global-theme-color-accent);
   font-size: var(--global-typography-font-size-title);
+  font-weight: var(--global-typography-font-weight-semibold);
+  line-height: var(--global-typography-line-height-tight);
 }
 
 .quest-detail-panel__alternate-name {
-  margin: 2px 0;
+  margin: var(--global-spacing-1) 0;
   color: var(--global-theme-color-text-secondary);
   font-size: var(--global-typography-font-size-small);
 }
@@ -44,37 +51,37 @@
 .quest-detail-panel__updating {
   position: absolute;
   right: 12px;
-  bottom: 9px;
+  bottom: var(--global-spacing-3);
   color: var(--global-theme-color-data);
   font-size: var(--global-typography-font-size-caption);
   font-style: normal;
 }
 
 .quest-detail-panel__key {
-  padding: 3px 7px;
-  border: 1px solid var(--global-theme-color-border);
-  border-radius: 999px;
+  padding: var(--global-spacing-1) var(--global-spacing-2);
+  border: var(--global-border-width) solid var(--global-theme-color-border);
+  border-radius: var(--global-radius-pill);
   color: var(--global-theme-color-data);
   font-size: var(--global-typography-font-size-caption);
 }
 
 .quest-detail-panel__key--urgent {
-  border-color: rgba(224, 109, 63, 0.5);
-  color: #ffe0b5;
+  border-color: var(--global-theme-color-warning);
+  color: var(--global-theme-color-warning);
 }
 
 .quest-detail-panel__tabs {
   display: flex;
-  gap: 3px;
-  padding: 6px 10px;
-  border-bottom: 1px solid rgba(223, 182, 93, 0.12);
+  gap: var(--global-spacing-1);
+  padding: var(--global-spacing-2) var(--global-spacing-3);
+  border-bottom: var(--global-border-width) solid var(--global-theme-color-border-subtle);
 }
 
 .quest-detail-panel__tab {
-  min-height: 34px;
-  padding: 0 12px;
-  border: 1px solid transparent;
-  border-radius: 6px;
+  min-height: var(--global-control-height);
+  padding: 0 var(--global-spacing-4);
+  border: var(--global-border-width) solid transparent;
+  border-radius: var(--global-radius-md);
   color: var(--global-theme-color-text-secondary);
   background: transparent;
   cursor: pointer;
@@ -83,11 +90,11 @@
 .quest-detail-panel__tab[aria-selected='true'] {
   border-color: var(--global-theme-color-border);
   color: var(--global-theme-color-data);
-  background: rgba(223, 182, 93, 0.09);
+  background: var(--global-theme-color-surface-interactive);
 }
 
 .quest-detail-panel__body {
   min-height: 0;
   overflow: auto;
-  padding: 11px 12px;
+  padding: var(--global-spacing-4) var(--global-spacing-5);
 }

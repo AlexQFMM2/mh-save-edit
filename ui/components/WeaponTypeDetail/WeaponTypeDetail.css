@@ -1,1 +1,1 @@
-.weapon-type-detail{display:grid;gap:7px}
+.weapon-type-detail{display:grid;gap:var(--global-spacing-2);min-width:0}

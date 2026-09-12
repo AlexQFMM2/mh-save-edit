@@ -7,20 +7,20 @@
   display: grid;
   grid-template-rows: minmax(0, 1fr) auto;
   overflow: hidden;
-  background: rgba(18, 10, 6, .22);
+  background: var(--global-theme-color-surface-deep);
 }
-.armor-detail-panel__craft { min-width: 0; padding: 13px; border-bottom: 1px solid rgba(223, 182, 93, .14); }
-.armor-detail-panel__craft header { display: flex; gap: 10px; }
+.armor-detail-panel__craft { min-width: 0; padding: var(--global-spacing-5); border-bottom: var(--global-border-width) solid var(--global-theme-color-border-subtle); }
+.armor-detail-panel__craft header { display: flex; gap: var(--global-spacing-3); }
 .armor-detail-panel__craft header > div { min-width: 0; }
-.armor-detail-panel__craft h2 { margin: 3px 0; color: var(--global-theme-color-text-primary); font-size: var(--global-typography-font-size-title); line-height: 1.2; }
+.armor-detail-panel__craft h2 { margin: var(--global-spacing-1) 0; color: var(--global-theme-color-text-primary); font-size: var(--global-typography-font-size-title); line-height: var(--global-typography-line-height-tight); }
 .armor-detail-panel__craft p,
-.armor-detail-panel__craft small { display: block; margin: 2px 0; overflow: hidden; color: var(--global-theme-color-text-secondary); font-size: var(--global-typography-font-size-small); text-overflow: ellipsis; white-space: nowrap; }
-.armor-detail-panel__price { display: flex; justify-content: space-between; margin: 13px 0; padding: 9px; border-radius: 6px; color: var(--global-theme-color-text-secondary); background: rgba(223, 182, 93, .06); }
+.armor-detail-panel__craft small { display: block; margin: var(--global-spacing-1) 0; overflow: hidden; color: var(--global-theme-color-text-secondary); font-size: var(--global-typography-font-size-small); text-overflow: ellipsis; white-space: nowrap; }
+.armor-detail-panel__price { display: flex; justify-content: space-between; margin: var(--global-spacing-4) 0; padding: var(--global-spacing-3); border-radius: var(--global-radius-md); color: var(--global-theme-color-text-secondary); background: var(--global-theme-color-surface-inset); }
 .armor-detail-panel__price strong { color: var(--global-theme-color-data); }
 .armor-detail-panel__craft .armor-detail-panel__identity { white-space: normal; }
-.armor-detail-panel__mapping-warning { margin: 10px 13px; padding: 9px; border: 1px solid #a76f3f; border-radius: 7px; color: #edaa74; background: rgba(167, 111, 63, .1); font-size: var(--global-typography-font-size-small); }
+.armor-detail-panel__mapping-warning { margin: var(--global-spacing-4) var(--global-spacing-5); padding: var(--global-spacing-3); border: var(--global-border-width) solid var(--global-theme-color-warning); border-radius: var(--global-radius-md); color: var(--global-theme-color-warning); background: var(--global-theme-color-surface-inset); font-size: var(--global-typography-font-size-small); line-height: var(--global-typography-line-height-normal); }
 .armor-detail-panel__scroll { min-width: 0; min-height: 0; overflow: auto; }
-.armor-detail-panel__actions { min-width: 0; padding: 10px 13px; border-top: 1px solid rgba(223, 182, 93, .14); background: rgba(18, 10, 6, .5); }
-.armor-detail-panel__updating { position: absolute; z-index: 2; top: 8px; right: 8px; padding: 3px 7px; border-radius: 20px; color: #2b1a0e; background: var(--global-theme-color-gold-bright); font-size: var(--global-typography-font-size-caption); font-weight: 700; }
-.armor-detail-panel--state { display: grid; place-items: center; padding: 20px; color: var(--global-theme-color-text-muted); text-align: center; }
+.armor-detail-panel__actions { min-width: 0; }
+.armor-detail-panel__updating { position: absolute; z-index: 2; top: var(--global-spacing-2); right: var(--global-spacing-2); padding: var(--global-spacing-1) var(--global-spacing-2); border-radius: var(--global-radius-pill); color: var(--global-theme-color-text-on-accent); background: var(--global-theme-color-accent); font-size: var(--global-typography-font-size-caption); font-weight: var(--global-typography-font-weight-bold); }
+.armor-detail-panel--state { display: grid; place-items: center; min-height: var(--global-state-min-height-compact); padding: var(--global-state-padding-compact); color: var(--global-state-color); line-height: var(--global-state-line-height); text-align: center; }
 .armor-detail-panel--loading { opacity: .78; }

@@ -9,14 +9,17 @@
 .hunter-art-detail-panel--state {
   display: grid;
   place-items: center;
-  padding: 20px;
-  color: var(--global-theme-color-text-secondary);
+  min-height: var(--global-state-min-height-compact);
+  padding: var(--global-state-padding-compact);
+  color: var(--global-state-color);
+  line-height: var(--global-state-line-height);
+  text-align: center;
 }
 
 .hunter-art-detail-panel__header {
   position: relative;
-  padding: 14px;
-  border-bottom: 1px solid rgba(223, 182, 93, 0.14);
+  padding: var(--global-spacing-5);
+  border-bottom: var(--global-border-width) solid var(--global-theme-color-border-subtle);
 }
 
 .hunter-art-detail-panel__eyebrow {
@@ -25,28 +28,31 @@
 }
 
 .hunter-art-detail-panel__title {
-  margin: 4px 0;
+  margin: var(--global-spacing-1) 0;
+  color: var(--global-theme-color-text-primary);
   font-size: var(--global-typography-font-size-title);
+  font-weight: var(--global-typography-font-weight-semibold);
+  line-height: var(--global-typography-line-height-tight);
 }
 
 .hunter-art-detail-panel__alternate-name,
 .hunter-art-detail-panel__description,
 .hunter-art-detail-panel__source-text,
 .hunter-art-detail-panel__condition-text {
-  margin: 5px 0;
+  margin: var(--global-spacing-2) 0;
   color: var(--global-theme-color-text-secondary);
-  line-height: 1.55;
+  line-height: var(--global-typography-line-height-relaxed);
 }
 
 .hunter-art-detail-panel__alternate-name {
-  margin: 2px 0;
+  margin: var(--global-spacing-1) 0;
   font-size: var(--global-typography-font-size-small);
 }
 
 .hunter-art-detail-panel__updating {
   position: absolute;
-  right: 13px;
-  bottom: 10px;
+  right: var(--global-spacing-4);
+  bottom: var(--global-spacing-3);
   color: var(--global-theme-color-data);
   font-size: var(--global-typography-font-size-caption);
   font-style: normal;
@@ -55,24 +61,14 @@
 .hunter-art-detail-panel__body {
   display: flex;
   flex-direction: column;
-  gap: 11px;
+  gap: var(--global-spacing-4);
   height: calc(100% - 112px);
   overflow: auto;
-  padding: 12px;
+  padding: var(--global-spacing-5);
 }
 
-.hunter-art-detail-panel__section {
-  padding: 11px;
-  border: 1px solid rgba(223, 182, 93, 0.13);
-  border-radius: 7px;
-  background: rgba(18, 10, 6, 0.24);
-}
-
-.hunter-art-detail-panel__section-title {
-  margin: 0 0 8px;
-  color: var(--global-theme-color-gold-bright);
-  font-size: var(--global-typography-font-size-body);
-}
+.hunter-art-detail-panel__section { --detail-section-component-padding: var(--global-spacing-4); }
+.hunter-art-detail-panel__section-title { margin: 0 0 var(--global-spacing-3); color: var(--global-theme-color-accent); font-size: var(--global-typography-font-size-body); }
 
 .hunter-art-detail-panel__translation-summary {
   color: var(--global-theme-color-data);
@@ -81,9 +77,9 @@
 
 .hunter-art-detail-panel__unlock {
   display: grid;
-  gap: 6px;
-  padding: 8px 0;
-  border-bottom: 1px solid rgba(223, 182, 93, 0.1);
+  gap: var(--global-spacing-2);
+  padding: var(--global-spacing-3) 0;
+  border-bottom: var(--global-border-width) solid var(--global-theme-color-border-subtle);
 }
 
 .hunter-art-detail-panel__unlock:last-child {
@@ -93,23 +89,23 @@
 .hunter-art-detail-panel__unlock-heading {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--global-spacing-3);
 }
 
 .hunter-art-detail-panel__source-badge {
-  padding: 2px 6px;
-  border: 1px solid var(--global-theme-color-border);
-  border-radius: 999px;
+  padding: var(--global-spacing-1) var(--global-spacing-2);
+  border: var(--global-border-width) solid var(--global-theme-color-border);
+  border-radius: var(--global-radius-pill);
   color: var(--global-theme-color-data);
   font-size: var(--global-typography-font-size-caption);
 }
 
 .hunter-art-detail-panel__relation-button {
-  padding: 8px 9px;
-  border: 1px solid var(--global-theme-color-border);
-  border-radius: 6px;
+  padding: var(--global-spacing-3);
+  border: var(--global-border-width) solid var(--global-theme-color-border);
+  border-radius: var(--global-radius-md);
   color: var(--global-theme-color-data);
-  background: rgba(223, 182, 93, 0.06);
+  background: var(--global-theme-color-surface-inset);
   text-align: left;
   cursor: pointer;
 }
@@ -117,17 +113,17 @@
 .hunter-art-detail-panel__condition-group,
 .hunter-art-detail-panel__quests {
   display: grid;
-  gap: 5px;
+  gap: var(--global-spacing-2);
 }
 
 .hunter-art-detail-panel__quests {
-  gap: 6px;
+  gap: var(--global-spacing-2);
 }
 
 .hunter-art-detail-panel__quests .hunter-art-detail-panel__relation-button {
   display: flex;
   justify-content: space-between;
-  gap: 10px;
+  gap: var(--global-spacing-3);
 }
 
 .hunter-art-detail-panel__relation-meta {

@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import { CatalogIcon } from '../CatalogIcon/CatalogIcon'
 import { ItemRelationSection } from '../ItemRelationSection/ItemRelationSection'
 import { CatalogWriteControl } from '../CatalogWriteControl/CatalogWriteControl'
+import { DetailActionBar } from '../DetailActionBar/DetailActionBar'
 import './ItemDetailPanel.css'
 
 type ItemDetailPanelProps = { item: ItemDetail | null; loading: boolean; error?: string; allowCatalogWrite?: boolean; onSelectItem?: (saveId: number) => void; onSelectDecoration?: (saveId: number) => void; onSelectWeapon?: (weapon: WeaponRelationTarget) => void; onSelectArmor?: (armor: ArmorRelationTarget) => void; onSelectMonster?: (monster: MonsterRelationTarget) => void; onSelectQuest?: (quest: QuestRelationTarget) => void; onSelectPalicoEquipment?: (equipment: PalicoEquipmentRelationTarget) => void }
@@ -24,6 +25,6 @@ export function ItemDetailPanel({ item, loading, error, allowCatalogWrite = true
       <dl className="item-detail-panel__stats"><div><dt>稀有度</dt><dd>{item.rarity ?? '—'}</dd></div><div><dt>持有上限</dt><dd>{item.maxStack ?? '—'}</dd></div><div><dt>买入</dt><dd>{item.buyPrice == null ? '—' : `${item.buyPrice} z`}</dd></div><div><dt>卖出</dt><dd>{item.sellPrice == null ? '—' : `${item.sellPrice} z`}</dd></div></dl>
       <div className="item-detail-panel__relations">{sections.map(([kind,title]) => <ItemRelationSection key={`${item.saveId}-${kind}`} title={title} relations={grouped.get(kind) ?? []} onSelectItem={selectRelatedItem} onSelectDecoration={onSelectDecoration} onSelectWeapon={onSelectWeapon} onSelectArmor={onSelectArmor} onSelectMonster={onSelectMonster} onSelectQuest={onSelectQuest} onSelectPalicoEquipment={onSelectPalicoEquipment} />)}</div>
     </div>
-    {allowCatalogWrite && <div className="item-detail-panel__actions"><CatalogWriteControl gameId={item.gameId} kind="item" saveId={item.saveId} maxCount={item.maxStack} /></div>}
+    {allowCatalogWrite && <DetailActionBar className="item-detail-panel__actions"><CatalogWriteControl gameId={item.gameId} kind="item" saveId={item.saveId} maxCount={item.maxStack} /></DetailActionBar>}
   </aside>
 }

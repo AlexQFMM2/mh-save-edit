@@ -2,4 +2,10 @@
   height: 100%;
   min-height: 0;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--global-spacing-6);
+}
+
+@media (max-width: 650px) {
+  .game-overview-page { padding: var(--global-spacing-4); }
 }

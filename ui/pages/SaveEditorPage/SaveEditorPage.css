@@ -1,7 +1,7 @@
 .save-editor-page {
   display: grid;
   grid-template-rows: auto auto minmax(0, 1fr);
-  gap: 8px;
+  gap: var(--global-spacing-3);
   height: 100%;
   min-height: 0;
   overflow: hidden;
@@ -13,18 +13,18 @@
 
 .save-editor-page__tabs {
   display: flex;
-  gap: 4px;
+  gap: var(--global-spacing-2);
   min-height: 43px;
   border: 1px solid var(--global-theme-color-border);
-  border-radius: 8px;
-  background: rgba(30, 18, 12, .55);
+  border-radius: var(--global-radius-lg);
+  background: var(--global-theme-color-surface);
 }
 
 .save-editor-page__tabs button {
   display: flex;
   align-items: center;
-  gap: 7px;
-  padding: 0 16px;
+  gap: var(--global-spacing-2);
+  padding: 0 var(--global-spacing-5);
   border: 0;
   border-bottom: 2px solid transparent;
   color: var(--global-theme-color-text-secondary);
@@ -33,9 +33,9 @@
 }
 
 .save-editor-page__tabs button[aria-selected=true] {
-  border-color: var(--global-theme-color-gold);
-  color: var(--global-theme-color-gold-bright);
-  background: rgba(223, 182, 93, .07);
+  border-color: var(--global-theme-color-border-strong);
+  color: var(--global-theme-color-accent);
+  background: var(--global-theme-color-surface-interactive);
 }
 
 .save-editor-page__tabs svg {
@@ -44,22 +44,22 @@
 
 .save-editor-page__subtabs {
   display: flex;
-  gap: 5px;
+  gap: var(--global-spacing-2);
 }
 
 .save-editor-page__subtabs button {
-  min-height: 34px;
-  padding: 0 12px;
-  border: 1px solid var(--global-theme-color-border);
-  border-radius: 7px;
+  min-height: var(--global-control-height-compact);
+  padding: 0 var(--global-spacing-4);
+  border: var(--global-border-width) solid var(--global-theme-color-border);
+  border-radius: var(--global-radius-md);
   color: var(--global-theme-color-text-secondary);
   background: var(--global-theme-color-surface-deep);
   cursor: pointer;
 }
 
 .save-editor-page__subtabs button.is-active {
-  border-color: var(--global-theme-color-gold);
-  color: var(--global-theme-color-gold-bright);
+  border-color: var(--global-theme-color-border-strong);
+  color: var(--global-theme-color-accent);
 }
 
 .save-editor-page__section {
@@ -84,21 +84,24 @@
 .save-editor-page__mismatch {
   display: grid;
   place-items: center;
+  min-height: var(--global-state-min-height-compact);
+  padding: var(--global-state-padding-compact);
+  line-height: var(--global-state-line-height);
   height: 100%;
-  color: var(--global-theme-color-text-secondary);
+  color: var(--global-state-color);
 }
 
 .save-editor-page__error {
   position: absolute;
   z-index: 4;
   inset: 0;
-  color: var(--global-theme-color-danger);
-  background: rgba(42, 27, 19, .9);
+  color: var(--global-state-error-color);
+  background: var(--global-theme-color-surface);
 }
 
 .save-editor-page__mismatch {
   align-content: center;
-  gap: 12px;
+  gap: var(--global-spacing-4);
   text-align: center;
 }
 
@@ -108,13 +111,13 @@
 }
 
 .save-editor-page__mismatch button {
-  min-height: 42px;
-  padding: 0 16px;
-  border: 1px solid var(--global-theme-color-gold);
-  border-radius: 8px;
-  color: #28180f;
-  background: var(--global-theme-color-gold);
-  font-weight: 800;
+  min-height: var(--global-control-height-tall);
+  padding: 0 var(--global-spacing-5);
+  border: var(--global-border-width) solid var(--global-theme-color-border-strong);
+  border-radius: var(--global-radius-md);
+  color: var(--global-theme-color-text-on-accent);
+  background: var(--global-theme-color-accent);
+  font-weight: var(--global-typography-font-weight-bold);
   cursor: pointer;
 }
 

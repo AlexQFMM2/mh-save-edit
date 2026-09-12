@@ -2,29 +2,30 @@
   display: grid;
   grid-template-columns: 48px minmax(160px, 1fr) minmax(150px, .9fr) 94px 52px repeat(7, 42px) 52px 146px;
   align-items: center;
-  gap: 6px;
+  gap: var(--global-spacing-2);
   min-height: 50px;
-  padding: 5px 8px;
-  border-bottom: 1px solid rgba(223, 182, 93, .12);
+  padding: var(--global-spacing-2) var(--global-spacing-3);
+  border-bottom: var(--global-border-width) solid var(--global-theme-color-border-row);
   color: var(--global-theme-color-text-secondary);
   font-size: var(--global-typography-font-size-small);
 }
 
-.loadout-equipment-row__slot { display: grid; place-items: center; color: var(--global-theme-color-data); font-weight: 700; }
+.loadout-equipment-row__slot { display: grid; place-items: center; color: var(--global-theme-color-data); font-weight: var(--global-typography-font-weight-bold); }
 .loadout-equipment-row__slot-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-.loadout-equipment-row__name { display: grid; gap: 2px; min-width: 0; overflow: hidden; border: 0; color: var(--global-theme-color-text-primary); background: transparent; font: inherit; font-size: var(--global-typography-font-size-body); text-align: left; cursor: pointer; }
+.loadout-equipment-row__name { display: grid; gap: var(--global-spacing-1); min-width: 0; overflow: hidden; border: 0; color: var(--global-theme-color-text-primary); background: transparent; font: inherit; font-size: var(--global-typography-font-size-body); line-height: var(--global-typography-line-height-normal); text-align: left; cursor: pointer; }
 .loadout-equipment-row__name:hover { color: var(--global-theme-color-data); }
 .loadout-equipment-row__name-text, .loadout-equipment-row__decorations { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .loadout-equipment-row__decorations { color: var(--global-theme-color-data); }
 .loadout-equipment-row__lock-text { color: var(--global-theme-color-text-muted); font-size: var(--global-typography-font-size-caption); }
-.loadout-equipment-row__slots { display: flex; align-items: center; gap: 5px; color: var(--global-theme-color-data); }
+.loadout-equipment-row__slots { display: flex; align-items: center; gap: var(--global-spacing-1); color: var(--global-theme-color-data); }
 .loadout-equipment-row__slot-usage { font-size: var(--global-typography-font-size-caption); }
 .loadout-equipment-row__data { color: var(--global-theme-color-data); font-variant-numeric: tabular-nums; }
-.loadout-equipment-row__state { font-size: var(--global-typography-font-size-caption); font-weight: 700; }
-.loadout-equipment-row__state--confirmed { color: #a8d18d; }
-.loadout-equipment-row__state--invalid { color: #f0b46e; }
-.loadout-equipment-row__actions { display: flex; justify-content: flex-end; gap: 3px; }
-.loadout-equipment-row__action { display: grid; place-items: center; width: 31px; height: 31px; border: 1px solid var(--global-theme-color-border); border-radius: 6px; color: var(--global-theme-color-text-secondary); background: transparent; cursor: pointer; }
+.loadout-equipment-row__state { font-size: var(--global-typography-font-size-caption); font-weight: var(--global-typography-font-weight-bold); }
+.loadout-equipment-row__state--confirmed { color: var(--global-theme-color-success); }
+.loadout-equipment-row__state--invalid { color: var(--global-theme-color-warning); }
+.loadout-equipment-row__actions { display: flex; justify-content: flex-end; gap: var(--global-spacing-1); }
+.loadout-equipment-row__action { display: grid; place-items: center; width: var(--global-control-height-compact); height: var(--global-control-height-compact); border: var(--global-border-width) solid var(--global-theme-color-border); border-radius: var(--global-radius-md); color: var(--global-theme-color-text-secondary); background: transparent; cursor: pointer; }
 .loadout-equipment-row__action:hover:not(:disabled) { color: var(--global-theme-color-data); border-color: var(--global-theme-color-gold); }
 .loadout-equipment-row__action:disabled { opacity: .35; cursor: not-allowed; }
+.loadout-equipment-row__action:focus-visible { outline: 2px solid var(--global-theme-color-focus-ring); outline-offset: 2px; }
 .loadout-equipment-row__action-icon { width: 15px; height: 15px; }

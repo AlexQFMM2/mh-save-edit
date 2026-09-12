@@ -9,8 +9,9 @@
   display: grid;
   min-height: 100%;
   place-items: center;
-  padding: 20px;
-  color: var(--global-theme-color-text-secondary);
+  padding: var(--global-state-padding);
+  color: var(--global-state-color);
+  line-height: var(--global-state-line-height);
 }
 
 .quest-list__scroller {
@@ -26,8 +27,8 @@
 
 .quest-list__heading,
 .quest-list__cell {
-  padding: 7px 9px;
-  border-bottom: 1px solid rgba(223, 182, 93, 0.1);
+  padding: var(--global-spacing-2) var(--global-spacing-3);
+  border-bottom: var(--global-border-width) solid var(--global-theme-color-border-row);
   font-size: var(--global-typography-font-size-small);
   text-align: left;
   white-space: nowrap;
@@ -38,7 +39,7 @@
   top: 0;
   z-index: 1;
   color: var(--global-theme-color-gold-bright);
-  background: #332117;
+  background: var(--global-theme-color-surface-table-header);
 }
 
 .quest-list__cell--data {
@@ -51,33 +52,29 @@
   text-overflow: ellipsis;
 }
 
-.quest-list__row--selected {
-  background: rgba(223, 182, 93, 0.11);
-}
+.quest-list__row--selected { background: var(--global-theme-color-surface-row-selected); box-shadow: inset 3px 0 var(--global-theme-color-gold-bright); }
 
 .quest-list__row {
   cursor: pointer;
 }
 
 .quest-list__row:hover,
-.quest-list__row:focus-within {
-  background: rgba(223, 182, 93, 0.07);
-}
+.quest-list__row:focus-within { background: var(--global-theme-color-surface-row-hover); }
 
 .quest-list__row--selected:hover,
 .quest-list__row--selected:focus-within {
-  background: rgba(223, 182, 93, 0.14);
+  background: var(--global-theme-color-surface-row-selected);
 }
 
 .quest-list__row:active {
-  background: rgba(223, 182, 93, 0.17);
+  background: var(--global-theme-color-surface-row-active);
 }
 
 .quest-list__select {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 2px;
+  gap: var(--global-spacing-1);
   width: 100%;
   min-width: 190px;
   padding: 0;
@@ -104,16 +101,16 @@
 
 .quest-list__badge {
   display: inline-flex;
-  padding: 3px 7px;
-  border: 1px solid var(--global-theme-color-border);
-  border-radius: 999px;
+  padding: var(--global-spacing-1) var(--global-spacing-2);
+  border: var(--global-border-width) solid var(--global-theme-color-border);
+  border-radius: var(--global-radius-pill);
   color: var(--global-theme-color-data);
-  background: rgba(223, 182, 93, 0.08);
+  background: var(--global-theme-color-surface-interactive);
   font-size: var(--global-typography-font-size-caption);
 }
 
 .quest-list__badge--urgent {
-  border-color: rgba(224, 109, 63, 0.5);
-  color: #ffe0b5;
-  background: rgba(150, 57, 28, 0.25);
+  border-color: var(--global-theme-color-danger);
+  color: var(--global-theme-color-warning);
+  background: var(--global-theme-color-surface-interactive);
 }

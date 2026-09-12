@@ -1,1 +1,1 @@
-.equipment-picker-drawer__apply { color: #24150e; background: var(--global-theme-color-gold-bright); }
+.equipment-picker-drawer__apply { color: var(--global-theme-color-text-on-accent); background: var(--global-theme-color-accent); }

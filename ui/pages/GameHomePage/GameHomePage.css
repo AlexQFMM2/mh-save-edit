@@ -2,4 +2,5 @@
   height: 100vh;
   min-height: 0;
   overflow: hidden;
+  background: var(--global-theme-color-surface-page);
 }

@@ -3,22 +3,25 @@
   grid-template-rows: auto minmax(0, 1fr);
   height: 100%;
   min-height: 0;
-  padding: 12px;
+  padding: var(--global-spacing-5);
 }
 
 .palico-equipment-detail-panel--state {
   display: grid;
   place-items: center;
-  color: var(--global-theme-color-text-muted);
+  min-height: var(--global-state-min-height-compact);
+  padding: var(--global-state-padding-compact);
+  color: var(--global-state-color);
+  line-height: var(--global-state-line-height);
   text-align: center;
 }
 
 .palico-equipment-detail-panel__header {
   display: flex;
   align-items: start;
-  gap: 10px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid rgba(223, 182, 93, .15);
+  gap: var(--global-spacing-4);
+  padding-bottom: var(--global-spacing-4);
+  border-bottom: var(--global-border-width) solid var(--global-theme-color-border-subtle);
 }
 
 .palico-equipment-detail-panel__identity {
@@ -26,8 +29,11 @@
 }
 
 .palico-equipment-detail-panel__title {
-  margin: 2px 0;
+  margin: var(--global-spacing-1) 0;
+  color: var(--global-theme-color-accent);
   font-size: var(--global-typography-font-size-title);
+  font-weight: var(--global-typography-font-weight-semibold);
+  line-height: var(--global-typography-line-height-tight);
 }
 
 .palico-equipment-detail-panel__name,
@@ -42,7 +48,7 @@
 
 .palico-equipment-detail-panel__scroll {
   min-height: 0;
-  padding-top: 10px;
+  padding-top: var(--global-spacing-4);
   overflow: auto;
   overscroll-behavior: contain;
 }
@@ -50,14 +56,15 @@
 .palico-equipment-detail-panel__stats {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 6px;
-  margin: 0 0 14px;
+  gap: var(--global-spacing-2);
+  margin: 0 0 var(--global-spacing-4);
 }
 
 .palico-equipment-detail-panel__stat {
-  padding: 7px;
-  border: 1px solid rgba(223, 182, 93, .13);
-  border-radius: 6px;
+  padding: var(--global-spacing-3);
+  border: var(--global-border-width) solid var(--global-theme-color-border-subtle);
+  border-radius: var(--global-radius-md);
+  background: var(--global-theme-color-surface-inset);
 }
 
 .palico-equipment-detail-panel__stat-label {
@@ -66,24 +73,17 @@
 }
 
 .palico-equipment-detail-panel__stat-value {
-  margin: 2px 0 0;
+  margin: var(--global-spacing-1) 0 0;
   color: var(--global-theme-color-data);
   font-size: var(--global-typography-font-size-small);
 }
 
-.palico-equipment-detail-panel__section {
-  margin-bottom: 14px;
-}
-
-.palico-equipment-detail-panel__section-title {
-  margin: 0 0 7px;
-  color: var(--global-theme-color-gold-bright);
-  font-size: var(--global-typography-font-size-body);
-}
+.palico-equipment-detail-panel__section { --detail-section-component-padding: var(--global-spacing-4); }
+.palico-equipment-detail-panel__section-title { margin: 0 0 var(--global-spacing-3); color: var(--global-theme-color-accent); font-size: var(--global-typography-font-size-body); }
 
 .palico-equipment-detail-panel__paragraph {
   margin: 0;
-  line-height: 1.55;
+  line-height: var(--global-typography-line-height-relaxed);
 }
 
 .palico-equipment-detail-panel__secondary {
@@ -92,26 +92,26 @@
 
 .palico-equipment-detail-panel__materials {
   display: grid;
-  gap: 5px;
+  gap: var(--global-spacing-2);
 }
 
 .palico-equipment-detail-panel__material {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  padding: 7px 9px;
-  border: 1px solid rgba(223, 182, 93, .14);
-  border-radius: 6px;
+  gap: var(--global-spacing-3);
+  padding: var(--global-spacing-3);
+  border: var(--global-border-width) solid var(--global-theme-color-border-subtle);
+  border-radius: var(--global-radius-md);
   color: var(--global-theme-color-text-primary);
-  background: rgba(223, 182, 93, .05);
+  background: var(--global-theme-color-surface-inset);
   font: inherit;
   text-align: left;
   cursor: pointer;
 }
 
 .palico-equipment-detail-panel__material:hover {
-  background: rgba(223, 182, 93, .13);
+  background: var(--global-theme-color-surface-interactive);
 }
 
 .palico-equipment-detail-panel__material-name {

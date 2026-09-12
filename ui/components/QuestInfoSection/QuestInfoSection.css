@@ -1,22 +1,21 @@
 .quest-info-section {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--global-spacing-4);
 }
 
 .quest-info-section__stats {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 6px;
+  gap: var(--global-spacing-2);
   margin: 0;
 }
 
-.quest-info-section__stat,
-.quest-info-section__group {
-  padding: 8px;
-  border: 1px solid rgba(223, 182, 93, 0.12);
-  border-radius: 6px;
-  background: rgba(16, 8, 5, 0.2);
+.quest-info-section__stat {
+  padding: var(--global-spacing-3);
+  border: var(--global-border-width) solid var(--global-theme-color-border-subtle);
+  border-radius: var(--global-radius-md);
+  background: var(--global-theme-color-surface-inset);
 }
 
 .quest-info-section__stat-label {
@@ -25,35 +24,35 @@
 }
 
 .quest-info-section__stat-value {
-  margin: 2px 0 0;
+  margin: var(--global-spacing-1) 0 0;
   color: var(--global-theme-color-data);
 }
 
 .quest-info-section__heading {
-  margin: 0 0 5px;
+  margin: 0 0 var(--global-spacing-2);
   font-size: var(--global-typography-font-size-body);
 }
 
 .quest-info-section__text {
-  margin: 3px 0;
+  margin: var(--global-spacing-1) 0;
   color: var(--global-theme-color-text-secondary);
 }
 
 .quest-info-section__monsters {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 6px;
+  gap: var(--global-spacing-2);
 }
 
 .quest-info-section__monster {
   display: flex;
   align-items: center;
-  gap: 7px;
+  gap: var(--global-spacing-2);
   min-height: 44px;
-  padding: 5px 7px;
-  border: 1px solid rgba(223, 182, 93, 0.14);
-  border-radius: 6px;
+  padding: var(--global-spacing-2) var(--global-spacing-3);
+  border: var(--global-border-width) solid var(--global-theme-color-border-subtle);
+  border-radius: var(--global-radius-md);
   color: var(--global-theme-color-data);
-  background: rgba(223, 182, 93, 0.04);
+  background: var(--global-theme-color-surface-inset);
   cursor: pointer;
 }

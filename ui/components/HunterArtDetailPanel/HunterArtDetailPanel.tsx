@@ -1,4 +1,5 @@
 import type { HunterArtDetail, HunterArtUnlockCondition } from '../../../api/catalog/types'
+import { DetailSection } from '../DetailSection/DetailSection'
 import './HunterArtDetailPanel.css'
 
 type Props = {
@@ -35,8 +36,7 @@ export function HunterArtDetailPanel({ art, loading, error, onSelectQuest, onSel
         {loading && <em className="hunter-art-detail-panel__updating">正在更新…</em>}
       </header>
       <div className="hunter-art-detail-panel__body">
-        <section className="hunter-art-detail-panel__section">
-          <h3 className="hunter-art-detail-panel__section-title">狩技说明</h3>
+        <DetailSection title="狩技说明" className="hunter-art-detail-panel__section">
           <p className="hunter-art-detail-panel__description">{art.longDescriptionCn || art.shortDescriptionCn}</p>
           {art.longDescriptionEn && (
             <details className="hunter-art-detail-panel__translation">
@@ -44,9 +44,8 @@ export function HunterArtDetailPanel({ art, loading, error, onSelectQuest, onSel
               <p className="hunter-art-detail-panel__description">{art.longDescriptionEn}</p>
             </details>
           )}
-        </section>
-        <section className="hunter-art-detail-panel__section">
-          <h3 className="hunter-art-detail-panel__section-title">解锁条件</h3>
+        </DetailSection>
+        <DetailSection title="解锁条件" className="hunter-art-detail-panel__section">
           {art.unlocks.map(unlock => (
             <div className="hunter-art-detail-panel__unlock" key={unlock.id}>
               <div className="hunter-art-detail-panel__unlock-heading">
@@ -57,10 +56,9 @@ export function HunterArtDetailPanel({ art, loading, error, onSelectQuest, onSel
               {unlock.condition.kind !== 'sourceText' && unlock.kind !== 'initial' && <p className="hunter-art-detail-panel__source-text">来源原文：{unlock.sourceText}</p>}
             </div>
           ))}
-        </section>
+        </DetailSection>
         {art.quests.length > 0 && (
-          <section className="hunter-art-detail-panel__section">
-            <h3 className="hunter-art-detail-panel__section-title">关联任务</h3>
+          <DetailSection title="关联任务" className="hunter-art-detail-panel__section">
             <div className="hunter-art-detail-panel__quests">
               {art.quests.map(quest => (
                 <button className="hunter-art-detail-panel__relation-button" type="button" key={quest.questKey} onClick={() => onSelectQuest(quest.questKey)}>
@@ -69,7 +67,7 @@ export function HunterArtDetailPanel({ art, loading, error, onSelectQuest, onSel
                 </button>
               ))}
             </div>
-          </section>
+          </DetailSection>
         )}
       </div>
     </section>

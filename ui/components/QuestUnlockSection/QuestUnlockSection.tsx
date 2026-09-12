@@ -1,4 +1,5 @@
 import type { QuestDetail } from '../../../api/catalog/types'
+import { DetailSection } from '../DetailSection/DetailSection'
 import './QuestUnlockSection.css'
 
 export function QuestUnlockSection({ quest, onSelectQuest, onSelectHunterArt }: { quest: QuestDetail; onSelectQuest: (key: string) => void; onSelectHunterArt: (id: number) => void }) {
@@ -11,12 +12,11 @@ export function QuestUnlockSection({ quest, onSelectQuest, onSelectHunterArt }: 
       {prerequisites.length > 0 && <RelationGroup title="前置任务" rows={prerequisites} onSelect={onSelectQuest} />}
       {unlocks.length > 0 && <RelationGroup title="解锁任务" rows={unlocks} onSelect={onSelectQuest} />}
       {arts.length > 0 && (
-        <section className="quest-unlock-section__group">
-          <h3 className="quest-unlock-section__heading">解锁狩技</h3>
+        <DetailSection title="解锁狩技" className="quest-unlock-section__group">
           <div className="quest-unlock-section__items">
             {arts.map(value => <button className="quest-unlock-section__item" key={value.id} type="button" onClick={() => onSelectHunterArt(value.hunterArt!.hunterArtId)}><span>{value.hunterArt!.nameCn}</span>{value.evidenceStatus === 'wiki_only' && <small className="quest-unlock-section__source">Wiki 资料</small>}</button>)}
           </div>
-        </section>
+        </DetailSection>
       )}
     </div>
   )
@@ -24,11 +24,10 @@ export function QuestUnlockSection({ quest, onSelectQuest, onSelectHunterArt }: 
 
 function RelationGroup({ title, rows, onSelect }: { title: string; rows: QuestDetail['relations']; onSelect: (key: string) => void }) {
   return (
-    <section className="quest-unlock-section__group">
-      <h3 className="quest-unlock-section__heading">{title}</h3>
+    <DetailSection title={title} className="quest-unlock-section__group">
       <div className="quest-unlock-section__items">
         {rows.map(value => <button className="quest-unlock-section__item" key={value.id} type="button" onClick={() => onSelect(value.quest.questKey)}><span>{value.quest.nameCn}</span><small className="quest-unlock-section__source">{value.operator === 'any' ? '满足任一条件' : '需满足条件'} · {value.evidenceStatus === 'wiki_only' ? 'Wiki 资料' : '已验证'}</small></button>)}
       </div>
-    </section>
+    </DetailSection>
   )
 }

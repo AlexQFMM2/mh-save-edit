@@ -3,6 +3,7 @@
   min-height: 0;
   overflow: auto;
   overscroll-behavior: contain;
+  background: var(--global-theme-color-surface-inset);
 }
 
 .palico-equipment-browser__state {
@@ -21,9 +22,10 @@
 .palico-equipment-browser__row {
   display: grid;
   align-items: center;
-  gap: 8px;
+  gap: var(--global-spacing-2);
   min-height: 43px;
-  padding: 5px 8px;
+  padding: var(--global-spacing-2) var(--global-spacing-3);
+  line-height: var(--global-typography-line-height-normal);
 }
 
 .palico-equipment-browser__table--weapon .palico-equipment-browser__header,
@@ -41,14 +43,14 @@
   z-index: 2;
   top: 0;
   color: var(--global-theme-color-text-muted);
-  background: var(--global-theme-color-surface-deep);
+  background: var(--global-theme-color-surface-table-header);
   font-size: var(--global-typography-font-size-caption);
 }
 
 .palico-equipment-browser__row {
   width: 100%;
   border: 0;
-  border-bottom: 1px solid rgba(223, 182, 93, .09);
+  border-bottom: var(--global-border-width) solid var(--global-theme-color-border-row);
   color: var(--global-theme-color-text-secondary);
   background: transparent;
   font: inherit;
@@ -59,11 +61,19 @@
 
 .palico-equipment-browser__row:hover,
 .palico-equipment-browser__row--selected {
-  background: rgba(223, 182, 93, .1);
+  background: var(--global-theme-color-surface-row-hover);
 }
 
 .palico-equipment-browser__row--selected {
+  background: var(--global-theme-color-surface-row-selected);
   box-shadow: inset 3px 0 var(--global-theme-color-gold-bright);
+}
+
+.palico-equipment-browser__row:focus-visible {
+  position: relative;
+  z-index: 1;
+  outline: 2px solid var(--global-theme-color-focus-ring);
+  outline-offset: -2px;
 }
 
 .palico-equipment-browser__icon-cell {

@@ -28,21 +28,21 @@
   height: calc(100vh - var(--game-shell-page-header-height));
   min-height: 0;
   overflow: hidden;
-  transition: grid-template-columns 240ms ease;
+  transition: grid-template-columns var(--global-motion-normal) ease;
 }
 
 .game-shell__skip-link {
   position: fixed;
   z-index: 10;
-  top: 10px;
-  left: 10px;
-  padding: 9px 12px;
-  border: 1px solid var(--global-theme-color-gold);
-  border-radius: 7px;
+  top: var(--global-spacing-3);
+  left: var(--global-spacing-3);
+  padding: var(--global-spacing-2) var(--global-spacing-4);
+  border: var(--global-border-width) solid var(--global-theme-color-border-strong);
+  border-radius: var(--global-radius-md);
   color: var(--global-theme-color-text-primary);
   background: var(--global-theme-color-surface-deep);
   font-size: var(--global-typography-font-size-small);
-  font-weight: 700;
+  font-weight: var(--global-typography-font-weight-bold);
   text-decoration: none;
   transform: translateY(-160%);
 }

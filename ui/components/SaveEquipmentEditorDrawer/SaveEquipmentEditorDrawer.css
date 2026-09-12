@@ -8,13 +8,13 @@
 
 .save-equipment-editor > nav {
   display: flex;
-  gap: 4px;
+  gap: var(--global-spacing-1);
   border-bottom: 1px solid var(--global-theme-color-border);
 }
 
 .save-equipment-editor > nav button {
-  min-height: 40px;
-  padding: 0 13px;
+  min-height: var(--global-control-height-tall);
+  padding: 0 var(--global-spacing-4);
   border: 0;
   border-bottom: 2px solid transparent;
   color: var(--global-theme-color-text-secondary);
@@ -37,26 +37,26 @@
 .save-equipment-editor__toolbar {
   display: grid;
   grid-template-columns: minmax(150px, 220px) minmax(150px, 220px) minmax(220px, 1fr);
-  gap: 8px;
-  padding: 10px 0;
+  gap: var(--global-spacing-3);
+  padding: var(--global-spacing-3) 0;
 }
 
 .save-equipment-editor__toolbar > label {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
-  gap: 7px;
+  gap: var(--global-spacing-2);
   min-width: 0;
-  padding: 0 9px;
+  padding: 0 var(--global-spacing-3);
   border: 1px solid var(--global-theme-color-border);
-  border-radius: 7px;
+  border-radius: var(--global-radius-md);
   background: var(--global-theme-color-surface-deep);
 }
 
 .save-equipment-editor__toolbar input {
   width: 100%;
   min-width: 0;
-  height: 38px;
+  height: var(--global-control-height);
   border: 0;
   outline: 0;
   color: var(--global-theme-color-text-primary);
@@ -75,7 +75,7 @@
 .save-equipment-editor__candidate-layout.has-relic-editor {
   display: grid;
   grid-template-columns: minmax(240px, 38fr) minmax(0, 62fr);
-  gap: 10px;
+  gap: var(--global-spacing-3);
 }
 
 .save-equipment-editor__results,
@@ -90,11 +90,11 @@
 .save-equipment-editor__results > button {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
-  gap: 10px;
+  gap: var(--global-spacing-3);
   width: 100%;
-  padding: 9px;
+  padding: var(--global-spacing-3);
   border: 1px solid transparent;
-  border-radius: 7px;
+  border-radius: var(--global-radius-md);
   color: var(--global-theme-color-text-primary);
   text-align: left;
   background: transparent;
@@ -103,7 +103,7 @@
 
 .save-equipment-editor__results > button[aria-selected='true'] {
   border-color: var(--global-theme-color-gold);
-  background: rgba(223, 182, 93, 0.08);
+  background: var(--global-theme-color-surface-row-selected);
 }
 
 .save-equipment-editor__results > button > svg {
@@ -113,7 +113,7 @@
 .save-equipment-editor__results > button > span {
   display: grid;
   min-width: 0;
-  gap: 2px;
+  gap: var(--global-spacing-1);
 }
 
 .save-equipment-editor__results small {
@@ -127,16 +127,16 @@
 }
 
 .save-equipment-editor__relic {
-  padding: 10px;
+  padding: var(--global-spacing-3);
   border: 1px solid var(--global-theme-color-border);
-  border-radius: 8px;
-  background: rgba(30, 18, 12, 0.45);
+  border-radius: var(--global-radius-md);
+  background: var(--global-theme-color-surface-inset);
   overflow-x: hidden;
 }
 
 .save-equipment-editor__relic > h3,
 .save-equipment-editor__relic > p {
-  margin: 0 0 8px;
+  margin: 0 0 var(--global-spacing-3);
 }
 
 .save-equipment-editor__relic > p {
@@ -145,20 +145,20 @@
 }
 
 .save-equipment-editor__advanced {
-  padding: 12px 2px;
+  padding: var(--global-spacing-4) 0;
 }
 
 .save-equipment-editor__advanced > p {
-  padding: 10px;
+  padding: var(--global-spacing-3);
   border-left: 3px solid var(--global-theme-color-gold);
   color: var(--global-theme-color-text-secondary);
-  background: rgba(223, 182, 93, 0.06);
+  background: var(--global-theme-color-surface-interactive);
 }
 
 .save-equipment-editor__advanced > div {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
+  gap: var(--global-spacing-3);
 }
 
 .save-equipment-editor__advanced > .save-equipment-editor__advanced-content.is-charm { grid-template-columns: minmax(0, 1fr); }
@@ -172,7 +172,7 @@
 .save-equipment-editor__charm {
   display: grid;
   grid-template-columns: minmax(280px, 1fr) minmax(300px, 1fr);
-  gap: 12px;
+  gap: var(--global-spacing-4);
   min-width: 0;
   min-height: 0;
 }
@@ -187,23 +187,23 @@
 .save-equipment-editor__decoration-section {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
-  gap: 8px;
-  padding: 10px;
+  gap: var(--global-spacing-3);
+  padding: var(--global-spacing-3);
   border: 1px solid var(--global-theme-color-border);
-  border-radius: 8px;
+  border-radius: var(--global-radius-md);
 }
 
 .save-equipment-editor__decoration-section > h3 { margin: 0; color: var(--global-theme-color-data); font-size: var(--global-typography-font-size-body); }
 
 .save-equipment-editor__existing-relic > h3,
 .save-equipment-editor__existing-relic > p {
-  margin: 0 0 8px;
+  margin: 0 0 var(--global-spacing-3);
 }
 
 .save-equipment-editor__advanced label {
   display: grid;
   min-width: 0;
-  gap: 5px;
+  gap: var(--global-spacing-1);
   color: var(--global-theme-color-text-secondary);
   font-size: var(--global-typography-font-size-small);
 }
@@ -211,21 +211,21 @@
 .save-equipment-editor__advanced input {
   width: 100%;
   min-width: 0;
-  height: 38px;
-  padding: 0 9px;
+  height: var(--global-control-height);
+  padding: 0 var(--global-spacing-3);
   border: 1px solid var(--global-theme-color-border);
-  border-radius: 7px;
+  border-radius: var(--global-radius-md);
   color: var(--global-theme-color-text-primary);
   background: var(--global-theme-color-surface-deep);
 }
-.save-equipment-editor__appearance { grid-column: 1 / -1; min-width: 0; padding: 10px; border: 1px solid var(--global-theme-color-border); border-radius: 8px; }
-.save-equipment-editor__appearance h3, .save-equipment-editor__appearance p { margin: 0 0 6px; }
+.save-equipment-editor__appearance { grid-column: 1 / -1; min-width: 0; padding: var(--global-spacing-3); border: var(--global-border-width) solid var(--global-theme-color-border); border-radius: var(--global-radius-md); }
+.save-equipment-editor__appearance h3, .save-equipment-editor__appearance p { margin: 0 0 var(--global-spacing-2); }
 .save-equipment-editor__appearance h3 { color: var(--global-theme-color-data); font-size: var(--global-typography-font-size-body); }
 .save-equipment-editor__appearance p { color: var(--global-theme-color-text-muted); font-size: var(--global-typography-font-size-small); }
-.save-equipment-editor__appearance-search { box-sizing: border-box; width: 100%; min-width: 0; height: 34px; margin: 3px 0 7px; padding: 0 8px; border: 1px solid var(--global-theme-color-border); border-radius: 6px; color: var(--global-theme-color-text-primary); background: var(--global-theme-color-surface-deep); }
-.save-equipment-editor__appearance-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 6px; max-height: 190px; overflow: auto; }
-.save-equipment-editor__appearance-grid button { display: flex; align-items: center; gap: 6px; min-width: 0; min-height: 42px; padding: 5px 7px; border: 1px solid var(--global-theme-color-border); border-radius: 6px; color: var(--global-theme-color-text-secondary); background: transparent; text-align: left; cursor: pointer; }
-.save-equipment-editor__appearance-grid button.is-selected { border-color: var(--global-theme-color-gold-bright); color: var(--global-theme-color-data); background: rgba(223,182,93,.1); }
+.save-equipment-editor__appearance-search { box-sizing: border-box; width: 100%; min-width: 0; height: var(--global-control-height-compact); margin: var(--global-spacing-1) 0 var(--global-spacing-2); padding: 0 var(--global-spacing-3); border: var(--global-border-width) solid var(--global-theme-color-border); border-radius: var(--global-radius-md); color: var(--global-theme-color-text-primary); background: var(--global-theme-color-surface-deep); }
+.save-equipment-editor__appearance-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: var(--global-spacing-2); max-height: 190px; overflow: auto; }
+.save-equipment-editor__appearance-grid button { display: flex; align-items: center; gap: var(--global-spacing-2); min-width: 0; min-height: var(--global-control-height-tall); padding: var(--global-spacing-1) var(--global-spacing-2); border: var(--global-border-width) solid var(--global-theme-color-border); border-radius: var(--global-radius-md); color: var(--global-theme-color-text-secondary); background: transparent; text-align: left; cursor: pointer; }
+.save-equipment-editor__appearance-grid button.is-selected { border-color: var(--global-theme-color-gold-bright); color: var(--global-theme-color-data); background: var(--global-theme-color-surface-row-selected); }
 .save-equipment-editor__appearance-grid button span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 @media (max-width: 1050px) {

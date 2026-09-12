@@ -1,13 +1,13 @@
-.auto-loadout-job-progress { display: grid; gap: 7px; min-width: 0; padding: 9px; border: 1px solid rgba(223, 182, 93, .16); border-radius: 7px; background: rgba(18, 10, 6, .24); }
-.auto-loadout-job-progress[data-compact="true"] { gap: 4px; padding: 6px; }
-.auto-loadout-job-progress__heading, .auto-loadout-job-progress__status, .auto-loadout-job-progress__metrics { display: flex; align-items: center; gap: 6px; }
+.auto-loadout-job-progress { display: grid; gap: var(--global-spacing-2); min-width: 0; min-height: 96px; padding: var(--global-spacing-3); border: var(--global-border-width) solid var(--global-theme-color-border-subtle); border-radius: var(--global-radius-md); background: var(--global-theme-color-surface-inset); }
+.auto-loadout-job-progress[data-compact="true"] { gap: var(--global-spacing-1); min-height: 72px; padding: var(--global-spacing-2); }
+.auto-loadout-job-progress__heading, .auto-loadout-job-progress__status, .auto-loadout-job-progress__metrics { display: flex; align-items: center; gap: var(--global-spacing-2); }
 .auto-loadout-job-progress__heading { justify-content: space-between; min-width: 0; }
-.auto-loadout-job-progress__status { color: var(--global-theme-color-data); font-size: var(--global-typography-font-size-small); font-weight: 700; white-space: nowrap; }
+.auto-loadout-job-progress__status { color: var(--global-theme-color-data); font-size: var(--global-typography-font-size-small); font-weight: var(--global-typography-font-weight-bold); white-space: nowrap; }
 .auto-loadout-job-progress__status-icon { width: 15px; height: 15px; }
 .auto-loadout-job-progress[data-status="running"] .auto-loadout-job-progress__status-icon { animation: auto-loadout-job-progress-spin 1.15s linear infinite; }
 .auto-loadout-job-progress__stage { min-width: 0; overflow: hidden; color: var(--global-theme-color-text-secondary); font-size: var(--global-typography-font-size-small); text-overflow: ellipsis; white-space: nowrap; }
-.auto-loadout-job-progress__track { position: relative; height: 8px; overflow: hidden; border: 1px solid rgba(223, 182, 93, .18); border-radius: 999px; background: rgba(4, 2, 2, .48); }
-.auto-loadout-job-progress__bar { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--global-theme-color-gold), var(--global-theme-color-gold-bright)); transition: width 160ms ease; }
+.auto-loadout-job-progress__track { position: relative; height: 8px; overflow: hidden; border: var(--global-border-width) solid var(--global-theme-color-border-subtle); border-radius: var(--global-radius-pill); background: var(--global-theme-color-surface-deep); }
+.auto-loadout-job-progress__bar { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--global-theme-color-gold), var(--global-theme-color-gold-bright)); transition: width var(--global-motion-fast) ease; }
 .auto-loadout-job-progress__track[data-indeterminate="true"] .auto-loadout-job-progress__bar { width: 35%; animation: auto-loadout-job-progress-indeterminate 1.25s ease-in-out infinite; }
 .auto-loadout-job-progress__metrics { flex-wrap: wrap; justify-content: space-between; color: var(--global-theme-color-text-secondary); font-size: var(--global-typography-font-size-caption); }
 .auto-loadout-job-progress__metric-value { color: var(--global-theme-color-data); font-variant-numeric: tabular-nums; }

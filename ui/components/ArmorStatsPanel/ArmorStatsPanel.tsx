@@ -1,6 +1,7 @@
 import type { ArmorDetail } from '../../../api/catalog/types'
 import { EquipmentSlotIndicator } from '../EquipmentSlotIndicator/EquipmentSlotIndicator'
-import { ArmorSkillList } from '../ArmorSkillList/ArmorSkillList'
+import { DetailSection } from '../DetailSection/DetailSection'
+import { DetailStatGrid } from '../DetailStatGrid/DetailStatGrid'
 import './ArmorStatsPanel.css'
 
 const combat={both:'近战 / 远程',blademaster:'近战',gunner:'远程'};const gender={both:'男女通用',male:'男性',female:'女性'}
@@ -12,13 +13,9 @@ const resistanceTypes = [
   ['龙', 'dragonRes', 'is-dragon'],
 ] as const
 
-export function ArmorStatsPanel({ armor, onSelectSkill }: { armor: ArmorDetail; onSelectSkill?: (skillId:number)=>void }) {
-  return <section className="armor-stats-panel">
-    <header><span>属性</span><strong>RARE {armor.rarity}</strong></header>
-    <div className="armor-stats-panel__defense" aria-label="防御力">
-      <Stat label="基础防御" value={armor.baseDefense}/>
-      <Stat label="最大防御" value={armor.maxDefense}/>
-    </div>
+export function ArmorStatsPanel({ armor }: { armor: ArmorDetail }) {
+  return <DetailSection title="属性" meta={`RARE ${armor.rarity}`} className="armor-stats-panel" ariaLabel="防具属性">
+    <DetailStatGrid variant="two-column" ariaLabel="防御力" items={[{ label: '基础防御', value: armor.baseDefense }, { label: '最大防御', value: armor.maxDefense }]}/>
     <section className="armor-stats-panel__resistances" aria-label="属性耐性">
       <h3>属性耐性</h3>
       <div className="armor-stats-panel__resistance-values">
@@ -27,11 +24,6 @@ export function ArmorStatsPanel({ armor, onSelectSkill }: { armor: ArmorDetail; 
         </div>)}
       </div>
     </section>
-    <ArmorSkillList skills={armor.skills} onSelectSkill={onSelectSkill}/>
     <div className="armor-stats-panel__meta"><span>{combat[armor.combat]} · {gender[armor.gender]}</span><span>孔位 <EquipmentSlotIndicator slots={armor.slots}/></span></div>
-  </section>
-}
-
-function Stat({ label, value }: { label: string; value: number }) {
-  return <div><span>{label}</span><strong>{value}</strong></div>
+  </DetailSection>
 }
