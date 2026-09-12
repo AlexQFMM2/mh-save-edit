@@ -19,7 +19,7 @@ function charmCandidates(snapshot: LoadoutCatalogSnapshot, request: AutoLoadoutR
     const charmClass = snapshot.charmClasses.find(value => value.classId === range.classId)
     if (!charmClass) continue
     const point = { skillId: target.skillId, nameCn: snapshot.skills.find(value => value.skillId === target.skillId)?.nameCn ?? target.nameCn, points: range.maxPoints }
-    const charm: LoadoutCharm & { lock: 'unlocked' } = { kind: 'charm', gameId: snapshot.gameId, classId: charmClass.classId, classNameCn: charmClass.nameCn, slots: range.slotCount ?? 0, skill1: range.position === 'A' ? point : null, skill2: range.position === 'B' ? point : null, decorations: [], legality: 'confirmed', encoding: 'encodable', issues: [], lock: 'unlocked' }
+    const charm: LoadoutCharm & { lock: 'unlocked' } = { kind: 'charm', gameId: snapshot.gameId, classId: charmClass.classId, classNameCn: charmClass.nameCn, iconPath: charmClass.iconPath, slots: range.slotCount ?? 0, skill1: range.position === 'A' ? point : null, skill2: range.position === 'B' ? point : null, decorations: [], legality: 'confirmed', encoding: 'encodable', issues: [], lock: 'unlocked' }
     const validated = applyCharmValidation(snapshot, charm)
     if (validated.legality === 'confirmed' && validated.encoding === 'encodable') byPosition[range.position].push(validated)
   }

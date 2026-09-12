@@ -37,7 +37,7 @@ export function AutoLoadoutResultRow({ index, result, selected, onSelect }: Prop
           const equipment = slot === 'weapon' ? result.loadout.weapon : slot === 'charm' ? result.loadout.charm : result.loadout.armor[slot]
           const empty = !item
           return <tr className={`auto-loadout-result-row__equipment-row${empty ? ' auto-loadout-result-row__equipment-row--empty' : ''}`} key={slot}>
-            <th className="auto-loadout-result-row__cell auto-loadout-result-row__part" scope="row"><LoadoutSlotIcon slot={slot} item={equipment} size="small" /><span className="auto-loadout-result-row__part-hidden">{slotLabels[slot]}</span></th>
+            <th className="auto-loadout-result-row__cell auto-loadout-result-row__part" scope="row"><LoadoutSlotIcon gameId={result.loadout.gameId} slot={slot} item={equipment} size="small" /><span className="auto-loadout-result-row__part-hidden">{slotLabels[slot]}</span></th>
             <td className="auto-loadout-result-row__cell auto-loadout-result-row__equipment">{item?.nameCn ?? '未选择'}</td>
             <td className="auto-loadout-result-row__cell auto-loadout-result-row__decorations">{item?.decorations.length ? item.decorations.map(value => value.nameCn).join('、') : '无珠'}</td>
             <td className="auto-loadout-result-row__cell auto-loadout-result-row__slots"><EquipmentSlotIndicator slots={item?.naturalSlots ?? 0} usedSlots={item?.usedSlots ?? 0} compact /></td>

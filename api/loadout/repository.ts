@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto'
 import type Database from 'better-sqlite3'
 import { validateCharm } from './charm'
+import { charmIconPath } from '../save/catalogIconPaths'
 import type { ArmorLoadoutSlot, CharmValidationResult, LoadoutArmorCandidate, LoadoutArmorFilters, LoadoutCalculationSnapshot, LoadoutCatalogSnapshot, LoadoutCharm, LoadoutCharmClass, LoadoutDecoration, LoadoutDecorationFilters, LoadoutFacets, LoadoutPage, LoadoutSkillDefinition, LoadoutWeaponCandidate, LoadoutWeaponFilters } from './types'
 
 type Row = Record<string, unknown>
@@ -177,8 +178,8 @@ export class LoadoutCatalogRepository {
   }
 
   private getCharmClasses(): LoadoutCharmClass[] {
-    if (this.tableExists('charm_classes')) return (this.db.prepare('SELECT * FROM charm_classes WHERE save_id>0 ORDER BY save_id').all() as Row[]).map(row => ({ classId: number(row.save_id), nameCn: text(row.name_cn), nameEn: text(row.name_en), maxSlots: this.maxCharmSlots(number(row.save_id)) }))
-    if (this.tableExists('cn__talismans')) return (this.db.prepare('SELECT * FROM cn__talismans WHERE id>0 ORDER BY id').all() as Row[]).map(row => ({ classId: number(row.id), nameCn: text(row.name), nameEn: text(row.english), maxSlots: number(row.max_slots, 3) }))
+    if (this.tableExists('charm_classes')) return (this.db.prepare('SELECT * FROM charm_classes WHERE save_id>0 ORDER BY save_id').all() as Row[]).map(row => { const classId = number(row.save_id); return { classId, nameCn: text(row.name_cn), nameEn: text(row.name_en), maxSlots: this.maxCharmSlots(classId), iconPath: charmIconPath(this.gameId, classId) } })
+    if (this.tableExists('cn__talismans')) return (this.db.prepare('SELECT * FROM cn__talismans WHERE id>0 ORDER BY id').all() as Row[]).map(row => { const classId = number(row.id); return { classId, nameCn: text(row.name), nameEn: text(row.english), maxSlots: number(row.max_slots, 3), iconPath: charmIconPath(this.gameId, classId) } })
     return []
   }
 

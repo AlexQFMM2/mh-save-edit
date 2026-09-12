@@ -3,6 +3,7 @@ import { createRequire } from 'node:module'
 import { join } from 'node:path'
 import type { GameId } from '../core/loadout'
 import type { SaveEquipmentCell, SaveItemCell, SavePalicoGenerationRules } from './types'
+import { charmIconPath } from './catalogIconPaths'
 
 const require = createRequire(import.meta.url)
 const BetterSqlite = require('better-sqlite3') as typeof Database
@@ -49,8 +50,8 @@ export class SaveCatalogResolver {
       typeNameCn = ({ head: '头部', chest: '胸部', arms: '腕部', waist: '腰部', legs: '腿部' } as Record<string, string>)[text(row?.part)] ?? '防具'
     } else if (cell.kind === 'charm') {
       row = this.hasTable(db, 'charm_classes')
-        ? db.prepare("SELECT name_cn,name_en,NULL icon_path FROM charm_classes WHERE save_id=? LIMIT 1").get(cell.saveId) as Row | undefined
-        : db.prepare("SELECT name name_cn,english name_en,NULL icon_path FROM cn__talismans WHERE id=? LIMIT 1").get(cell.saveId) as Row | undefined
+        ? db.prepare("SELECT name_cn,name_en FROM charm_classes WHERE save_id=? LIMIT 1").get(cell.saveId) as Row | undefined
+        : db.prepare("SELECT name name_cn,english name_en FROM cn__talismans WHERE id=? LIMIT 1").get(cell.saveId) as Row | undefined
       typeNameCn = '护石'
     } else if (cell.kind === 'palico-weapon') {
       row = db.prepare('SELECT equipment_id,name_cn,name_en,icon_path FROM catalog_palico_weapons WHERE game_id=? AND save_id=? LIMIT 1').get(gameId, cell.saveId) as Row | undefined
@@ -68,7 +69,8 @@ export class SaveCatalogResolver {
       return { saveId, rawValue, nameCn: text(value?.name_cn, `未知装饰珠 #${saveId}`), slots: value?.slots == null ? null : number(value.slots), fixed }
     })
     const skillName = (skillId: number | null) => skillId ? text((db.prepare('SELECT name_cn FROM catalog_skills WHERE game_id=? AND skill_id=? LIMIT 1').get(gameId, skillId) as Row | undefined)?.name_cn, `未知技能 #${skillId}`) : null
-    return { ...cell, nameCn: cell.empty ? '空格' : text(row?.name_cn, cell.kind === 'kinsect' ? `猎虫 #${cell.saveId}` : `${typeNameCn || '装备'} #${cell.saveId}`), nameEn: text(row?.name_en), typeNameCn: cell.empty ? '空格' : typeNameCn, iconPath: row?.icon_path ? text(row.icon_path) : null, weaponKey: row?.weapon_key ? text(row.weapon_key) : null, armorDexId: row?.dex_id == null ? null : number(row.dex_id), palicoEquipmentId: row?.equipment_id == null ? null : number(row.equipment_id), decorationLabels, skill1NameCn: skillName(cell.skill1Id), skill2NameCn: skillName(cell.skill2Id), diagnostics }
+    const iconPath = cell.kind === 'charm' ? charmIconPath(gameId, cell.saveId) : row?.icon_path ? text(row.icon_path) : null
+    return { ...cell, nameCn: cell.empty ? '空格' : text(row?.name_cn, cell.kind === 'kinsect' ? `猎虫 #${cell.saveId}` : `${typeNameCn || '装备'} #${cell.saveId}`), nameEn: text(row?.name_en), typeNameCn: cell.empty ? '空格' : typeNameCn, iconPath, weaponKey: row?.weapon_key ? text(row.weapon_key) : null, armorDexId: row?.dex_id == null ? null : number(row.dex_id), palicoEquipmentId: row?.equipment_id == null ? null : number(row.equipment_id), decorationLabels, skill1NameCn: skillName(cell.skill1Id), skill2NameCn: skillName(cell.skill2Id), diagnostics }
   }
   palicoLabels(forte: number, target: number) {
     const db = this.db('mhgu')

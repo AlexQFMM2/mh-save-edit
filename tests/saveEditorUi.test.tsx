@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import type { SaveBoxSection, SavePalicoDetail, SavePalicoGenerationRules, SavePalicoSection, SavePersonalSection, SaveSessionSnapshot } from '../api/save/types'
+import type { SaveBoxSection, SaveEquipmentCell, SavePalicoDetail, SavePalicoGenerationRules, SavePalicoSection, SavePersonalSection, SaveSessionSnapshot } from '../api/save/types'
 import { CatalogWriteControl } from '../ui/components/CatalogWriteControl/CatalogWriteControl'
 import { ConfirmationDialog } from '../ui/components/ConfirmationDialog/ConfirmationDialog'
 import { SaveBoxWorkspace } from '../ui/components/SaveBoxWorkspace/SaveBoxWorkspace'
@@ -17,6 +17,16 @@ import { SaveSessionHeader } from '../ui/components/SaveSessionHeader/SaveSessio
 const itemSection: SaveBoxSection = {
   kind: 'item-box', domain: 'items', page: 1, pageSize: 100, pageCount: 2, totalSlots: 200, nonEmptyCount: 2,
   cells: Array.from({ length: 100 }, (_, slot) => ({ slot, empty: slot !== 0 && slot !== 12, itemId: slot === 0 ? 10 : slot === 12 ? 20 : 0, count: slot === 0 ? 3 : slot === 12 ? 7 : 0, nameCn: slot === 0 ? '回复药' : slot === 12 ? '秘药' : '空格', nameEn: slot === 0 ? 'Potion' : slot === 12 ? 'Max Potion' : '', iconPath: null, maxStack: 99, rarity: 1, diagnostics: [] })),
+}
+
+const charmCell: SaveEquipmentCell = {
+  slot: 0, empty: false, kind: 'charm', saveType: 6, saveId: 10, level: 0, slots: 3, appearanceId: null,
+  decorations: [0, 0, 0], skill1Id: 1, skill1Points: 5, skill2Id: 2, skill2Points: 3, nameCn: '天之护石', nameEn: 'Creator Talisman',
+  typeNameCn: '护石', iconPath: null, weaponKey: null, armorDexId: null, palicoEquipmentId: null, decorationLabels: [],
+  skill1NameCn: '回避性能', skill2NameCn: '痛击', recordHex: '00'.repeat(16), diagnostics: [],
+}
+const charmSection: SaveBoxSection = {
+  kind: 'equipment-box', domain: 'hunter-equipment', page: 1, pageSize: 100, pageCount: 1, totalSlots: 1, nonEmptyCount: 1, cells: [charmCell],
 }
 
 const palicoRules: SavePalicoGenerationRules = {
@@ -80,6 +90,13 @@ function NavigationBlockHarness() {
 }
 
 describe('save editor UI primitives', () => {
+  it('uses the shared gem fallback for talisman cells without a catalog icon', () => {
+    render(<SaveBoxWorkspace gameId="mh3g" section={charmSection} busy={false} onPage={vi.fn()} onReplaceItem={vi.fn()} onEditEquipment={vi.fn()} onSetCount={vi.fn()} onClear={vi.fn()} onCopy={vi.fn()} onImport={vi.fn()} onExport={vi.fn()} />)
+    const gridCell = screen.getByRole('gridcell', { name: /天之护石/ })
+    expect(gridCell.querySelector('svg')).toBeTruthy()
+    expect(screen.getByRole('heading', { name: '天之护石' }).parentElement?.parentElement?.querySelector('svg')).toBeTruthy()
+  })
+
   it('keeps physical box order, jumps between search matches and opens a cell on double click', () => {
     const edit = vi.fn()
     const page = vi.fn()

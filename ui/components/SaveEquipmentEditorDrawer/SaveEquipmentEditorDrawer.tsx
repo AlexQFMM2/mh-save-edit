@@ -136,11 +136,11 @@ export function SaveEquipmentEditorDrawer({ gameId, domain, cell, onApply, onApp
   const pointMinimum = gameId === 'mh4g' ? -32768 : -128
   const pointMaximum = gameId === 'mh4g' ? 32767 : 127
   const currentCharm = useMemo<EditableCharm>(() => ({
-    kind: 'charm', gameId, classId: charmClassId, classNameCn: cell.nameCn || '自定义护石', slots,
+    kind: 'charm', gameId, classId: charmClassId, classNameCn: cell.nameCn || '自定义护石', iconPath: snapshot?.charmClasses.find(value => value.classId === charmClassId)?.iconPath ?? null, slots,
     skill1: skill1Id ? { skillId: skill1Id, nameCn: cell.skill1NameCn ?? `技能 #${skill1Id}`, points: skill1Points } : null,
     skill2: skill2Id ? { skillId: skill2Id, nameCn: cell.skill2NameCn ?? `技能 #${skill2Id}`, points: skill2Points } : null,
     decorations: [], legality: 'unknown', encoding: 'encodable', issues: [], lock: 'unlocked',
-  }), [cell.nameCn, cell.skill1NameCn, cell.skill2NameCn, charmClassId, gameId, skill1Id, skill1Points, skill2Id, skill2Points, slots])
+  }), [cell.nameCn, cell.skill1NameCn, cell.skill2NameCn, charmClassId, gameId, skill1Id, skill1Points, skill2Id, skill2Points, slots, snapshot])
   const selectedBlocked = selected && 'candidateKey' in selected ? selected.instance?.encoding === 'blocked' : false
   const activeExistingRelic = existingRelic && ((kind === 'weapon' && existingRelic.kind === 'weapon') || (kind !== 'weapon' && kind !== 'charm' && existingRelic.kind === 'armor' && existingRelic.part === kind)) ? existingRelic : undefined
 

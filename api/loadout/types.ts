@@ -101,6 +101,7 @@ export type LoadoutCharm = {
   gameId: LoadoutGame
   classId: number
   classNameCn: string
+  iconPath?: string | null
   slots: number
   skill1: LoadoutSkillPoint | null
   skill2: LoadoutSkillPoint | null
@@ -153,6 +154,7 @@ export type LoadoutCharmClass = {
   nameCn: string
   nameEn: string
   maxSlots: number
+  iconPath?: string | null
 }
 
 export type LoadoutCharmRange = {

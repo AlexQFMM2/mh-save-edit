@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Navigate, useOutletContext, useSearchParams } from 'react-router-dom'
 import type { PalicoTypeDetail, PalicoTypeSummary } from '../../../api/catalog/types'
 import { PalicoEntryList } from '../../components/PalicoEntryList/PalicoEntryList'
+import { PalicoCatalogToolbar } from '../../components/PalicoCatalogToolbar/PalicoCatalogToolbar'
 import { PalicoSupportMoveDetailDrawer } from '../../components/PalicoSupportMoveDetailDrawer/PalicoSupportMoveDetailDrawer'
 import { PalicoTypeDetailPanel } from '../../components/PalicoTypeDetailPanel/PalicoTypeDetailPanel'
 import type { WorkspaceOutletContext } from '../../components/WorkspaceContent/WorkspaceContent'
@@ -10,6 +11,8 @@ import './PalicoTypesCatalogPage.css'
 export function PalicoTypesCatalogPage() {
   const { game } = useOutletContext<WorkspaceOutletContext>()
   const [params, setParams] = useSearchParams()
+  const query = params.get('q') ?? ''
+  const [queryInput, setQueryInput] = useState(query)
   const selected = numberParam(params.get('type'))
   const move = numberParam(params.get('move'))
   const [items, setItems] = useState<PalicoTypeSummary[]>([])
@@ -21,6 +24,12 @@ export function PalicoTypesCatalogPage() {
   const setParamsRef = useRef(setParams)
   setParamsRef.current = setParams
 
+  const filteredItems = useMemo(() => {
+    const needle = query.trim().toLocaleLowerCase()
+    if (!needle) return items
+    return items.filter(item => `${item.typeId} 0x${item.typeId.toString(16)} ${item.nameCn} ${item.nameEn} ${item.nameJp} ${item.descriptionCn}`.toLocaleLowerCase().includes(needle))
+  }, [items, query])
+
   const update = useCallback((changes: Record<string, string | number | undefined>) => {
     setParamsRef.current((current) => {
       const next = new URLSearchParams(current)
@@ -31,6 +40,16 @@ export function PalicoTypesCatalogPage() {
       return next
     })
   }, [])
+
+  useEffect(() => {
+    setQueryInput(query)
+  }, [query])
+
+  useEffect(() => {
+    if (queryInput === query) return
+    const timer = window.setTimeout(() => update({ q: queryInput || undefined, type: undefined, move: undefined }), 240)
+    return () => window.clearTimeout(timer)
+  }, [queryInput, query, update])
 
   useEffect(() => {
     if (game.id !== 'mhgu') return
@@ -55,6 +74,14 @@ export function PalicoTypesCatalogPage() {
   }, [game.id, update])
 
   useEffect(() => {
+    if (!filteredItems.length) {
+      if (selected != null) update({ type: undefined, move: undefined })
+      return
+    }
+    if (!filteredItems.some(item => item.typeId === selected)) update({ type: filteredItems[0].typeId, move: undefined })
+  }, [filteredItems, selected, update])
+
+  useEffect(() => {
     if (game.id !== 'mhgu' || selected == null) return
     const id = ++request.current
     setDetailLoading(true)
@@ -74,10 +101,11 @@ export function PalicoTypesCatalogPage() {
 
   return (
     <div className="palico-types-catalog-page">
+      <PalicoCatalogToolbar query={queryInput} onQueryChange={setQueryInput} onReset={() => { setQueryInput(''); setParams({}) }} placeholder="名称、英文名、日文名或 ID" />
       <div className="palico-types-catalog-page__layout">
         <div className="palico-types-catalog-page__list-slot">
           <PalicoEntryList
-            entries={items.map((item) => ({ id: item.typeId, nameCn: item.nameCn, nameEn: item.nameEn }))}
+            entries={filteredItems.map((item) => ({ id: item.typeId, nameCn: item.nameCn, nameEn: item.nameEn }))}
             selectedId={selected}
             loading={loading}
             error={error}

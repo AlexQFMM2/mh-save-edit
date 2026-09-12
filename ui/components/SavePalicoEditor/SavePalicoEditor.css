@@ -1,6 +1,6 @@
 .save-palico-editor{display:grid;grid-template-columns:minmax(260px,34fr) minmax(0,66fr);gap:10px;height:100%;min-height:0}
 .save-palico-editor>aside,.save-palico-editor__detail{min-height:0;border:1px solid var(--global-theme-color-border);border-radius:9px;background:rgba(30,18,12,.55);overflow:hidden}
-.save-palico-editor>aside{display:grid;grid-template-rows:auto minmax(0,1fr)}
+.save-palico-editor>aside{display:grid;grid-template-rows:auto auto minmax(0,1fr)}
 .save-palico-editor>aside header{display:flex;justify-content:space-between;padding:12px;border-bottom:1px solid var(--global-theme-color-border)}
 .save-palico-editor h2{margin:0;font-size:var(--global-typography-font-size-body)}
 .save-palico-editor>aside header span{color:var(--global-theme-color-data)}

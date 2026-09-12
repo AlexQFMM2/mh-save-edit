@@ -38,7 +38,7 @@ export function CharmEditorForm({ snapshot, current, pointMinimum = -32768, poin
   }, [current, skills])
   const draft = useMemo<EditableCharm>(() => ({
     kind: 'charm', gameId: snapshot.gameId, classId: Number(classId) || 0,
-    classNameCn: selectedClass?.nameCn ?? current?.classNameCn ?? '自定义护石', slots,
+    classNameCn: selectedClass?.nameCn ?? current?.classNameCn ?? '自定义护石', iconPath: selectedClass?.iconPath ?? current?.iconPath ?? null, slots,
     skill1: pointFor(skills, skill1, points1, current?.skill1), skill2: pointFor(skills, skill2, points2, current?.skill2),
     decorations: current?.decorations ?? [], legality: current?.legality ?? 'unknown', encoding: current?.encoding ?? 'encodable', issues: current?.issues ?? [], instance: current?.instance,
     lock: current?.lock ?? 'unlocked',
