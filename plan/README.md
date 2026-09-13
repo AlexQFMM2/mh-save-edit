@@ -219,6 +219,8 @@ Windows 对应模拟器重开和扩充后的私有样本矩阵决定。
 - [16-save-editor-workspace.md](16-save-editor-workspace.md)：五格式存档会话、环境/角色选择、个人信息、游戏式箱子、导入导出、可选顺序交换、图鉴/配装写入和 GU/XX 猫猫修改。
 - [17-ui-style-system.md](17-ui-style-system.md)：全项目字号、颜色、间距、边框、详情分区、列表、表格、抽屉和视觉回归统一规范。
 - [18-ui-style-audit-checklist.md](18-ui-style-audit-checklist.md)：逐页面、逐组件 UI 扫描结果、问题标签、完成状态和后续勾选清单。
+- [19-skill-detail-drawer-layout.md](19-skill-detail-drawer-layout.md)：技能引用抽屉单列布局、无横向滚动发动效果、关系点击和护石跳转规划。
+- [20-weapon-tree-and-detail-layout.md](20-weapon-tree-and-detail-layout.md)：技能发动效果卡、武器派生节点防重叠和派生模式详情区收口规划。
 
 ## 8. 当前明确不做
 

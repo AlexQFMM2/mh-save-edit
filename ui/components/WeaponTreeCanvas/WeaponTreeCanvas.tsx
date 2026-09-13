@@ -3,7 +3,7 @@ import { Background, ReactFlow, ReactFlowProvider, type Edge, type NodeTypes, ty
 import '@xyflow/react/dist/style.css'
 import type { WeaponCatalogFilters, WeaponTreeResult } from '../../../api/catalog/types'
 import { contextualWeaponKeys, weaponMatchesFilters } from '../../utils/weaponCatalog'
-import { layoutWeaponTree } from '../../utils/weaponTreeLayout'
+import { layoutWeaponTree, WEAPON_TREE_NODE_MIN_HEIGHT, WEAPON_TREE_NODE_ROW_GAP, WEAPON_TREE_NODE_WIDTH } from '../../utils/weaponTreeLayout'
 import { WeaponTreeControls } from '../WeaponTreeControls/WeaponTreeControls'
 import { WeaponTreeMatchNavigator } from '../WeaponTreeMatchNavigator/WeaponTreeMatchNavigator'
 import { WeaponTreeMinimap } from '../WeaponTreeMinimap/WeaponTreeMinimap'
@@ -24,7 +24,7 @@ function WeaponTreeCanvasInner({ tree, filters, selectedKey, sharpnessStage, onS
   const positions = useMemo(() => {
     const cached = layoutCache.get(layoutKey)
     if (cached) return cached
-    const value = layoutWeaponTree(tree.nodes, tree.edges, 285, 176)
+    const value = layoutWeaponTree(tree.nodes, tree.edges, WEAPON_TREE_NODE_WIDTH, WEAPON_TREE_NODE_MIN_HEIGHT + WEAPON_TREE_NODE_ROW_GAP)
     layoutCache.set(layoutKey, value)
     return value
   }, [layoutKey, tree.nodes, tree.edges])
@@ -45,7 +45,7 @@ function WeaponTreeCanvasInner({ tree, filters, selectedKey, sharpnessStage, onS
   const selectAndCenter = (weaponKey: string, focus = false) => {
     onSelect(weaponKey)
     const node = instanceRef.current?.getNode(weaponKey)
-    if (node) void instanceRef.current?.setCenter(node.position.x + (node.measured?.width ?? 230) / 2, node.position.y + (node.measured?.height ?? 108) / 2, { zoom: Math.max(instanceRef.current.getZoom(), .8), duration: reduceMotion() ? 0 : 220 })
+    if (node) void instanceRef.current?.setCenter(node.position.x + (node.measured?.width ?? WEAPON_TREE_NODE_WIDTH) / 2, node.position.y + (node.measured?.height ?? WEAPON_TREE_NODE_MIN_HEIGHT) / 2, { zoom: Math.max(instanceRef.current.getZoom(), .8), duration: reduceMotion() ? 0 : 220 })
     if (focus) window.setTimeout(() => document.querySelector<HTMLButtonElement>(`[data-weapon-key="${CSS.escape(weaponKey)}"]`)?.focus(), 0)
   }
   const navigate = (weaponKey: string, direction: 'left' | 'right' | 'up' | 'down') => {
@@ -61,7 +61,7 @@ function WeaponTreeCanvasInner({ tree, filters, selectedKey, sharpnessStage, onS
   useEffect(() => {
     if (!selectedKey || !instanceRef.current) return
     const node = instanceRef.current.getNode(selectedKey)
-    if (node) void instanceRef.current.setCenter(node.position.x + (node.measured?.width ?? 230) / 2, node.position.y + (node.measured?.height ?? 108) / 2, { zoom: 1, duration: reduceMotion() ? 0 : 220 })
+    if (node) void instanceRef.current.setCenter(node.position.x + (node.measured?.width ?? WEAPON_TREE_NODE_WIDTH) / 2, node.position.y + (node.measured?.height ?? WEAPON_TREE_NODE_MIN_HEIGHT) / 2, { zoom: 1, duration: reduceMotion() ? 0 : 220 })
   }, [selectedKey, tree.dataVersion, tree.weaponTypeId])
   const initialize = (instance: ReactFlowInstance<WeaponFlowNode, Edge>) => {
     instanceRef.current = instance
@@ -69,7 +69,7 @@ function WeaponTreeCanvasInner({ tree, filters, selectedKey, sharpnessStage, onS
     if (!initialKey) return
     window.setTimeout(() => {
       const node = instance.getNode(initialKey)
-      if (node) void instance.setCenter(node.position.x + (node.measured?.width ?? 230) / 2, node.position.y + (node.measured?.height ?? 108) / 2, { zoom: 1, duration: 0 })
+      if (node) void instance.setCenter(node.position.x + (node.measured?.width ?? WEAPON_TREE_NODE_WIDTH) / 2, node.position.y + (node.measured?.height ?? WEAPON_TREE_NODE_MIN_HEIGHT) / 2, { zoom: 1, duration: 0 })
     }, 0)
   }
   return <div className="weapon-tree-canvas" aria-label="武器派生画布">

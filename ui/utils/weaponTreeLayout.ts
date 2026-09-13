@@ -2,7 +2,13 @@ import type { WeaponTreeEdge, WeaponTreeNode } from '../../api/catalog/types'
 
 export type WeaponNodePosition = { weaponKey: string; x: number; y: number; depth: number; order: number }
 
+/** Shared with the node card so the layout always leaves room for its content. */
+export const WEAPON_TREE_NODE_WIDTH = 285
+export const WEAPON_TREE_NODE_MIN_HEIGHT = 168
+export const WEAPON_TREE_NODE_ROW_GAP = 28
+
 export function layoutWeaponTree(nodes: WeaponTreeNode[], edges: WeaponTreeEdge[], gapX = 250, gapY = 92): WeaponNodePosition[] {
+  const rowSpacing = Math.max(gapY, WEAPON_TREE_NODE_MIN_HEIGHT + WEAPON_TREE_NODE_ROW_GAP)
   const byKey = new Map(nodes.map((node) => [node.weaponKey, node]))
   const children = new Map<string, WeaponTreeEdge[]>()
   const indegree = new Map(nodes.map((node) => [node.weaponKey, 0]))
@@ -56,7 +62,7 @@ export function layoutWeaponTree(nodes: WeaponTreeNode[], edges: WeaponTreeEdge[
     }
   }
   return stableNodes
-    .map((node) => ({ weaponKey: node.weaponKey, x: (depth.get(node.weaponKey) ?? 0) * gapX, y: (resolvedRow.get(node.weaponKey) ?? 0) * gapY, depth: depth.get(node.weaponKey) ?? 0, order: 0 }))
+    .map((node) => ({ weaponKey: node.weaponKey, x: (depth.get(node.weaponKey) ?? 0) * gapX, y: (resolvedRow.get(node.weaponKey) ?? 0) * rowSpacing, depth: depth.get(node.weaponKey) ?? 0, order: 0 }))
     .sort((left, right) => left.y - right.y || left.depth - right.depth || left.weaponKey.localeCompare(right.weaponKey))
     .map((position, index) => ({ ...position, order: index }))
 }

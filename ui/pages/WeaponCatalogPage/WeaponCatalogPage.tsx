@@ -142,7 +142,7 @@ export function WeaponCatalogPage() {
   return <div className="weapon-catalog-page">
     <WeaponCatalogToolbar query={queryInput} sort={sort} direction={direction} sharpnessStage={sharpnessStage} sharpnessStages={facets.sharpnessStages} view={view} showMotion={game.id==='mhgu'} total={view === 'tree' && tree ? tree.nodes.filter((node) => weaponMatchesFilters(node, treeFilters)).length : meta.total} onQueryChange={setQueryInput} onChange={(key, value) => update({ target: undefined, [key]: value, page: undefined })} />
     <WeaponFilterBar facets={facets} typeId={typeId} attributeId={attributeId} includeHiddenAttributes={includeHiddenAttributes} rarity={rarity} slots={slots} directlyProducible={directlyProducible} includePlaceholders={includePlaceholders} onChange={changeFilter} onReset={resetCatalog} />
-    <div className="weapon-catalog-page__layout"><div className="weapon-catalog-page__browser">{main}</div><WeaponDetailPanel gameId={game.id} weapon={detail} loading={detailLoading} error={detailError} sharpnessStage={sharpnessStage} onSelectItem={setDrawerItemId} onSelectWeapon={selectLinkedWeapon} /></div>
+    <div className="weapon-catalog-page__layout"><div className="weapon-catalog-page__browser">{main}</div><WeaponDetailPanel gameId={game.id} weapon={detail} loading={detailLoading} error={detailError} sharpnessStage={sharpnessStage} showRelations={false} onSelectItem={setDrawerItemId} onSelectWeapon={selectLinkedWeapon} /></div>
     <ItemDetailDrawer gameId={game.id} itemSaveId={drawerItemId} onClose={() => setDrawerItemId(null)} />
   </div>
 }
