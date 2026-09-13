@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import type { SkillDetail } from '../../../api/catalog/types'
+import type { SkillCatalogTab, SkillDetail } from '../../../api/catalog/types'
 import type { GameId } from '../../../api/core/loadout'
 import { DetailDrawer } from '../DetailDrawer/DetailDrawer'
 import { SkillDetailPanel } from '../SkillDetailPanel/SkillDetailPanel'
@@ -11,8 +11,10 @@ export function SkillDetailDrawer({ gameId, skillId, onClose }: { gameId: GameId
   const [skill, setSkill] = useState<SkillDetail | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string>()
+  const [tab, setTab] = useState<SkillCatalogTab>('armor')
   useEffect(() => {
-    if (skillId == null) return
+    setTab('armor')
+    if (skillId == null) { setSkill(null); return }
     let active = true
     setLoading(true); setError(undefined); setSkill(null)
     const api = window.mhSaveEditor?.catalog
@@ -22,5 +24,5 @@ export function SkillDetailDrawer({ gameId, skillId, onClose }: { gameId: GameId
   }, [gameId, skillId])
   if (skillId == null) return null
   const go = (path: string) => { onClose(); navigate(path) }
-  return <div className="skill-detail-drawer"><DetailDrawer title="关联技能" onClose={onClose}><SkillDetailPanel skill={skill} loading={loading} error={error} onSelectDecoration={decoration => go(`/game/${gameId}/catalog/decorations?target=${decoration.saveId}&item=${decoration.saveId}`)} onSelectArmor={armor => go(`/game/${gameId}/catalog/armor?target=${armor.dexId}&armor=${armor.dexId}`)}/></DetailDrawer></div>
+  return <div className="skill-detail-drawer"><DetailDrawer title="关联技能" onClose={onClose}><SkillDetailPanel skill={skill} loading={loading} error={error} tab={tab} onTabChange={setTab} onSelectDecoration={decoration => go(`/game/${gameId}/catalog/decorations?target=${decoration.saveId}&item=${decoration.saveId}`)} onSelectArmor={armor => go(`/game/${gameId}/catalog/armor?target=${armor.dexId}&armor=${armor.dexId}`)}/></DetailDrawer></div>
 }
