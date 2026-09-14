@@ -50,6 +50,7 @@ export function SaveEquipmentEmbeddedDetail({ gameId, cell }: { gameId: GameId; 
   }, [cell.armorDexId, cell.kind, cell.palicoEquipmentId, cell.saveId, cell.slot, cell.weaponKey, gameId])
 
   return <div className={`save-equipment-embedded-detail${loading ? ' is-loading' : ''}`} aria-busy={loading}>
+    {cell.kind === 'armor' && cell.appearanceId != null && <section className="save-equipment-embedded-detail__appearance"><strong>幻化外观</strong>{cell.appearance ? <p>{cell.appearance.nameCn} <small>#{cell.appearance.appearanceId} · {cell.appearance.part} · {cell.appearance.iconSource === 'dex-armor-category' ? '部位/稀有度分类图标' : '备用图标'}</small></p> : <p>未知外观 ID {cell.appearanceId}（原值保留）</p>}</section>}
     {detail?.kind === 'weapon' && <section className="save-equipment-embedded-detail__catalog"><WeaponCoreStats weapon={detail.value} compact /><WeaponTypeDetail gameId={gameId} weapon={detail.value} sharpnessStage="base" />{detail.value.specialSummary.length > 0 && <p>{detail.value.specialSummary.join(' · ')}</p>}</section>}
     {detail?.kind === 'armor' && <section className="save-equipment-embedded-detail__catalog save-equipment-embedded-detail__armor-catalog"><ArmorDetailPanel armor={detail.value} loading={false} allowCatalogWrite={false} /></section>}
     {detail?.kind === 'palico-weapon' && <PalicoWeaponStats value={detail.value} />}

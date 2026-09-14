@@ -111,6 +111,37 @@ CSS 变量会从页面提供的容器继承到 `GameCard`。页面不得直接�
 - 默认只允许只读查看。运行导出器、重新解包、覆盖文件、移动或删除宿主机内容前，必须取得用户明确授权。
 - 不在仓库中记录密码、私钥或其他凭据；使用开发机已经配置好的 SSH 访问能力。
 
+#### 宿主机完整 RomFS 的直接读取约定
+
+`D:\\MH\\unpack\\mhgu\\romfs` 是 MHGU Switch 完整 RomFS 的权威只读目录，不能把当前
+Linux `research/mhgu/romfs` 下约 92 MB 的表格子集误认为完整解包。宿主机目录已经核对到：
+
+- `nativeNX\\arc\\ui`：装备箱、商店、制作和其他 UI ARC；
+- `nativeNX\\arc\\player`：猎人装备及相关模型/资源 ARC；
+- `nativeNX\\arc\\otomo`：猎猫装备及相关资源 ARC；
+- `nativeNX\\table`、`nativeNX\\chS`、`nativeNX\\eng` 等：原生表和本地化资源。
+
+2026-09-13 通过 `ssh_admin` 只读核对：该 RomFS 共 35,531 个文件、12,311,983,212 字节；`nativeNX`
+下有 14,511 个 `.arc`、1,778 个 `.tex` 和 1,972 个 `.gui`。已确认装备/UI 相关入口包括
+`nativeNX\\eng\\GUI\\02_common\\menu\\menu_equipDetail.gui`、`menu_equipMenu.gui`、
+`nativeNX\\eng\\GUI\\02_common\\i_box.gui`、`nativeNX\\eng\\GUI\\04_lobby\\shop` 和
+`nativeNX\\eng\\GUI\\99_texture`。这些只读统计不能替代纹理/atlas 解析，但足以确认完整 UI 资源
+确实存在于宿主机目录。
+
+涉及图标、UI 图集、纹理、layout、幻化外观或其他原生资源时，优先通过本地
+`ssh_admin --connect` 进入已登记的 Windows 宿主机，直接只读查询：
+
+```text
+D:\\MH\\unpack\\mhgu\\romfs
+```
+
+查询必须限定根目录、文件类型、关键词和输出数量；不要递归输出整棵 10+ GB 目录，也不要把完整
+RomFS 拉回 Linux。只有构建器明确需要的最小元数据、文件哈希、资源路径、atlas 坐标或经过许可的
+小型派生索引，才可以复制到 `research`。如应用确实需要图片资源，可在宿主机对已确认的单个游戏
+纹理做一次受控转换，生成 PNG 主资源和可选 WebP 副本；不得把原始 TEX、ARC、纹理图集或完整
+RomFS 拉回 Linux。原始 ARC、纹理、图集、RomFS 和大体积二进制始终留在宿主机。远程只读查询失败
+时，应报告连接/挂载问题，不得据此推断“游戏没有资源”。
+
 已验证可用的 UTF-8 顶层查看命令：
 
 ```bash

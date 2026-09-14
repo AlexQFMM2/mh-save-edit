@@ -122,20 +122,19 @@ function buildCrosswalk(gameId, catalogRows, dexTrees) {
   const byName = new Map()
   for (const row of catalogRows) for (const name of [row.name_cn, row.name_en]) {
     const key = normalize(name)
-    if (key) byName.set(key, row.skill_id)
+    if (!key) continue
+    const values = byName.get(key) ?? new Set()
+    values.add(row.skill_id)
+    byName.set(key, values)
   }
   const result = new Map()
   for (const row of dexTrees) {
     const dexId = integer(row.SklTree_ID)
     if (dexId == null || dexId < 0) continue
-    let skillId = byName.get(normalize(row.SklTree_Name_1)) ?? byName.get(normalize(row.SklTree_Name_0))
-    if (skillId == null && gameId !== 'mhgu' && catalogRows.some(value => value.skill_id === dexId)) skillId = dexId
-    if (skillId == null && gameId === 'mhgu') {
-      const candidate = dexId === 1 ? 203 : dexId === 204 || dexId === 205 ? dexId : dexId - 1
-      if (catalogRows.some(value => value.skill_id === candidate)) skillId = candidate
-    }
-    if (skillId == null) throw new Error(`${gameId}: Dex 技能系 ${dexId} ${row.SklTree_Name_1} 未映射`)
-    result.set(dexId, skillId)
+    const matches = new Set()
+    for (const name of [row.SklTree_Name_1, row.SklTree_Name_0, row.SklTree_Name_3]) for (const value of byName.get(normalize(name)) ?? []) matches.add(value)
+    if (matches.size !== 1) throw new Error(`${gameId}: Dex 技能系 ${dexId} ${row.SklTree_Name_1} 映射${matches.size ? '不唯一' : '缺失'}`)
+    result.set(dexId, [...matches][0])
   }
   return result
 }

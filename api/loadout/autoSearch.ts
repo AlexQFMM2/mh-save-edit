@@ -10,6 +10,15 @@ const clone = <T>(value: T): T => structuredClone(value)
 const sumSkill = (skills: { skillId: number; points: number }[], targets: Set<number>) => skills.reduce((sum, value) => sum + (targets.has(value.skillId) ? Math.max(0, value.points) : 0), 0)
 
 function armorScore(armor: LoadoutArmor, targets: Set<number>) { return sumSkill(armor.skills, targets) * 1000 + armor.slots * 50 + armor.maxDefense }
+function dominates(a: LoadoutArmor, b: LoadoutArmor, targets: Set<number>) {
+  const points = (armor: LoadoutArmor, skillId: number) => Math.max(0, armor.skills.find(value => value.skillId === skillId)?.points ?? 0)
+  const valuesA = [...[...targets].map(skillId => points(a, skillId)), a.slots, a.maxDefense, a.fireRes, a.waterRes, a.thunderRes, a.iceRes, a.dragonRes]
+  const valuesB = [...[...targets].map(skillId => points(b, skillId)), b.slots, b.maxDefense, b.fireRes, b.waterRes, b.thunderRes, b.iceRes, b.dragonRes]
+  return valuesA.every((value, index) => value >= valuesB[index]) && valuesA.some((value, index) => value > valuesB[index])
+}
+function removeDominated(values: LoadoutArmor, candidates: LoadoutArmor[], targets: Set<number>) {
+  return candidates.some(candidate => candidate.candidateKey !== values.candidateKey && dominates(candidate, values, targets))
+}
 function fingerprint(loadout: LogicalLoadout) { return createHash('sha256').update(JSON.stringify({ weapon: loadout.weapon?.candidateKey, armor: ARMOR_LOADOUT_SLOTS.map(slot => loadout.armor[slot]?.candidateKey), charm: loadout.charm && [loadout.charm.classId, loadout.charm.skill1?.skillId, loadout.charm.skill1?.points, loadout.charm.skill2?.skillId, loadout.charm.skill2?.points], decorations: [loadout.weapon?.decorations, ...ARMOR_LOADOUT_SLOTS.map(slot => loadout.armor[slot]?.decorations), loadout.charm?.decorations].map(values => values?.map(value => value.saveId)) })).digest('hex').slice(0, 20) }
 
 function charmCandidates(snapshot: LoadoutCatalogSnapshot, request: AutoLoadoutRequest): (LoadoutCharm & { lock: 'unlocked' })[] {
@@ -19,7 +28,8 @@ function charmCandidates(snapshot: LoadoutCatalogSnapshot, request: AutoLoadoutR
     const charmClass = snapshot.charmClasses.find(value => value.classId === range.classId)
     if (!charmClass) continue
     const point = { skillId: target.skillId, nameCn: snapshot.skills.find(value => value.skillId === target.skillId)?.nameCn ?? target.nameCn, points: range.maxPoints }
-    const charm: LoadoutCharm & { lock: 'unlocked' } = { kind: 'charm', gameId: snapshot.gameId, classId: charmClass.classId, classNameCn: charmClass.nameCn, iconPath: charmClass.iconPath, slots: range.slotCount ?? 0, skill1: range.position === 'A' ? point : null, skill2: range.position === 'B' ? point : null, decorations: [], legality: 'confirmed', encoding: 'encodable', issues: [], lock: 'unlocked' }
+    if (range.slotCount == null || range.status !== 'exact') continue
+    const charm: LoadoutCharm & { lock: 'unlocked' } = { kind: 'charm', gameId: snapshot.gameId, classId: charmClass.classId, classNameCn: charmClass.nameCn, iconPath: charmClass.iconPath, slots: range.slotCount, skill1: range.position === 'A' ? point : null, skill2: range.position === 'B' ? point : null, decorations: [], legality: 'confirmed', encoding: 'encodable', issues: [], lock: 'unlocked' }
     const validated = applyCharmValidation(snapshot, charm)
     if (validated.legality === 'confirmed' && validated.encoding === 'encodable') byPosition[range.position].push(validated)
   }
@@ -33,31 +43,43 @@ function charmCandidates(snapshot: LoadoutCatalogSnapshot, request: AutoLoadoutR
   const seen = new Set<string>()
   const targetIds = new Set(request.targets.map((target) => target.skillId))
   const score = (value: LoadoutCharm) => [value.skill1, value.skill2].reduce((sum, point) => sum + (point && targetIds.has(point.skillId) ? Math.max(0, point.points) : 0), 0) + value.slots / 10
-  return result.filter(value => { const key = `${value.classId}:${value.slots}:${value.skill1?.skillId}:${value.skill1?.points}:${value.skill2?.skillId}:${value.skill2?.points}`; if (seen.has(key)) return false; seen.add(key); return true }).sort((a, b) => score(b) - score(a) || a.classId - b.classId).slice(0, 200)
+  return result.filter(value => { const key = `${value.classId}:${value.slots}:${value.skill1?.skillId}:${value.skill1?.points}:${value.skill2?.skillId}:${value.skill2?.points}`; if (seen.has(key)) return false; seen.add(key); return true }).sort((a, b) => score(b) - score(a) || a.classId - b.classId)
 }
 
 function assignDecorations(snapshot: LoadoutCatalogSnapshot, request: AutoLoadoutRequest, input: LogicalLoadout): LogicalLoadout {
-  const loadout = clone(input)
   const targetIds = new Set(request.targets.map(value => value.skillId))
   const candidates = snapshot.decorations.filter(value => value.slots > 0 && value.slots <= 3 && value.skills.some(skill => targetIds.has(skill.skillId) && skill.points > 0)).sort((a, b) => {
     const ap = sumSkill(a.skills, targetIds) / a.slots; const bp = sumSkill(b.skills, targetIds) / b.slots
     return bp - ap || a.slots - b.slots || a.saveId - b.saveId
   })
-  const containers: { capacity: number; values: LoadoutDecoration[]; locked: boolean }[] = []
-  if (loadout.weapon) { if (loadout.weapon.lock === 'equipment') loadout.weapon.decorations = []; containers.push({ capacity: loadout.weapon.slots, values: loadout.weapon.decorations, locked: loadout.weapon.lock === 'equipmentAndDecorations' }) }
-  for (const slot of ARMOR_LOADOUT_SLOTS) { const armor = loadout.armor[slot]; if (!armor) continue; if (armor.lock === 'equipment') armor.decorations = []; containers.push({ capacity: armor.slots, values: armor.decorations, locked: armor.lock === 'equipmentAndDecorations' }) }
-  if (loadout.charm) { if (loadout.charm.lock === 'equipment') loadout.charm.decorations = []; containers.push({ capacity: loadout.charm.slots, values: loadout.charm.decorations, locked: loadout.charm.lock === 'equipmentAndDecorations' }) }
-  for (let guard = 0; guard < 40; guard += 1) {
-    const calculation = calculateLoadout(snapshot, loadout)
+  const visited = new Set<string>(); let states = 0
+  const search = (current: LogicalLoadout): LogicalLoadout | null => {
+    if (++states > 100_000) return null
+    const calculation = calculateLoadout(snapshot, current)
     const missing = request.targets.map(target => ({ ...target, current: calculation.skills.find(value => value.skillId === target.skillId)?.total ?? 0 })).filter(value => value.current < value.threshold).sort((a, b) => (b.threshold - b.current) - (a.threshold - a.current))[0]
-    if (!missing) break
-    const available = containers.filter(container => !container.locked).map(container => ({ container, remaining: container.capacity - container.values.reduce((sum, value) => sum + value.slots, 0) })).filter(value => value.remaining > 0).sort((a, b) => a.remaining - b.remaining)
-    const decoration = candidates.filter(value => value.skills.some(skill => skill.skillId === missing.skillId && skill.points > 0)).find(value => available.some(slot => slot.remaining >= value.slots))
-    if (!decoration) break
-    const container = available.find(value => value.remaining >= decoration.slots)!
-    container.container.values.push(clone(decoration))
+    if (!missing) return current
+    const containers: { path: 'weapon' | 'charm' | ArmorLoadoutSlot; capacity: number; locked: boolean; values: LoadoutDecoration[] }[] = []
+    if (current.weapon) containers.push({ path: 'weapon', capacity: current.weapon.slots, locked: current.weapon.lock === 'equipmentAndDecorations', values: current.weapon.decorations })
+    for (const slot of ARMOR_LOADOUT_SLOTS) { const armor = current.armor[slot]; if (armor) containers.push({ path: slot, capacity: armor.slots, locked: armor.lock === 'equipmentAndDecorations', values: armor.decorations }) }
+    if (current.charm) containers.push({ path: 'charm', capacity: current.charm.slots, locked: current.charm.lock === 'equipmentAndDecorations', values: current.charm.decorations })
+    const key = JSON.stringify([missing.skillId, containers.map(value => [value.path, value.values.map(decoration => decoration.saveId)])])
+    if (visited.has(key)) return null
+    visited.add(key)
+    for (const decoration of candidates.filter(value => value.skills.some(skill => skill.skillId === missing.skillId && skill.points > 0))) {
+      for (const container of containers) {
+        if (container.locked || container.capacity - container.values.reduce((sum, value) => sum + value.slots, 0) < decoration.slots) continue
+        const next = clone(current)
+        if (container.path === 'weapon' && next.weapon) next.weapon.decorations.push(clone(decoration))
+        else if (container.path === 'charm' && next.charm) next.charm.decorations.push(clone(decoration))
+        else if (container.path !== 'weapon' && container.path !== 'charm' && next.armor[container.path]) next.armor[container.path]!.decorations.push(clone(decoration))
+        const result = search(next); if (result) return result
+      }
+    }
+    return null
   }
-  return loadout
+  const initial = clone(input)
+  for (const equipment of [initial.weapon, initial.charm, ...ARMOR_LOADOUT_SLOTS.map(slot => initial.armor[slot])]) if (equipment?.lock === 'equipment') equipment.decorations = []
+  return search(initial) ?? initial
 }
 
 export async function runAutoLoadout(snapshot: LoadoutCatalogSnapshot, request: AutoLoadoutRequest, context: SearchContext): Promise<AutoLoadoutResult[]> {
@@ -72,7 +94,10 @@ export async function runAutoLoadout(snapshot: LoadoutCatalogSnapshot, request: 
   for (const slot of ARMOR_LOADOUT_SLOTS) {
     const fixed = request.baseLoadout.armor[slot]
     if (fixed && fixed.lock !== 'unlocked') candidateBySlot.set(slot, [clone(fixed)])
-    else candidateBySlot.set(slot, snapshot.armors.filter(value => value.sourceKind === 'catalog' && value.saveType != null && value.saveId != null && value.part === slot && (value.gender === 'both' || value.gender === request.baseLoadout.gender) && (value.combat === 'both' || value.combat === weaponCombat)).map(value => ({ ...clone(value), decorations: [], lock: 'unlocked' as const })).sort((a, b) => armorScore(b, targetIds) - armorScore(a, targetIds)).slice(0, 50))
+    else {
+      const all = snapshot.armors.filter(value => value.sourceKind === 'catalog' && value.saveType != null && value.saveId != null && value.part === slot && (value.gender === 'both' || value.gender === request.baseLoadout.gender) && (value.combat === 'both' || value.combat === weaponCombat)).map(value => ({ ...clone(value), decorations: [], lock: 'unlocked' as const })).sort((a, b) => armorScore(b, targetIds) - armorScore(a, targetIds) || a.candidateKey.localeCompare(b.candidateKey))
+      candidateBySlot.set(slot, all.filter(value => !removeDominated(value, all, targetIds)))
+    }
   }
   let beam: LogicalLoadout[] = [{ ...clone(request.baseLoadout), armor: {} }]
   for (const slot of ARMOR_LOADOUT_SLOTS) {
@@ -85,7 +110,7 @@ export async function runAutoLoadout(snapshot: LoadoutCatalogSnapshot, request: 
     beam = expanded.sort((a, b) => {
       const score = (value: LogicalLoadout) => ARMOR_LOADOUT_SLOTS.reduce((sum, key) => sum + (value.armor[key] ? armorScore(value.armor[key]!, targetIds) : 0), 0)
       return score(b) - score(a)
-    }).slice(0, 800)
+    })
     checked += expanded.length
     context.progress({ requestId: request.requestId, stage: `组合${slot}`, checked, results: 0, elapsedMs: Date.now() - started })
     await context.checkpoint()
@@ -114,5 +139,7 @@ export async function runAutoLoadout(snapshot: LoadoutCatalogSnapshot, request: 
     if (checked % 50 === 0) { context.progress({ requestId: request.requestId, stage: '装饰珠求解', checked, results: results.length, elapsedMs: Date.now() - started }); await context.checkpoint() }
   }
   context.progress({ requestId: request.requestId, stage: '正式复核', checked, results: results.length, elapsedMs: Date.now() - started })
+  const searchComplete = Date.now() < deadline
+  for (const result of results) { result.searchComplete = searchComplete; if (!searchComplete) result.incompleteReason = 'timeout' }
   return results
 }

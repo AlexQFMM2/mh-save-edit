@@ -170,6 +170,9 @@ export class SaveSessionService {
       if (changes.saveType != null) record[0] = changes.saveType; if (changes.level != null) record[1] = changes.level; if (changes.saveId != null) writeU16(record, 2, changes.saveId); if (changes.appearanceId != null) writeU16(record, 4, changes.appearanceId)
     } else if (format === 'mhgu-switch-yuzu' || format === 'mhxx-3ds-citra') {
       if (changes.skill1Id != null && changes.skill1Id > 0xff || changes.skill2Id != null && changes.skill2Id > 0xff) throw new Error('GU/XX 护石技能 ID 超出 8 位编码范围')
+      const nextType = changes.saveType ?? (readU16(record, 0) & 0x1f); const nextAppearance = changes.appearanceId ?? readU16(record, 4)
+      if ((changes.appearanceId != null || changes.saveType != null) && nextAppearance !== 0 && nextType >= 7) throw new Error('GU/XX 猎人武器不支持外观替换，已阻止写入')
+      if ((changes.appearanceId != null || changes.saveType != null) && nextAppearance !== 0 && nextType >= 1 && nextType <= 5 && !this.resolver.resolveArmorAppearance(adapter.meta.contentGameId, nextType, nextAppearance)) throw new Error('GU/XX 猎人防具外观必须属于相同部位且存在')
       let packed = readU16(record, 0); if (changes.saveType != null) packed = (packed & ~0x1f) | (changes.saveType & 0x1f); if (changes.level != null) packed = (packed & ~(0x1f << 5)) | ((changes.level & 0x1f) << 5); writeU16(record, 0, packed)
       if (changes.saveId != null) writeU16(record, 2, changes.saveId); if (changes.appearanceId != null) writeU16(record, 4, changes.appearanceId); changes.decorations?.forEach((value, index) => writeU16(record, 6 + index * 2, value))
       if (changes.skill1Id != null) record[12] = changes.skill1Id & 0xff; if (changes.skill2Id != null) record[13] = changes.skill2Id & 0xff; if (changes.skill1Points != null) record.writeInt8(changes.skill1Points, 14); if (changes.skill2Points != null) record.writeInt8(changes.skill2Points, 15); if (changes.slots != null) record[16] = changes.slots

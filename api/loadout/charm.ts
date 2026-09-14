@@ -15,7 +15,10 @@ export function validateCharm(snapshot: LoadoutCalculationSnapshot, charm: Loado
     }
     const matches = snapshot.charmRanges.filter(value => value.classId === charm.classId && value.position === position && value.skillId === skill.skillId && (value.slotCount == null || value.slotCount === charm.slots))
     for (const value of matches) ranges.push({ position, min: value.minPoints, max: value.maxPoints, source: value.source })
-    if (!matches.some(value => skill.points >= value.minPoints && skill.points <= value.maxPoints)) issues.push({ code: 'charm.skill.non-natural', path: `charm.skill${position === 'A' ? 1 : 2}.points`, severity: 'warning', message: `${position} 技能点不在已确认自然范围内`, source: matches[0]?.source ?? 'catalog_skill_talisman_ranges' })
+    const exact = matches.filter(value => value.slotCount != null && value.status === 'exact')
+    const unknown = matches.filter(value => value.slotCount == null || value.status !== 'exact')
+    if (!exact.length && unknown.length) issues.push({ code: 'charm.slots.unknown', path: 'charm.slots', severity: 'warning', message: `${position} 技能的护石孔位规则无法确认，不能视为 0 孔`, source: unknown[0].source })
+    else if (!exact.some(value => skill.points >= value.minPoints && skill.points <= value.maxPoints)) issues.push({ code: 'charm.skill.non-natural', path: `charm.skill${position === 'A' ? 1 : 2}.points`, severity: 'warning', message: `${position} 技能点不在已确认自然范围内`, source: matches[0]?.source ?? 'catalog_skill_talisman_ranges' })
   }
   if (charm.skill1 && charm.skill2 && charm.skill1.skillId === charm.skill2.skillId) issues.push({ code: 'charm.skill.duplicate', path: 'charm.skill2', severity: 'warning', message: 'A/B 技能使用了同一技能系' })
   const encoding = issues.some(value => value.severity === 'error') ? 'blocked' : 'encodable'

@@ -165,6 +165,11 @@ function buildGame(gameId, spec) {
   const activeNames = names(spec, 'ID_Skl_Name.csv', 'Skl_ID', 'Skl_Name')
   const activeByExact = new Map(parseCsv(dexFile(spec, 'DB_Skl.csv')).map((row) => [`${row.SklTree_ID}:${row.Pt}`, activeNames.get(integer(row.Skl_ID))]))
   const skillRows = parseCsv(dexFile(spec, 'DB_SklTreetoAmr.csv'))
+  const skillCrosswalk = new Map()
+  for (const row of db.prepare('SELECT dex_id,skill_id FROM catalog_skills WHERE game_id=? AND dex_id IS NOT NULL').all(gameId)) {
+    if (skillCrosswalk.has(row.dex_id)) throw new Error(`${gameId}: Dex 技能系 ${row.dex_id} 存在重复 crosswalk`)
+    skillCrosswalk.set(row.dex_id, row.skill_id)
+  }
   const materialRows = parseCsv(dexFile(spec, 'DB_ItmtoAmr.csv'))
   const itemByDex = new Map(db.prepare('SELECT dex_id,save_id FROM catalog_items WHERE game_id=? AND dex_id IS NOT NULL').all(gameId).map((row) => [row.dex_id, row.save_id]))
   const saveIdentities = rawSaveIdentities(db, gameId, armorRows, armorNames)
@@ -189,7 +194,7 @@ function buildGame(gameId, spec) {
       for (const identity of saveIdentities.get(dexId) ?? []) insertSave.run(gameId, dexId, identity.saveType, identity.saveId, identity.status, identity.source ?? source)
     }
     for (const row of skillRows) {
-      const dexId = integer(row.Amr_ID); const skillId = integer(row.SklTree_ID); const point = integer(row.Pt, 0); const name = skillNames.get(skillId) ?? { cn: `技能 ${skillId}`, en: '', jp: '' }; const active = activeByExact.get(`${skillId}:${point}`)
+      const dexId = integer(row.Amr_ID); const dexSkillId = integer(row.SklTree_ID); const skillId = skillCrosswalk.get(dexSkillId); if (skillId == null) throw new Error(`${gameId}: 防具 ${dexId} 的 Dex 技能系 ${dexSkillId} 缺少 crosswalk`); const point = integer(row.Pt, 0); const skill = db.prepare('SELECT name_cn cn,name_en en FROM catalog_skills WHERE game_id=? AND skill_id=?').get(gameId, skillId); const name = skill ?? skillNames.get(dexSkillId) ?? { cn: `技能 ${skillId}`, en: '', jp: '' }; const active = activeByExact.get(`${dexSkillId}:${point}`)
       insertSkill.run(gameId, dexId, skillId, name.cn, name.en, point, active?.cn ?? null, active?.en ?? null, source)
     }
     for (const row of materialRows) {

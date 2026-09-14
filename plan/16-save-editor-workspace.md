@@ -1,6 +1,6 @@
 # 三作修改器工作区与存档会话实施计划
 
-状态：修改器初版完成；剩余为 UI 美化、完整回归测试、Windows 模拟器重开与扩充真实样本矩阵（2026-09-12）
+状态：修改器初版完成；剩余为 UI 美化、GU/XX 猎人防具幻化详情与校验、完整回归测试、Windows 模拟器重开与扩充真实样本矩阵（2026-09-13）。幻化图标素材阻塞已解除。
 
 ## 0. 实施进度
 
@@ -25,7 +25,8 @@
 - 完整备份导入会按目标 adapter 的 ID 位宽、数量上限、装备类型、记录长度与字符集重新校验；无效记录
   只进入预览诊断，不会借助完整备份绕过正式 writer。
 - GU/XX 操虫棍与已强化防具必须复用当前箱中可确认来源的完整实例；配装实例的类型、ID、等级与格式均会
-  二次核对。护石落盘标记、猫武器/猫防具外观约束和唯一已穿戴缓存同步均已有固定回归。
+  二次核对。护石落盘标记、猫武器/猫防具外观约束和唯一已穿戴缓存同步均已有固定回归；猎人防具
+  `appearanceId` 的详情展示与同部位写入 validator 仍按 15.7 追补。
 - MH4G 装饰珠 `bit15` 的固定/内置标记已在详情、编辑和配装整套写入之间保留，不再被普通珠 ID 覆盖。
 - 覆盖保存会检查磁盘 fingerprint，生成时间戳备份，以同目录临时文件 `fsync + rename` 写回，并重新
   读取、比较和用同一 adapter 复核；失败时保持 dirty 并恢复原文件。
@@ -1002,3 +1003,44 @@ GU/XX 猫武器/头/身体、普通猫/外来猫/配信猫、非法但可编码�
 
 这些证据不阻挡会话、玩家字段、道具/装备箱、图鉴加入、配装写入和猎猫修改。物理交换不纳入完成
 条件；模拟器样本仍作为发布回归质量门槛，而不是继续开发页面和 writer 的外部数据阻塞。
+
+### 15.7 GU/XX 防具幻化字段与缩略图专项复核（2026-09-13）
+
+本节保留探测摘要；可执行的字段、crosswalk、resolver、校验、UI 和验收清单已拆到
+[21-gu-armor-appearance.md](21-gu-armor-appearance.md)，后续实现以该专项文档为准。
+
+#### 已确认的原生事实
+
+- `api/save/adapters/mhgu.ts` 与旧版 `mhgu-xx-se` 使用同一字段：装备记录 `0x04–0x05` 为小端 16 位 `appearanceId`；读取和写入偏移已确认，不是解包缺少字段。
+- 猎人防具幻化使用同部位防具表中的存档 ID；旧修改器已验证头/胸/腕/腰/腿必须同部位。错误部位或不存在的 ID 应拒绝写入。
+- 猎人武器幻化在 MHGU/XX 原版不生效；旧修改器将其视为禁止项。新 UI 不能因为记录有 `appearanceId` 字段就开放武器幻化。
+- 猫防具幻化同样要求头/身体同部位；猫武器幻化禁用。等级/属性/技能属于实际装备记录，不能因幻化显示改变。
+
+#### 当前实现缺口
+
+- `SaveEquipmentCell.appearanceId` 已被解析，但 `SaveEquipmentEmbeddedDetail` 只加载实际装备的 `saveId` 详情，没有加载或并列展示“当前幻化外观”的名称、身份和状态。因此用户在箱格详情里容易误以为幻化没有生效。
+- `SaveEquipmentEditorDrawer` 目前只在 GU/XX 防具实例编辑区显示幻化候选，缺少“实际装备 ↔ 幻化外观”的双预览、当前外观清除状态和同部位校验说明；候选最多读取一页 100 条，也没有针对外观身份的稳定分页/定位。
+- `SaveSessionService.patchEquipmentRecord()` 已阻止猫武器幻化并检查猫防具同部位，但猎人防具写入还需要统一调用同一 resolver 做“存在 + 部位”校验；`validate()` 也应逐条报告非法 `appearanceId`，不能只在点击保存时才发现。图标素材已取得，不再阻塞该 resolver 或写回工作。
+- 配装器普通防具物化默认写入 `appearanceId=0`。这符合“图鉴装备不携带外观实例”的首版边界，但导入已有实例或未来保存逻辑配装时必须明确是否保留 appearance，而不能静默覆盖。
+
+#### 解包与图标调查结论
+
+已核对 `../research/mhgu/romfs/mhxx-table/` 的 `armorSeriesData.asd`、`armorSe.ased`、`armorCreateA00–A04.acrd`、颜色与基础外观表，以及当前 `data/manifests/mhgu-armor-icons.json` 和旧修改器防具表：
+
+- 这些资源可以闭合外观 ID → 同部位防具身份/名称/数值关系，但当前没有发现“每个 appearanceId 一张独立缩略 PNG”或现成 appearance icon manifest。
+- 当前公开资源是 `Amr_<部位><稀有度>` 的部位/稀有度通用图标（GU 防具 manifest 88 个键），不是每一件外观装备的独立图标。旧修改器也只提供名称下拉，没有独立幻化缩略图。
+- 进一步核对 `../research/mhgu/dex/resources/MHXX_Dex.Resource Image.resources` 后确认：其中共有 3,211 个图像资源，`Amr_` 前缀 88 个、`Wpn_` 198 个、`Itm_` 2,925 个。`Amr_0101` 这一类键按“部位代码 + 稀有度”组织，当前 `data/manifests/mhgu-armor-icons.json` 已包含全部 88 个图标；你提供的截图样式与这组游戏/Dex 防具分类图标一致。
+- `../research/mhgu/reference-editors/Cotto-MHGU-Editor-source/core/game_data.json` 与 `src/gameData.ts` 还保存了完整的外观候选数组：`EquipHead/Chest/Arms/Waist/LegsNames` 与对应 `IDs` 分别为 1204、1189、1158、1108、1177 项；旧编辑器通过同部位 `IDs` 数组将 `appearanceId` 解析为名称，证明它们不是按名称猜测。
+- 因此当前真正缺少的不是“游戏分类图标”，而是“每个 appearanceId 一张独立外观模型缩略图”。首版已改用用户提供的防具幻化 sprite 作为“存在幻化/幻化类别”标识；仍可按外观目标条目的部位/稀有度选择 `Amr_<部位><稀有度>` 分类图标，但必须在来源标记中说明二者都不是独立模型 thumbnail。只有寻找模型/渲染预览时才需要继续解包 UI 图集或模型资源，该项不阻塞字段读写。
+- 模型、试穿预览和独立外观大图不在本轮范围；若后续要做真实 appearance thumbnail，需要额外找到游戏 UI 图集/渲染资源并单独审计，不因当前缺图标而阻塞字段读写。
+
+#### 落实计划与验收
+
+1. 新增 `resolveArmorAppearance(contentGameId, saveType, appearanceId)`，唯一来源为已审计的同部位防具 crosswalk；返回名称、三语名称、稀有度、部位、`iconPath`、`iconSource='custom-appearance-sprite'|'dex-armor-category'|'fallback'` 和 `sourceStatus`（`confirmed` / `unknown`）。`appearanceId=0` 明确表示“无幻化”，不创建虚假的装备关系。
+2. 新增 `armorAppearanceIconPath(gameId, part, rarity)`，使用 `Amr_<部位代码><稀有度两位数>` 查 manifest；找不到具体稀有度时只回退同部位最低级图标，并返回 `iconFallback=true`，不能静默使用实际装备的图标冒充外观。
+3. 在 `SaveEquipmentCell` 增加外观解析字段（名称、部位、稀有度、图标、来源、诊断）。装备箱格主图仍代表实际装备；存在幻化时叠加小尺寸外观图标徽标，详情中并列显示“实际装备 / 幻化外观”，防止把外观属性误当成实际能力。
+4. 编辑抽屉复用同一 resolver，支持按部位搜索、清除幻化、当前项定位和实际/外观双预览；候选行使用目标外观的 `Amr_` 图标。猎人武器、猫武器的幻化入口保持隐藏或禁用并说明原版限制。
+5. 将“存在 + 同部位 + 版本可用性”提取为 adapter validator，读取时产生字段诊断，写入时阻断 `invalid`，未知但可保存的记录标记 `unknown` 并要求用户确认；不得按名称猜测。
+6. 配装器物化继续默认 `appearanceId=0`；若未来支持带幻化实例的逻辑配装，新增显式 `appearance` 字段和 round-trip 测试，不复用普通防具模板字段。
+
+验收必须覆盖：每个猎人防具部位的有效/无效/跨部位 appearance ID、五部位 `Amr_` 图标映射、稀有度超出 manifest 的 fallback、猫头/猫身体同部位规则、武器幻化禁用、详情关闭再打开仍保留外观名称和图标、外观图标来源明确且不伪装成独立模型 thumbnail、图鉴/配装物化不会意外写入外观，以及旧版本未知 ID 的可读保留与保存阻断策略。

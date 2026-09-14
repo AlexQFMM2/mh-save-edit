@@ -26,7 +26,7 @@ export function AutoLoadoutResultRow({ index, result, selected, onSelect }: Prop
       <span className="auto-loadout-result-row__summary">雷 <b className="auto-loadout-result-row__data">{resistance.thunder}</b></span>
       <span className="auto-loadout-result-row__summary">冰 <b className="auto-loadout-result-row__data">{resistance.ice}</b></span>
       <span className="auto-loadout-result-row__summary">龙 <b className="auto-loadout-result-row__data">{resistance.dragon}</b></span>
-      <span className="auto-loadout-result-row__legality">{result.calculation.legality === 'confirmed' ? '自然合法' : '包含固定风险输入'}</span>
+      <span className="auto-loadout-result-row__legality">{result.calculation.legality === 'confirmed' ? '自然合法' : '包含固定风险输入'}{result.searchComplete === false ? ' · 未证明穷举' : ''}</span>
       <span className="auto-loadout-result-row__selection"><Check className="auto-loadout-result-row__selection-icon" aria-hidden="true" />{selected ? '已选择' : '选择此结果'}</span>
     </button>
     <div className="auto-loadout-result-row__table-scroller">

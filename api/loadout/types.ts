@@ -252,8 +252,8 @@ export type AutoLoadoutRequest = {
   resultLimit: number
   timeoutMs: number
 }
-export type AutoLoadoutResult = { fingerprint: string; loadout: LogicalLoadout; calculation: LoadoutResult }
-export type AutoLoadoutProgress = { requestId: string; stage: string; checked: number; estimatedTotal?: number | null; results: number; elapsedMs: number }
+export type AutoLoadoutResult = { fingerprint: string; loadout: LogicalLoadout; calculation: LoadoutResult; searchComplete?: boolean; incompleteReason?: 'timeout' | 'candidate-bound' | 'unknown-charm-range' | 'search-error' }
+export type AutoLoadoutProgress = { requestId: string; stage: string; checked: number; estimatedTotal?: number | null; results: number; elapsedMs: number; searchComplete?: boolean; incompleteReason?: 'timeout' | 'candidate-bound' | 'unknown-charm-range' | 'search-error' }
 export type AutoLoadoutJobStatus = 'queued' | 'running' | 'paused' | 'completed' | 'cancelled' | 'failed' | 'interrupted'
 export type AutoLoadoutJobSummary = {
   jobId: string

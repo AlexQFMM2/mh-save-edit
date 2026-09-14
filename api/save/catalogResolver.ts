@@ -75,7 +75,24 @@ export class SaveCatalogResolver {
       : 0
     const armorPart = (text(row?.part) || armorPartBySaveType[cell.saveType]) as 'head' | 'chest' | 'arms' | 'waist' | 'legs' | undefined
     const iconPath = cell.kind === 'charm' ? charmIconPath(gameId, cell.saveId) : row?.icon_path ? text(row.icon_path) : cell.kind === 'weapon' ? weaponFallbackIconPath(gameId, typeId) : cell.kind === 'armor' && armorPart ? armorFallbackIconPath(gameId, armorPart) : null
-    return { ...cell, nameCn: cell.empty ? '空格' : text(row?.name_cn, cell.kind === 'kinsect' ? `猎虫 #${cell.saveId}` : `${typeNameCn || '装备'} #${cell.saveId}`), nameEn: text(row?.name_en), typeNameCn: cell.empty ? '空格' : typeNameCn, iconPath, weaponKey: row?.weapon_key ? text(row.weapon_key) : null, armorDexId: row?.dex_id == null ? null : number(row.dex_id), palicoEquipmentId: row?.equipment_id == null ? null : number(row.equipment_id), decorationLabels, skill1NameCn: skillName(cell.skill1Id), skill2NameCn: skillName(cell.skill2Id), diagnostics }
+    const appearance = !cell.empty && !cell.kind.toString().startsWith('palico') && (gameId === 'mhgu') && cell.kind === 'armor' && cell.appearanceId ? this.resolveArmorAppearance(gameId, cell.saveType, cell.appearanceId) : null
+    if (cell.kind === 'armor' && cell.appearanceId && gameId === 'mhgu' && !appearance) diagnostics.push({ code: 'equipment.appearance.unknown', path: `equipment.${cell.slot}.appearanceId`, severity: 'warning', message: `未映射的防具幻化 ID ${cell.appearanceId}，原值会被保留` })
+    return { ...cell, appearance, nameCn: cell.empty ? '空格' : text(row?.name_cn, cell.kind === 'kinsect' ? `猎虫 #${cell.saveId}` : `${typeNameCn || '装备'} #${cell.saveId}`), nameEn: text(row?.name_en), typeNameCn: cell.empty ? '空格' : typeNameCn, iconPath, weaponKey: row?.weapon_key ? text(row.weapon_key) : null, armorDexId: row?.dex_id == null ? null : number(row.dex_id), palicoEquipmentId: row?.equipment_id == null ? null : number(row.equipment_id), decorationLabels, skill1NameCn: skillName(cell.skill1Id), skill2NameCn: skillName(cell.skill2Id), diagnostics }
+  }
+  resolveArmorAppearance(gameId: GameId, saveType: number, appearanceId: number) {
+    if (gameId !== 'mhgu' || !appearanceId || saveType < 1 || saveType > 5) return null
+    const part = armorPartBySaveType[saveType]; const table = ({ head: 'cn__armor_head', chest: 'cn__armor_chest', arms: 'cn__armor_arms', waist: 'cn__armor_waist', legs: 'cn__armor_legs' } as Record<string, string>)[part]
+    const row = this.db(gameId).prepare(`SELECT id,name,english,rarity FROM ${table} WHERE id=?`).get(appearanceId) as Row | undefined
+    if (!row) return null
+    const rarity = row.rarity == null ? null : number(row.rarity); const exactIcon = this.armorAppearanceIconPath(gameId, part, rarity); const fallbackIcon = exactIcon ? null : this.armorAppearanceIconPath(gameId, part, null); const iconPath = exactIcon ?? fallbackIcon
+    return { appearanceId, nameCn: text(row.name), nameEn: text(row.english), nameJp: '', part, rarity, iconPath, iconSource: iconPath ? 'dex-armor-category' as const : 'fallback' as const, sourceStatus: 'confirmed' as const, iconFallback: Boolean(fallbackIcon) }
+  }
+  armorAppearanceIconPath(gameId: GameId, part: 'head' | 'chest' | 'arms' | 'waist' | 'legs', rarity: number | null) {
+    if (gameId !== 'mhgu') return null
+    const row = rarity == null
+      ? this.db(gameId).prepare('SELECT icon_path FROM catalog_armors WHERE game_id=? AND part=? AND icon_path IS NOT NULL ORDER BY rarity,dex_id LIMIT 1').get(gameId, part) as Row | undefined
+      : this.db(gameId).prepare('SELECT icon_path FROM catalog_armors WHERE game_id=? AND part=? AND rarity=? AND icon_path IS NOT NULL ORDER BY dex_id LIMIT 1').get(gameId, part, rarity) as Row | undefined
+    return row?.icon_path ? text(row.icon_path) : null
   }
   palicoLabels(forte: number, target: number) {
     const db = this.db('mhgu')

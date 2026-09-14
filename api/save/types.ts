@@ -102,6 +102,18 @@ export type SaveItemCell = {
 }
 
 export type SaveEquipmentKind = 'empty' | 'weapon' | 'armor' | 'charm' | 'kinsect' | 'palico-weapon' | 'palico-head' | 'palico-body' | 'unknown'
+export type SaveArmorAppearance = {
+  appearanceId: number
+  nameCn: string
+  nameEn: string
+  nameJp?: string
+  part: 'head' | 'chest' | 'arms' | 'waist' | 'legs'
+  rarity: number | null
+  iconPath: string | null
+  iconSource: 'dex-armor-category' | 'custom-appearance-sprite' | 'fallback'
+  sourceStatus: 'confirmed' | 'unknown'
+  iconFallback: boolean
+}
 export type SaveEquipmentCell = {
   slot: number
   empty: boolean
@@ -111,6 +123,7 @@ export type SaveEquipmentCell = {
   level: number
   slots: number | null
   appearanceId: number | null
+  appearance?: SaveArmorAppearance | null
   decorations: number[]
   skill1Id: number | null
   skill1Points: number | null
