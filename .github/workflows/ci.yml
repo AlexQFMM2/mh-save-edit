@@ -3,6 +3,7 @@ name: MH Save Editor CI
 on:
   push:
     branches: [main]
+    tags: ['v*']
   pull_request:
 
 permissions:
@@ -154,3 +155,29 @@ jobs:
           if-no-files-found: error
           retention-days: 7
           compression-level: 6
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: package-windows
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: mh-save-editor-windows-x64
+          path: release/win-unpacked
+      - name: Archive Windows portable build
+        run: |
+          tar -C release/win-unpacked -czf "mh-save-editor-${GITHUB_REF_NAME}-windows-x64.tar.gz" .
+          sha256sum "mh-save-editor-${GITHUB_REF_NAME}-windows-x64.tar.gz" > SHA256SUMS.txt
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            --verify-tag \
+            --title "$GITHUB_REF_NAME" \
+            --generate-notes \
+            "mh-save-editor-${GITHUB_REF_NAME}-windows-x64.tar.gz" \
+            SHA256SUMS.txt
