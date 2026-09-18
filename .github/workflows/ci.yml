@@ -39,6 +39,7 @@ jobs:
             test "$(head -c 15 "data/$database")" = "SQLite format 3"
           done
           test "$(find ui/public/assets/catalog/icons -maxdepth 1 -type f -name '*.png' | wc -l)" -eq 1941
+      - run: pnpm data:audit:runtime
       - run: pnpm typecheck
       - name: Test without private manifest snapshots
         run: pnpm exec vitest run --exclude tests/weaponCatalogData.test.ts --minWorkers=1 --maxWorkers=2
@@ -91,6 +92,7 @@ jobs:
       - name: Apply runtime catalog migrations
         shell: pwsh
         run: node tools/repair_runtime_catalog.mjs
+      - run: pnpm data:audit:runtime
       - name: Validate injected runtime assets
         shell: pwsh
         run: |

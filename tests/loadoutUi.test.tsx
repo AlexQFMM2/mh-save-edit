@@ -146,7 +146,7 @@ describe('AutoLoadoutHistoryDrawer', () => {
     const close = vi.fn()
     Object.defineProperty(window, 'mhSaveEditor', { configurable: true, value: { loadout: { listAutoLoadoutJobs: vi.fn().mockResolvedValue([summary]), getAutoLoadoutJob: vi.fn().mockResolvedValue(detail), markAutoLoadoutJobViewed: vi.fn().mockResolvedValue(undefined), subscribeAutoLoadoutJobs: vi.fn(() => () => undefined), controlAutoLoadoutJob: vi.fn(), retryAutoLoadoutJob: vi.fn(), deleteAutoLoadoutJobs: vi.fn(), reconcileLoadout: vi.fn(), selectAutoLoadoutJobResult: vi.fn() } } })
 
-    render(<AutoLoadoutHistoryDrawer gameId="mh3g" snapshot={snapshot} onApply={vi.fn()} onClose={close} />)
+    render(<AutoLoadoutHistoryDrawer gameId="mh3g" snapshot={snapshot} onApply={vi.fn()} onCopyConditions={vi.fn()} onClose={close} />)
     const task = await screen.findByRole('button', { name: /测试发动.*MH3G/ })
     fireEvent.click(task)
     await screen.findByRole('dialog', { name: '自动任务详情' })
@@ -162,14 +162,17 @@ describe('AutoLoadoutHistoryDrawer', () => {
 })
 
 describe('EquipmentPickerDrawer', () => {
-  it('applies a valid paged equipment candidate on double click', async () => {
+  it('only applies a valid paged candidate through the footer, not keyboard or double click', async () => {
     const candidate: LoadoutWeaponCandidate = { kind: 'weapon', gameId: 'mh3g', candidateKey: 'weapon:1', sourceKind: 'catalog', weaponKey: 'weapon:1', templateKey: null, saveType: 7, saveId: 1, nameCn: '测试大剑', nameEn: 'Test GS', typeId: 1, typeNameCn: '大剑', rarity: 1, slots: 2, attack: 100, affinity: 0, defense: 0, iconPath: null }
     const facets: LoadoutFacets = { skills: [], weaponTypes: [{ typeId: 1, nameCn: '大剑' }], weaponRarities: [1], armorRarities: [], charmClasses: [] }
-    Object.defineProperty(window, 'mhSaveEditor', { configurable: true, value: { loadout: { searchWeapons: vi.fn().mockResolvedValue({ items: [candidate], page: 1, pageSize: 100, total: 1, hasNext: false }), searchArmors: vi.fn() } } })
+    Object.defineProperty(window, 'mhSaveEditor', { configurable: true, value: { loadout: { searchWeapons: vi.fn().mockResolvedValue({ items: [candidate], page: 1, pageSize: 100, total: 1, hasNext: false }), searchArmors: vi.fn() }, catalog: { getWeapon: vi.fn().mockResolvedValue(null) } } })
     const onApply = vi.fn()
     render(<EquipmentPickerDrawer gameId="mh3g" slot="weapon" facets={facets} relicLookups={[]} decorations={[]} onApply={onApply} onClose={vi.fn()} />)
     await screen.findByRole('button', { name: /测试大剑/ })
-    fireEvent.doubleClick(screen.getByRole('button', { name: /测试大剑/ }))
+    const row = screen.getByRole('button', { name: /测试大剑/ })
+    fireEvent.keyDown(row, { key: 'Enter' }); fireEvent.keyDown(row, { key: ' ' }); fireEvent.doubleClick(row)
+    expect(onApply).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByRole('button', { name: '应用选择' }))
     expect(onApply).toHaveBeenCalledWith(candidate)
   })
 
@@ -224,7 +227,7 @@ describe('SaveEquipmentEditorDrawer', () => {
     const recordHex = `${'ab'.repeat(20)}${'cd'.repeat(8)}`
     const bootstrap = { gameId: 'mh4g' as const, dataVersion: 'test', decorations: [], skills: [], charmClasses: [], charmRanges: [], relicLookups: [] }
     const facets: LoadoutFacets = { skills: [], weaponTypes: [{ typeId: 1, nameCn: '大剑' }], weaponRarities: [1], armorRarities: [], charmClasses: [] }
-    Object.defineProperty(window, 'mhSaveEditor', { configurable: true, value: { loadout: { getBootstrap: vi.fn().mockResolvedValue(bootstrap), getFacets: vi.fn().mockResolvedValue(facets), searchWeapons: vi.fn().mockResolvedValue({ items: [template], page: 1, pageSize: 100, total: 1, hasNext: false }), searchArmors: vi.fn() } } })
+    Object.defineProperty(window, 'mhSaveEditor', { configurable: true, value: { loadout: { getBootstrap: vi.fn().mockResolvedValue(bootstrap), getFacets: vi.fn().mockResolvedValue(facets), searchWeapons: vi.fn().mockResolvedValue({ items: [template], page: 1, pageSize: 100, total: 1, hasNext: false }), searchArmors: vi.fn() }, catalog: { getWeapon: vi.fn().mockResolvedValue(null) } } })
     const applyRecord = vi.fn().mockResolvedValue(undefined)
     render(<SaveEquipmentEditorDrawer gameId="mh4g" domain="hunter-equipment" cell={{ slot: 4, empty: false, kind: 'weapon', saveType: 7, saveId: 1, level: 0, slots: null, appearanceId: null, decorations: [0, 0, 0], skill1Id: null, skill1Points: null, skill2Id: null, skill2Points: null, nameCn: '发掘大剑', nameEn: 'Relic GS', typeNameCn: '大剑', iconPath: null, weaponKey: null, armorDexId: null, palicoEquipmentId: null, decorationLabels: [], skill1NameCn: null, skill2NameCn: null, recordHex, diagnostics: [] }} onApply={vi.fn().mockResolvedValue(undefined)} onApplyRecord={applyRecord} onClose={vi.fn()} />)
     fireEvent.click(screen.getByRole('button', { name: '编辑实例' }))
@@ -237,18 +240,20 @@ describe('SaveEquipmentEditorDrawer', () => {
     const candidate: LoadoutWeaponCandidate = { kind: 'weapon', gameId: 'mhgu', candidateKey: 'catalog:greatsword:7:2:3', sourceKind: 'catalog', weaponKey: 'greatsword:7:2:3', templateKey: null, saveType: 7, saveId: 2, saveLevel: 3, nameCn: '强化测试大剑', nameEn: 'Upgraded Test GS', typeId: 1, typeNameCn: '大剑', rarity: 3, slots: 1, attack: 120, affinity: 0, defense: 0, iconPath: null }
     const bootstrap = { gameId: 'mhgu' as const, dataVersion: 'test', decorations: [], skills: [], charmClasses: [], charmRanges: [], relicLookups: [] }
     const facets: LoadoutFacets = { skills: [], weaponTypes: [{ typeId: 1, nameCn: '大剑' }], weaponRarities: [3], armorRarities: [], charmClasses: [] }
-    Object.defineProperty(window, 'mhSaveEditor', { configurable: true, value: { loadout: { getBootstrap: vi.fn().mockResolvedValue(bootstrap), getFacets: vi.fn().mockResolvedValue(facets), searchWeapons: vi.fn().mockResolvedValue({ items: [candidate], page: 1, pageSize: 100, total: 1, hasNext: false }), searchArmors: vi.fn() } } })
+    Object.defineProperty(window, 'mhSaveEditor', { configurable: true, value: { loadout: { getBootstrap: vi.fn().mockResolvedValue(bootstrap), getFacets: vi.fn().mockResolvedValue(facets), searchWeapons: vi.fn().mockResolvedValue({ items: [candidate], page: 1, pageSize: 100, total: 1, hasNext: false }), searchArmors: vi.fn() }, catalog: { getWeapon: vi.fn().mockResolvedValue(null) } } })
     const apply = vi.fn().mockResolvedValue(undefined)
     render(<SaveEquipmentEditorDrawer gameId="mhgu" domain="hunter-equipment" cell={{ slot: 0, empty: false, kind: 'weapon', saveType: 7, saveId: 1, level: 0, slots: null, appearanceId: null, decorations: [0, 0, 0], skill1Id: null, skill1Points: null, skill2Id: null, skill2Points: null, nameCn: '测试大剑', nameEn: 'Test GS', typeNameCn: '大剑', iconPath: null, weaponKey: 'greatsword:7:1:0', armorDexId: null, palicoEquipmentId: null, decorationLabels: [], skill1NameCn: null, skill2NameCn: null, recordHex: '00'.repeat(36), diagnostics: [] }} onApply={apply} onApplyRecord={vi.fn().mockResolvedValue(undefined)} onClose={vi.fn()} />)
     const row = await screen.findByRole('button', { name: /强化测试大剑/ })
-    fireEvent.doubleClick(row)
+    fireEvent.click(row)
+    expect(apply).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByRole('button', { name: '应用选择' }))
     await waitFor(() => expect(apply).toHaveBeenCalledWith(expect.objectContaining({ reset: true, saveType: 7, saveId: 2, level: 3 })))
   })
 
   it('does not expose instance editing for an empty equipment cell', () => {
     const bootstrap = { gameId: 'mhgu' as const, dataVersion: 'test', decorations: [], skills: [], charmClasses: [], charmRanges: [], relicLookups: [] }
     const facets: LoadoutFacets = { skills: [], weaponTypes: [], weaponRarities: [], armorRarities: [], charmClasses: [] }
-    Object.defineProperty(window, 'mhSaveEditor', { configurable: true, value: { loadout: { getBootstrap: vi.fn().mockResolvedValue(bootstrap), getFacets: vi.fn().mockResolvedValue(facets), searchWeapons: vi.fn().mockResolvedValue({ items: [], page: 1, pageSize: 100, total: 0, hasNext: false }), searchArmors: vi.fn() } } })
+    Object.defineProperty(window, 'mhSaveEditor', { configurable: true, value: { loadout: { getBootstrap: vi.fn().mockResolvedValue(bootstrap), getFacets: vi.fn().mockResolvedValue(facets), searchWeapons: vi.fn().mockResolvedValue({ items: [], page: 1, pageSize: 100, total: 0, hasNext: false }), searchArmors: vi.fn() }, catalog: { getWeapon: vi.fn().mockResolvedValue(null) } } })
     render(<SaveEquipmentEditorDrawer gameId="mhgu" domain="hunter-equipment" cell={{ slot: 0, empty: true, kind: 'empty', saveType: 0, saveId: 0, level: 0, slots: null, appearanceId: null, decorations: [0, 0, 0], skill1Id: null, skill1Points: null, skill2Id: null, skill2Points: null, nameCn: '空格', nameEn: '', typeNameCn: '空格', iconPath: null, weaponKey: null, armorDexId: null, palicoEquipmentId: null, decorationLabels: [], skill1NameCn: null, skill2NameCn: null, recordHex: '00'.repeat(36), diagnostics: [] }} onApply={vi.fn().mockResolvedValue(undefined)} onApplyRecord={vi.fn().mockResolvedValue(undefined)} onClose={vi.fn()} />)
     const edit = screen.getByRole('button', { name: '编辑实例' }) as HTMLButtonElement
     expect(edit.disabled).toBe(true)

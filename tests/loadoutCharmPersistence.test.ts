@@ -44,7 +44,7 @@ describe('loadout charm persistence', () => {
       }],
       relicLookups: [],
     }
-    const results = await runAutoLoadout(snapshot, {
+    const { results } = await runAutoLoadout(snapshot, {
       requestId: 'test', gameId: 'mhgu', dataVersion: 'test', baseLoadout: loadout,
       targets: [{ activationKey: 'attack:10', skillId: 10, threshold: 5, nameCn: '攻击提升' }],
       resultLimit: 5, timeoutMs: 5000,

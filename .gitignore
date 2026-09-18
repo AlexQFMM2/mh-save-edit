@@ -7,9 +7,11 @@ data/*.sqlite
 data/*.sqlite-*
 data/manifests/
 ui/public/assets/catalog/icons/
+ui/public/assets/catalog/appearance/
 build/app-icon.ico
 build/app-icon.png
 *.log
 .env
 .electron-native/
+.dsh-meow/
 .DS_Store

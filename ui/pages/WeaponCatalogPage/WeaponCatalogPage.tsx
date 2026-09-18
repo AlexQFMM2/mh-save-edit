@@ -34,6 +34,7 @@ export function WeaponCatalogPage() {
   const rarity = numberParam(params.get('rarity'))
   const slots = numberParam(params.get('slots'))
   const directlyProducible = params.get('producible') === '1'
+  const finalOnly = params.get('final') === '1'
   const includePlaceholders = params.get('debug') === '1'
   const sort = (['saveId', 'name', 'rarity', 'attack', 'slots', 'sharpness', 'affinity'].includes(params.get('sort') ?? '') ? params.get('sort') : 'saveId') as WeaponSort
   const direction = (params.get('direction') === 'desc' ? 'desc' : 'asc') as SortDirection
@@ -96,10 +97,10 @@ export function WeaponCatalogPage() {
     let active = true; setLoading(true); setError(undefined)
     const api = window.mhSaveEditor?.catalog
     if (!api) { setError('图鉴 API 尚未连接，请在 Electron 应用中打开。'); setLoading(false); return }
-    const filters: WeaponCatalogFilters = { gameId: game.id, targetWeaponKey, query, weaponTypeId: typeId, attributeId, includeHiddenAttributes, rarity, slots, directlyProducible, includePlaceholders, sort, direction, sharpnessStage, page, pageSize: 100 }
+    const filters: WeaponCatalogFilters = { gameId: game.id, targetWeaponKey, query, weaponTypeId: typeId, attributeId, includeHiddenAttributes, rarity, slots, directlyProducible, finalOnly, includePlaceholders, sort, direction, sharpnessStage, page, pageSize: 100 }
     void api.searchWeapons(filters).then((result) => { if (!active) return; setItems(result.items); setMeta({ total: result.total, pageSize: result.pageSize, hasNext: result.hasNext }); if (!selectedKey && result.items[0]) update({ weapon: result.items[0].weaponKey }) }).catch((cause) => { if (active) setError(cause instanceof Error ? cause.message : '武器查询失败') }).finally(() => { if (active) setLoading(false) })
     return () => { active = false }
-  }, [game.id, targetWeaponKey, query, typeId, attributeId, includeHiddenAttributes, rarity, slots, directlyProducible, includePlaceholders, sort, direction, sharpnessStage, page, update, view])
+  }, [game.id, targetWeaponKey, query, typeId, attributeId, includeHiddenAttributes, rarity, slots, directlyProducible, finalOnly, includePlaceholders, sort, direction, sharpnessStage, page, update, view])
   useEffect(() => {
     if (view !== 'tree' || typeId == null) { setTree(null); return }
     let active = true; setTreeLoading(true); setTreeError(undefined)
@@ -119,7 +120,7 @@ export function WeaponCatalogPage() {
 
   const selectedType = facets.weaponTypes.find((type) => type.typeId === typeId)
   const selectedVisible = items.some((item) => item.weaponKey === selectedKey)
-  const treeFilters = useMemo(() => ({ query, attributeId, includeHiddenAttributes, rarity, slots, directlyProducible }), [query, attributeId, includeHiddenAttributes, rarity, slots, directlyProducible])
+  const treeFilters = useMemo(() => ({ query, attributeId, includeHiddenAttributes, rarity, slots, directlyProducible, finalOnly }), [query, attributeId, includeHiddenAttributes, rarity, slots, directlyProducible, finalOnly])
   const selectWeapon = (weaponKey: string) => update({ target: undefined, weapon: weaponKey })
   const selectLinkedWeapon = (weapon: WeaponLink) => update({ target: weapon.weaponKey, type: weapon.typeId, weapon: weapon.weaponKey, page: undefined })
   const changeFilter = (key: string, value?: string) => update({ target: undefined, [key]: value, page: undefined, weapon: undefined })
@@ -141,7 +142,7 @@ export function WeaponCatalogPage() {
 
   return <div className="weapon-catalog-page">
     <WeaponCatalogToolbar query={queryInput} sort={sort} direction={direction} sharpnessStage={sharpnessStage} sharpnessStages={facets.sharpnessStages} view={view} showMotion={game.id==='mhgu'} total={view === 'tree' && tree ? tree.nodes.filter((node) => weaponMatchesFilters(node, treeFilters)).length : meta.total} onQueryChange={setQueryInput} onChange={(key, value) => update({ target: undefined, [key]: value, page: undefined })} />
-    <WeaponFilterBar facets={facets} typeId={typeId} attributeId={attributeId} includeHiddenAttributes={includeHiddenAttributes} rarity={rarity} slots={slots} directlyProducible={directlyProducible} includePlaceholders={includePlaceholders} onChange={changeFilter} onReset={resetCatalog} />
+    <WeaponFilterBar facets={facets} typeId={typeId} attributeId={attributeId} includeHiddenAttributes={includeHiddenAttributes} rarity={rarity} slots={slots} directlyProducible={directlyProducible} finalOnly={finalOnly} includePlaceholders={includePlaceholders} onChange={changeFilter} onReset={resetCatalog} />
     <div className="weapon-catalog-page__layout"><div className="weapon-catalog-page__browser">{main}</div><WeaponDetailPanel gameId={game.id} weapon={detail} loading={detailLoading} error={detailError} sharpnessStage={sharpnessStage} showRelations={false} onSelectItem={setDrawerItemId} onSelectWeapon={selectLinkedWeapon} /></div>
     <ItemDetailDrawer gameId={game.id} itemSaveId={drawerItemId} onClose={() => setDrawerItemId(null)} />
   </div>

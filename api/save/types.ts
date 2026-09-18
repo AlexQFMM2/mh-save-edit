@@ -114,6 +114,9 @@ export type SaveArmorAppearance = {
   sourceStatus: 'confirmed' | 'unknown'
   iconFallback: boolean
 }
+export type SaveArmorAppearanceFilters = { gameId: 'mhgu'; saveType: number; query?: string; page?: number; pageSize?: number }
+export type SaveArmorAppearancePage = { items: SaveArmorAppearance[]; total: number; page: number; pageSize: number; hasNext: boolean }
+
 export type SaveEquipmentCell = {
   slot: number
   empty: boolean

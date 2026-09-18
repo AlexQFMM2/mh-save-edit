@@ -45,6 +45,7 @@ export const weaponCatalogFiltersSchema = z.object({
   rarity: z.number().int().min(0).max(20).optional(),
   slots: z.number().int().min(0).max(9).optional(),
   directlyProducible: z.boolean().optional(),
+  finalOnly: z.boolean().optional(),
   includePlaceholders: z.boolean().optional(),
   sort: z.enum(['saveId', 'name', 'rarity', 'attack', 'slots', 'sharpness', 'affinity']).optional(),
   direction: z.enum(['asc', 'desc']).optional(),

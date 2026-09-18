@@ -36,7 +36,7 @@ export function weaponSharpnessStages(profile: WeaponSharpnessProfile, gameId: G
   })
 }
 
-export function weaponMatchesFilters(weapon: WeaponSummary, filters: Pick<WeaponCatalogFilters, 'query' | 'attributeId' | 'includeHiddenAttributes' | 'rarity' | 'slots' | 'directlyProducible'>): boolean {
+export function weaponMatchesFilters(weapon: WeaponSummary, filters: Pick<WeaponCatalogFilters, 'query' | 'attributeId' | 'includeHiddenAttributes' | 'rarity' | 'slots' | 'directlyProducible' | 'finalOnly'>): boolean {
   const query = filters.query?.trim().toLocaleLowerCase()
   if (query) {
     const numeric = /^0x[0-9a-f]+$/i.test(query) ? Number.parseInt(query.slice(2), 16) : /^\d+$/.test(query) ? Number(query) : null
@@ -46,6 +46,7 @@ export function weaponMatchesFilters(weapon: WeaponSummary, filters: Pick<Weapon
   if (filters.rarity != null && weapon.rarity !== filters.rarity) return false
   if (filters.slots != null && weapon.slots !== filters.slots) return false
   if (filters.directlyProducible && !weapon.isDirectlyProducible) return false
+  if (filters.finalOnly && !weapon.isFinalForm) return false
   const attributes = filters.includeHiddenAttributes === false ? weapon.attributes.filter((attribute) => !attribute.isHidden) : weapon.attributes
   if (filters.attributeId === 'none' && attributes.length > 0) return false
   if (typeof filters.attributeId === 'number' && !attributes.some((attribute) => attribute.attributeId === filters.attributeId)) return false

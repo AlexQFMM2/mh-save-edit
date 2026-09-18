@@ -11,7 +11,7 @@ export function EquipmentPickerDrawer({ gameId, slot, facets, relicLookups, deco
   const [selected, setSelected] = useState<EquipmentPickerCandidate | null>(current ?? null)
   const select = useCallback((candidate: EquipmentPickerCandidate | null) => setSelected(candidate), [])
   return <LoadoutWorkspaceDrawer title={`选择${labels[slot]}`} onClose={onClose} footer={<><button type="button" onClick={onClose}>取消</button><button type="button" className="equipment-picker-drawer__apply" disabled={!selected || selected.instance?.encoding === 'blocked'} onClick={() => selected && onApply(selected)}>应用选择</button></>}>
-    <EquipmentPickerContent gameId={gameId} slot={slot} facets={facets} relicLookups={relicLookups} decorations={decorations} current={current} onSelectionChange={select} onConfirm={onApply} />
+    <EquipmentPickerContent gameId={gameId} slot={slot} facets={facets} relicLookups={relicLookups} decorations={decorations} current={current} onSelectionChange={select} />
   </LoadoutWorkspaceDrawer>
 }
 

@@ -1,17 +1,16 @@
 .catalog-icon {
-  --catalog-icon-component-small-size: 34px;
-  --catalog-icon-component-large-size: 58px;
   display: inline-grid;
   flex: 0 0 auto;
   place-items: center;
-  width: var(--catalog-icon-component-small-size);
-  height: var(--catalog-icon-component-small-size);
-  border: var(--global-border-width) solid var(--global-theme-color-border-subtle);
+  width: var(--catalog-icon-component-small-size, 34px);
+  height: var(--catalog-icon-component-small-size, 34px);
+  border: var(--catalog-icon-component-border, var(--global-border-width) solid var(--global-theme-color-border-subtle));
+  opacity: var(--catalog-icon-component-opacity, 1);
   border-radius: var(--global-radius-md);
   color: var(--global-theme-color-text-muted);
-  background: var(--global-theme-color-surface-deep);
+  background: var(--catalog-icon-component-background, var(--global-theme-color-surface-deep));
 }
-.catalog-icon--large { width: var(--catalog-icon-component-large-size); height: var(--catalog-icon-component-large-size); }
+.catalog-icon--large { width: var(--catalog-icon-component-large-size, 58px); height: var(--catalog-icon-component-large-size, 58px); }
 .catalog-icon img { width: 16px; height: 16px; image-rendering: pixelated; transform: scale(1.5); }
 .catalog-icon--large img { transform: scale(2.5); }
 .catalog-icon svg { width: 17px; height: 17px; }

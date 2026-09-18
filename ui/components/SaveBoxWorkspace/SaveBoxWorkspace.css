@@ -11,8 +11,8 @@
 .save-box-workspace__grid > button { position: relative; display: grid; place-items: center; min-width: 0; min-height: 0; padding: var(--global-spacing-1); border: var(--global-border-width) solid var(--global-theme-color-border-subtle); border-radius: var(--global-radius-sm); background: transparent; }
 .save-box-workspace__grid > button[aria-selected=true] { border-color: var(--global-theme-color-gold-bright); box-shadow: inset 0 0 0 1px var(--global-theme-color-gold); }
 .save-box-workspace__grid > button.is-dimmed { opacity: .2; }
-.save-box-workspace__grid > button.is-empty .catalog-icon { opacity: .3; }
-.save-box-workspace__grid .catalog-icon { width: 30px; height: 30px; border: 0; background: transparent; }
+.save-box-workspace__grid > button.is-empty { --catalog-icon-component-opacity: .3; }
+.save-box-workspace__grid { --catalog-icon-component-small-size: 30px; --catalog-icon-component-border: 0; --catalog-icon-component-background: transparent; --armor-appearance-icon-component-small-size: 30px; --armor-appearance-icon-component-border: 0; --armor-appearance-icon-component-background: transparent; }
 .save-box-workspace__grid small { position: absolute; top: 2px; left: 3px; color: var(--global-theme-color-text-muted); font-size: var(--global-typography-font-size-caption); transform: scale(.82); transform-origin: top left; }
 .save-box-workspace__grid strong { position: absolute; right: 3px; bottom: 1px; padding: 0 var(--global-spacing-1); border-radius: var(--global-radius-sm); color: var(--global-theme-color-data); background: var(--global-theme-color-surface-deep); font-size: var(--global-typography-font-size-caption); transform: scale(.9); transform-origin: bottom right; }
 .save-box-workspace__box > footer { display: flex; align-items: center; justify-content: center; gap: var(--global-spacing-4); padding-top: var(--global-spacing-3); }

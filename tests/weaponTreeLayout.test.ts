@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { WeaponTreeEdge, WeaponTreeNode } from '../api/catalog/types'
 import { layoutWeaponTree } from '../ui/utils/weaponTreeLayout'
+import { contextualWeaponKeys, weaponMatchesFilters } from '../ui/utils/weaponCatalog'
 
 function node(weaponKey: string, dexId: number): WeaponTreeNode { return { gameId: 'mh3g', weaponKey, typeId: 1, typeNameCn: '大剑', typeNameEn: 'Great Sword', kind: 'standardMelee', saveType: 7, saveId: dexId, saveLevel: null, displayLevel: null, dexId, nameCn: weaponKey, nameEn: weaponKey, rarity: 1, displayAttack: 1, trueRawAttack: 1, affinity: 0, defense: 0, slots: 0, isDirectlyProducible: dexId === 1, isFinalForm: false, iconPath: null, isPlaceholder: false, attributes: [], sharpness: null, specialSummary: [], matchesFilter: true } }
 
@@ -12,6 +13,12 @@ describe('weapon tree layout', () => {
     expect(layoutWeaponTree(nodes, edges)).toEqual(first)
     expect(first.find((item) => item.weaponKey === '7:4')!.depth).toBe(2)
     expect(first.find((item) => item.weaponKey === '7:3')!.y).toBe(first.find((item) => item.weaponKey === '7:4')!.y)
+  })
+  it('counts only confirmed final matches while retaining their nonmatching ancestors', () => {
+    const values = nodes.map(value => ({ ...value, isFinalForm: value.weaponKey === '7:4' }))
+    const matches = new Set(values.filter(value => weaponMatchesFilters(value, { finalOnly: true })).map(value => value.weaponKey))
+    expect([...matches]).toEqual(['7:4'])
+    expect([...contextualWeaponKeys(values, edges, matches)].sort()).toEqual(['7:1', '7:3', '7:4'])
   })
   it('rejects cycles', () => {
     expect(() => layoutWeaponTree(nodes.slice(0, 2), [...edges.slice(0, 1), { parentWeaponKey: '7:2', childWeaponKey: '7:1', branchOrder: 0 }])).toThrow()

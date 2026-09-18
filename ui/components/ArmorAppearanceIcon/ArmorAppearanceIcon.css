@@ -1,0 +1,15 @@
+.armor-appearance-icon {
+  --armor-appearance-icon-component-size: var(--armor-appearance-icon-component-small-size, 34px);
+  display: inline-grid;
+  flex: 0 0 auto;
+  width: var(--armor-appearance-icon-component-size);
+  height: var(--armor-appearance-icon-component-size);
+  border: var(--armor-appearance-icon-component-border, var(--global-border-width) solid var(--global-theme-color-border-subtle));
+  border-radius: var(--global-radius-md);
+  background: var(--armor-appearance-icon-component-background, var(--global-theme-color-surface-deep));
+}
+.armor-appearance-icon--large { --armor-appearance-icon-component-size: var(--armor-appearance-icon-component-large-size, 58px); }
+.armor-appearance-icon__viewport { position: relative; display: block; width: 100%; height: 100%; overflow: hidden; border-radius: inherit; }
+.armor-appearance-icon__image { position: absolute; left: -50%; width: 200%; height: 800%; max-width: none; image-rendering: pixelated; }
+.armor-appearance-icon__fallback { display: grid; place-items: center; position: relative; }
+.armor-appearance-icon__badge { position: absolute; right: 0; bottom: 0; padding-inline: 2px; background: var(--global-theme-color-surface-deep); color: var(--global-theme-color-data); font-size: var(--global-typography-font-size-caption); }

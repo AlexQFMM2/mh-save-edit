@@ -3,14 +3,16 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import Database from 'better-sqlite3'
+import { repairRuntimeArmorSkills } from './runtime/repairArmorSkills.mjs'
 
+function repairMh3gDecorations() {
 const root = path.resolve(import.meta.dirname, '..')
 const databasePath = path.join(root, 'data/mh3g.sqlite')
 
 // Runtime assets are intentionally private and may lag behind the public
 // builder commit. This idempotent migration keeps an older injected catalog
 // compatible with the corrected MH3G decoration crosswalk.
-if (!fs.existsSync(databasePath)) process.exit(0)
+if (!fs.existsSync(databasePath)) return
 
 const db = new Database(databasePath)
 db.pragma('foreign_keys = ON')
@@ -81,3 +83,7 @@ if (rows[0]?.dex_id !== 147 || rows[0]?.name_en !== 'ShotPlus Jewel 2' || rows[1
 }
 db.close()
 console.log('MH3G decoration crosswalk runtime migration applied')
+}
+
+repairMh3gDecorations()
+repairRuntimeArmorSkills(path.resolve(import.meta.dirname, '..', 'data'))

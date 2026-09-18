@@ -48,6 +48,51 @@ afterEach(() => {
 })
 
 describe('SaveSessionService transfers', () => {
+  it.each(['mhgu-switch-yuzu', 'mhxx-3ds-citra'] as const)('round-trips five-part appearances, unknown preservation and undo for %s', (formatId) => {
+    const directory = temporaryDirectory(); createMhguCatalog(directory)
+    const db = new Database(join(directory, 'mhgu.sqlite'))
+    for (const part of ['head', 'chest', 'arms', 'waist', 'legs']) {
+      db.exec(`CREATE TABLE cn__armor_${part}(id INTEGER,name TEXT,english TEXT,rarity INTEGER)`)
+      db.prepare(`INSERT INTO cn__armor_${part} VALUES(7,?,?,1)`).run(`synthetic-${part}`, part)
+    }
+    db.exec("INSERT INTO cn__armor_chest VALUES(99,'chest only','chest only',1)"); db.close()
+    const xx = formatId === 'mhxx-3ds-citra'
+    const bytes = Buffer.alloc(xx ? 4_726_152 : 5_159_064)
+    bytes.writeUInt32LE(0xc6, 0); bytes[4] = 1; bytes.writeUInt32LE(0x1c, 8)
+    ;(xx ? [0x126474, 0x244c34, 0x3633f4] : [0x18cc78, 0x2ac53c, 0x3cbe00]).forEach((base, index) => bytes.writeUInt32LE(base, 0x10 + index * 4))
+    const initial = new MhguSaveAdapter(bytes, formatId, 'system'); initial.selectCharacter(0)
+    const records = Array.from({ length: 5 }, (_, index) => {
+      const record = Buffer.alloc(36, 0x5a); writeU16(record, 0, 0xa800 | (4 << 5) | (index + 1)); writeU16(record, 2, 9); writeU16(record, 4, index === 0 ? 40000 : 0); initial.setEquipment(index, record); return record
+    })
+    const weaponRecord = Buffer.alloc(36); writeU16(weaponRecord, 0, 7); writeU16(weaponRecord, 2, 1); initial.setEquipment(5, weaponRecord)
+    const source = initial.serialize(); const sourcePath = join(directory, 'system'); writeFileSync(sourcePath, source)
+    const service = new SaveSessionService(directory)
+    try {
+      let session = service.openPath(sourcePath, { contentGameId: 'mhgu', formatId }).session!
+      session = service.selectCharacter(session.sessionId, 0)
+      const patch = (slot: number, appearanceId: number) => service.apply({ kind: 'set-equipment-fields', sessionId: session.sessionId, revision: session.revision, domain: 'hunter-equipment', slot, changes: { appearanceId } }).session
+      session = patch(0, 40000); expect(session.undoCount).toBe(0)
+      expect(() => patch(0, 99)).toThrow(/相同部位/)
+      expect(() => patch(5, 7)).toThrow(/不支持外观/)
+      for (let slot = 0; slot < 5; slot++) session = patch(slot, 7)
+      const exportPath = join(directory, 'draft.mhbox')
+      const draft = () => { service.exportBox({ sessionId: session.sessionId, revision: session.revision, domain: 'hunter-equipment', format: 'full' }, exportPath); return (JSON.parse(readFileSync(exportPath, 'utf8')) as { records: { slot: number; recordHex: string }[] }).records }
+      const changedRecords = draft()
+      records.forEach((record, slot) => { const expected = Buffer.from(record); writeU16(expected, 4, 7); expect(changedRecords.find(value => value.slot === slot)?.recordHex).toBe(bufferToHex(expected)) })
+      for (let i = 0; i < 5; i++) session = service.undo(session.sessionId, session.revision).session
+      const originalRecords = draft()
+      records.forEach((record, slot) => expect(originalRecords.find(value => value.slot === slot)?.recordHex).toBe(bufferToHex(record)))
+      for (let i = 0; i < 5; i++) session = service.redo(session.sessionId, session.revision).session
+      const output = join(directory, 'preview-system'); session = service.save(session.sessionId, session.revision, output).session!
+      const restored = new MhguSaveAdapter(readFileSync(output), formatId, 'system'); restored.selectCharacter(0)
+      records.forEach((record, slot) => { const expected = Buffer.from(record); writeU16(expected, 4, 7); expect(restored.equipment(slot).recordHex).toBe(bufferToHex(expected)) })
+      session = patch(0, 0); service.save(session.sessionId, session.revision, output)
+      const cleared = new MhguSaveAdapter(readFileSync(output), formatId, 'system'); cleared.selectCharacter(0)
+      expect(cleared.equipment(0).appearanceId).toBe(0)
+      expect(readFileSync(sourcePath)).toEqual(source)
+    } finally { service.dispose() }
+  })
+
   it('searches the entire physical item box and rotates to the next cross-page match', () => {
     const directory = temporaryDirectory()
     const database = new Database(join(directory, 'mh3g.sqlite'))

@@ -3,8 +3,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { PalicoArmorSummary, PalicoWeaponSummary } from '../../../api/catalog/types'
 import type { GameId } from '../../../api/core/loadout'
 import type { ArmorLoadoutSlot, CharmValidationResult, LoadoutArmorCandidate, LoadoutCalculationSnapshot, LoadoutFacets, LoadoutWeaponCandidate } from '../../../api/loadout/types'
-import type { SaveEquipmentCell } from '../../../api/save/types'
+import type { SaveArmorAppearance, SaveEquipmentCell } from '../../../api/save/types'
 import { CatalogIcon } from '../CatalogIcon/CatalogIcon'
+import { ArmorAppearanceIcon } from '../ArmorAppearanceIcon/ArmorAppearanceIcon'
+import { armorPartForSaveType } from '../../../api/save/armorParts'
 import { CharmEditorForm, type EditableCharm } from '../CharmEditorForm/CharmEditorForm'
 import { DecorationEditorContent } from '../DecorationEditorContent/DecorationEditorContent'
 import { EquipmentPickerContent, type EquipmentPickerCandidate } from '../EquipmentPickerContent/EquipmentPickerContent'
@@ -53,9 +55,9 @@ type Props = {
 const hunterKinds = [{ value: 'weapon', label: '武器' }, { value: 'head', label: '头部' }, { value: 'chest', label: '胸部' }, { value: 'arms', label: '腕部' }, { value: 'waist', label: '腰部' }, { value: 'legs', label: '腿部' }, { value: 'charm', label: '护石' }]
 const palicoKinds = [{ value: 'palico-weapon', label: '猫武器' }, { value: 'palico-head', label: '猫头部' }, { value: 'palico-body', label: '猫身体' }]
 
-function initialKind(cell: SaveEquipmentCell, palico: boolean, gameId?: GameId): Kind {
+function initialKind(cell: SaveEquipmentCell, palico: boolean, gameId: GameId): Kind {
   if (palico) return cell.kind === 'palico-weapon' || cell.kind === 'palico-head' || cell.kind === 'palico-body' ? cell.kind : 'palico-weapon'
-  if (cell.kind === 'armor') return ((gameId === 'mhgu' ? { 1: 'head', 2: 'chest', 3: 'arms', 4: 'waist', 5: 'legs' } : { 1: 'chest', 2: 'arms', 3: 'waist', 4: 'legs', 5: 'head' }) as Record<number, ArmorLoadoutSlot>)[cell.saveType] ?? 'head'
+  if (cell.kind === 'armor') return armorPartForSaveType(gameId, cell.saveType) ?? 'head'
   return cell.kind === 'weapon' || cell.kind === 'charm' ? cell.kind : 'weapon'
 }
 
@@ -73,7 +75,13 @@ export function SaveEquipmentEditorDrawer({ gameId, domain, cell, onApply, onApp
   const [charmDraft, setCharmDraft] = useState<EditableCharm>()
   const [charmEncoding, setCharmEncoding] = useState<CharmValidationResult['encoding']>('encodable')
   const [advanced, setAdvanced] = useState(cell.kind === 'charm')
-  const [appearanceItems, setAppearanceItems] = useState<LoadoutArmorCandidate[]>([])
+  const [appearanceItems, setAppearanceItems] = useState<SaveArmorAppearance[]>([])
+  const [appearancePage, setAppearancePage] = useState(1)
+  const [appearanceTotal, setAppearanceTotal] = useState(0)
+  const [appearanceHasNext, setAppearanceHasNext] = useState(false)
+  const [selectedAppearance, setSelectedAppearance] = useState(cell.appearance)
+  const [appearanceLoading, setAppearanceLoading] = useState(false)
+  const [appearanceError, setAppearanceError] = useState<string>()
   const [appearanceId, setAppearanceId] = useState(cell.appearanceId ?? 0)
   const [appearanceQuery, setAppearanceQuery] = useState('')
   const [slots, setSlots] = useState(cell.slots ?? 0)
@@ -100,10 +108,12 @@ export function SaveEquipmentEditorDrawer({ gameId, domain, cell, onApply, onApp
   useEffect(() => {
     if (gameId !== 'mhgu' || palico || cell.kind !== 'armor') { setAppearanceItems([]); return }
     let live = true
-    const part = initialKind(cell, false, gameId) as 'head' | 'chest' | 'arms' | 'waist' | 'legs'
-    void window.mhSaveEditor.loadout.searchArmors({ gameId: 'mhgu', part, sourceKind: 'catalog', query: appearanceQuery || undefined, pageSize: 100 }).then(value => { if (live) setAppearanceItems(value.items) }).catch(() => { if (live) setAppearanceItems([]) })
+    setAppearanceLoading(true); setAppearanceError(undefined); setAppearanceItems([])
+    void window.mhSaveEditor.save.searchArmorAppearances({ gameId: 'mhgu', saveType: cell.saveType, query: appearanceQuery || undefined, page: appearancePage, pageSize: 100 }).then(value => {
+      if (live) { setAppearanceItems(value.items); setAppearanceTotal(value.total); setAppearanceHasNext(value.hasNext) }
+    }).catch(cause => { if (live) { setAppearanceTotal(0); setAppearanceHasNext(false); setAppearanceError(cause instanceof Error ? cause.message : '幻化候选读取失败') } }).finally(() => { if (live) setAppearanceLoading(false) })
     return () => { live = false }
-  }, [appearanceQuery, cell.kind, cell.saveType, gameId, palico])
+  }, [appearanceQuery, appearancePage, cell.kind, cell.saveType, gameId, palico])
 
   useEffect(() => {
     if (gameId !== 'mh4g' || palico || (cell.kind !== 'weapon' && cell.kind !== 'armor')) { setExistingRelic(undefined); return }
@@ -172,7 +182,7 @@ export function SaveEquipmentEditorDrawer({ gameId, domain, cell, onApply, onApp
       ...(kind === 'charm' ? { ...(creatingCharm ? { reset: true } : {}), saveType: 6, saveId: charmDraft?.classId ?? charmClassId } : {}),
       ...(kind === 'charm' ? { slots: charmDraft?.slots ?? slots, skill1Id: charmDraft?.skill1?.skillId ?? 0, skill1Points: charmDraft?.skill1?.points ?? 0, skill2Id: charmDraft?.skill2?.skillId ?? 0, skill2Points: charmDraft?.skill2?.points ?? 0 } : {}),
       decorations,
-      ...(gameId === 'mhgu' && cell.kind === 'armor' ? { appearanceId } : {}),
+      ...(gameId === 'mhgu' && cell.kind === 'armor' && appearanceId !== (cell.appearanceId ?? 0) ? { appearanceId } : {}),
     })
     onClose()
   }
@@ -200,7 +210,28 @@ export function SaveEquipmentEditorDrawer({ gameId, domain, cell, onApply, onApp
         <p>实例编辑只修改已确认字段；未知位、固定标记和保留字节保持原样。替换装备则从干净记录创建。</p>
         {activeExistingRelic?.instance ? <div className="save-equipment-editor__existing-relic"><h3>{cell.nameCn}</h3><p>已识别为发掘实例，下面直接编辑当前格的完整 28 字节记录。</p>{snapshot ? <RelicEquipmentEditor candidate={activeExistingRelic} lookups={snapshot.relicLookups} decorations={snapshot.decorations} onChange={setExistingRelic} /> : <p role="status">正在读取发掘参数…</p>}</div> : <div className={kind === 'charm' ? 'save-equipment-editor__advanced-content is-charm' : 'save-equipment-editor__advanced-content'}>
           {kind === 'charm' && snapshot ? <div className="save-equipment-editor__charm"><CharmEditorForm snapshot={snapshot} current={currentCharm} pointMinimum={pointMinimum} pointMaximum={pointMaximum} onChange={updateCharm} /><section className="save-equipment-editor__decoration-section"><h3>护石装饰珠</h3><DecorationEditorContent decorations={snapshot.decorations} skills={snapshot.skills} value={decorations.filter(Boolean)} capacity={charmDraft?.slots ?? slots} interpretFixedBit={gameId === 'mh4g'} onChange={values => setDecorations([...values, 0, 0, 0].slice(0, 3))} /></section></div> : <>
-            {gameId === 'mhgu' && cell.kind === 'armor' && <section className="save-equipment-editor__appearance"><h3>防具幻化</h3><p>只修改显示外观，实际装备和防具属性保持不变。</p><input className="save-equipment-editor__appearance-search" value={appearanceQuery} onChange={event => setAppearanceQuery(event.target.value)} placeholder="搜索幻化防具名称或 ID" /><div className="save-equipment-editor__appearance-grid"><button type="button" className={!appearanceId ? 'is-selected' : ''} onClick={() => setAppearanceId(0)}>取消幻化</button>{appearanceItems.map(item => <button type="button" className={appearanceId === item.saveId ? 'is-selected' : ''} key={item.candidateKey} onClick={() => item.saveId != null && setAppearanceId(item.saveId)}><CatalogIcon path={item.iconPath} name={item.nameCn} /><span>{item.nameCn}</span></button>)}</div></section>}
+            {gameId === 'mhgu' && cell.kind === 'armor' && <section className="save-equipment-editor__appearance">
+              <h3 className="save-equipment-editor__appearance-heading">防具幻化</h3>
+              <p className="save-equipment-editor__appearance-note">只修改显示外观，实际装备和防具属性保持不变。渐变图标仅表示幻化部位。</p>
+              <p className="save-equipment-editor__appearance-note">当前外观：{appearanceId ? (selectedAppearance?.appearanceId === appearanceId ? selectedAppearance.nameCn : undefined) ?? `未知外观 #${appearanceId}（原值保留）` : '无幻化'}</p>
+              <input className="save-equipment-editor__appearance-search" aria-label="搜索幻化防具名称或 ID" value={appearanceQuery} onChange={event => { setAppearanceQuery(event.target.value); setAppearancePage(1) }} placeholder="搜索幻化防具名称或 ID" />
+              {appearanceLoading && <p className="save-equipment-editor__appearance-note" role="status">正在读取同部位幻化候选…</p>}
+              {appearanceError && <p className="save-equipment-editor__appearance-note" role="alert">{appearanceError}</p>}
+              <div className="save-equipment-editor__appearance-grid" aria-busy={appearanceLoading}>
+                <button type="button" aria-pressed={!appearanceId} className={`save-equipment-editor__appearance-option${!appearanceId ? ' is-selected' : ''}`} onClick={() => { setAppearanceId(0); setSelectedAppearance(null) }}>取消幻化</button>
+                {appearanceItems.map(item => <button type="button" aria-pressed={appearanceId === item.appearanceId} className={`save-equipment-editor__appearance-option${appearanceId === item.appearanceId ? ' is-selected' : ''}`} key={item.appearanceId} title={`${item.nameCn} · ID ${item.appearanceId}`} onClick={() => { setAppearanceId(item.appearanceId); setSelectedAppearance(item) }}>
+                  <ArmorAppearanceIcon part={item.part} name={item.nameCn} />
+                  <span className="save-equipment-editor__appearance-name">{item.nameCn}<small className="save-equipment-editor__appearance-id">ID {item.appearanceId}</small></span>
+                </button>)}
+              </div>
+              {!appearanceLoading && !appearanceError && !appearanceItems.length && <p className="save-equipment-editor__appearance-note">未找到同部位候选，请调整搜索词。</p>}
+              <div className="save-equipment-editor__appearance-pagination">
+                <button type="button" className="save-equipment-editor__appearance-option" disabled={appearanceLoading || appearancePage <= 1} onClick={() => setAppearancePage(page => page - 1)}>上一页外观</button>
+                <span className="save-equipment-editor__appearance-id">第 {appearancePage} 页 · 共 {appearanceTotal} 项</span>
+                <button type="button" className="save-equipment-editor__appearance-option" disabled={appearanceLoading || !appearanceHasNext} onClick={() => setAppearancePage(page => page + 1)}>下一页外观</button>
+              </div>
+              <p className="save-equipment-editor__appearance-note">包含普通图鉴之外的同部位原生外观；选择只更新草稿，应用字段修改后才提交。</p>
+            </section>}
             {snapshot && !palico && <div className="save-equipment-editor__decoration-content">{kind !== 'weapon' && cell.kind !== 'weapon' && <DecorationEditorContent decorations={snapshot.decorations} skills={snapshot.skills} value={decorations.filter(Boolean)} capacity={cell.slots} interpretFixedBit={gameId === 'mh4g'} onChange={values => setDecorations([...values, 0, 0, 0].slice(0, 3))} />}</div>}
           </>}
         </div>}
@@ -209,7 +240,7 @@ export function SaveEquipmentEditorDrawer({ gameId, domain, cell, onApply, onApp
           <SearchableSelect ariaLabel="装备类别" value={kind} options={palico ? palicoKinds : hunterKinds} onChange={value => setKind(value as Kind)} />
           {palico && <label><Search aria-hidden="true" /><input value={query} onChange={event => setQuery(event.target.value)} placeholder="搜索名称或 ID" /></label>}
         </div>
-        {kind === 'charm' ? <div className="save-equipment-editor__results"><button type="button" onClick={() => { setAdvanced(true); setKind('charm'); setSkill1Id(0); setSkill2Id(0); setSlots(0) }}><Sparkles aria-hidden="true" /><span><strong>创建或编辑护石</strong><small>选择品级、A/B 技能、点数、孔位和装饰珠</small></span></button></div> : !palico && snapshot && facets ? <EquipmentPickerContent gameId={gameId} slot={kind as Exclude<HunterKind, 'charm'>} facets={facets} relicLookups={snapshot.relicLookups} decorations={snapshot.decorations} onSelectionChange={selectEquipment} onConfirm={value => void applyCandidate(value)} /> : <div className="save-equipment-editor__candidate-layout">
+        {kind === 'charm' ? <div className="save-equipment-editor__results"><button type="button" onClick={() => { setAdvanced(true); setKind('charm'); setSkill1Id(0); setSkill2Id(0); setSlots(0) }}><Sparkles aria-hidden="true" /><span><strong>创建或编辑护石</strong><small>选择品级、A/B 技能、点数、孔位和装饰珠</small></span></button></div> : !palico && snapshot && facets ? <EquipmentPickerContent gameId={gameId} slot={kind as Exclude<HunterKind, 'charm'>} facets={facets} relicLookups={snapshot.relicLookups} decorations={snapshot.decorations} onSelectionChange={selectEquipment} /> : <div className="save-equipment-editor__candidate-layout">
           <div className="save-equipment-editor__results" role="listbox" aria-busy={loading}>{error && <p role="alert">{error}</p>}{items.map((value, index) => <button ref={element => { buttons.current[index] = element }} type="button" role="option" tabIndex={selected && 'key' in selected && selected.key === value.key || (!selected && index === 0) ? 0 : -1} aria-selected={Boolean(selected && 'key' in selected && selected.key === value.key)} key={value.key} onClick={() => setSelected(value)} onDoubleClick={() => void applyCandidate(value)} onKeyDown={event => move(event, index)}><CatalogIcon path={value.iconPath} name={value.nameCn} /><span><strong>{value.nameCn}</strong><small>{value.nameEn || value.detail}</small><em>{value.detail}</em></span></button>)}{!loading && !error && !items.length && <p>没有符合条件的装备。</p>}</div>
         </div>}
       </div>}

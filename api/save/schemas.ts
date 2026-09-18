@@ -6,6 +6,8 @@ const formatId = z.enum(['mh3g-3ds-citra', 'mh3u-wiiu-cemu', 'mh4g-3ds-citra', '
 const sessionIdentity = z.object({ sessionId: z.string().uuid(), revision: z.number().int().positive() }).strict()
 const boxDomain = z.enum(['items', 'hunter-equipment', 'palico-equipment'])
 
+export const saveArmorAppearanceSchema = z.object({ gameId: z.literal('mhgu'), saveType: z.number().int().min(1).max(5), query: z.string().trim().max(120).optional(), page: z.number().int().min(1).max(1000).optional(), pageSize: z.number().int().min(1).max(100).optional() }).strict()
+
 export const saveOpenSchema = z.object({ contentGameId: gameId, formatId }).strict()
 export const saveSessionIdSchema = sessionIdentity
 export const saveIdentitySchema = sessionIdentity

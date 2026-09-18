@@ -83,6 +83,36 @@ describe('AutoLoadoutJobService', () => {
     service.dispose()
   })
 
+  it('persists timeout completeness and coverage warnings even with zero results', () => {
+    const directory = mkdtempSync(join(tmpdir(), 'mh-loadout-jobs-')); directories.push(directory)
+    const { service, workers } = createHarness(join(directory, 'jobs.sqlite'))
+    const job = service.start(request())
+    workers[0].emit('message', { type: 'finished', results: [], value: { requestId: 'test', stage: '达到时间上限，未搜完', checked: 12, verified: 3, results: 0, elapsedMs: 1000, searchComplete: false, incompleteReason: 'timeout', coverageWarnings: ['合成规则未确认'] } })
+    expect(service.get(job.jobId).status).toBe('completed')
+    expect(service.get(job.jobId).progress).toMatchObject({ stage: '达到时间上限，未搜完', searchComplete: false, incompleteReason: 'timeout', verified: 3, coverageWarnings: ['合成规则未确认'] })
+    service.dispose()
+  })
+
+  it('creates an edited child only on Start, validates its parent and keeps source conditions unchanged', () => {
+    const directory = mkdtempSync(join(tmpdir(), 'mh-loadout-copy-')); directories.push(directory)
+    const { service, workers } = createHarness(join(directory, 'jobs.sqlite'))
+    try {
+      const source = service.start(request())
+      const original = service.get(source.jobId).request
+      const edited = { ...original, parentJobId: source.jobId, requestId: crypto.randomUUID(), timeoutMs: 47000, resultLimit: 7 }
+      const child = service.start(edited)
+      expect(child.parentJobId).toBe(source.jobId)
+      expect(child.status).toBe('queued'); expect(workers).toHaveLength(1)
+      expect(service.get(child.jobId).request).toMatchObject({ timeoutMs: 47000, resultLimit: 7 })
+      expect(service.get(child.jobId).request.parentJobId).toBeUndefined()
+      expect(service.get(source.jobId).request).toEqual(original)
+      expect(edited.parentJobId).toBe(source.jobId)
+      expect(() => service.start({ ...request(), parentJobId: crypto.randomUUID() })).toThrow(/不存在/)
+      expect(() => service.start({ ...request(), gameId: 'mh4g', baseLoadout: createEmptyLogicalLoadout('mh4g'), parentJobId: source.jobId })).toThrow(/跨游戏/)
+      expect(service.list({})).toHaveLength(2)
+    } finally { service.dispose() }
+  })
+
   it('marks a job failed when its worker cannot be created', () => {
     const directory = mkdtempSync(join(tmpdir(), 'mh-loadout-jobs-')); directories.push(directory)
     const service = new AutoLoadoutJobService(join(directory, 'jobs.sqlite'), 'worker.js', value => ({ request: value, snapshot }), () => { throw new Error('missing worker') })

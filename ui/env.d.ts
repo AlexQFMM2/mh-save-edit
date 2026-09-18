@@ -1,7 +1,7 @@
 import type { GameId } from '../api/core/loadout'
 import type { ArmorCatalogFacets, ArmorCatalogFilters, ArmorDetail, ArmorIdentity, ArmorSetFilters, ArmorSetSummary, ArmorSummary, DecorationCatalogFacets, DecorationCatalogFilters, DecorationDetail, DecorationIdentity, DecorationSummary, HunterArtCatalogFacets, HunterArtCatalogFilters, HunterArtDetail, HunterArtIdentity, HunterArtSummary, ItemCatalogFilters, ItemDetail, ItemIdentity, ItemSummary, MonsterCatalogFacets, MonsterCatalogFilters, MonsterDetail, MonsterIdentity, MonsterSummary, PageResult, PalicoArmorDetail, PalicoArmorFilters, PalicoArmorSummary, PalicoCatalogFacets, PalicoEquipmentIdentity, PalicoSkillDetail, PalicoSkillFilters, PalicoSkillIdentity, PalicoSkillSummary, PalicoSupportMoveDetail, PalicoSupportMoveFilters, PalicoSupportMoveIdentity, PalicoSupportMoveSummary, PalicoTypeDetail, PalicoTypeIdentity, PalicoTypeSummary, PalicoWeaponDetail, PalicoWeaponFilters, PalicoWeaponSummary, QuestCatalogFacets, QuestCatalogFilters, QuestDetail, QuestIdentity, QuestSummary, SkillCatalogFacets, SkillCatalogFilters, SkillDetail, SkillIdentity, SkillSummary, WeaponCatalogFacets, WeaponCatalogFilters, WeaponDetail, WeaponIdentity, WeaponMotionCatalogResult, WeaponMotionFacets, WeaponMotionFilters, WeaponSummary, WeaponTreeResult } from '../api/catalog/types'
 import type { AutoLoadoutJob, AutoLoadoutJobDetail, AutoLoadoutJobFilters, AutoLoadoutJobState, AutoLoadoutJobSummary, AutoLoadoutRequest, CharmValidationResult, LoadoutArmorCandidate, LoadoutArmorFilters, LoadoutCalculationSnapshot, LoadoutCatalogSnapshot, LoadoutCharm, LoadoutDecoration, LoadoutDecorationFilters, LoadoutFacets, LoadoutPage, LoadoutRelicLookup, LoadoutWeaponCandidate, LoadoutWeaponFilters, LogicalLoadout } from '../api/loadout/types'
-import type { SaveBoxWriteTarget, SaveBoxWriteTargetRequest, SaveCatalogEquipmentRequest, SaveCatalogItemRequest, SaveCatalogItemWritePreview, SaveCharacterSummary, SaveCommand, SaveExportRequest, SaveImportApplyRequest, SaveImportPreview, SaveImportRequest, SaveLoadoutWritePreview, SaveLoadoutWriteRequest, SaveMutationResult, SaveOpenRequest, SaveOpenResult, SaveResult, SaveSectionRequest, SaveSectionSnapshot, SaveSessionSnapshot, SaveValidationResult } from '../api/save/types'
+import type { SaveArmorAppearanceFilters, SaveArmorAppearancePage, SaveBoxWriteTarget, SaveBoxWriteTargetRequest, SaveCatalogEquipmentRequest, SaveCatalogItemRequest, SaveCatalogItemWritePreview, SaveCharacterSummary, SaveCommand, SaveExportRequest, SaveImportApplyRequest, SaveImportPreview, SaveImportRequest, SaveLoadoutWritePreview, SaveLoadoutWriteRequest, SaveMutationResult, SaveOpenRequest, SaveOpenResult, SaveResult, SaveSectionRequest, SaveSectionSnapshot, SaveSessionSnapshot, SaveValidationResult } from '../api/save/types'
 
 declare global {
   interface Window {
@@ -72,6 +72,7 @@ declare global {
         subscribeAutoLoadoutJobs(listener: (summary: AutoLoadoutJobSummary) => void): () => void
       }
       save: {
+        searchArmorAppearances(request: SaveArmorAppearanceFilters): Promise<SaveArmorAppearancePage>
         getSession(): Promise<SaveSessionSnapshot | null>
         open(request: SaveOpenRequest): Promise<SaveOpenResult>
         listCharacters(sessionId: string, revision: number): Promise<SaveCharacterSummary[]>

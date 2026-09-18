@@ -1,5 +1,6 @@
 export const saveChannels = {
   getSession: 'save:get-session',
+  searchArmorAppearances: 'save:search-armor-appearances',
   open: 'save:open',
   listCharacters: 'save:list-characters',
   selectCharacter: 'save:select-character',

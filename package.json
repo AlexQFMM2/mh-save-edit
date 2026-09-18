@@ -1,13 +1,13 @@
 {
   "name": "mh-save-edit",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "private": true,
   "description": "Monster Hunter save editor for MH3G, MH4G and MHGU.",
   "type": "module",
   "main": "out/main/index.js",
   "scripts": {
-    "dev": "node tools/electron-vite-dev.mjs dev",
-    "build": "electron-vite build",
+    "dev": "node tools/prepare_appearance_sprite.mjs && node tools/electron-vite-dev.mjs dev",
+    "build": "node tools/prepare_appearance_sprite.mjs && electron-vite build",
     "package:win": "pnpm build && electron-builder --win --x64 --dir --publish never",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
@@ -32,7 +32,9 @@
     "data:extract:palicoes": "node tools/extract_palico_resident.mjs",
     "data:build:palicoes": "node tools/build_palico_catalog.mjs",
     "data:audit:palicoes": "node tools/audit_palico_catalog.mjs",
-    "data:inspect:skill-effect": "node tools/inspect_skill_effect.mjs"
+    "data:inspect:skill-effect": "node tools/inspect_skill_effect.mjs",
+    "data:repair:runtime": "node tools/repair_runtime_catalog.mjs",
+    "data:audit:runtime": "node tools/audit_runtime_catalog.mjs"
   },
   "dependencies": {
     "@xyflow/react": "^12.11.6",

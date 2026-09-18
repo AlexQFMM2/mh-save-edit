@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 'react'
+import { commitLoadoutDraft, getLoadoutDraft, restoreLoadoutDraft, setLoadoutDraftJob, subscribeLoadoutDraft, undoLoadoutDraft } from '../../stores/loadoutDraftStore'
 import { useOutletContext } from 'react-router-dom'
 import { calculateLoadout } from '../../../api/loadout/calculator'
 import { applyCharmValidation } from '../../../api/loadout/charm'
@@ -29,29 +30,39 @@ export function LoadoutBuilderPage() {
   const saveSession = useSaveSession()
   const [snapshot, setSnapshot] = useState<LoadoutCalculationSnapshot>()
   const [facets, setFacets] = useState<LoadoutFacets>()
-  const [loadout, setLoadout] = useState<LogicalLoadout>()
+  const draft = useSyncExternalStore(subscribeLoadoutDraft, useCallback(() => getLoadoutDraft(game.id), [game.id]))
+  const loadout = draft.loadout
   const [drawer, setDrawer] = useState<Drawer>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string>()
   const [notice, setNotice] = useState<string>()
   const [jobs, setJobs] = useState<AutoLoadoutJobSummary[]>([])
-  const [currentAutoJobId, setCurrentAutoJobId] = useState<string>()
+  const currentAutoJobId = draft.autoJobId
+  const setCurrentAutoJobId = (jobId: string) => setLoadoutDraftJob(game.id, jobId)
   const [writeBusy, setWriteBusy] = useState(false)
-  const undo = useRef<LogicalLoadout[]>([])
 
   useEffect(() => {
     let active = true
     setLoading(true)
     setError(undefined)
+    setDrawer(null)
+    setNotice(undefined)
     const api = window.mhSaveEditor?.loadout
     if (!api) { setError('配装器 API 尚未连接，请在 Electron 应用中打开。'); setLoading(false); return () => { active = false } }
-    void Promise.all([api.getBootstrap(game.id), api.getFacets(game.id)]).then(([value, nextFacets]) => {
+    void Promise.all([api.getBootstrap(game.id), api.getFacets(game.id)]).then(async ([value, nextFacets]) => {
       if (!active) return
+      const saved = getLoadoutDraft(game.id)
+      let restored = saved.loadout ?? createEmptyLogicalLoadout(game.id, value.dataVersion)
+      let history = saved.undo
+      if (restored.dataVersion !== value.dataVersion || history.some(entry => entry.dataVersion !== value.dataVersion)) {
+        const reconciled = await Promise.all([restored, ...history].map(entry => api.reconcileLoadout(entry)))
+        if (reconciled.some(entry => entry.gameId !== game.id || entry.dataVersion !== value.dataVersion)) throw new Error('资料版本再次变化，请重新进入配装页面；原草稿已保留')
+        restored = reconciled[0]; history = reconciled.slice(1)
+      }
+      if (!active) return
+      restoreLoadoutDraft(game.id, restored, history)
       setSnapshot(value)
       setFacets(nextFacets)
-      setLoadout(createEmptyLogicalLoadout(game.id, value.dataVersion))
-      setCurrentAutoJobId(undefined)
-      undo.current = []
     }).catch(cause => { if (active) setError(cause instanceof Error ? cause.message : '配装资料读取失败') }).finally(() => { if (active) setLoading(false) })
     return () => { active = false }
   }, [game.id])
@@ -72,13 +83,8 @@ export function LoadoutBuilderPage() {
     }))
   }, [refreshJobs])
 
-  const commit = useCallback((recipe: (current: LogicalLoadout) => LogicalLoadout) => setLoadout(current => {
-    if (!current) return current
-    undo.current.push(clone(current))
-    if (undo.current.length > 30) undo.current.shift()
-    return recipe(clone(current))
-  }), [])
-  const result = useMemo(() => snapshot && loadout ? calculateLoadout(snapshot, loadout) : undefined, [snapshot, loadout])
+  const commit = useCallback((recipe: (current: LogicalLoadout) => LogicalLoadout) => commitLoadoutDraft(game.id, recipe), [game.id])
+  const result = useMemo(() => snapshot?.gameId === game.id && loadout?.gameId === game.id ? calculateLoadout(snapshot, loadout) : undefined, [snapshot, loadout, game.id])
   const equipment = (slot: LoadoutSlot) => { if (!loadout) return null; if (slot === 'weapon') return loadout.weapon; if (slot === 'charm') return loadout.charm; return loadout.armor[slot] ?? null }
   const clear = (slot: LoadoutSlot) => commit(current => { if (slot === 'weapon') current.weapon = null; else if (slot === 'charm') current.charm = null; else delete current.armor[slot]; return current })
   const choose = (slot: LoadoutSlot) => setDrawer(slot === 'charm' ? { kind: 'charm' } : { kind: 'equipment', slot })
@@ -89,10 +95,10 @@ export function LoadoutBuilderPage() {
     setDrawer(null)
   }
   const applyCharm = (charm: NonNullable<LogicalLoadout['charm']>) => { if (!snapshot) return; commit(current => ({ ...current, charm: applyCharmValidation(snapshot, charm) })); setDrawer(null) }
-  const applyDecorations = (slot: LoadoutSlot, decorations: LoadoutDecoration[]) => { commit(current => { if (slot === 'weapon' && current.weapon) current.weapon.decorations = decorations; else if (slot === 'charm' && current.charm) current.charm.decorations = decorations; else if (slot !== 'weapon' && slot !== 'charm' && current.armor[slot]) current.armor[slot]!.decorations = decorations; return current }); setDrawer(null) }
+  const applyDecorations = (slot: LoadoutSlot, decorations: LoadoutDecoration[]) => { commit(current => { if (slot === 'weapon' && current.weapon) current.weapon.decorations = decorations; else if (slot === 'charm' && current.charm) current.charm.decorations = decorations; else if (slot !== 'weapon' && slot !== 'charm' && current.armor[slot]) current.armor[slot]!.decorations = decorations; return current }); setNotice('装饰珠已即时更新，可逐步撤销') }
   const toggleLock = (slot: LoadoutSlot) => commit(current => { const item = slot === 'weapon' ? current.weapon : slot === 'charm' ? current.charm : current.armor[slot]; if (item) item.lock = cycleLock(item.lock); return current })
-  const newLoadout = () => { if (!snapshot) return; if (loadout) undo.current.push(clone(loadout)); setLoadout(createEmptyLogicalLoadout(game.id, snapshot.dataVersion)); setNotice('已创建新配装') }
-  const undoOnce = () => { const previous = undo.current.pop(); if (previous) { setLoadout(previous); setNotice('已撤销上一步') } }
+  const newLoadout = () => { if (!snapshot) return; commit(() => createEmptyLogicalLoadout(game.id, snapshot.dataVersion)); setNotice('已创建新配装') }
+  const undoOnce = () => { if (undoLoadoutDraft(game.id)) setNotice('已撤销上一步') }
   const applyAutoResult = (value: LogicalLoadout) => { commit(() => value); setDrawer(null); setNotice('已应用自动配装结果，可撤销') }
   const openWritePreview = async () => {
     const current = saveSession.session
@@ -124,28 +130,27 @@ export function LoadoutBuilderPage() {
       if (!snapshot) throw new Error('当前配装资料尚未加载')
       const versionChanged = checked.data.dataVersion !== snapshot.dataVersion
       const reconciled = await window.mhSaveEditor.loadout.reconcileLoadout(checked.data)
-      if (loadout) undo.current.push(clone(loadout))
-      setLoadout(reconciled)
+      commit(() => reconciled)
       setNotice(versionChanged ? '配装已按当前资料迁移并重新计算' : '配装已按当前资料重新读取并计算')
     } catch (cause) { setNotice(cause instanceof Error ? cause.message : '导入失败') }
   }
   const exportFile = () => { if (!loadout) return; const blob = new Blob([JSON.stringify(loadout, null, 2)], { type: 'application/json' }); const url = URL.createObjectURL(blob); const anchor = document.createElement('a'); anchor.href = url; anchor.download = `${loadout.name || 'loadout'}.mhloadout.json`; anchor.click(); URL.revokeObjectURL(url) }
 
-  if (loading) return <div className="loadout-builder-page__state" role="status">正在加载配装资料…</div>
+  if (loading || (!error && snapshot?.gameId !== game.id)) return <div className="loadout-builder-page__state" role="status">正在加载配装资料…</div>
   if (error || !snapshot || !facets || !loadout || !result) return <div className="loadout-builder-page__state loadout-builder-page__state--error" role="alert">{error ?? '配装资料不可用'}</div>
   const activeDecoration = drawer?.kind === 'decorations' ? equipment(drawer.slot) : null
   const activeJobCount = jobs.filter(job => job.status === 'running').length
   const unreadJobCount = jobs.filter(job => job.status === 'completed' && !job.viewedAt).length
 
   return <div className="loadout-builder-page">
-    <LoadoutToolbar loadout={loadout} result={result} notice={notice} canUndo={undo.current.length > 0} activeJobCount={activeJobCount} unreadJobCount={unreadJobCount} onUndo={undoOnce} onNameChange={value => commit(current => ({ ...current, name: value }))} onGenderChange={value => commit(current => ({ ...current, gender: value }))} onReset={() => { undo.current.push(clone(loadout)); setLoadout(createEmptyLogicalLoadout(game.id, snapshot.dataVersion)); setNotice('已重置配装') }} onNew={newLoadout} onImport={importFile} onExport={exportFile} onOpenAuto={() => setDrawer({ kind: 'auto' })} onOpenHistory={() => setDrawer({ kind: 'history' })} onWriteToSave={saveSession.session?.contentGameId === game.id && !saveSession.session.readOnly ? () => void openWritePreview() : undefined} />
+    <LoadoutToolbar loadout={loadout} result={result} notice={notice} canUndo={draft.undo.length > 0} activeJobCount={activeJobCount} unreadJobCount={unreadJobCount} onUndo={undoOnce} onNameChange={value => commit(current => ({ ...current, name: value }))} onGenderChange={value => commit(current => ({ ...current, gender: value }))} onReset={() => { commit(() => createEmptyLogicalLoadout(game.id, snapshot.dataVersion)); setNotice('已重置配装') }} onNew={newLoadout} onImport={importFile} onExport={exportFile} onOpenAuto={() => setDrawer({ kind: 'auto' })} onOpenHistory={() => setDrawer({ kind: 'history' })} onWriteToSave={saveSession.session?.contentGameId === game.id && !saveSession.session.readOnly ? () => void openWritePreview() : undefined} />
     <LoadoutEquipmentTable slots={LOADOUT_SLOTS} loadout={loadout} result={result} onChoose={choose} onClear={clear} onDecorate={slot => setDrawer({ kind: 'decorations', slot })} onToggleLock={toggleLock} />
     <div className="loadout-builder-page__analysis"><LoadoutSkillMatrix skills={result.skills} /><LoadoutLegalitySummary result={result} onIssueClick={path => setNotice(`问题位置：${path}`)} /></div>
     {drawer?.kind === 'equipment' && <EquipmentPickerDrawer gameId={game.id} slot={drawer.slot} facets={facets} relicLookups={snapshot.relicLookups} decorations={snapshot.decorations} current={equipment(drawer.slot) as LoadoutWeaponCandidate | LoadoutArmorCandidate | null} onApply={candidate => applyEquipment(drawer.slot, candidate)} onClose={() => setDrawer(null)} />}
     {drawer?.kind === 'charm' && <CharmPickerDrawer snapshot={snapshot} current={loadout.charm} onApply={applyCharm} onClose={() => setDrawer(null)} />}
-    {drawer?.kind === 'decorations' && activeDecoration && <DecorationEditorDrawer decorations={snapshot.decorations} skills={snapshot.skills} current={activeDecoration.decorations} capacity={activeDecoration.slots} onApply={value => applyDecorations(drawer.slot, value)} onClose={() => setDrawer(null)} />}
+    {drawer?.kind === 'decorations' && activeDecoration && <DecorationEditorDrawer decorations={snapshot.decorations} skills={snapshot.skills} current={activeDecoration.decorations} capacity={activeDecoration.slots} canUndo={draft.undo.length > 0} onUndo={undoOnce} onChange={value => applyDecorations(drawer.slot, value)} onClose={() => setDrawer(null)} />}
     {drawer?.kind === 'auto' && <AutoLoadoutDrawer snapshot={snapshot} loadout={loadout} calculation={result} initialJobId={currentAutoJobId} onJobStarted={setCurrentAutoJobId} onApply={applyAutoResult} onClose={() => setDrawer(null)} />}
-    {drawer?.kind === 'history' && <AutoLoadoutHistoryDrawer gameId={game.id} snapshot={snapshot} onApply={applyAutoResult} onJobsChanged={refreshJobs} onClose={() => setDrawer(null)} />}
+    {drawer?.kind === 'history' && <AutoLoadoutHistoryDrawer gameId={game.id} snapshot={snapshot} onApply={applyAutoResult} onJobsChanged={refreshJobs} onCopyConditions={() => setDrawer({ kind: 'auto' })} onClose={() => setDrawer(null)} />}
     {drawer?.kind === 'save' && <LoadoutSaveWriteDrawer preview={drawer.preview} busy={writeBusy} onClose={() => setDrawer(null)} onApply={() => void applyWritePreview()} />}
   </div>
 }

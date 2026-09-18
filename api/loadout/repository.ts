@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto'
 import type Database from 'better-sqlite3'
 import { validateCharm } from './charm'
+import { readFinalWeaponKeys } from '../catalog/finalWeapons'
 import { armorFallbackIconPath, charmIconPath, weaponFallbackIconPath } from '../save/catalogIconPaths'
 import type { ArmorLoadoutSlot, CharmValidationResult, LoadoutArmorCandidate, LoadoutArmorFilters, LoadoutCalculationSnapshot, LoadoutCatalogSnapshot, LoadoutCharm, LoadoutCharmClass, LoadoutDecoration, LoadoutDecorationFilters, LoadoutFacets, LoadoutPage, LoadoutSkillDefinition, LoadoutWeaponCandidate, LoadoutWeaponFilters } from './types'
 
@@ -41,6 +42,7 @@ export class LoadoutCatalogRepository {
   private bootstrapCache?: LoadoutCalculationSnapshot
   private snapshotCache?: LoadoutCatalogSnapshot
   private weaponsCache?: LoadoutWeaponCandidate[]
+  private finalWeaponKeys?: Set<string>
   private armorsCache?: LoadoutArmorCandidate[]
   private relicLookupsCache?: LoadoutCalculationSnapshot['relicLookups']
   constructor(private readonly db: Database.Database, private readonly gameId: LoadoutCatalogSnapshot['gameId']) {}
@@ -54,6 +56,8 @@ export class LoadoutCatalogRepository {
       skills: this.getSkills(),
       charmClasses: this.getCharmClasses(),
       charmRanges: (this.db.prepare('SELECT * FROM catalog_skill_talisman_ranges WHERE game_id=? ORDER BY talisman_id,position,skill_id,min_points').all(this.gameId) as Row[]).map(row => ({ rangeKey: text(row.range_key), classId: number(row.talisman_id), skillId: number(row.skill_id), position: row.position === 'B' ? 'B' : 'A', minPoints: number(row.min_points), maxPoints: number(row.max_points), slotCount: row.slot_count == null ? null : number(row.slot_count), maxSlots: row.max_slots == null ? null : number(row.max_slots), status: row.range_status === 'exact' || row.range_status === 'unknown' ? row.range_status : 'rule', source: text(row.source) })),
+      charmSlotRules: this.readCharmSlotRules(),
+      charmCombinations: this.gameId === 'mh3g' && this.tableExists('charm_combinations') ? (this.db.prepare('SELECT class_id,slots,skill1_id,skill1_points,skill2_id,skill2_points FROM charm_combinations ORDER BY class_id,slots,skill1_id,skill1_points,skill2_id,skill2_points').all() as Row[]).map(row => [number(row.class_id), number(row.slots), number(row.skill1_id), number(row.skill1_points), number(row.skill2_id), number(row.skill2_points)]) : undefined,
       relicLookups: this.readRelicLookups(false),
     }
     this.bootstrapCache = bootstrap
@@ -86,7 +90,8 @@ export class LoadoutCatalogRepository {
 
   searchWeapons(filters: LoadoutWeaponFilters): LoadoutPage<LoadoutWeaponCandidate> {
     const query = filters.query?.trim().toLocaleLowerCase() ?? ''
-    const items = this.getWeapons().filter(value => (!filters.typeId || value.typeId === filters.typeId) && (!filters.sourceKind || filters.sourceKind === 'all' || value.sourceKind === filters.sourceKind) && (filters.rarity == null || value.rarity === filters.rarity) && (filters.slots == null || value.slots === filters.slots) && (filters.directlyProducible == null || Boolean(value.directlyProducible) === filters.directlyProducible) && (!query || `${value.nameCn} ${value.nameEn} ${value.saveId} 0x${value.saveId.toString(16)}`.toLocaleLowerCase().includes(query))).sort((a, b) => filters.sort === 'rarity' ? (b.rarity ?? -1) - (a.rarity ?? -1) || a.candidateKey.localeCompare(b.candidateKey) : filters.sort === 'slots' ? b.slots - a.slots || a.candidateKey.localeCompare(b.candidateKey) : filters.sort === 'attack' ? (b.attack ?? -1) - (a.attack ?? -1) || a.candidateKey.localeCompare(b.candidateKey) : a.candidateKey.localeCompare(b.candidateKey))
+    const finals = filters.finalOnly ? (this.finalWeaponKeys ??= readFinalWeaponKeys(this.db, this.gameId)) : undefined
+    const items = this.getWeapons().filter(value => (!finals || (value.sourceKind === 'catalog' && value.weaponKey != null && finals.has(value.weaponKey))) && (!filters.typeId || value.typeId === filters.typeId) && (!filters.sourceKind || filters.sourceKind === 'all' || value.sourceKind === filters.sourceKind) && (filters.rarity == null || value.rarity === filters.rarity) && (filters.slots == null || value.slots === filters.slots) && (filters.directlyProducible == null || Boolean(value.directlyProducible) === filters.directlyProducible) && (!query || `${value.nameCn} ${value.nameEn} ${value.saveId} 0x${value.saveId.toString(16)}`.toLocaleLowerCase().includes(query))).sort((a, b) => filters.sort === 'rarity' ? (b.rarity ?? -1) - (a.rarity ?? -1) || a.candidateKey.localeCompare(b.candidateKey) : filters.sort === 'slots' ? b.slots - a.slots || a.candidateKey.localeCompare(b.candidateKey) : filters.sort === 'attack' ? (b.attack ?? -1) - (a.attack ?? -1) || a.candidateKey.localeCompare(b.candidateKey) : a.candidateKey.localeCompare(b.candidateKey))
     return page(items, filters.page, filters.pageSize)
   }
 
@@ -104,6 +109,15 @@ export class LoadoutCatalogRepository {
   }
 
   validateCharm(charm: LoadoutCharm): CharmValidationResult { return validateCharm(this.getBootstrap(), charm) }
+
+  private readCharmSlotRules(): NonNullable<LoadoutCalculationSnapshot['charmSlotRules']> {
+    if (this.gameId !== 'mhgu' || !this.tableExists('cn__talisman_slot_thresholds') || !this.tableExists('cn__talismans')) return []
+    const rows = this.db.prepare('SELECT t.id class_id,t.max_slots,r.fulfillment,r.slot1_threshold,r.slot2_threshold,r.slot3_threshold,r.source FROM cn__talismans t JOIN cn__talisman_slot_thresholds r ON r.rarity_marker=t.rarity WHERE t.id>0 ORDER BY t.id,r.fulfillment').all() as Row[]
+    const evidenceRows = this.db.prepare('SELECT t.id class_id,t.max_slots,t.rarity,r.fulfillment,r.slot1_threshold,r.slot2_threshold,r.slot3_threshold FROM cn__talismans t JOIN cn__talisman_slot_thresholds r ON r.rarity_marker=t.rarity WHERE t.id>0 ORDER BY t.id,r.fulfillment').all()
+    const evidence = this.tableExists('catalog_build_metadata') ? this.db.prepare("SELECT source_sha256 FROM catalog_build_metadata WHERE game_id='mhgu' AND domain='charm-slot-native-audit'").get() as Row | undefined : undefined
+    const verified = evidence?.source_sha256 === createHash('sha256').update(JSON.stringify(evidenceRows)).digest('hex')
+    return rows.map(row => ({ classId: number(row.class_id), maxSlots: number(row.max_slots), fulfillment: number(row.fulfillment), thresholds: [number(row.slot1_threshold), number(row.slot2_threshold), number(row.slot3_threshold)], source: `${text(row.source)}${verified ? '+native-slot-availability-audit' : ''}`, evidence: verified ? 'verified' : 'reference' }))
+  }
 
   private dataVersion(): string {
     const rows = this.tableExists('catalog_build_metadata') ? this.db.prepare('SELECT domain,source_sha256,builder_sha256 FROM catalog_build_metadata WHERE game_id=? ORDER BY domain').all(this.gameId) as Row[] : []

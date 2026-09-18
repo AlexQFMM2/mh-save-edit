@@ -2,15 +2,15 @@ import type Database from 'better-sqlite3'
 import { createRequire } from 'node:module'
 import { join } from 'node:path'
 import type { GameId } from '../core/loadout'
-import type { SaveEquipmentCell, SaveItemCell, SavePalicoGenerationRules } from './types'
+import type { SaveArmorAppearance, SaveArmorAppearanceFilters, SaveArmorAppearancePage, SaveEquipmentCell, SaveItemCell, SavePalicoGenerationRules } from './types'
 import { armorFallbackIconPath, charmIconPath, weaponFallbackIconPath } from './catalogIconPaths'
+import { armorPartForSaveType, ARMOR_APPEARANCE_SPRITE_PATH } from './armorParts'
 
 const require = createRequire(import.meta.url)
 const BetterSqlite = require('better-sqlite3') as typeof Database
 type Row = Record<string, unknown>
 const number = (value: unknown, fallback = 0) => Number.isFinite(Number(value)) ? Number(value) : fallback
 const text = (value: unknown, fallback = '') => value == null ? fallback : String(value)
-const armorPartBySaveType: Record<number, 'head' | 'chest' | 'arms' | 'waist' | 'legs'> = { 1: 'chest', 2: 'arms', 3: 'waist', 4: 'legs', 5: 'head' }
 
 export type SaveCatalogEquipmentIdentity = {
   kind: 'weapon' | 'armor' | 'charm' | 'palico-weapon' | 'palico-head' | 'palico-body'
@@ -73,26 +73,36 @@ export class SaveCatalogResolver {
     const typeId = cell.kind === 'weapon'
       ? number((db.prepare('SELECT type_id FROM catalog_weapon_types WHERE game_id=? AND save_type=? LIMIT 1').get(gameId, cell.saveType) as Row | undefined)?.type_id)
       : 0
-    const armorPart = (text(row?.part) || armorPartBySaveType[cell.saveType]) as 'head' | 'chest' | 'arms' | 'waist' | 'legs' | undefined
+    const armorPart = (text(row?.part) || armorPartForSaveType(gameId, cell.saveType)) as 'head' | 'chest' | 'arms' | 'waist' | 'legs' | undefined
     const iconPath = cell.kind === 'charm' ? charmIconPath(gameId, cell.saveId) : row?.icon_path ? text(row.icon_path) : cell.kind === 'weapon' ? weaponFallbackIconPath(gameId, typeId) : cell.kind === 'armor' && armorPart ? armorFallbackIconPath(gameId, armorPart) : null
     const appearance = !cell.empty && !cell.kind.toString().startsWith('palico') && (gameId === 'mhgu') && cell.kind === 'armor' && cell.appearanceId ? this.resolveArmorAppearance(gameId, cell.saveType, cell.appearanceId) : null
     if (cell.kind === 'armor' && cell.appearanceId && gameId === 'mhgu' && !appearance) diagnostics.push({ code: 'equipment.appearance.unknown', path: `equipment.${cell.slot}.appearanceId`, severity: 'warning', message: `未映射的防具幻化 ID ${cell.appearanceId}，原值会被保留` })
     return { ...cell, appearance, nameCn: cell.empty ? '空格' : text(row?.name_cn, cell.kind === 'kinsect' ? `猎虫 #${cell.saveId}` : `${typeNameCn || '装备'} #${cell.saveId}`), nameEn: text(row?.name_en), typeNameCn: cell.empty ? '空格' : typeNameCn, iconPath, weaponKey: row?.weapon_key ? text(row.weapon_key) : null, armorDexId: row?.dex_id == null ? null : number(row.dex_id), palicoEquipmentId: row?.equipment_id == null ? null : number(row.equipment_id), decorationLabels, skill1NameCn: skillName(cell.skill1Id), skill2NameCn: skillName(cell.skill2Id), diagnostics }
   }
-  resolveArmorAppearance(gameId: GameId, saveType: number, appearanceId: number) {
-    if (gameId !== 'mhgu' || !appearanceId || saveType < 1 || saveType > 5) return null
-    const part = armorPartBySaveType[saveType]; const table = ({ head: 'cn__armor_head', chest: 'cn__armor_chest', arms: 'cn__armor_arms', waist: 'cn__armor_waist', legs: 'cn__armor_legs' } as Record<string, string>)[part]
+  searchArmorAppearances(filters: SaveArmorAppearanceFilters): SaveArmorAppearancePage {
+    const part = armorPartForSaveType(filters.gameId, filters.saveType)
+    if (filters.gameId !== 'mhgu' || !part) throw new Error('幻化查询只支持 GU/XX 猎人防具部位')
+    const table = `cn__armor_${part}`
+    const page = Math.max(1, filters.page ?? 1); const pageSize = Math.min(100, Math.max(1, filters.pageSize ?? 100))
+    const query = filters.query?.trim() ?? ''; const like = `%${query}%`; const numericId = /^(?:0x[0-9a-f]+|[0-9]+)$/i.test(query) ? Number(query) : -1
+    const where = 'id>0 AND (name LIKE ? OR english LIKE ? OR CAST(id AS TEXT) LIKE ? OR id=?)'
+    const args = [like, like, like, numericId]
+    const db = this.db('mhgu')
+    const total = number((db.prepare(`SELECT count(*) total FROM ${table} WHERE ${where}`).get(...args) as Row).total)
+    const rows = db.prepare(`SELECT id,name,english,rarity FROM ${table} WHERE ${where} ORDER BY CASE WHEN id=? THEN 0 ELSE 1 END,id LIMIT ? OFFSET ?`).all(...args, numericId, pageSize, (page - 1) * pageSize) as Row[]
+    const items = rows.map(row => this.appearanceFromRow(part, row))
+    return { items, total, page, pageSize, hasNext: page * pageSize < total }
+  }
+  private appearanceFromRow(part: SaveArmorAppearance['part'], row: Row): SaveArmorAppearance {
+    return { appearanceId: number(row.id), nameCn: text(row.name), nameEn: text(row.english), nameJp: '', part, rarity: row.rarity == null ? null : number(row.rarity), iconPath: ARMOR_APPEARANCE_SPRITE_PATH, iconSource: 'custom-appearance-sprite', sourceStatus: 'confirmed', iconFallback: false }
+  }
+  resolveArmorAppearance(gameId: GameId, saveType: number, appearanceId: number): SaveArmorAppearance | null {
+    const part = armorPartForSaveType(gameId, saveType)
+    if (gameId !== 'mhgu' || !Number.isInteger(appearanceId) || appearanceId <= 0 || !part) return null
+    const table = { head: 'cn__armor_head', chest: 'cn__armor_chest', arms: 'cn__armor_arms', waist: 'cn__armor_waist', legs: 'cn__armor_legs' }[part]
     const row = this.db(gameId).prepare(`SELECT id,name,english,rarity FROM ${table} WHERE id=?`).get(appearanceId) as Row | undefined
     if (!row) return null
-    const rarity = row.rarity == null ? null : number(row.rarity); const exactIcon = this.armorAppearanceIconPath(gameId, part, rarity); const fallbackIcon = exactIcon ? null : this.armorAppearanceIconPath(gameId, part, null); const iconPath = exactIcon ?? fallbackIcon
-    return { appearanceId, nameCn: text(row.name), nameEn: text(row.english), nameJp: '', part, rarity, iconPath, iconSource: iconPath ? 'dex-armor-category' as const : 'fallback' as const, sourceStatus: 'confirmed' as const, iconFallback: Boolean(fallbackIcon) }
-  }
-  armorAppearanceIconPath(gameId: GameId, part: 'head' | 'chest' | 'arms' | 'waist' | 'legs', rarity: number | null) {
-    if (gameId !== 'mhgu') return null
-    const row = rarity == null
-      ? this.db(gameId).prepare('SELECT icon_path FROM catalog_armors WHERE game_id=? AND part=? AND icon_path IS NOT NULL ORDER BY rarity,dex_id LIMIT 1').get(gameId, part) as Row | undefined
-      : this.db(gameId).prepare('SELECT icon_path FROM catalog_armors WHERE game_id=? AND part=? AND rarity=? AND icon_path IS NOT NULL ORDER BY dex_id LIMIT 1').get(gameId, part, rarity) as Row | undefined
-    return row?.icon_path ? text(row.icon_path) : null
+    return this.appearanceFromRow(part, row)
   }
   palicoLabels(forte: number, target: number) {
     const db = this.db('mhgu')
@@ -154,7 +164,7 @@ export class SaveCatalogResolver {
       return row ? { kind: 'weapon', saveType, saveId, saveLevel: number(row.save_level), slots: row.slots == null ? null : number(row.slots), nameCn: text(row.name_cn) } : null
     }
     if (saveType >= 1 && saveType <= 5) {
-      const expectedPart = ({ 1: 'head', 2: 'chest', 3: 'arms', 4: 'waist', 5: 'legs' } as Record<number, string>)[saveType]
+      const expectedPart = armorPartForSaveType(gameId, saveType)
       const row = db.prepare('SELECT a.name_cn,a.slots FROM catalog_armor_save_identities i JOIN catalog_armors a ON a.game_id=i.game_id AND a.dex_id=i.armor_dex_id WHERE i.game_id=? AND i.save_type=? AND i.save_id=? AND a.part=? AND a.is_placeholder=0 ORDER BY a.dex_id LIMIT 1').get(gameId, saveType, saveId, expectedPart) as Row | undefined
       return row ? { kind: 'armor', saveType, saveId, saveLevel: null, slots: row.slots == null ? null : number(row.slots), nameCn: text(row.name_cn) } : null
     }

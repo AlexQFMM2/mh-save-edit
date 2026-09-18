@@ -1,2 +1,2 @@
 .decoration-editor-drawer { height: 100%; min-height: 0; }
-.decoration-editor-drawer__apply { color: var(--global-theme-color-text-on-accent); background: var(--global-theme-color-accent); }
+.decoration-editor-drawer__notice { margin: 0 0 var(--global-spacing-4); color: var(--global-theme-color-text-secondary); font-size: var(--global-typography-font-size-small); }

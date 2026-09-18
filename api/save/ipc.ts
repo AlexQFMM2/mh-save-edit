@@ -1,7 +1,7 @@
 import { BrowserWindow, dialog, ipcMain } from 'electron'
 import type { SaveOpenRequest } from './types'
 import { saveChannels } from './channels'
-import { saveBoxWriteTargetSchema, saveCatalogEquipmentSchema, saveCatalogItemSchema, saveCharacterSchema, saveCloseSchema, saveCommandSchema, saveIdentitySchema, saveImportApplySchema, saveLoadoutPreviewSchema, saveLoadoutWriteSchema, saveOpenSchema, saveSectionSchema, saveSessionIdSchema, saveTransferSchema } from './schemas'
+import { saveArmorAppearanceSchema, saveBoxWriteTargetSchema, saveCatalogEquipmentSchema, saveCatalogItemSchema, saveCharacterSchema, saveCloseSchema, saveCommandSchema, saveIdentitySchema, saveImportApplySchema, saveLoadoutPreviewSchema, saveLoadoutWriteSchema, saveOpenSchema, saveSectionSchema, saveSessionIdSchema, saveTransferSchema } from './schemas'
 import { SaveSessionService } from './sessionService'
 
 export type RegisteredSaveIpc = { dispose(): void; confirmWindowClose(window: BrowserWindow): boolean }
@@ -14,6 +14,7 @@ export function registerSaveIpc(dataDir: string): RegisteredSaveIpc {
   const openTitle = (request: SaveOpenRequest) => request.formatId.includes('mhgu') || request.formatId.includes('mhxx') ? '选择 system 存档' : '选择角色存档文件'
 
   ipcMain.handle(saveChannels.getSession, () => service.snapshot())
+  ipcMain.handle(saveChannels.searchArmorAppearances, (_event, payload: unknown) => service.searchArmorAppearances(saveArmorAppearanceSchema.parse(payload)))
   ipcMain.handle(saveChannels.open, async (_event, payload: unknown) => {
     const request = saveOpenSchema.parse(payload)
     const selected = await dialog.showOpenDialog({ title: openTitle(request), properties: ['openFile'], filters: [{ name: 'Monster Hunter 存档', extensions: ['*'] }] })

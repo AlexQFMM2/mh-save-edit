@@ -1,5 +1,6 @@
 import { Copy, Pause, Play, RotateCcw, Square, Trash2 } from 'lucide-react'
-import { useCallback, useEffect, useState, type KeyboardEvent } from 'react'
+import { useCallback, useEffect, useRef, useState, type KeyboardEvent } from 'react'
+import { saveAutoLoadoutDraft } from '../../stores/autoLoadoutDraftStore'
 import { calculateLoadout } from '../../../api/loadout/calculator'
 import type { AutoLoadoutJobDetail, AutoLoadoutJobStatus, AutoLoadoutJobSummary, AutoLoadoutResult, LoadoutCalculationSnapshot, LoadoutGame, LogicalLoadout } from '../../../api/loadout/types'
 import { AutoLoadoutJobProgress } from '../AutoLoadoutJobProgress/AutoLoadoutJobProgress'
@@ -8,7 +9,7 @@ import { LoadoutWorkspaceDrawer } from '../LoadoutWorkspaceDrawer/LoadoutWorkspa
 import { SearchableSelect } from '../SearchableSelect/SearchableSelect'
 import './AutoLoadoutHistoryDrawer.css'
 
-type Props = { gameId: LoadoutGame; snapshot: LoadoutCalculationSnapshot; onApply: (value: LogicalLoadout) => void; onJobsChanged?: () => void | Promise<void>; onClose: () => void }
+type Props = { gameId: LoadoutGame; snapshot: LoadoutCalculationSnapshot; onApply: (value: LogicalLoadout) => void; onJobsChanged?: () => void | Promise<void>; onCopyConditions: () => void; onClose: () => void }
 type DetailTab = 'conditions' | 'progress' | 'results'
 const terminalStatuses: AutoLoadoutJobStatus[] = ['completed', 'cancelled', 'failed', 'interrupted']
 const statusOptions = [{ value: 'all', label: '全部状态' }, { value: 'queued', label: '排队中' }, { value: 'running', label: '运行中' }, { value: 'paused', label: '已暂停' }, { value: 'completed', label: '已完成' }, { value: 'cancelled', label: '已取消' }, { value: 'failed', label: '失败' }, { value: 'interrupted', label: '已中断' }]
@@ -16,7 +17,7 @@ const gameOptions = [{ value: 'current', label: '当前版本' }, { value: 'all'
 const dateFormatter = new Intl.DateTimeFormat('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
 const detailTabs: DetailTab[] = ['conditions', 'progress', 'results']
 
-export function AutoLoadoutHistoryDrawer({ gameId, snapshot, onApply, onJobsChanged, onClose }: Props) {
+export function AutoLoadoutHistoryDrawer({ gameId, snapshot, onApply, onJobsChanged, onCopyConditions, onClose }: Props) {
   const [summaries, setSummaries] = useState<AutoLoadoutJobSummary[]>([])
   const [selectedJob, setSelectedJob] = useState<AutoLoadoutJobDetail>()
   const [selectedResult, setSelectedResult] = useState<AutoLoadoutResult>()
@@ -26,6 +27,10 @@ export function AutoLoadoutHistoryDrawer({ gameId, snapshot, onApply, onJobsChan
   const [query, setQuery] = useState('')
   const [error, setError] = useState<string>()
   const [busy, setBusy] = useState(false)
+  const live = useRef(true)
+  const selectedJobId = useRef(selectedJob?.jobId)
+  selectedJobId.current = selectedJob?.jobId
+  useEffect(() => { live.current = true; return () => { live.current = false } }, [])
 
   const loadList = useCallback(async () => {
     const filters = {
@@ -70,12 +75,18 @@ export function AutoLoadoutHistoryDrawer({ gameId, snapshot, onApply, onJobsChan
     catch (cause) { setError(cause instanceof Error ? cause.message : '任务控制失败') }
     finally { setBusy(false) }
   }
-  const retry = async () => {
-    if (!selectedJob) return
-    setBusy(true)
-    try { const next = await window.mhSaveEditor.loadout.retryAutoLoadoutJob(selectedJob.jobId); await openJob(next.jobId) }
-    catch (cause) { setError(cause instanceof Error ? cause.message : '重新运行失败') }
-    finally { setBusy(false) }
+  const copyConditions = async () => {
+    if (!selectedJob || busy || selectedJob.gameId !== gameId) return
+    const source = selectedJob
+    setBusy(true); setError(undefined)
+    try {
+      const baseLoadout = await window.mhSaveEditor.loadout.reconcileLoadout(source.request.baseLoadout)
+      if (!live.current || selectedJobId.current !== source.jobId) return
+      if (baseLoadout.gameId !== gameId || baseLoadout.dataVersion !== snapshot.dataVersion) throw new Error('资料版本已变化，请重新进入配装页面后复制')
+      saveAutoLoadoutDraft(gameId, { baseLoadout, targetKeys: source.request.targets.map(target => target.activationKey), maxSeconds: source.timeoutMs / 1000, resultLimit: source.request.resultLimit, parentJobId: source.jobId, tab: 'conditions' })
+      onCopyConditions()
+    } catch (cause) { if (live.current && selectedJobId.current === source.jobId) setError(cause instanceof Error ? cause.message : '复制条件失败，原草稿未变') }
+    finally { if (live.current) setBusy(false) }
   }
   const remove = async (jobIds: string[]) => {
     const active = summaries.some(job => jobIds.includes(job.jobId) && ['running', 'paused'].includes(job.status)) || (selectedJob && jobIds.includes(selectedJob.jobId) && ['running', 'paused'].includes(selectedJob.status))
@@ -120,11 +131,11 @@ export function AutoLoadoutHistoryDrawer({ gameId, snapshot, onApply, onJobsChan
 
   return <LoadoutWorkspaceDrawer title={selectedJob ? '自动任务详情' : '自动任务历史'} onBack={selectedJob ? back : undefined} onEscape={selectedJob ? back : onClose} onClose={onClose} footer={footer}>
     {selectedJob ? <div className="auto-loadout-history-drawer__detail">
-      <div className="auto-loadout-history-drawer__detail-head"><div><h3 className="auto-loadout-history-drawer__detail-title">{selectedJob.targets.map(target => target.nameCn).join('、')}</h3><p className="auto-loadout-history-drawer__detail-meta">{selectedJob.gameId.toUpperCase()} · {dateFormatter.format(new Date(selectedJob.createdAt))}{selectedJob.dataVersion !== snapshot.dataVersion && selectedJob.gameId === gameId ? ' · 资料已更新，应用前将重新复核' : ''}</p></div><div className="auto-loadout-history-drawer__actions">{selectedJob.status === 'running' && <button className="auto-loadout-history-drawer__action" type="button" disabled={busy} onClick={() => void control('pause')}><Pause className="auto-loadout-history-drawer__action-icon" aria-hidden="true" />暂停</button>}{selectedJob.status === 'paused' && <button className="auto-loadout-history-drawer__action" type="button" disabled={busy} onClick={() => void control('resume')}><Play className="auto-loadout-history-drawer__action-icon" aria-hidden="true" />继续</button>}{['running', 'paused', 'queued'].includes(selectedJob.status) && <button className="auto-loadout-history-drawer__action" type="button" disabled={busy} onClick={() => void control('cancel')}><Square className="auto-loadout-history-drawer__action-icon" aria-hidden="true" />取消</button>}<button className="auto-loadout-history-drawer__action" type="button" disabled={busy} onClick={() => void retry()}><Copy className="auto-loadout-history-drawer__action-icon" aria-hidden="true" />按原条件重跑</button><button className="auto-loadout-history-drawer__action" type="button" disabled={busy} onClick={() => void remove([selectedJob.jobId])}><Trash2 className="auto-loadout-history-drawer__action-icon" aria-hidden="true" />删除</button></div></div>
+      <div className="auto-loadout-history-drawer__detail-head"><div><h3 className="auto-loadout-history-drawer__detail-title">{selectedJob.targets.map(target => target.nameCn).join('、')}</h3><p className="auto-loadout-history-drawer__detail-meta">{selectedJob.gameId.toUpperCase()} · {dateFormatter.format(new Date(selectedJob.createdAt))}{selectedJob.dataVersion !== snapshot.dataVersion && selectedJob.gameId === gameId ? ' · 资料已更新，应用前将重新复核' : ''}</p></div><div className="auto-loadout-history-drawer__actions">{selectedJob.status === 'running' && <button className="auto-loadout-history-drawer__action" type="button" disabled={busy} onClick={() => void control('pause')}><Pause className="auto-loadout-history-drawer__action-icon" aria-hidden="true" />暂停</button>}{selectedJob.status === 'paused' && <button className="auto-loadout-history-drawer__action" type="button" disabled={busy} onClick={() => void control('resume')}><Play className="auto-loadout-history-drawer__action-icon" aria-hidden="true" />继续</button>}{['running', 'paused', 'queued'].includes(selectedJob.status) && <button className="auto-loadout-history-drawer__action" type="button" disabled={busy} onClick={() => void control('cancel')}><Square className="auto-loadout-history-drawer__action-icon" aria-hidden="true" />取消</button>}<button className="auto-loadout-history-drawer__action" type="button" disabled={busy || selectedJob.gameId !== gameId} title={selectedJob.gameId !== gameId ? '请切换到对应游戏后复制条件' : '复制为可编辑草稿，不会立即创建任务'} onClick={() => void copyConditions()}><Copy className="auto-loadout-history-drawer__action-icon" aria-hidden="true" />复制条件新建</button><button className="auto-loadout-history-drawer__action" type="button" disabled={busy} onClick={() => void remove([selectedJob.jobId])}><Trash2 className="auto-loadout-history-drawer__action-icon" aria-hidden="true" />删除</button></div></div>
       <div className="auto-loadout-history-drawer__tabs" role="tablist" aria-label="任务详情"><button className="auto-loadout-history-drawer__tab" type="button" role="tab" tabIndex={tab === 'conditions' ? 0 : -1} aria-selected={tab === 'conditions'} onKeyDown={event => moveTabFocus(event, 'conditions')} onClick={() => setTab('conditions')}>条件</button><button className="auto-loadout-history-drawer__tab" type="button" role="tab" tabIndex={tab === 'progress' ? 0 : -1} aria-selected={tab === 'progress'} onKeyDown={event => moveTabFocus(event, 'progress')} onClick={() => setTab('progress')}>进度</button><button className="auto-loadout-history-drawer__tab" type="button" role="tab" tabIndex={tab === 'results' ? 0 : -1} aria-selected={tab === 'results'} onKeyDown={event => moveTabFocus(event, 'results')} onClick={() => setTab('results')}>结果 ({selectedJob.resultCount})</button></div>
       {tab === 'conditions' && <section className="auto-loadout-history-drawer__conditions" role="tabpanel"><dl className="auto-loadout-history-drawer__condition-list">{[['目标技能', selectedJob.targets.map(target => `${target.nameCn} ≥ ${target.threshold}`).join('、')], ['武器', selectedJob.request.baseLoadout.weapon?.nameCn ?? '未选择'], ['性别', selectedJob.request.baseLoadout.gender === 'male' ? '男性' : '女性'], ['最大时间', `${selectedJob.timeoutMs / 1000} 秒`], ['资料版本', selectedJob.dataVersion]].map(([term, value]) => <div className="auto-loadout-history-drawer__condition-row" key={term}><dt className="auto-loadout-history-drawer__condition-term">{term}</dt><dd className="auto-loadout-history-drawer__condition-value">{value}</dd></div>)}</dl></section>}
       {tab === 'progress' && <section className="auto-loadout-history-drawer__progress" role="tabpanel"><AutoLoadoutJobProgress job={selectedJob} />{selectedJob.error && <p className="auto-loadout-history-drawer__error" role="alert">{selectedJob.error}</p>}</section>}
-      {tab === 'results' && <section className="auto-loadout-history-drawer__results" role="tabpanel"><AutoLoadoutResultList results={selectedJob.results} selected={selectedResult?.fingerprint} onSelect={setSelectedResult} /></section>}
+      {tab === 'results' && <section className="auto-loadout-history-drawer__results" role="tabpanel"><AutoLoadoutResultList job={selectedJob} results={selectedJob.results} selected={selectedResult?.fingerprint} onSelect={setSelectedResult} /></section>}
       {error && <p className="auto-loadout-history-drawer__error" role="alert">{error}</p>}
     </div> : <div className="auto-loadout-history-drawer__list-view">
       <div className="auto-loadout-history-drawer__filters">

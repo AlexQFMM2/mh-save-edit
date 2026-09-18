@@ -5,7 +5,7 @@ import type { GameId } from '../api/core/loadout'
 import { loadoutChannels } from '../api/loadout/channels'
 import type { AutoLoadoutJobFilters, AutoLoadoutJobSummary, AutoLoadoutRequest, LoadoutArmorFilters, LoadoutCharm, LoadoutDecorationFilters, LoadoutWeaponFilters, LogicalLoadout } from '../api/loadout/types'
 import { saveChannels } from '../api/save/channels'
-import type { SaveBoxWriteTargetRequest, SaveCatalogEquipmentRequest, SaveCatalogItemRequest, SaveCommand, SaveExportRequest, SaveImportApplyRequest, SaveImportRequest, SaveLoadoutWriteRequest, SaveOpenRequest, SaveSectionRequest, SaveSessionSnapshot } from '../api/save/types'
+import type { SaveArmorAppearanceFilters, SaveBoxWriteTargetRequest, SaveCatalogEquipmentRequest, SaveCatalogItemRequest, SaveCommand, SaveExportRequest, SaveImportApplyRequest, SaveImportRequest, SaveLoadoutWriteRequest, SaveOpenRequest, SaveSectionRequest, SaveSessionSnapshot } from '../api/save/types'
 
 contextBridge.exposeInMainWorld('mhSaveEditor', {
   version: '0.1.0',
@@ -78,6 +78,7 @@ contextBridge.exposeInMainWorld('mhSaveEditor', {
     },
   },
   save: {
+    searchArmorAppearances: (request: SaveArmorAppearanceFilters) => ipcRenderer.invoke(saveChannels.searchArmorAppearances, request),
     getSession: () => ipcRenderer.invoke(saveChannels.getSession),
     open: (request: SaveOpenRequest) => ipcRenderer.invoke(saveChannels.open, request),
     listCharacters: (sessionId: string, revision: number) => ipcRenderer.invoke(saveChannels.listCharacters, { sessionId, revision }),

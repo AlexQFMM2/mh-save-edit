@@ -3,6 +3,7 @@ import crypto from 'node:crypto'
 import fs from 'node:fs'
 import path from 'node:path'
 import Database from 'better-sqlite3'
+import { migrateArmorSkillIds } from './runtime/armorSkillMigration.mjs'
 
 const projectRoot = path.resolve(import.meta.dirname, '..')
 const args = process.argv.slice(2)
@@ -224,6 +225,7 @@ function buildGame(gameId, spec) {
     })
   })
   transaction()
+  migrateArmorSkillIds(db, gameId)
   const missingMaterials = materialRows.filter((row) => !itemByDex.has(integer(row.Itm_ID))).length
   const iconStats = db.prepare('SELECT count(*) total, sum(icon_path IS NOT NULL) mapped, sum(is_placeholder=0 AND icon_path IS NULL) missing FROM catalog_armors WHERE game_id=?').get(gameId)
   const audit = { gameId, armorCount: armorRows.length, rawSeriesCount: spec.groups, pairedSeriesCount: spec.pairs, universalSeriesCount: spec.universal, displayedSetCount: spec.pairs + spec.universal, completeSeriesCount: spec.complete, relicArmorCount: 0, saveIdentityCount: db.prepare('SELECT count(*) count FROM catalog_armor_save_identities WHERE game_id=?').get(gameId).count, materialCount: db.prepare('SELECT count(*) count FROM catalog_armor_materials WHERE game_id=?').get(gameId).count, missingMaterialMappings: missingMaterials, iconStats, nativeSeries, combatOverrides: gameId === 'mhgu' ? [589, 590, 1997, 1998, 5468, 5469] : [], source: snapshot }

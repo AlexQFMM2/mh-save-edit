@@ -47,9 +47,15 @@ export class AutoLoadoutJobService {
     return () => this.events.off('updated', listener)
   }
 
-  start(request: AutoLoadoutRequest, parentJobId: string | null = null): AutoLoadoutJobSummary {
+  start(request: AutoLoadoutRequest, parentJobId: string | null = request.parentJobId ?? null): AutoLoadoutJobSummary {
     this.assertOpen()
-    const prepared = this.prepareRequest(request, false)
+    if (parentJobId) {
+      const source = this.requireDetail(parentJobId)
+      if (source.gameId !== request.gameId) throw new Error('不能跨游戏复制自动配装任务')
+    }
+    const searchRequest = { ...request }
+    delete searchRequest.parentJobId
+    const prepared = this.prepareRequest(searchRequest, false)
     const jobId = randomUUID()
     const summary = this.store.create(jobId, parentJobId, prepared.request, nowIso())
     this.prepared.set(jobId, prepared)
@@ -161,7 +167,7 @@ export class AutoLoadoutJobService {
       const active = this.active
       if (!active || active.jobId !== queued.jobId) return
       const current = active.pendingProgress ?? this.store.get(queued.jobId)?.progress
-      if (current) this.persistProgress(active, { ...current, elapsedMs: Math.max(current.elapsedMs, Date.now() - active.startedAt) }, true)
+      if (current) this.persistProgress(active, { ...current, elapsedMs: active.startPosted ? current.elapsedMs : Date.now() - active.startedAt }, true)
     }, 800)
     heartbeatTimer.unref?.()
     this.active = { jobId: queued.jobId, worker, request: prepared.request, startedAt, startPosted: false, startupTimer, lastPersistedAt: 0, pendingProgress: null, progressTimer: null, heartbeatTimer }
@@ -198,7 +204,7 @@ export class AutoLoadoutJobService {
     if (message.type === 'finished') {
       const latest = message.value ?? active.pendingProgress ?? this.store.get(jobId)?.progress
       const results = message.results ?? []
-      const progress: AutoLoadoutProgress = { requestId: active.request.requestId, stage: '已完成', checked: latest?.checked ?? 0, estimatedTotal: latest?.estimatedTotal, results: results.length, elapsedMs: Math.max(latest?.elapsedMs ?? 0, Date.now() - active.startedAt) }
+      const progress: AutoLoadoutProgress = { ...latest, requestId: active.request.requestId, stage: message.value?.stage ?? '任务已结束，搜索完整性未知', checked: latest?.checked ?? 0, results: results.length, elapsedMs: latest?.elapsedMs ?? Date.now() - active.startedAt }
       this.emit(this.store.complete(jobId, progress, results, nowIso()))
       this.finishActive(jobId)
       return

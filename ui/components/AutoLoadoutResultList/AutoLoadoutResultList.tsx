@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
-import type { AutoLoadoutResult } from '../../../api/loadout/types'
+import type { AutoLoadoutJobSummary, AutoLoadoutResult } from '../../../api/loadout/types'
+import { autoLoadoutEmptyMessage } from '../../utils/autoLoadoutJobPresentation'
 import { AutoLoadoutResultRow } from '../AutoLoadoutResultRow/AutoLoadoutResultRow'
 import { SearchableSelect } from '../SearchableSelect/SearchableSelect'
 import './AutoLoadoutResultList.css'
@@ -10,7 +11,7 @@ function remainingSlots(result: AutoLoadoutResult): number {
   return result.calculation.slots.reduce((sum, item) => sum + Math.max(0, item.remainingSlots), 0)
 }
 
-export function AutoLoadoutResultList({ results, selected, onSelect }: { results: AutoLoadoutResult[]; selected?: string; onSelect: (value: AutoLoadoutResult) => void }) {
+export function AutoLoadoutResultList({ results, job, selected, onSelect }: { results: AutoLoadoutResult[]; job?: AutoLoadoutJobSummary; selected?: string; onSelect: (value: AutoLoadoutResult) => void }) {
   const [sort, setSort] = useState<ResultSort>('recommended')
   const sorted = useMemo(() => {
     if (sort === 'recommended') return results
@@ -25,7 +26,7 @@ export function AutoLoadoutResultList({ results, selected, onSelect }: { results
       <label className="auto-loadout-result-list__sort"><span className="auto-loadout-result-list__sort-label">排序</span><SearchableSelect ariaLabel="自动配装结果排序" value={sort} options={[{ value: 'recommended', label: '推荐顺序' }, { value: 'defense', label: '防御力降序' }, { value: 'slots', label: '剩余孔数降序' }]} onChange={value => setSort(value as ResultSort)} /></label>
     </div>
     <div className="auto-loadout-result-list__scroller">
-      {sorted.length ? sorted.map((result, index) => <AutoLoadoutResultRow index={index + 1} key={result.fingerprint} result={result} selected={selected === result.fingerprint} onSelect={() => onSelect(result)} />) : <p className="auto-loadout-result-list__empty">尚无结果。设置目标后开始搜索。</p>}
+      {sorted.length ? sorted.map((result, index) => <AutoLoadoutResultRow index={index + 1} key={result.fingerprint} result={result} selected={selected === result.fingerprint} onSelect={() => onSelect(result)} />) : <p className="auto-loadout-result-list__empty">{autoLoadoutEmptyMessage(job)}</p>}
     </div>
   </div>
 }

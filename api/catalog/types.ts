@@ -632,6 +632,7 @@ export type WeaponCatalogFilters = {
   rarity?: number
   slots?: number
   directlyProducible?: boolean
+  finalOnly?: boolean
   includePlaceholders?: boolean
   sort?: WeaponSort
   direction?: SortDirection

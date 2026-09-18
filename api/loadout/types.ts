@@ -170,6 +170,15 @@ export type LoadoutCharmRange = {
   source: string
 }
 
+export type CharmSlotRule = {
+  classId: number
+  maxSlots: number
+  fulfillment: number
+  thresholds: [number, number, number]
+  source: string
+  evidence: 'verified' | 'reference'
+}
+
 export type LoadoutRelicLookup = {
   kind: string
   key: string
@@ -184,6 +193,9 @@ export type LoadoutCalculationSnapshot = {
   skills: LoadoutSkillDefinition[]
   charmClasses: LoadoutCharmClass[]
   charmRanges: LoadoutCharmRange[]
+  charmSlotRules?: CharmSlotRule[]
+  /** Exact joint rows: class, slots, first ID/points, second ID/points. */
+  charmCombinations?: [number, number, number, number, number, number][]
   relicLookups: LoadoutRelicLookup[]
 }
 
@@ -244,6 +256,8 @@ export type CharmValidationResult = {
 
 export type AutoLoadoutTarget = { activationKey: string; skillId: number; threshold: number; nameCn: string }
 export type AutoLoadoutRequest = {
+  /** Optional provenance, validated only when explicitly creating a new job. */
+  parentJobId?: string
   requestId: string
   gameId: LoadoutGame
   dataVersion: string
@@ -253,7 +267,8 @@ export type AutoLoadoutRequest = {
   timeoutMs: number
 }
 export type AutoLoadoutResult = { fingerprint: string; loadout: LogicalLoadout; calculation: LoadoutResult; searchComplete?: boolean; incompleteReason?: 'timeout' | 'candidate-bound' | 'unknown-charm-range' | 'search-error' }
-export type AutoLoadoutProgress = { requestId: string; stage: string; checked: number; estimatedTotal?: number | null; results: number; elapsedMs: number; searchComplete?: boolean; incompleteReason?: 'timeout' | 'candidate-bound' | 'unknown-charm-range' | 'search-error' }
+export type AutoLoadoutProgress = { requestId: string; stage: string; checked: number; verified?: number; estimatedTotal?: number | null; results: number; elapsedMs: number; searchComplete?: boolean; incompleteReason?: 'timeout' | 'candidate-bound' | 'unknown-charm-range' | 'search-error'; coverageWarnings?: string[] }
+export type AutoLoadoutSearchReport = { results: AutoLoadoutResult[]; progress: AutoLoadoutProgress }
 export type AutoLoadoutJobStatus = 'queued' | 'running' | 'paused' | 'completed' | 'cancelled' | 'failed' | 'interrupted'
 export type AutoLoadoutJobSummary = {
   jobId: string
@@ -287,7 +302,7 @@ export type AutoLoadoutJob = AutoLoadoutJobSummary
 /** Legacy renderer shape kept for older callers while the task API migrates. */
 export type AutoLoadoutJobState = { status: AutoLoadoutJobStatus; progress: AutoLoadoutProgress | null; results: AutoLoadoutResult[]; error?: string }
 
-export type LoadoutWeaponFilters = { gameId: LoadoutGame; query?: string; typeId?: number; sourceKind?: 'all' | 'catalog' | 'relicTemplate'; rarity?: number; slots?: number; directlyProducible?: boolean; sort?: 'source' | 'rarity' | 'slots' | 'attack'; page?: number; pageSize?: number }
+export type LoadoutWeaponFilters = { gameId: LoadoutGame; query?: string; typeId?: number; sourceKind?: 'all' | 'catalog' | 'relicTemplate'; rarity?: number; slots?: number; directlyProducible?: boolean; finalOnly?: boolean; sort?: 'source' | 'rarity' | 'slots' | 'attack'; page?: number; pageSize?: number }
 export type LoadoutArmorFilters = { gameId: LoadoutGame; part: ArmorLoadoutSlot; query?: string; skillId?: number; sourceKind?: 'all' | 'catalog' | 'relicTemplate'; rarity?: number; slots?: number; combat?: 'blademaster' | 'gunner'; gender?: 'male' | 'female'; sort?: 'source' | 'rarity' | 'slots' | 'defense' | 'skill'; page?: number; pageSize?: number }
 export type LoadoutDecorationFilters = { gameId: LoadoutGame; query?: string; skillId?: number; page?: number; pageSize?: number }
 export type LoadoutPage<T> = { items: T[]; page: number; pageSize: number; total: number; hasNext: boolean }

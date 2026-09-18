@@ -3,7 +3,7 @@ import { CatalogResetButton } from '../CatalogResetButton/CatalogResetButton'
 import { SearchableSelect } from '../SearchableSelect/SearchableSelect'
 import './WeaponFilterBar.css'
 
-type Props = { facets: WeaponCatalogFacets; typeId?: number; attributeId?: WeaponAttributeFilter; includeHiddenAttributes: boolean; rarity?: number; slots?: number; directlyProducible: boolean; includePlaceholders: boolean; onChange: (key: string, value?: string) => void; onReset: () => void }
+type Props = { facets: WeaponCatalogFacets; typeId?: number; attributeId?: WeaponAttributeFilter; includeHiddenAttributes: boolean; rarity?: number; slots?: number; directlyProducible: boolean; finalOnly: boolean; includePlaceholders: boolean; onChange: (key: string, value?: string) => void; onReset: () => void }
 
 export function WeaponFilterBar(props: Props) {
   return <div className="weapon-filter-bar" aria-label="武器筛选器">
@@ -14,6 +14,7 @@ export function WeaponFilterBar(props: Props) {
     <label className="weapon-filter-bar__check"><input type="checkbox" checked={props.includeHiddenAttributes} onChange={(event) => props.onChange('hidden', event.target.checked ? '1' : '0')} /><span>包含觉醒</span></label>
     <label className="weapon-filter-bar__check"><input type="checkbox" checked={props.directlyProducible} onChange={(event) => props.onChange('producible', event.target.checked ? '1' : undefined)} /><span>可直接生产</span></label>
     <label className="weapon-filter-bar__check"><input type="checkbox" checked={props.includePlaceholders} onChange={(event) => props.onChange('debug', event.target.checked ? '1' : undefined)} /><span>占位条目</span></label>
+    <label className="weapon-filter-bar__check"><input type="checkbox" checked={props.finalOnly} onChange={event => props.onChange('final', event.target.checked ? '1' : undefined)} /><span>只看无法再强化</span></label>
     <CatalogResetButton onReset={props.onReset} />
   </div>
 }

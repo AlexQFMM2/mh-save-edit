@@ -1,6 +1,7 @@
 import Database from 'better-sqlite3'
 import { afterEach, describe, expect, it } from 'vitest'
 import { WeaponCatalogRepository } from '../api/catalog/weaponRepository'
+import { LoadoutCatalogRepository } from '../api/loadout/repository'
 import type { GameId, } from '../api/core/loadout'
 
 const databases: Database.Database[] = []
@@ -12,6 +13,28 @@ describe('WeaponCatalogRepository', () => {
     const repo = repository(gameId)
     expect(repo.searchWeapons({ gameId }).total).toBe(total)
     expect(repo.getWeaponFacets(gameId).weaponTypes).toHaveLength(types)
+  })
+
+  it.each(['mh3g', 'mh4g', 'mhgu'] as const)('keeps final-only pagination, picker results and tree flags consistent for %s', gameId => {
+    const repo = repository(gameId)
+    const picker = new LoadoutCatalogRepository(databases.at(-1)!, gameId)
+    const first = repo.searchWeapons({ gameId, finalOnly: true })
+    expect(first.total).toBeGreaterThan(0)
+    const catalogKeys = new Set<string>(); const pickerKeys = new Set<string>()
+    for (let page = 1; page <= Math.ceil(first.total / 100); page++) {
+      const catalogPage = repo.searchWeapons({ gameId, finalOnly: true, page })
+      const pickerPage = picker.searchWeapons({ gameId, finalOnly: true, page })
+      expect(pickerPage.total).toBe(first.total)
+      expect(catalogPage.items.every(item => item.isFinalForm && !item.isPlaceholder)).toBe(true)
+      expect(pickerPage.items.every(item => item.sourceKind === 'catalog')).toBe(true)
+      catalogPage.items.forEach(item => catalogKeys.add(item.weaponKey))
+      pickerPage.items.forEach(item => pickerKeys.add(item.weaponKey!))
+    }
+    expect(catalogKeys.size).toBe(first.total); expect(pickerKeys).toEqual(catalogKeys)
+    expect(picker.searchWeapons({ gameId, sourceKind: 'relicTemplate', finalOnly: true }).total).toBe(0)
+    const tree = repo.getWeaponTree(gameId, 1)
+    expect(tree.nodes.filter(node => node.isFinalForm).every(node => catalogKeys.has(node.weaponKey) && !tree.edges.some(edge => edge.parentWeaponKey === node.weaponKey))).toBe(true)
+    expect(tree.nodes.some(node => !node.isFinalForm)).toBe(true)
   })
 
   it('searches names and decimal or hexadecimal identities', () => {
@@ -46,7 +69,7 @@ describe('WeaponCatalogRepository', () => {
   it('returns exact targets, material item identities and derivation trees', () => {
     const repo = repository('mh3g')
     const summary = repo.searchWeapons({ gameId: 'mh3g', weaponTypeId: 1, pageSize: 1 }).items[0]
-    expect(repo.searchWeapons({ gameId: 'mh3g', targetWeaponKey: summary.weaponKey, query: 'does not matter' }).items.map((item) => item.weaponKey)).toEqual([summary.weaponKey])
+    expect(repo.searchWeapons({ gameId: 'mh3g', targetWeaponKey: summary.weaponKey, query: 'does not matter', finalOnly: true }).items.map((item) => item.weaponKey)).toEqual([summary.weaponKey])
     const detail = repo.getWeapon({ gameId: 'mh3g', weaponKey: summary.weaponKey })
     expect(detail?.materials.every((material) => material.saveId >= 0)).toBe(true)
     const tree = repo.getWeaponTree('mh3g', 1)

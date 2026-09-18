@@ -12,7 +12,7 @@ import './WeaponTreeCanvas.css'
 
 const nodeTypes: NodeTypes = { weapon: WeaponTreeNodeView }
 const layoutCache = new Map<string, ReturnType<typeof layoutWeaponTree>>()
-type FilterSlice = Pick<WeaponCatalogFilters, 'query' | 'attributeId' | 'includeHiddenAttributes' | 'rarity' | 'slots' | 'directlyProducible'>
+type FilterSlice = Pick<WeaponCatalogFilters, 'query' | 'attributeId' | 'includeHiddenAttributes' | 'rarity' | 'slots' | 'directlyProducible' | 'finalOnly'>
 
 export function WeaponTreeCanvas(props: { tree: WeaponTreeResult; filters: FilterSlice; selectedKey?: string; sharpnessStage: NonNullable<WeaponCatalogFilters['sharpnessStage']>; onSelect: (weaponKey: string) => void }) {
   return <ReactFlowProvider><WeaponTreeCanvasInner {...props} /></ReactFlowProvider>

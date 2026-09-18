@@ -1,4 +1,5 @@
 import type Database from 'better-sqlite3'
+import { FINAL_WEAPON_SQL, readFinalWeaponKeys } from './finalWeapons'
 import type { GameId } from '../core/loadout'
 import type {
   BowCharge,
@@ -85,6 +86,11 @@ function sharpnessOrder(stage: SharpnessStage, direction: 'ASC' | 'DESC'): strin
 }
 
 export class WeaponCatalogRepository {
+  private readonly finalKeys = new Map<GameId, Set<string>>()
+  private finalWeapons(gameId: GameId): Set<string> {
+    if (!this.finalKeys.has(gameId)) this.finalKeys.set(gameId, readFinalWeaponKeys(this.db, gameId))
+    return this.finalKeys.get(gameId)!
+  }
   constructor(private readonly db: Database.Database) {}
 
   searchWeapons(filters: WeaponCatalogFilters): PageResult<WeaponSummary> {
@@ -115,6 +121,7 @@ export class WeaponCatalogRepository {
       if (filters.rarity != null) { where.push('w.rarity = ?'); values.push(filters.rarity) }
       if (filters.slots != null) { where.push('w.slots = ?'); values.push(filters.slots) }
       if (filters.directlyProducible) where.push('w.is_directly_producible = 1')
+      if (filters.finalOnly) where.push(`(${FINAL_WEAPON_SQL})`)
       if (filters.attributeId === 'none') {
         where.push(`NOT EXISTS (SELECT 1 FROM catalog_weapon_attributes a WHERE a.game_id=w.game_id AND a.weapon_key=w.weapon_key${filters.includeHiddenAttributes === false ? ' AND a.is_hidden=0' : ''})`)
       } else if (typeof filters.attributeId === 'number') {
@@ -244,7 +251,7 @@ export class WeaponCatalogRepository {
         defense: int(row.defense),
         slots: int(row.slots),
         isDirectlyProducible: bool(row.is_directly_producible),
-        isFinalForm: bool(row.is_final_form),
+        isFinalForm: this.finalWeapons(gameId).has(weaponKey),
         iconPath: row.icon_path ? String(row.icon_path) : null,
         isPlaceholder: bool(row.is_placeholder),
         attributes: attributes.get(weaponKey) ?? [],

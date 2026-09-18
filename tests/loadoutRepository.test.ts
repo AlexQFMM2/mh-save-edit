@@ -24,6 +24,14 @@ describe('LoadoutCatalogRepository bootstrap', () => {
     expect(statements.some(sql => sql.includes('FROM catalog_armors'))).toBe(false)
   })
 
+  it('includes universal armor for either profession without mixing exclusive professions', () => {
+    const rows = ['both', 'blademaster', 'gunner'].map((combat, index) => ({ dex_id: index + 1, part: 'head', combat, gender: 'both', name_cn: `合成防具${index}`, slots: 0 }))
+    const db = { prepare: (sql: string) => ({ all: () => sql.includes('FROM catalog_armors') ? rows : [], get: () => undefined }) } as unknown as Database.Database
+    const repo = new LoadoutCatalogRepository(db, 'mhgu')
+    expect(repo.searchArmors({ gameId: 'mhgu', part: 'head', combat: 'blademaster' }).items.map(item => item.combat)).toEqual(['both', 'blademaster'])
+    expect(repo.searchArmors({ gameId: 'mhgu', part: 'head', combat: 'gunner' }).items.map(item => item.combat)).toEqual(['both', 'gunner'])
+  })
+
   it('keeps editor enums out of bootstrap and exposes them through the lazy endpoint', () => {
     const statements: string[] = []
     const lookupRow = { lookup_kind: 'equipment_lookup', lookup_key: 'attack_tier:7:melee:0', payload_json: '{"domain":"attack_tier","save_type":7,"variant":"melee","code":0}', source: 'test' }
