@@ -55,11 +55,17 @@ jobs:
         run: pnpm exec vitest run tests/guBuiltWorker.test.ts --minWorkers=1 --maxWorkers=2
 
   package-windows:
-    if: github.event_name == 'push' && github.event.repository.private == true
+    # Immutable tagged previews publish directly to the existing private Release.
+    # Main pushes validate source only; avoid duplicate Windows builds/artifacts.
+    if: startsWith(github.ref, 'refs/tags/v') && github.event.repository.private == true
     needs: check
     runs-on: windows-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: pnpm/action-setup@v4
         with:
           version: 11
@@ -176,37 +182,26 @@ jobs:
             $hash = (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
             "$hash  $($_.Name)"
           } | Set-Content release/win-unpacked/SHA256SUMS.txt
-      - uses: actions/upload-artifact@v4
-        with:
-          name: mh-save-editor-windows-x64
-          path: release/win-unpacked/
-          if-no-files-found: error
-          retention-days: 7
-          compression-level: 6
-
-  release:
-    if: startsWith(github.ref, 'refs/tags/v') && github.event.repository.private == true
-    needs: package-windows
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
-        with:
-          name: mh-save-editor-windows-x64
-          path: release/win-unpacked
-      - name: Archive Windows portable build
-        run: |
-          tar -C release/win-unpacked -czf "mh-save-editor-${GITHUB_REF_NAME}-windows-x64.tar.gz" .
-          sha256sum "mh-save-editor-${GITHUB_REF_NAME}-windows-x64.tar.gz" > SHA256SUMS.txt
-      - name: Create GitHub Release
+      - name: Archive and publish verified private preview
+        shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "$GITHUB_REF_NAME" \
-            --verify-tag \
-            --title "$GITHUB_REF_NAME" \
-            --generate-notes \
-            "mh-save-editor-${GITHUB_REF_NAME}-windows-x64.tar.gz" \
-            SHA256SUMS.txt
+          $visibility = gh repo view $env:GITHUB_REPOSITORY --json visibility --jq '.visibility'
+          if ($LASTEXITCODE -ne 0 -or $visibility.Trim() -ne 'PRIVATE') { throw 'Preview distribution requires a private repository' }
+          $version = (Get-Content package.json -Raw | ConvertFrom-Json).version
+          if ($env:GITHUB_REF_NAME -ne "v$version") { throw 'Tag and application version differ' }
+          $archiveName = "mh-save-editor-$($env:GITHUB_REF_NAME)-windows-x64.tar.gz"
+          $archive = Join-Path $PWD "release/$archiveName"
+          tar -C release/win-unpacked -czf $archive .
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $hash = (Get-FileHash $archive -Algorithm SHA256).Hash.ToLowerInvariant()
+          "$hash  $archiveName" | Set-Content release/SHA256SUMS.txt -Encoding utf8
+          gh release create $env:GITHUB_REF_NAME `
+            --repo $env:GITHUB_REPOSITORY `
+            --verify-tag --draft `
+            --title $env:GITHUB_REF_NAME --generate-notes `
+            $archive release/SHA256SUMS.txt
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          gh release edit $env:GITHUB_REF_NAME --repo $env:GITHUB_REPOSITORY --draft=false --latest
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
