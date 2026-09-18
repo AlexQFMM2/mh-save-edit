@@ -2,7 +2,7 @@ import type { LoadoutCalculationSnapshot, LoadoutCharm } from './types'
 
 export type CharmSlotCheck = { status: 'confirmed' | 'invalid' | 'unknown'; maxSlots: number | null; source?: string }
 
-/** GU's fulfillment calculation uses both positions: two independent ranges are not a pair rule. */
+/** GU position pools combine independently; fulfillment still couples both positions to slots. */
 export function checkCharmSlots(snapshot: LoadoutCalculationSnapshot, charm: LoadoutCharm): CharmSlotCheck {
   if (snapshot.gameId !== 'mhgu') return { status: 'unknown', maxSlots: null }
   const rules = snapshot.charmSlotRules?.filter(rule => rule.classId === charm.classId) ?? []

@@ -29,6 +29,10 @@ describe('real-catalog search smoke', () => {
       expect(report.results.length).toBeGreaterThan(0)
       expect(checkpoints).toBeGreaterThan(0)
       expect(request).toEqual(before)
+      if (gameId === 'mh4g' && snapshot.mh4gCharmWitnesses?.length) {
+        expect(report.progress.coverageWarnings?.some(message => message.includes('未穷举'))).toBe(true)
+        expect(report.results.some(result => result.loadout.charm?.legality === 'confirmed')).toBe(true)
+      }
       for (const result of report.results) {
         const calculation = calculateLoadout(snapshot, result.loadout)
         expect(calculation.encoding).not.toBe('blocked')

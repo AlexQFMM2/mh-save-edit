@@ -1,4 +1,5 @@
 import type { GameId } from '../core/loadout'
+import type { Mh4gCharmNativeInput, Mh4gCharmWitness } from './mh4gCharmTypes'
 
 export type LoadoutGame = GameId
 export type LoadoutSlot = 'weapon' | 'head' | 'chest' | 'arms' | 'waist' | 'legs' | 'charm'
@@ -194,6 +195,12 @@ export type LoadoutCalculationSnapshot = {
   charmClasses: LoadoutCharmClass[]
   charmRanges: LoadoutCharmRange[]
   charmSlotRules?: CharmSlotRule[]
+  mh4gCharmRules?: Mh4gCharmNativeInput
+  /** Missing/corrupt evidence is reported, never silently promoted to verified. */
+  mh4gCharmRulesIssue?: string
+  mh4gCharmWitnesses?: Mh4gCharmWitness[]
+  mh4gCharmWitnessSource?: string
+  mh4gCharmWitnessIssue?: string
   /** Exact joint rows: class, slots, first ID/points, second ID/points. */
   charmCombinations?: [number, number, number, number, number, number][]
   relicLookups: LoadoutRelicLookup[]

@@ -2,8 +2,11 @@ import { calculateLoadout } from './calculator'
 import { getGameLoadoutRules } from './rules'
 import { ARMOR_LOADOUT_SLOTS, type AutoLoadoutRequest, type LoadoutCatalogSnapshot, type LoadoutDecoration, type LogicalLoadout } from './types'
 import type { SearchControl } from './searchControl'
+import { assignDecorationPatterns } from './searchDecorationPatterns'
 
 export async function assignDecorations(snapshot: LoadoutCatalogSnapshot, request: AutoLoadoutRequest, input: LogicalLoadout, relevant: Set<number>, control: SearchControl): Promise<LogicalLoadout | null> {
+  const patterned = await assignDecorationPatterns(snapshot, request, input, relevant, control)
+  if (patterned !== undefined) return patterned
   const current = structuredClone(input)
   const gear = [current.weapon, ...ARMOR_LOADOUT_SLOTS.map(part => current.armor[part]), current.charm].filter((value): value is NonNullable<typeof value> => Boolean(value))
   for (const value of gear) if (value.lock !== 'equipmentAndDecorations') value.decorations = []

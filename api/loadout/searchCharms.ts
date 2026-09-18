@@ -1,4 +1,5 @@
 import { applyCharmValidation } from './charm'
+import { searchMh4gCharms } from './searchMh4gCharms'
 import type { LoadoutCatalogSnapshot, LoadoutCharm, LogicalLoadout } from './types'
 import type { SearchControl } from './searchControl'
 
@@ -7,9 +8,11 @@ export async function searchCharms(snapshot: LoadoutCatalogSnapshot, relevant: S
   const candidates: NonNullable<LogicalLoadout['charm']>[] = []
   const warnings = new Set<string>()
   const seen = new Set<string>()
+  const unknownNotice = snapshot.gameId === 'mhgu' ? '部分护石的技能范围或孔位证据未确认，未自动生成；可显式固定已有护石作为输入。' : '部分护石的联合技能/孔位生成规则未确认，未自动生成；可显式固定已有护石作为输入。'
+  if (snapshot.gameId === 'mh4g') return searchMh4gCharms(snapshot, relevant, control)
   const push = (charm: NonNullable<LogicalLoadout['charm']>) => {
     const value = applyCharmValidation(snapshot, charm)
-    if (value.legality !== 'confirmed' || value.encoding !== 'encodable') { if (value.legality === 'unknown') warnings.add('部分护石的联合技能/孔位生成规则未确认，未自动生成；可显式固定已有护石作为输入。'); return }
+    if (value.legality !== 'confirmed' || value.encoding !== 'encodable') { if (value.legality === 'unknown') warnings.add(unknownNotice); return }
     const key = JSON.stringify([value.classId,value.slots,value.skill1,value.skill2])
     if (!seen.has(key)) { seen.add(key); candidates.push(value) }
   }
@@ -33,7 +36,7 @@ export async function searchCharms(snapshot: LoadoutCatalogSnapshot, relevant: S
     for (const range of ranges) {
       const explicit = range.status === 'exact' && range.slotCount != null
       const verifiedRules = snapshot.charmSlotRules?.some(rule => rule.classId === cls.classId && rule.evidence === 'verified')
-      if (!explicit && !verifiedRules) { warnings.add('部分护石的联合技能/孔位生成规则未确认，未自动生成；可显式固定已有护石作为输入。'); continue }
+      if (!explicit && !verifiedRules) { warnings.add(unknownNotice); continue }
       for (let points = Math.max(1, range.minPoints); points <= range.maxPoints; points++) {
         await control.tick()
         const skill = { skillId: range.skillId, nameCn: snapshot.skills.find(value => value.skillId === range.skillId)?.nameCn ?? String(range.skillId), points }

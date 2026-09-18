@@ -1,6 +1,8 @@
 import type { CharmValidationResult, LoadoutCalculationSnapshot, LoadoutCharm, LoadoutIssue } from './types'
 import { checkCharmSlots } from './charmSlotRules'
 import { isExactCharmCombination } from './charmCombinations'
+import { validateMh4gCharm } from './mh4gCharmValidation'
+import { validateMhguCharm } from './mhguCharmValidation'
 
 export function validateCharm(snapshot: LoadoutCalculationSnapshot, charm: LoadoutCharm): CharmValidationResult {
   const issues: LoadoutIssue[] = []
@@ -9,6 +11,8 @@ export function validateCharm(snapshot: LoadoutCalculationSnapshot, charm: Loado
   const charmClass = snapshot.charmClasses.find(value => value.classId === charm.classId)
   if (!charmClass) issues.push({ code: 'charm.class.unknown', path: 'charm.classId', severity: 'info', message: '护石品级未出现在当前资料中，保留为未知可编码值' })
   else if (charm.slots > charmClass.maxSlots) issues.push({ code: 'charm.slots.non-natural', path: 'charm.slots', severity: 'warning', message: `孔位超过${charmClass.nameCn}已确认上限 ${charmClass.maxSlots}`, source: 'catalog_skill_talisman_ranges' })
+  if (snapshot.gameId === 'mh4g') return validateMh4gCharm(snapshot, charm, issues)
+  if (snapshot.gameId === 'mhgu') return validateMhguCharm(snapshot, charm, issues)
   const ranges: CharmValidationResult['ranges'] = []
   const slotCheck = checkCharmSlots(snapshot, charm)
   const exactCombination = isExactCharmCombination(snapshot, charm)

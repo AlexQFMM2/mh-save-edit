@@ -3,6 +3,7 @@ import { calculateLoadout } from './calculator'
 import { getGameLoadoutRules } from './rules'
 import { searchCharms } from './searchCharms'
 import { createSearchBounds } from './searchBounds'
+import { createArmorOrdering } from './searchOrdering'
 import { assignDecorations } from './searchDecorations'
 import { SearchBudgetExpired, SearchControl, type SearchContext } from './searchControl'
 import { ARMOR_LOADOUT_SLOTS, type AutoLoadoutRequest, type AutoLoadoutResult, type AutoLoadoutSearchReport, type LoadoutArmor, type LoadoutCatalogSnapshot, type LogicalLoadout } from './types'
@@ -23,7 +24,6 @@ export async function runAutoLoadout(snapshot: LoadoutCatalogSnapshot, request: 
   const rules = getGameLoadoutRules(snapshot.gameId)
   const relevant = new Set([...request.targets.map(target => target.skillId), rules.torsoSkillId, ...(snapshot.gameId === 'mhgu' ? [204, 205] : [])])
   const weaponCombat = rules.getWeaponCombatType(request.baseLoadout.weapon)
-  const score = (armor: LoadoutArmor) => armor.skills.reduce((sum, point) => sum + (relevant.has(point.skillId) ? point.points * 100 : 0), 0) + armor.slots * 20
   const base = structuredClone(request.baseLoadout)
   base.armor = {}
   const bySlot: LoadoutArmor[][] = []
@@ -37,8 +37,7 @@ export async function runAutoLoadout(snapshot: LoadoutCatalogSnapshot, request: 
           await control.tick()
           if (armor.part === part && armor.sourceKind === 'catalog' && armor.saveType != null && armor.saveId != null && (armor.combat === 'both' || armor.combat === weaponCombat) && (armor.gender === 'both' || armor.gender === request.baseLoadout.gender)) candidates.push({ ...armor, decorations: [], lock: 'unlocked' })
         }
-        // Do not clamp signed points or prune modifier-bearing candidates by a flat score.
-        candidates.sort((a, b) => score(b) - score(a) || b.maxDefense - a.maxDefense || a.candidateKey.localeCompare(b.candidateKey))
+        // Keep every compatible candidate, including signed points and modifiers.
         bySlot.push(candidates)
       }
     }
@@ -48,19 +47,24 @@ export async function runAutoLoadout(snapshot: LoadoutCatalogSnapshot, request: 
     warnings.push(...generated.warnings)
     const charms = fixedCharm ? [structuredClone(request.baseLoadout.charm)] : [...generated.candidates, null]
     const canReach = createSearchBounds(snapshot, request, bySlot, charms)
-    const search = async (depth: number): Promise<boolean> => {
+    const orderedArmors = createArmorOrdering(snapshot, request, bySlot, relevant)
+    const search = async (depth: number, spent: number, limit: number, previousLimit: number): Promise<boolean> => {
       await control.tick()
       if (!canReach(base, depth)) return false
       if (depth < ARMOR_LOADOUT_SLOTS.length) {
         control.stage = `组合防具 ${depth + 1}/5`
         const part = ARMOR_LOADOUT_SLOTS[depth]
-        for (const armor of bySlot[depth]) {
-          base.armor[part] = armor
-          if (await search(depth + 1)) return true
+        const ordered = orderedArmors(base, depth)
+        for (let rank = 0; rank < ordered.length && spent + rank <= limit; rank++) {
+          base.armor[part] = ordered[rank]
+          if (await search(depth + 1, spent + rank, limit, previousLimit)) return true
         }
         delete base.armor[part]
         return false
       }
+      // Every complete armor tuple has one deterministic rank sum. Earlier
+      // bands already checked all its charms; do not repeat decoration work.
+      if (spent <= previousLimit) return false
       for (const charm of charms) {
         control.stage = '装饰珠求解'
         await control.tick()
@@ -80,8 +84,13 @@ export async function runAutoLoadout(snapshot: LoadoutCatalogSnapshot, request: 
       }
       return false
     }
-    if (await search(0)) reason = 'candidate-bound'
-    else if (warnings.length) reason = 'unknown-charm-range'
+    const maximumRankSum = bySlot.reduce((sum, rows) => sum + Math.max(0, rows.length - 1), 0)
+    let previousLimit = -1
+    for (let limit = 0; ; limit = Math.min(maximumRankSum, limit * 2 + 1)) {
+      if (await search(0, 0, limit, previousLimit)) { reason = 'candidate-bound'; break }
+      if (limit === maximumRankSum) { if (warnings.length) reason = 'unknown-charm-range'; break }
+      previousLimit = limit
+    }
   } catch (error) {
     if (!(error instanceof SearchBudgetExpired)) throw error
     reason = 'timeout'

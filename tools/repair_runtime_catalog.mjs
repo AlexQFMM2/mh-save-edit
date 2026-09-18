@@ -4,6 +4,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import Database from 'better-sqlite3'
 import { repairRuntimeArmorSkills } from './runtime/repairArmorSkills.mjs'
+import { repairMh4gCharms } from './runtime/repairMh4gCharms.mjs'
 
 function repairMh3gDecorations() {
 const root = path.resolve(import.meta.dirname, '..')
@@ -87,3 +88,11 @@ console.log('MH3G decoration crosswalk runtime migration applied')
 
 repairMh3gDecorations()
 repairRuntimeArmorSkills(path.resolve(import.meta.dirname, '..', 'data'))
+const mh4gPath = path.resolve(import.meta.dirname, '..', 'data/mh4g.sqlite')
+if (fs.existsSync(mh4gPath)) {
+  const db = new Database(mh4gPath)
+  try {
+    db.pragma('foreign_keys=ON')
+    console.log('MH4G charm source crosswalk prepared', repairMh4gCharms(db))
+  } finally { db.close() }
+}

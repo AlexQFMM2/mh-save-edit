@@ -9,8 +9,12 @@ on:
 permissions:
   contents: read
 
+env:
+  RUNTIME_ASSETS_SHA256: cb7baa9d3b7a57cdbc6e5c744513a3c6b92d1db3b9aea5b48f86b1a68e980642
+
 jobs:
   check:
+    if: github.event.repository.private == true
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -25,15 +29,16 @@ jobs:
       - name: Download encrypted runtime test assets
         env:
           GH_TOKEN: ${{ github.token }}
-          RUNTIME_ASSETS_PASSWORD: ${{ secrets.RUNTIME_ASSETS_PASSWORD }}
+          RUNTIME_ASSETS_PASSWORD: ${{ secrets.RUNTIME_ASSETS_V2_PASSWORD }}
         run: |
           test -n "$RUNTIME_ASSETS_PASSWORD"
           mkdir -p .runtime-assets
-          gh release download runtime-assets-v1 \
-            --pattern mh-save-edit-runtime-assets-v1.zip \
+          gh release download runtime-assets-v2 \
+            --pattern mh-save-edit-runtime-assets-v2.zip \
             --dir .runtime-assets
+          echo "$RUNTIME_ASSETS_SHA256  .runtime-assets/mh-save-edit-runtime-assets-v2.zip" | sha256sum --check
           unzip -P "$RUNTIME_ASSETS_PASSWORD" -o \
-            .runtime-assets/mh-save-edit-runtime-assets-v1.zip
+            .runtime-assets/mh-save-edit-runtime-assets-v2.zip
           node tools/repair_runtime_catalog.mjs
           for database in mh3g.sqlite mh4g.sqlite mhgu.sqlite; do
             test "$(head -c 15 "data/$database")" = "SQLite format 3"
@@ -44,9 +49,13 @@ jobs:
       - name: Test without private manifest snapshots
         run: pnpm exec vitest run --exclude tests/weaponCatalogData.test.ts --minWorkers=1 --maxWorkers=2
       - run: pnpm build
+      - name: Verify compiled GU runtime search
+        env:
+          GU_BUILT_WORKER: out/main/auto-search-worker.js
+        run: pnpm exec vitest run tests/guBuiltWorker.test.ts --minWorkers=1 --maxWorkers=2
 
   package-windows:
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' && github.event.repository.private == true
     needs: check
     runs-on: windows-latest
     steps:
@@ -75,16 +84,18 @@ jobs:
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
-          RUNTIME_ASSETS_PASSWORD: ${{ secrets.RUNTIME_ASSETS_PASSWORD }}
+          RUNTIME_ASSETS_PASSWORD: ${{ secrets.RUNTIME_ASSETS_V2_PASSWORD }}
         run: |
           if ([string]::IsNullOrWhiteSpace($env:RUNTIME_ASSETS_PASSWORD)) {
             throw 'RUNTIME_ASSETS_PASSWORD is not configured'
           }
           New-Item -ItemType Directory -Path .runtime-assets -Force | Out-Null
-          gh release download runtime-assets-v1 `
-            --pattern mh-save-edit-runtime-assets-v1.zip `
+          gh release download runtime-assets-v2 `
+            --pattern mh-save-edit-runtime-assets-v2.zip `
             --dir .runtime-assets
-          & 7z x .runtime-assets/mh-save-edit-runtime-assets-v1.zip `
+          $archiveHash = (Get-FileHash .runtime-assets/mh-save-edit-runtime-assets-v2.zip -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($archiveHash -ne $env:RUNTIME_ASSETS_SHA256) { throw 'Runtime archive identity mismatch' }
+          & 7z x .runtime-assets/mh-save-edit-runtime-assets-v2.zip `
             "-p$env:RUNTIME_ASSETS_PASSWORD" `
             "-o$PWD" `
             -y
@@ -110,8 +121,23 @@ jobs:
           if ($icons.Count -ne 1941) { throw "Expected 1941 catalog icons, found $($icons.Count)" }
           if (!(Test-Path build/app-icon.ico -PathType Leaf)) { throw 'Missing Windows application icon' }
           if (!(Test-Path build/app-icon.png -PathType Leaf)) { throw 'Missing application icon preview' }
-      - run: pnpm exec electron-builder install-app-deps
       - run: pnpm package:win
+      - name: Verify packaged Electron native-addon ABI
+        shell: pwsh
+        run: |
+          $script = Join-Path $env:RUNNER_TEMP 'mh-save-editor-native-smoke.cjs'
+          @'
+          const path = require('node:path');
+          if (!process.versions.electron) throw new Error('Expected packaged Electron, not host Node');
+          const addon = path.join(path.dirname(process.execPath), 'resources', 'app.asar.unpacked', 'node_modules', 'better-sqlite3', 'build', 'Release', 'better_sqlite3.node');
+          const loaded = require(addon);
+          if (typeof loaded.Database !== 'function') throw new Error('SQLite native constructor missing');
+          console.log(JSON.stringify({ electron: process.versions.electron, abi: process.versions.modules, sqliteAddonLoaded: true }));
+          '@ | Set-Content -LiteralPath $script -Encoding utf8
+          $env:ELECTRON_RUN_AS_NODE = '1'
+          & './release/win-unpacked/MH Save Editor.exe' $script | Write-Output
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Remove-Item Env:ELECTRON_RUN_AS_NODE
       - name: Validate embedded Windows icons
         shell: pwsh
         run: |
@@ -159,7 +185,7 @@ jobs:
           compression-level: 6
 
   release:
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: startsWith(github.ref, 'refs/tags/v') && github.event.repository.private == true
     needs: package-windows
     runs-on: ubuntu-latest
     permissions:

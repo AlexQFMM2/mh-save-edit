@@ -15,3 +15,6 @@ build/app-icon.png
 .electron-native/
 .dsh-meow/
 .DS_Store
+__pycache__/
+*.py[cod]
+.runtime-assets/

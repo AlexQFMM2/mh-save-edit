@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto'
 import type Database from 'better-sqlite3'
 import { validateCharm } from './charm'
+import { readMh4gCharmEvidence } from './mh4gCharmRepository'
 import { readFinalWeaponKeys } from '../catalog/finalWeapons'
 import { armorFallbackIconPath, charmIconPath, weaponFallbackIconPath } from '../save/catalogIconPaths'
 import type { ArmorLoadoutSlot, CharmValidationResult, LoadoutArmorCandidate, LoadoutArmorFilters, LoadoutCalculationSnapshot, LoadoutCatalogSnapshot, LoadoutCharm, LoadoutCharmClass, LoadoutDecoration, LoadoutDecorationFilters, LoadoutFacets, LoadoutPage, LoadoutSkillDefinition, LoadoutWeaponCandidate, LoadoutWeaponFilters } from './types'
@@ -60,6 +61,7 @@ export class LoadoutCatalogRepository {
       charmCombinations: this.gameId === 'mh3g' && this.tableExists('charm_combinations') ? (this.db.prepare('SELECT class_id,slots,skill1_id,skill1_points,skill2_id,skill2_points FROM charm_combinations ORDER BY class_id,slots,skill1_id,skill1_points,skill2_id,skill2_points').all() as Row[]).map(row => [number(row.class_id), number(row.slots), number(row.skill1_id), number(row.skill1_points), number(row.skill2_id), number(row.skill2_points)]) : undefined,
       relicLookups: this.readRelicLookups(false),
     }
+    if (this.gameId === 'mh4g') Object.assign(bootstrap, readMh4gCharmEvidence(this.db, bootstrap.charmRanges))
     this.bootstrapCache = bootstrap
     return bootstrap
   }

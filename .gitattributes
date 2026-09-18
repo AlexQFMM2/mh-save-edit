@@ -1,0 +1,7 @@
+# Producer fingerprints must use identical source bytes on Linux and Windows.
+* text=auto eol=lf
+*.png binary
+*.webp binary
+*.ico binary
+*.jpg binary
+*.jpeg binary

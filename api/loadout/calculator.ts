@@ -1,6 +1,7 @@
 import type { ArmorLoadoutSlot, LegalityStatus, LoadoutActivation, LoadoutCalculationSnapshot, LoadoutDecoration, LoadoutIssue, LoadoutResult, LoadoutSkillPoint, LoadoutSkillResult, LogicalLoadout } from './types'
 import { ARMOR_LOADOUT_SLOTS } from './types'
 import { getGameLoadoutRules, type LoadoutContribution } from './rules'
+import { findMh4gCharmWitness, MH4G_WITNESS_NOTICE_CODE } from './mh4gCharmWitnesses'
 
 type Contribution = LoadoutContribution
 const emptyContribution = (): Contribution => ({ weapon: 0, head: 0, chest: 0, arms: 0, waist: 0, legs: 0, charm: 0, decorations: 0, special: 0 })
@@ -112,6 +113,8 @@ export function calculateLoadout(snapshot: LoadoutCalculationSnapshot, loadout: 
   skillResults.sort((a, b) => Number(Boolean(b.activation)) - Number(Boolean(a.activation)) || b.total - a.total || a.skillId - b.skillId)
 
   const encoding = issues.some(issue => issue.severity === 'error') || slotResults.some(value => value.encoding === 'blocked') ? 'blocked' : 'encodable'
-  const legality: LegalityStatus = issues.some(issue => issue.severity === 'warning') || slotResults.some(value => value.legality === 'invalid') ? 'invalid' : issues.some(issue => issue.severity === 'info') || slotResults.some(value => value.legality === 'unknown') ? 'unknown' : 'confirmed'
+  const witnessedMh4gCharm = snapshot.gameId === 'mh4g' && loadout.charm && findMh4gCharmWitness(snapshot, loadout.charm)
+  const unknownIssues = issues.some(issue => issue.severity === 'info' && !(witnessedMh4gCharm && issue.path === 'charm' && issue.code === MH4G_WITNESS_NOTICE_CODE))
+  const legality: LegalityStatus = issues.some(issue => issue.severity === 'warning') || slotResults.some(value => value.legality === 'invalid') ? 'invalid' : unknownIssues || slotResults.some(value => value.legality === 'unknown') ? 'unknown' : 'confirmed'
   return { defense, maxDefense, armorStats, resistances, slots: slotResults, skills: skillResults, activations: active, issues, legality, encoding }
 }

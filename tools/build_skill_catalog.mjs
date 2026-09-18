@@ -3,6 +3,7 @@ import crypto from 'node:crypto'
 import fs from 'node:fs'
 import path from 'node:path'
 import Database from 'better-sqlite3'
+import { mh4gTalismanRows, readStoredMh4gNative } from './runtime/mh4gCharmNative.mjs'
 
 const projectRoot = path.resolve(import.meta.dirname, '..')
 const args = process.argv.slice(2)
@@ -169,16 +170,7 @@ function talismanRows(db, gameId, skills) {
       rows.push({ key: `${group.classId}:${group.position}:${group.skillId}:s${group.slots}:${min}:${max}`, skillId: group.skillId, talismanId: group.classId, nameCn: talisman.name_cn, nameEn: talisman.name_en, position: group.position, slotCount: group.slots, min, max, maxSlots: group.slots, status: 'exact', source: `${talisman.source}+charm_combinations` })
     }
   } else if (gameId === 'mh4g') {
-    const classes = new Map(db.prepare('SELECT save_id,name_cn,name_en,source FROM charm_classes WHERE save_id>0').all().map(row => [row.save_id, row]))
-    const rules = db.prepare('SELECT class_id,charm_source,max_slots,skill2_allowed,source FROM charm_class_rules WHERE class_id>0').all()
-    const ranges = db.prepare('SELECT skill_tree_id,position,charm_source,min_points,max_points,source FROM charm_skill_ranges').all()
-    for (const range of ranges) for (const rule of rules) {
-      const position = range.position === 1 ? 'A' : 'B'
-      if (range.charm_source !== rule.charm_source || !valid.has(range.skill_tree_id) || (position === 'B' && !rule.skill2_allowed) || (range.min_points === 0 && range.max_points === 0)) continue
-      const talisman = classes.get(rule.class_id)
-      if (!talisman) continue
-      rows.push({ key: `${rule.class_id}:${position}:${range.skill_tree_id}:${range.min_points}:${range.max_points}`, skillId: range.skill_tree_id, talismanId: rule.class_id, nameCn: talisman.name_cn, nameEn: talisman.name_en, position, slotCount: null, min: range.min_points, max: range.max_points, maxSlots: rule.max_slots, status: 'rule', source: `${range.source}+${rule.source}` })
-    }
+    rows.push(...mh4gTalismanRows(db, skills))
   } else {
     const talismans = new Map(db.prepare('SELECT id,name,english,source,max_slots FROM cn__talismans WHERE id>0').all().map(row => [row.id, row]))
     for (const limit of db.prepare('SELECT * FROM cn__talisman_skill_limits WHERE talisman_id>0 AND skill_id>0').all()) {
@@ -202,8 +194,12 @@ function buildGame(gameId, spec) {
   const db = new Database(dbFile)
   db.pragma('foreign_keys=ON')
   ensureSchema(db)
+  if (gameId === 'mh4g') {
+    sourceHashes.charmNative = sha256(JSON.stringify(readStoredMh4gNative(db)))
+    sourceHashes.charmReference = sha256(JSON.stringify(db.prepare('SELECT * FROM charm_skill_ranges ORDER BY position,charm_source,skill_tree_id,min_points').all()))
+  }
   const sourceSha256 = sha256(JSON.stringify(sourceHashes))
-  const builderSha256 = fileSha256(import.meta.filename)
+  const builderSha256 = sha256(fileSha256(import.meta.filename) + fileSha256(path.join(import.meta.dirname, 'runtime/mh4gCharmNative.mjs')))
   const previous = db.prepare("SELECT source_sha256,builder_sha256 FROM catalog_build_metadata WHERE domain='skills' AND game_id=?").get(gameId)
   if (previous?.source_sha256 === sourceSha256 && previous?.builder_sha256 === builderSha256) {
     const stats = skillStats(db, gameId)
