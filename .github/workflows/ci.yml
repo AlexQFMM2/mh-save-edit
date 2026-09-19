@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 env:
-  RUNTIME_ASSETS_SHA256: cb7baa9d3b7a57cdbc6e5c744513a3c6b92d1db3b9aea5b48f86b1a68e980642
+  RUNTIME_ASSETS_SHA256: 8e731db803b5f08b2f031f261ae73e9434ad797cbc8348dcd649316f78f01e09
 
 jobs:
   check:
@@ -33,12 +33,12 @@ jobs:
         run: |
           test -n "$RUNTIME_ASSETS_PASSWORD"
           mkdir -p .runtime-assets
-          gh release download runtime-assets-v2 \
-            --pattern mh-save-edit-runtime-assets-v2.zip \
+          gh release download runtime-assets-v3 \
+            --pattern mh-save-edit-runtime-assets-v3.zip \
             --dir .runtime-assets
-          echo "$RUNTIME_ASSETS_SHA256  .runtime-assets/mh-save-edit-runtime-assets-v2.zip" | sha256sum --check
+          echo "$RUNTIME_ASSETS_SHA256  .runtime-assets/mh-save-edit-runtime-assets-v3.zip" | sha256sum --check
           unzip -P "$RUNTIME_ASSETS_PASSWORD" -o \
-            .runtime-assets/mh-save-edit-runtime-assets-v2.zip
+            .runtime-assets/mh-save-edit-runtime-assets-v3.zip
           node tools/repair_runtime_catalog.mjs
           for database in mh3g.sqlite mh4g.sqlite mhgu.sqlite; do
             test "$(head -c 15 "data/$database")" = "SQLite format 3"
@@ -96,12 +96,12 @@ jobs:
             throw 'RUNTIME_ASSETS_PASSWORD is not configured'
           }
           New-Item -ItemType Directory -Path .runtime-assets -Force | Out-Null
-          gh release download runtime-assets-v2 `
-            --pattern mh-save-edit-runtime-assets-v2.zip `
+          gh release download runtime-assets-v3 `
+            --pattern mh-save-edit-runtime-assets-v3.zip `
             --dir .runtime-assets
-          $archiveHash = (Get-FileHash .runtime-assets/mh-save-edit-runtime-assets-v2.zip -Algorithm SHA256).Hash.ToLowerInvariant()
+          $archiveHash = (Get-FileHash .runtime-assets/mh-save-edit-runtime-assets-v3.zip -Algorithm SHA256).Hash.ToLowerInvariant()
           if ($archiveHash -ne $env:RUNTIME_ASSETS_SHA256) { throw 'Runtime archive identity mismatch' }
-          & 7z x .runtime-assets/mh-save-edit-runtime-assets-v2.zip `
+          & 7z x .runtime-assets/mh-save-edit-runtime-assets-v3.zip `
             "-p$env:RUNTIME_ASSETS_PASSWORD" `
             "-o$PWD" `
             -y

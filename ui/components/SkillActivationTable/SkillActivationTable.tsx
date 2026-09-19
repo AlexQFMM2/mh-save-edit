@@ -19,7 +19,12 @@ export function SkillActivationTable({ activations }: { activations: SkillActiva
           {activation.nameJp && <small>{activation.nameJp}</small>}
         </div>
         <div className="skill-activation-table__descriptions">
-          {activation.descriptionCn && <p><span>中文</span>{activation.descriptionCn}</p>}
+          {activation.wikiDetail && <>
+            <p><span>详细效果（Wiki）</span>{activation.wikiDetail.descriptionCn}</p>
+            <p><span>资料来源 · {activation.wikiDetail.sourceVersion}</span>{activation.wikiDetail.sourceUrl}</p>
+            {activation.wikiDetail.sourceVersion === 'MHXX' && <p><span>版本说明</span>引用 MHXX Wiki，非 GU 程序独立验证。</p>}
+          </>}
+          {activation.descriptionCn && <p><span>{activation.wikiDetail ? '原始中文说明' : '中文'}</span>{activation.descriptionCn}</p>}
           {activation.descriptionEn && <p><span>English</span>{activation.descriptionEn}</p>}
           {activation.descriptionJp && <p><span>日本語</span>{activation.descriptionJp}</p>}
           {!activation.descriptionCn && !activation.descriptionEn && !activation.descriptionJp && <p className="skill-activation-table__empty-description">暂无说明</p>}

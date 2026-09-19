@@ -433,7 +433,7 @@ export type ArmorCatalogFacets = {
 }
 
 export type SkillActivationLink = { activationKey: string; nameCn: string; nameEn: string; direction: 'positive' | 'negative' | 'special' }
-export type SkillActivation = { activationKey: string; dexActivationId: number; threshold: number; direction: 'positive' | 'negative' | 'special'; nameCn: string; nameEn: string; nameJp: string; descriptionCn: string; descriptionEn: string; descriptionJp: string; components: SkillActivationLink[] }
+export type SkillActivation = { activationKey: string; dexActivationId: number; threshold: number; direction: 'positive' | 'negative' | 'special'; nameCn: string; nameEn: string; nameJp: string; descriptionCn: string; descriptionEn: string; descriptionJp: string; wikiDetail?: { descriptionCn: string; sourceUrl: string; sourceVersion: string; reviewNote: string }; components: SkillActivationLink[] }
 export type SkillDecorationRelation = DecorationIdentity & { nameCn: string; nameEn: string; points: number; slots: number; iconPath: string | null }
 export type SkillArmorRelation = ArmorIdentity & { nameCn: string; nameEn: string; points: number; slots: number; part: ArmorPartId; iconPath: string | null }
 export type SkillTalismanRelation = { rangeKey: string; skillId: number; skillNameCn: string; talismanId: number; talismanNameCn: string; talismanNameEn: string; position: 'A' | 'B'; slotCount: number | null; minPoints: number; maxPoints: number; maxSlots: number | null; rangeStatus: 'exact' | 'rule' | 'unknown'; source: string }

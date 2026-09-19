@@ -1,4 +1,5 @@
 import type Database from 'better-sqlite3'
+import { hasSkillWikiDetails, readSkillWikiDetails, wikiIdentityJoin } from './skillWikiDetails'
 import type { GameId } from '../core/loadout'
 import type { ArmorPartId, PageResult, SkillActivation, SkillActivationLink, SkillArmorRelation, SkillCatalogFacets, SkillCatalogFilters, SkillDecorationRelation, SkillDetail, SkillIdentity, SkillSummary, SkillTalismanRelation } from './types'
 
@@ -21,8 +22,10 @@ export class SkillCatalogRepository {
     if (filters.query?.trim()) {
       const query = filters.query.trim(); const like = `%${query}%`
       const id = /^0x[\da-f]+$/i.test(query) ? Number.parseInt(query.slice(2), 16) : /^\d+$/.test(query) ? Number(query) : -1
-      where.push(`(s.name_cn LIKE ? OR s.name_en LIKE ? OR COALESCE(s.name_jp,'') LIKE ? OR s.skill_id=? OR s.dex_id=? OR EXISTS (SELECT 1 FROM catalog_skill_activations a WHERE a.game_id=s.game_id AND a.skill_id=s.skill_id AND (a.name_cn LIKE ? OR a.name_en LIKE ? OR a.name_jp LIKE ? OR a.description_cn LIKE ? OR a.description_en LIKE ? OR a.description_jp LIKE ?)))`)
+      const wikiSearch = hasSkillWikiDetails(this.db) ? ` OR EXISTS (SELECT 1 FROM catalog_skill_effect_details w JOIN catalog_skill_activations a ON ${wikiIdentityJoin} WHERE a.game_id=s.game_id AND a.skill_id=s.skill_id AND w.description_cn LIKE ?)` : ''
+      where.push(`(s.name_cn LIKE ? OR s.name_en LIKE ? OR COALESCE(s.name_jp,'') LIKE ? OR s.skill_id=? OR s.dex_id=? OR EXISTS (SELECT 1 FROM catalog_skill_activations a WHERE a.game_id=s.game_id AND a.skill_id=s.skill_id AND (a.name_cn LIKE ? OR a.name_en LIKE ? OR a.name_jp LIKE ? OR a.description_cn LIKE ? OR a.description_en LIKE ? OR a.description_jp LIKE ?))${wikiSearch})`)
       values.push(like, like, like, id, id, like, like, like, like, like, like)
+      if (wikiSearch) values.push(like)
     }
     if (filters.direction) { where.push('EXISTS (SELECT 1 FROM catalog_skill_activations a WHERE a.game_id=s.game_id AND a.skill_id=s.skill_id AND a.direction=?)'); values.push(filters.direction) }
     if (filters.source && filters.source !== 'all') {
@@ -43,7 +46,8 @@ export class SkillCatalogRepository {
     const allComponents = hasTable(this.db, 'catalog_skill_components') ? this.db.prepare(`SELECT c.composite_activation_key,c.component_activation_key,a.name_cn,a.name_en,a.direction FROM catalog_skill_components c JOIN catalog_skill_activations a ON a.game_id=c.game_id AND a.activation_key=c.component_activation_key WHERE c.game_id=? AND c.composite_activation_key IN (SELECT activation_key FROM catalog_skill_activations WHERE game_id=? AND skill_id=?) ORDER BY c.composite_activation_key,c.component_activation_key`).all(identity.gameId, identity.gameId, identity.skillId) as Row[] : []
     const componentsByActivation = new Map<string, SkillActivationLink[]>()
     for (const value of allComponents) { const key = str(value.composite_activation_key); const links = componentsByActivation.get(key) ?? []; links.push({ activationKey: str(value.component_activation_key), nameCn: str(value.name_cn), nameEn: str(value.name_en), direction: str(value.direction) as SkillActivationLink['direction'] }); componentsByActivation.set(key, links) }
-    const activations = activationRows.map(value => this.toActivation(value, componentsByActivation.get(str(value.activation_key)) ?? []))
+    const wikiDetails = readSkillWikiDetails(this.db, identity.gameId, identity.skillId)
+    const activations = activationRows.map(value => ({ ...this.toActivation(value, componentsByActivation.get(str(value.activation_key)) ?? []), wikiDetail: wikiDetails.get(str(value.activation_key)) }))
     const components = [...componentsByActivation.values()].flat()
     const talismans = hasTable(this.db, 'catalog_skill_talisman_ranges') ? (this.db.prepare('SELECT * FROM catalog_skill_talisman_ranges WHERE game_id=? AND skill_id=? ORDER BY talisman_id,position,min_points,slot_count').all(identity.gameId, identity.skillId) as Row[]).map(row => ({ rangeKey: str(row.range_key), skillId: int(row.skill_id), skillNameCn: str(row.skill_name_cn || row.name_cn || ''), talismanId: int(row.talisman_id), talismanNameCn: str(row.talisman_name_cn), talismanNameEn: str(row.talisman_name_en), position: str(row.position) as 'A'|'B', slotCount: row.slot_count == null ? null : int(row.slot_count), minPoints: int(row.min_points), maxPoints: int(row.max_points), maxSlots: row.max_slots == null ? null : int(row.max_slots), rangeStatus: str(row.range_status) as SkillTalismanRelation['rangeStatus'], source: str(row.source) })) : []
     for (const talisman of talismans) talisman.skillNameCn = str(row.name_cn)
