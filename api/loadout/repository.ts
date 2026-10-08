@@ -171,9 +171,28 @@ export class LoadoutCatalogRepository {
     const skills = this.db.prepare('SELECT * FROM catalog_armor_skills WHERE game_id=? ORDER BY armor_dex_id,skill_id').all(this.gameId) as Row[]
     const identities = this.tableExists('catalog_armor_save_identities') ? this.db.prepare('SELECT * FROM catalog_armor_save_identities WHERE game_id=? ORDER BY armor_dex_id,save_type,save_id').all(this.gameId) as Row[] : []
     const skillsByArmor = groupRows(skills, 'armor_dex_id')
-    const identityByArmor = new Map<number, Row>()
-    for (const identity of identities) if (!identityByArmor.has(number(identity.armor_dex_id))) identityByArmor.set(number(identity.armor_dex_id), identity)
-    const regular = rows.map(row => { const identity = identityByArmor.get(number(row.dex_id)); return { kind: 'armor' as const, gameId: this.gameId, candidateKey: `catalog:${number(row.dex_id)}`, sourceKind: 'catalog' as const, dexId: number(row.dex_id), templateKey: null, saveType: identity ? number(identity.save_type) : null, saveId: identity ? number(identity.save_id) : null, nameCn: text(row.name_cn), nameEn: text(row.name_en), part: row.part as ArmorLoadoutSlot, combat: (row.combat === 'blademaster' || row.combat === 'gunner' ? row.combat : 'both') as LoadoutArmorCandidate['combat'], gender: (row.gender === 'male' || row.gender === 'female' ? row.gender : 'both') as LoadoutArmorCandidate['gender'], rarity: row.rarity == null ? null : number(row.rarity), slots: number(row.slots), baseDefense: number(row.base_defense), maxDefense: number(row.max_defense), fireRes: number(row.fire_res), waterRes: number(row.water_res), thunderRes: number(row.thunder_res), iceRes: number(row.ice_res), dragonRes: number(row.dragon_res), iconPath: row.icon_path ? text(row.icon_path) : null, skills: (skillsByArmor.get(number(row.dex_id)) ?? []).map(value => ({ skillId: number(value.skill_id), nameCn: text(value.name_cn), points: number(value.points) })) } })
+    const identitiesByArmor = groupRows(identities, 'armor_dex_id')
+    const regular = rows.flatMap((row): LoadoutArmorCandidate[] => {
+      const matches = identitiesByArmor.get(number(row.dex_id)) ?? []
+      const variants: (Row | undefined)[] = this.gameId === 'mh4g' && matches.length > 1 ? matches : [matches[0]]
+      return variants.map(identity => {
+        const gender = this.gameId === 'mh4g' ? identity?.gender ?? row.gender : row.gender
+        const variantKey = variants.length > 1 && identity ? `:${number(identity.save_type)}:${number(identity.save_id)}` : ''
+        return {
+          kind: 'armor', gameId: this.gameId, candidateKey: `catalog:${number(row.dex_id)}${variantKey}`,
+          sourceKind: 'catalog', dexId: number(row.dex_id), templateKey: null,
+          saveType: identity ? number(identity.save_type) : null, saveId: identity ? number(identity.save_id) : null,
+          nameCn: text(row.name_cn), nameEn: text(row.name_en), part: row.part as ArmorLoadoutSlot,
+          combat: row.combat === 'blademaster' || row.combat === 'gunner' ? row.combat : 'both',
+          gender: gender === 'male' || gender === 'female' ? gender : 'both',
+          rarity: row.rarity == null ? null : number(row.rarity), slots: number(row.slots),
+          baseDefense: number(row.base_defense), maxDefense: number(row.max_defense),
+          fireRes: number(row.fire_res), waterRes: number(row.water_res), thunderRes: number(row.thunder_res), iceRes: number(row.ice_res), dragonRes: number(row.dragon_res),
+          iconPath: row.icon_path ? text(row.icon_path) : null,
+          skills: (skillsByArmor.get(number(row.dex_id)) ?? []).map(value => ({ skillId: number(value.skill_id), nameCn: text(value.name_cn), points: number(value.points) })),
+        }
+      })
+    })
     if (this.gameId !== 'mh4g') return this.armorsCache = regular
     if (this.tableExists('catalog_loadout_relic_armor_templates')) {
       const relics=(this.db.prepare('SELECT * FROM catalog_loadout_relic_armor_templates WHERE game_id=? ORDER BY save_type,save_id').all(this.gameId) as Row[]).map(row=>{const part=text(row.part) as ArmorLoadoutSlot; return {kind:'armor' as const,gameId:this.gameId,candidateKey:`relic:${text(row.template_key)}`,sourceKind:'relicTemplate' as const,dexId:null,templateKey:text(row.template_key),saveType:number(row.save_type),saveId:number(row.save_id),nameCn:text(row.name_cn),nameEn:text(row.name_en),part,combat:(row.combat==='blademaster'||row.combat==='gunner'?row.combat:'both') as LoadoutArmorCandidate['combat'],gender:(row.gender==='male'||row.gender==='female'?row.gender:'both') as LoadoutArmorCandidate['gender'],rarity:row.rarity==null?null:number(row.rarity),slots:number(row.slots),baseDefense:number(row.base_defense),maxDefense:number(row.max_defense),fireRes:number(row.fire_res),waterRes:number(row.water_res),thunderRes:number(row.thunder_res),iceRes:number(row.ice_res),dragonRes:number(row.dragon_res),iconPath:armorFallbackIconPath(this.gameId,part),skills:[],instance:{source:'catalogTemplate' as const,recordHex:text(row.record_hex),legality:'unknown' as const,encoding:'encodable' as const,issues:[{code:'relic.template',path:'armor.instance',severity:'info' as const,message:'发掘防具模板的高级参数需要确认',source:text(row.source)}]}}})

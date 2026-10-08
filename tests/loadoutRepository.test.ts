@@ -51,4 +51,22 @@ describe('LoadoutCatalogRepository bootstrap', () => {
     expect(statements.some(sql => sql.includes("lookup_kind <> 'equipment_lookup'"))).toBe(true)
     expect(statements.some(sql => sql.includes('catalog_loadout_relic_value_lookups') && !sql.includes("lookup_kind <> 'equipment_lookup'"))).toBe(true)
   })
+
+  it('offers separate MH4G identities for both genders and keeps the Dex display name', () => {
+    const armor = { dex_id: 1, part: 'head', combat: 'blademaster', gender: 'both', name_cn: '合成活动防具', slots: 3 }
+    const identities = [
+      { armor_dex_id: 1, save_type: 5, save_id: 101, gender: 'male' },
+      { armor_dex_id: 1, save_type: 5, save_id: 102, gender: 'female' },
+    ]
+    const db = { prepare: (sql: string) => ({
+      all: () => sql.includes('FROM catalog_armors') ? [armor] : sql.includes('FROM catalog_armor_save_identities') ? identities : [],
+      get: (name: string) => sql.includes('sqlite_master') && name === 'catalog_armor_save_identities' ? { exists: 1 } : undefined,
+    }) } as unknown as Database.Database
+    const repo = new LoadoutCatalogRepository(db, 'mh4g')
+    for (const [gender, saveId] of [['male', 101], ['female', 102]] as const) {
+      const result = repo.searchArmors({ gameId: 'mh4g', part: 'head', gender })
+      expect(result.items).toHaveLength(1)
+      expect(result.items[0]).toMatchObject({ nameCn: '合成活动防具', gender, saveId, candidateKey: `catalog:1:5:${saveId}` })
+    }
+  })
 })

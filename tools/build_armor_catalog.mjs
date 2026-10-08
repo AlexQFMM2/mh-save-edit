@@ -4,6 +4,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import Database from 'better-sqlite3'
 import { migrateArmorSkillIds } from './runtime/armorSkillMigration.mjs'
+import { repairMh4gArmorIdentities } from './runtime/mh4gArmorIdentities.mjs'
 
 const projectRoot = path.resolve(import.meta.dirname, '..')
 const args = process.argv.slice(2)
@@ -15,7 +16,6 @@ const specs = {
   mhgu: { database: 'data/mhgu.sqlite', dex: 'mhgu/dex/mhxx-dex', count: 5726, groups: 1260, pairs: 600, universal: 60, complete: 1053 },
 }
 const parts = new Map([[1, 'head'], [2, 'chest'], [3, 'arms'], [4, 'waist'], [5, 'legs']])
-const saveTypesByPart = new Map([[1, 5], [2, 1], [3, 2], [4, 3], [5, 4]])
 
 function parseCsv(file) {
   const input = fs.readFileSync(file, 'utf8').replace(/^\uFEFF/, '')
@@ -113,14 +113,7 @@ function rawSaveIdentities(db, gameId, armorRows, armorNames) {
     return result
   }
   if (gameId === 'mh4g') {
-    const byName = new Map()
-    for (const row of db.prepare('SELECT * FROM armors WHERE is_relic=0 AND save_id>0').all()) byName.set(`${row.save_type}:${row.name_cn}`, [...(byName.get(`${row.save_type}:${row.name_cn}`) ?? []), row])
-    for (const armor of armorRows) {
-      const dexId = integer(armor.Amr_ID); const part = integer(armor.Part); const name = armorNames.get(dexId)?.cn
-      const candidates = byName.get(`${saveTypesByPart.get(part)}:${name}`) ?? []
-      const exact = candidates.find((row) => row.rarity === integer(armor.Rare) && row.base_defense === integer(armor.Def)) ?? candidates[0]
-      if (exact) add(dexId, { saveType: exact.save_type, saveId: exact.save_id, status: 'confirmed_name_stats', source: exact.source })
-    }
+    // Resolve only after catalog skills have been translated to native identities.
     return result
   }
   const tableByPart = new Map([[1, 'cn__armor_head'], [2, 'cn__armor_chest'], [3, 'cn__armor_arms'], [4, 'cn__armor_waist'], [5, 'cn__armor_legs']])
@@ -226,6 +219,7 @@ function buildGame(gameId, spec) {
   })
   transaction()
   migrateArmorSkillIds(db, gameId)
+  if (gameId === 'mh4g') repairMh4gArmorIdentities(db)
   const missingMaterials = materialRows.filter((row) => !itemByDex.has(integer(row.Itm_ID))).length
   const iconStats = db.prepare('SELECT count(*) total, sum(icon_path IS NOT NULL) mapped, sum(is_placeholder=0 AND icon_path IS NULL) missing FROM catalog_armors WHERE game_id=?').get(gameId)
   const audit = { gameId, armorCount: armorRows.length, rawSeriesCount: spec.groups, pairedSeriesCount: spec.pairs, universalSeriesCount: spec.universal, displayedSetCount: spec.pairs + spec.universal, completeSeriesCount: spec.complete, relicArmorCount: 0, saveIdentityCount: db.prepare('SELECT count(*) count FROM catalog_armor_save_identities WHERE game_id=?').get(gameId).count, materialCount: db.prepare('SELECT count(*) count FROM catalog_armor_materials WHERE game_id=?').get(gameId).count, missingMaterialMappings: missingMaterials, iconStats, nativeSeries, combatOverrides: gameId === 'mhgu' ? [589, 590, 1997, 1998, 5468, 5469] : [], source: snapshot }

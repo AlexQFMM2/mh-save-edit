@@ -161,10 +161,14 @@ export function SaveEquipmentEditorDrawer({ gameId, domain, cell, onApply, onApp
     skill2: skill2Id ? { skillId: skill2Id, nameCn: cell.skill2NameCn ?? `技能 #${skill2Id}`, points: skill2Points } : null,
     decorations: [], legality: 'unknown', encoding: 'encodable', issues: [], lock: 'unlocked',
   }), [cell.nameCn, cell.skill1NameCn, cell.skill2NameCn, charmClassId, gameId, skill1Id, skill1Points, skill2Id, skill2Points, slots, snapshot])
-  const selectedBlocked = selected && 'candidateKey' in selected ? selected.instance?.encoding === 'blocked' : false
+  const selectedMissingIdentity = selected && 'candidateKey' in selected && !selected.instance && (selected.saveType == null || selected.saveId == null)
+  const selectedBlocked = selectedMissingIdentity || (selected && 'candidateKey' in selected ? selected.instance?.encoding === 'blocked' : false)
   const activeExistingRelic = existingRelic && ((kind === 'weapon' && existingRelic.kind === 'weapon') || (kind !== 'weapon' && kind !== 'charm' && existingRelic.kind === 'armor' && existingRelic.part === kind)) ? existingRelic : undefined
 
   const applyCandidate = async (value: PalicoCandidate | EquipmentPickerCandidate) => {
+    if ('candidateKey' in value && !value.instance && (value.saveType == null || value.saveId == null)) {
+      setError('该条目没有当前游戏的存档编号，无法写入。'); return
+    }
     if ('candidateKey' in value && value.instance) await onApplyRecord(value.instance.recordHex)
     else await onApply({
       reset: true,
@@ -236,6 +240,7 @@ export function SaveEquipmentEditorDrawer({ gameId, domain, cell, onApply, onApp
           </>}
         </div>}
       </div> : <div className="save-equipment-editor__replace">
+        {selectedMissingIdentity&&<p role="status">该条目没有当前游戏的存档编号，无法写入；美版专属防具不能写入 MH4G 存档。</p>}
         <div className="save-equipment-editor__toolbar">
           <SearchableSelect ariaLabel="装备类别" value={kind} options={palico ? palicoKinds : hunterKinds} onChange={value => setKind(value as Kind)} />
           {palico && <label><Search aria-hidden="true" /><input value={query} onChange={event => setQuery(event.target.value)} placeholder="搜索名称或 ID" /></label>}

@@ -5,6 +5,7 @@ import path from 'node:path'
 import Database from 'better-sqlite3'
 import { repairRuntimeArmorSkills } from './runtime/repairArmorSkills.mjs'
 import { repairMh4gCharms } from './runtime/repairMh4gCharms.mjs'
+import { repairMh4gArmorIdentities } from './runtime/mh4gArmorIdentities.mjs'
 
 function repairMh3gDecorations() {
 const root = path.resolve(import.meta.dirname, '..')
@@ -94,5 +95,6 @@ if (fs.existsSync(mh4gPath)) {
   try {
     db.pragma('foreign_keys=ON')
     console.log('MH4G charm source crosswalk prepared', repairMh4gCharms(db))
+    console.log('MH4G armor save identities prepared', repairMh4gArmorIdentities(db))
   } finally { db.close() }
 }

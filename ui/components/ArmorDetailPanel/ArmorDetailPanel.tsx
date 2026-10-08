@@ -18,6 +18,7 @@ export function ArmorDetailPanel({ armor, loading, error, allowCatalogWrite = tr
     <div className="armor-detail-panel__scroll">
       <section className="armor-detail-panel__craft"><header><ArmorIcon path={armor.iconPath} name={armor.nameCn} size="large"/><div><small>{part[armor.part]} · Dex #{armor.dexId} · 0x{armor.dexId.toString(16).toUpperCase()}</small><h2>{armor.nameCn}</h2><p>{armor.nameEn}</p>{armor.nameJp&&<p>{armor.nameJp}</p>}</div></header><div className="armor-detail-panel__price"><span>制作费用</span><strong>{armor.price==null?'—':`${armor.price} z`}</strong></div>{armor.saveIdentities.length>0&&<p className="armor-detail-panel__identity">存档映射：{armor.saveIdentities.map(value=>`${value.saveType}:${value.saveId}`).join('、')}</p>}</section>
       {allowCatalogWrite&&armor.saveIdentities.length>1&&<p className="armor-detail-panel__mapping-warning" role="status">该防具有多个存档身份，已停止自动选择；请从修改器装备选择器中按身份确认后写入。</p>}
+      {armor.mappingStatus==='foreign_variant'&&<p className="armor-detail-panel__mapping-warning" role="status">这是 Dex 收录的美版防具，不能按此条目的属性写入 MH4G 存档，也不参与 MH4G 自动配装。</p>}
       <ArmorStatsPanel armor={armor}/>
       <ArmorSkillList skills={armor.skills} onSelectSkill={onSelectSkill}/>
       <ArmorMaterialList materials={armor.materials} onSelectItem={onSelectItem}/>

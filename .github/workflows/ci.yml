@@ -10,14 +10,15 @@ permissions:
   contents: read
 
 env:
-  RUNTIME_ASSETS_SHA256: 8e731db803b5f08b2f031f261ae73e9434ad797cbc8348dcd649316f78f01e09
+  RUNTIME_ASSETS_SHA256: 99fe4089052404645a5b44e2b8aeae1991c13c5eb0bcbf64c7f9d94150fbfaea
 
 jobs:
   check:
-    if: github.event.repository.private == true
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: pnpm/action-setup@v4
         with:
           version: 11
@@ -26,19 +27,17 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: Download encrypted runtime test assets
+      - name: Download public runtime test assets
         env:
           GH_TOKEN: ${{ github.token }}
-          RUNTIME_ASSETS_PASSWORD: ${{ secrets.RUNTIME_ASSETS_V2_PASSWORD }}
         run: |
-          test -n "$RUNTIME_ASSETS_PASSWORD"
           mkdir -p .runtime-assets
-          gh release download runtime-assets-v3 \
-            --pattern mh-save-edit-runtime-assets-v3.zip \
+          gh release download runtime-assets-v4 \
+            --repo AlexQFMM2/mh-save-edit \
+            --pattern mh-save-edit-runtime-assets-v4.zip \
             --dir .runtime-assets
-          echo "$RUNTIME_ASSETS_SHA256  .runtime-assets/mh-save-edit-runtime-assets-v3.zip" | sha256sum --check
-          unzip -P "$RUNTIME_ASSETS_PASSWORD" -o \
-            .runtime-assets/mh-save-edit-runtime-assets-v3.zip
+          echo "$RUNTIME_ASSETS_SHA256  .runtime-assets/mh-save-edit-runtime-assets-v4.zip" | sha256sum --check
+          unzip -q -o .runtime-assets/mh-save-edit-runtime-assets-v4.zip
           node tools/repair_runtime_catalog.mjs
           for database in mh3g.sqlite mh4g.sqlite mhgu.sqlite; do
             test "$(head -c 15 "data/$database")" = "SQLite format 3"
@@ -55,9 +54,9 @@ jobs:
         run: pnpm exec vitest run tests/guBuiltWorker.test.ts --minWorkers=1 --maxWorkers=2
 
   package-windows:
-    # Immutable tagged previews publish directly to the existing private Release.
+    # Publish only the authorized runtime package, directly to a tagged Release.
     # Main pushes validate source only; avoid duplicate Windows builds/artifacts.
-    if: startsWith(github.ref, 'refs/tags/v') && github.event.repository.private == true
+    if: startsWith(github.ref, 'refs/tags/v')
     needs: check
     runs-on: windows-latest
     permissions:
@@ -77,32 +76,29 @@ jobs:
       - name: Guard clean checkout boundary
         shell: pwsh
         run: |
-          $privateFiles = @(
+          $runtimeFiles = @(
             Get-ChildItem data -Filter *.sqlite -File -ErrorAction SilentlyContinue
             Get-ChildItem ui/public/assets/catalog/icons -File -ErrorAction SilentlyContinue
             Get-ChildItem build -Filter app-icon.* -File -ErrorAction SilentlyContinue
           )
-          if ($privateFiles.Count -gt 0) {
-            $privateFiles | ForEach-Object { Write-Error "Private runtime asset found: $($_.FullName)" }
+          if ($runtimeFiles.Count -gt 0) {
+            $runtimeFiles | ForEach-Object { Write-Error "Runtime asset found in source checkout: $($_.FullName)" }
             exit 1
           }
-      - name: Download encrypted runtime assets
+      - name: Download public runtime assets
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
-          RUNTIME_ASSETS_PASSWORD: ${{ secrets.RUNTIME_ASSETS_V2_PASSWORD }}
         run: |
-          if ([string]::IsNullOrWhiteSpace($env:RUNTIME_ASSETS_PASSWORD)) {
-            throw 'RUNTIME_ASSETS_PASSWORD is not configured'
-          }
           New-Item -ItemType Directory -Path .runtime-assets -Force | Out-Null
-          gh release download runtime-assets-v3 `
-            --pattern mh-save-edit-runtime-assets-v3.zip `
+          gh release download runtime-assets-v4 `
+            --repo AlexQFMM2/mh-save-edit `
+            --pattern mh-save-edit-runtime-assets-v4.zip `
             --dir .runtime-assets
-          $archiveHash = (Get-FileHash .runtime-assets/mh-save-edit-runtime-assets-v3.zip -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $archiveHash = (Get-FileHash .runtime-assets/mh-save-edit-runtime-assets-v4.zip -Algorithm SHA256).Hash.ToLowerInvariant()
           if ($archiveHash -ne $env:RUNTIME_ASSETS_SHA256) { throw 'Runtime archive identity mismatch' }
-          & 7z x .runtime-assets/mh-save-edit-runtime-assets-v3.zip `
-            "-p$env:RUNTIME_ASSETS_PASSWORD" `
+          & 7z x .runtime-assets/mh-save-edit-runtime-assets-v4.zip `
             "-o$PWD" `
             -y
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -182,15 +178,15 @@ jobs:
             $hash = (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
             "$hash  $($_.Name)"
           } | Set-Content release/win-unpacked/SHA256SUMS.txt
-      - name: Archive and publish verified private preview
+      - name: Archive and publish verified Windows release
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          $visibility = gh repo view $env:GITHUB_REPOSITORY --json visibility --jq '.visibility'
-          if ($LASTEXITCODE -ne 0 -or $visibility.Trim() -ne 'PRIVATE') { throw 'Preview distribution requires a private repository' }
           $version = (Get-Content package.json -Raw | ConvertFrom-Json).version
           if ($env:GITHUB_REF_NAME -ne "v$version") { throw 'Tag and application version differ' }
+          $notes = "docs/releases/$($env:GITHUB_REF_NAME).md"
+          if (!(Test-Path $notes -PathType Leaf)) { throw "Missing release notes: $notes" }
           $archiveName = "mh-save-editor-$($env:GITHUB_REF_NAME)-windows-x64.tar.gz"
           $archive = Join-Path $PWD "release/$archiveName"
           tar -C release/win-unpacked -czf $archive .
@@ -200,7 +196,7 @@ jobs:
           gh release create $env:GITHUB_REF_NAME `
             --repo $env:GITHUB_REPOSITORY `
             --verify-tag --draft `
-            --title $env:GITHUB_REF_NAME --generate-notes `
+            --title $env:GITHUB_REF_NAME --notes-file $notes `
             $archive release/SHA256SUMS.txt
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           gh release edit $env:GITHUB_REF_NAME --repo $env:GITHUB_REPOSITORY --draft=false --latest

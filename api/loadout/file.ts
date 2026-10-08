@@ -53,8 +53,16 @@ function weaponFromSnapshot(snapshot: LoadoutCatalogSnapshot, imported: LoadoutW
   }
 }
 
-function armorFromSnapshot(snapshot: LoadoutCatalogSnapshot, slot: ArmorLoadoutSlot, imported: LoadoutArmor): LoadoutArmor {
-  const catalog = snapshot.armors.find((candidate) => candidate.candidateKey === imported.candidateKey && candidate.part === slot)
+function armorFromSnapshot(snapshot: LoadoutCatalogSnapshot, slot: ArmorLoadoutSlot, imported: LoadoutArmor, gender: LogicalLoadout['gender']): LoadoutArmor {
+  let catalog = snapshot.armors.find((candidate) => candidate.candidateKey === imported.candidateKey && candidate.part === slot)
+  // Older MH4G catalogs collapsed the male/female native records into one Dex entry.
+  if (!catalog && snapshot.gameId === 'mh4g' && imported.sourceKind === 'catalog' && imported.candidateKey === `catalog:${imported.dexId}`) {
+    const variants = snapshot.armors.filter(candidate => candidate.sourceKind === 'catalog' && candidate.dexId === imported.dexId && candidate.part === slot)
+    const matches = imported.saveType != null && imported.saveId != null
+      ? variants.filter(candidate => candidate.saveType === imported.saveType && candidate.saveId === imported.saveId)
+      : variants.filter(candidate => candidate.gender === gender || candidate.gender === 'both')
+    if (matches.length === 1) catalog = matches[0]
+  }
   if (!catalog) throw new Error(`导入${slot}防具已不在当前资料中：${imported.nameCn}`)
   const editable = catalog.sourceKind === 'relicTemplate'
     ? {
@@ -92,7 +100,7 @@ export function reconcileImportedLoadout(snapshot: LoadoutCatalogSnapshot, impor
   }
   for (const slot of ['head', 'chest', 'arms', 'waist', 'legs'] as const) {
     const armor = imported.armor[slot]
-    if (armor) next.armor[slot] = armorFromSnapshot(snapshot, slot, armor)
+    if (armor) next.armor[slot] = armorFromSnapshot(snapshot, slot, armor, imported.gender)
   }
   if (imported.charm) {
     const decorations = decorationsFromSnapshot(snapshot, imported.charm.decorations)
