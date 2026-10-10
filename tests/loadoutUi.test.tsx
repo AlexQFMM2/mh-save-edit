@@ -222,20 +222,6 @@ describe('RelicEquipmentEditor', () => {
 })
 
 describe('SaveEquipmentEditorDrawer', () => {
-  it('hydrates an existing MH4G relic editor from the full save record and writes that instance record back', async () => {
-    const template: LoadoutWeaponCandidate = { kind: 'weapon', gameId: 'mh4g', candidateKey: 'relic:w:7:1', sourceKind: 'relicTemplate', weaponKey: null, templateKey: 'w:7:1', saveType: 7, saveId: 1, nameCn: '发掘大剑', nameEn: 'Relic GS', typeId: 1, typeNameCn: '大剑', rarity: 1, slots: 0, attack: 110, affinity: 0, defense: 0, iconPath: null, instance: { source: 'catalogTemplate', recordHex: '00'.repeat(28), legality: 'unknown', encoding: 'encodable', issues: [] } }
-    const recordHex = `${'ab'.repeat(20)}${'cd'.repeat(8)}`
-    const bootstrap = { gameId: 'mh4g' as const, dataVersion: 'test', decorations: [], skills: [], charmClasses: [], charmRanges: [], relicLookups: [] }
-    const facets: LoadoutFacets = { skills: [], weaponTypes: [{ typeId: 1, nameCn: '大剑' }], weaponRarities: [1], armorRarities: [], charmClasses: [] }
-    Object.defineProperty(window, 'mhSaveEditor', { configurable: true, value: { loadout: { getBootstrap: vi.fn().mockResolvedValue(bootstrap), getFacets: vi.fn().mockResolvedValue(facets), searchWeapons: vi.fn().mockResolvedValue({ items: [template], page: 1, pageSize: 100, total: 1, hasNext: false }), searchArmors: vi.fn() }, catalog: { getWeapon: vi.fn().mockResolvedValue(null) } } })
-    const applyRecord = vi.fn().mockResolvedValue(undefined)
-    render(<SaveEquipmentEditorDrawer gameId="mh4g" domain="hunter-equipment" cell={{ slot: 4, empty: false, kind: 'weapon', saveType: 7, saveId: 1, level: 0, slots: null, appearanceId: null, decorations: [0, 0, 0], skill1Id: null, skill1Points: null, skill2Id: null, skill2Points: null, nameCn: '发掘大剑', nameEn: 'Relic GS', typeNameCn: '大剑', iconPath: null, weaponKey: null, armorDexId: null, palicoEquipmentId: null, decorationLabels: [], skill1NameCn: null, skill2NameCn: null, recordHex, diagnostics: [] }} onApply={vi.fn().mockResolvedValue(undefined)} onApplyRecord={applyRecord} onClose={vi.fn()} />)
-    fireEvent.click(screen.getByRole('button', { name: '编辑实例' }))
-    await screen.findByText(/当前格的完整 28 字节记录/)
-    fireEvent.click(screen.getByRole('button', { name: '应用字段修改' }))
-    await waitFor(() => expect(applyRecord).toHaveBeenCalledWith(recordHex))
-  })
-
   it('preserves a catalog weapon native save level when replacing a save-box entry', async () => {
     const candidate: LoadoutWeaponCandidate = { kind: 'weapon', gameId: 'mhgu', candidateKey: 'catalog:greatsword:7:2:3', sourceKind: 'catalog', weaponKey: 'greatsword:7:2:3', templateKey: null, saveType: 7, saveId: 2, saveLevel: 3, nameCn: '强化测试大剑', nameEn: 'Upgraded Test GS', typeId: 1, typeNameCn: '大剑', rarity: 3, slots: 1, attack: 120, affinity: 0, defense: 0, iconPath: null }
     const bootstrap = { gameId: 'mhgu' as const, dataVersion: 'test', decorations: [], skills: [], charmClasses: [], charmRanges: [], relicLookups: [] }

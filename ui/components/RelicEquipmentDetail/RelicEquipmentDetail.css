@@ -1,0 +1,46 @@
+.relic-equipment-detail {
+  --relic-equipment-detail-component-field-min-width: 180px;
+  display: grid;
+  gap: var(--global-spacing-3);
+  min-width: 0;
+}
+.relic-equipment-detail__title {
+  margin: 0;
+  color: var(--global-theme-color-text-primary);
+  font-size: var(--global-typography-font-size-body);
+}
+.relic-equipment-detail__fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--relic-equipment-detail-component-field-min-width)), 1fr));
+  gap: var(--global-spacing-2);
+  margin: 0;
+}
+.relic-equipment-detail__field {
+  min-width: 0;
+  padding: var(--global-spacing-2);
+  border: var(--global-border-width) solid var(--global-theme-color-border-subtle);
+  border-radius: var(--global-radius-md);
+  background: var(--global-theme-color-surface-inset);
+}
+.relic-equipment-detail__label {
+  color: var(--global-theme-color-text-muted);
+  font-size: var(--global-typography-font-size-caption);
+}
+.relic-equipment-detail__value {
+  margin: var(--global-spacing-1) 0 0;
+  color: var(--global-theme-color-data);
+  font-size: var(--global-typography-font-size-small);
+  line-height: var(--global-typography-line-height-normal);
+  overflow-wrap: anywhere;
+}
+.relic-equipment-detail__flags {
+  margin: 0;
+  color: var(--global-theme-color-data);
+  font-size: var(--global-typography-font-size-small);
+  overflow-wrap: anywhere;
+}
+.relic-equipment-detail__note, .relic-equipment-detail__state {
+  margin: 0;
+  color: var(--global-theme-color-text-secondary);
+  font-size: var(--global-typography-font-size-small);
+}

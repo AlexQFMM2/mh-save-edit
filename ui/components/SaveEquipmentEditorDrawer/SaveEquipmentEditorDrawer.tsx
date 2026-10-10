@@ -2,7 +2,7 @@ import { Search, Sparkles } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { PalicoArmorSummary, PalicoWeaponSummary } from '../../../api/catalog/types'
 import type { GameId } from '../../../api/core/loadout'
-import type { ArmorLoadoutSlot, CharmValidationResult, LoadoutArmorCandidate, LoadoutCalculationSnapshot, LoadoutFacets, LoadoutWeaponCandidate } from '../../../api/loadout/types'
+import type { ArmorLoadoutSlot, CharmValidationResult, LoadoutArmorCandidate, LoadoutCalculationSnapshot, LoadoutFacets, LoadoutRelicLookup, LoadoutWeaponCandidate } from '../../../api/loadout/types'
 import type { SaveArmorAppearance, SaveEquipmentCell } from '../../../api/save/types'
 import { CatalogIcon } from '../CatalogIcon/CatalogIcon'
 import { ArmorAppearanceIcon } from '../ArmorAppearanceIcon/ArmorAppearanceIcon'
@@ -74,7 +74,10 @@ export function SaveEquipmentEditorDrawer({ gameId, domain, cell, onApply, onApp
   const [existingRelic, setExistingRelic] = useState<RelicCandidate>()
   const [charmDraft, setCharmDraft] = useState<EditableCharm>()
   const [charmEncoding, setCharmEncoding] = useState<CharmValidationResult['encoding']>('encodable')
-  const [advanced, setAdvanced] = useState(cell.kind === 'charm')
+  const [advanced, setAdvanced] = useState(cell.kind === 'charm' || Boolean(cell.relic))
+  const [relicLookups, setRelicLookups] = useState<LoadoutRelicLookup[]>([])
+  const [relicLoading, setRelicLoading] = useState(gameId === 'mh4g' && !palico && (cell.kind === 'weapon' || cell.kind === 'armor'))
+  const [relicError, setRelicError] = useState<string>()
   const [appearanceItems, setAppearanceItems] = useState<SaveArmorAppearance[]>([])
   const [appearancePage, setAppearancePage] = useState(1)
   const [appearanceTotal, setAppearanceTotal] = useState(0)
@@ -116,19 +119,29 @@ export function SaveEquipmentEditorDrawer({ gameId, domain, cell, onApply, onApp
   }, [appearanceQuery, appearancePage, cell.kind, cell.saveType, gameId, palico])
 
   useEffect(() => {
-    if (gameId !== 'mh4g' || palico || (cell.kind !== 'weapon' && cell.kind !== 'armor')) { setExistingRelic(undefined); return }
+    setExistingRelic(undefined); setRelicError(undefined); setRelicLookups([])
+    if (gameId !== 'mh4g' || palico || (cell.kind !== 'weapon' && cell.kind !== 'armor')) { setRelicLoading(false); return }
     let live = true
+    setRelicLoading(true)
     const find = async () => {
+      const identity = { gameId, saveType: cell.saveType, saveId: cell.saveId, sourceKind: 'relicTemplate' as const, pageSize: 1 }
       const values = cell.kind === 'weapon'
-        ? (await window.mhSaveEditor.loadout.searchWeapons({ gameId, query: cell.nameCn, sourceKind: 'relicTemplate', pageSize: 100 })).items
-        : (await window.mhSaveEditor.loadout.searchArmors({ gameId, part: initialKind(cell, false, gameId) as ArmorLoadoutSlot, query: cell.nameCn, sourceKind: 'relicTemplate', pageSize: 100 })).items
+        ? (await window.mhSaveEditor.loadout.searchWeapons(identity)).items
+        : (await window.mhSaveEditor.loadout.searchArmors({ ...identity, part: initialKind(cell, false, gameId) as ArmorLoadoutSlot })).items
       const candidate = values.find(value => value.saveType === cell.saveType && value.saveId === cell.saveId && value.instance)
-      if (!live || !candidate?.instance) return
+      if (!live) return
+      if (!candidate?.instance) {
+        if (cell.relic) throw new Error('当前发掘装备的参数模板读取失败，请关闭后重试。')
+        return
+      }
       setExistingRelic({ ...candidate, instance: { ...candidate.instance, source: 'saveInstance', formatId: 'mh4g-3ds-citra', recordHex: cell.recordHex } })
+      const lookups = await window.mhSaveEditor.loadout.getRelicLookups(gameId)
+      if (!lookups.some(value => value.kind === 'equipment_lookup')) throw new Error('发掘参数选项读取失败，请关闭后重试。')
+      if (live) setRelicLookups(lookups)
     }
-    void find().catch(() => { if (live) setExistingRelic(undefined) })
+    void find().catch(cause => { if (live) setRelicError(cause instanceof Error ? cause.message : '发掘参数读取失败') }).finally(() => { if (live) setRelicLoading(false) })
     return () => { live = false }
-  }, [cell.kind, cell.nameCn, cell.recordHex, cell.saveId, cell.saveType, gameId, palico])
+  }, [cell.kind, cell.recordHex, cell.saveId, cell.saveType, cell.relic?.templateKey, gameId, palico])
 
   useEffect(() => {
     if (!palico || kind === 'charm') { setItems([]); setSelected(undefined); return }
@@ -204,7 +217,7 @@ export function SaveEquipmentEditorDrawer({ gameId, domain, cell, onApply, onApp
   }
 
   const footer = <><button type="button" onClick={onClose}>取消</button>{advanced
-    ? <button type="button" disabled={kind === 'charm' && (!charmDraft || charmEncoding === 'blocked')} onClick={() => void applyAdvanced()}>应用字段修改</button>
+    ? <button type="button" disabled={relicLoading || Boolean(relicError) || Boolean(activeExistingRelic && (!snapshot || activeExistingRelic.instance?.encoding === 'blocked')) || (kind === 'charm' && (!charmDraft || charmEncoding === 'blocked'))} onClick={() => void applyAdvanced()}>应用字段修改</button>
     : <button type="button" disabled={!selected || selectedBlocked} onClick={() => selected && void applyCandidate(selected)}>应用选择</button>}</>
 
   return <WorkspaceDrawer title={`编辑第 ${cell.slot + 1} 格装备`} onClose={onClose} footer={footer}>
@@ -212,7 +225,9 @@ export function SaveEquipmentEditorDrawer({ gameId, domain, cell, onApply, onApp
       <nav><button type="button" className={!advanced ? 'is-active' : ''} onClick={() => setAdvanced(false)}>替换装备</button><button type="button" className={advanced ? 'is-active' : ''} disabled={cell.empty} title={cell.empty ? '空格没有可编辑的实例，请先选择装备或创建护石' : undefined} onClick={() => { setKind(initialKind(cell, palico, gameId)); setAdvanced(true) }}>编辑实例</button></nav>
       {advanced ? <div className="save-equipment-editor__advanced">
         <p>实例编辑只修改已确认字段；未知位、固定标记和保留字节保持原样。替换装备则从干净记录创建。</p>
-        {activeExistingRelic?.instance ? <div className="save-equipment-editor__existing-relic"><h3>{cell.nameCn}</h3><p>已识别为发掘实例，下面直接编辑当前格的完整 28 字节记录。</p>{snapshot ? <RelicEquipmentEditor candidate={activeExistingRelic} lookups={snapshot.relicLookups} decorations={snapshot.decorations} onChange={setExistingRelic} /> : <p role="status">正在读取发掘参数…</p>}</div> : <div className={kind === 'charm' ? 'save-equipment-editor__advanced-content is-charm' : 'save-equipment-editor__advanced-content'}>
+        {relicLoading || relicError || activeExistingRelic?.instance ? <div className="save-equipment-editor__existing-relic"><h3>{cell.nameCn}</h3>
+          {relicLoading ? <p role="status">正在读取当前装备的发掘参数…</p> : relicError ? <p role="alert">{relicError}</p> : activeExistingRelic && snapshot ? <><p>正在编辑当前装备的已保存参数；应用后加入存档草稿。</p><RelicEquipmentEditor candidate={activeExistingRelic} lookups={relicLookups} decorations={snapshot.decorations} onChange={setExistingRelic} /></> : <p role="status">正在读取发掘参数…</p>}
+        </div> : <div className={kind === 'charm' ? 'save-equipment-editor__advanced-content is-charm' : 'save-equipment-editor__advanced-content'}>
           {kind === 'charm' && snapshot ? <div className="save-equipment-editor__charm"><CharmEditorForm snapshot={snapshot} current={currentCharm} pointMinimum={pointMinimum} pointMaximum={pointMaximum} onChange={updateCharm} /><section className="save-equipment-editor__decoration-section"><h3>护石装饰珠</h3><DecorationEditorContent decorations={snapshot.decorations} skills={snapshot.skills} value={decorations.filter(Boolean)} capacity={charmDraft?.slots ?? slots} interpretFixedBit={gameId === 'mh4g'} onChange={values => setDecorations([...values, 0, 0, 0].slice(0, 3))} /></section></div> : <>
             {gameId === 'mhgu' && cell.kind === 'armor' && <section className="save-equipment-editor__appearance">
               <h3 className="save-equipment-editor__appearance-heading">防具幻化</h3>

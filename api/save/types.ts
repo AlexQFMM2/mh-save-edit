@@ -137,6 +137,7 @@ export type SaveEquipmentCell = {
   typeNameCn: string
   iconPath: string | null
   weaponKey: string | null
+  relic?: { templateKey: string; weaponTypeId: number | null }
   armorDexId: number | null
   palicoEquipmentId: number | null
   decorationLabels: { saveId: number; rawValue: number; nameCn: string; slots: number | null; fixed: boolean }[]

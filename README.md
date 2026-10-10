@@ -2,7 +2,7 @@
 
 基于 React + Electron + TypeScript 的离线 Monster Hunter 图鉴、配装器与存档编辑器，当前维护 MH3G、MH4G、MHGU/XX 三套内容资料。
 
-**当前应用版本：[v0.1.10](https://github.com/AlexQFMM2/mh-save-edit/releases/tag/v0.1.10)**。本版修复 MH4G 防具存档映射、自动配装候选缺失，以及道具箱和装备箱翻页遮挡，详见[更新说明](docs/releases/v0.1.10.md)。
+**当前应用版本：[v0.1.11](https://github.com/AlexQFMM2/mh-save-edit/releases/tag/v0.1.11)**。本版修复 MH4G 发掘装备参数无法回填、详情无法显示的问题，并增加装备格子的绿色“挖”字标记，详见[更新说明](docs/releases/v0.1.11.md)。
 
 **维护与交接说明更新于 2026-10-10。** 本轮功能开发收尾，后续以已有功能的 bug 修复和社区贡献为主，不承诺新作品的接入时间。跨作品统一数据表、统一译名及由此引出的整体数据重构计划已放弃；P2G 暂不接入。未来扩展按游戏独立推进，无须先改造现有三作。
 

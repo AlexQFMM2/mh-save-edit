@@ -41,6 +41,7 @@ export class SaveCatalogResolver {
   equipment(gameId: GameId, cell: Omit<SaveEquipmentCell, 'nameCn' | 'nameEn' | 'typeNameCn' | 'iconPath' | 'weaponKey' | 'armorDexId' | 'palicoEquipmentId' | 'decorationLabels' | 'skill1NameCn' | 'skill2NameCn' | 'diagnostics'>): SaveEquipmentCell {
     const db = this.db(gameId)
     let row: Row | undefined
+    let relic: SaveEquipmentCell['relic']
     let typeNameCn = ''
     if (cell.kind === 'weapon') {
       row = db.prepare('SELECT weapon_key,name_cn,name_en,icon_path FROM catalog_weapons WHERE game_id=? AND save_type=? AND save_id=? ORDER BY CASE WHEN COALESCE(save_level,0)=? THEN 0 ELSE 1 END,COALESCE(save_level,-1) LIMIT 1').get(gameId, cell.saveType, cell.saveId, cell.level) as Row | undefined
@@ -62,6 +63,14 @@ export class SaveCatalogResolver {
       typeNameCn = cell.kind === 'palico-head' ? '猫头部' : '猫身体'
     } else if (cell.kind === 'kinsect') typeNameCn = '猎虫'
     else if (cell.kind === 'unknown') typeNameCn = `未知类型 ${cell.saveType}`
+    if (!row && !cell.empty && gameId === 'mh4g' && (cell.kind === 'weapon' || cell.kind === 'armor')) {
+      const table = cell.kind === 'weapon' ? 'catalog_loadout_relic_weapon_templates' : 'catalog_loadout_relic_armor_templates'
+      if (this.hasTable(db, table)) {
+        row = db.prepare(`SELECT * FROM ${table} WHERE game_id=? AND save_type=? AND save_id=? LIMIT 1`).get(gameId, cell.saveType, cell.saveId) as Row | undefined
+        if (row) relic = { templateKey: text(row.template_key), weaponTypeId: cell.kind === 'weapon' ? number(row.type_id) : null }
+        if (row && cell.kind === 'armor') typeNameCn = ({ head: '头部', chest: '胸部', arms: '腕部', waist: '腰部', legs: '腿部' } as Record<string, string>)[text(row.part)] ?? '防具'
+      }
+    }
     const diagnostics = !cell.empty && !row && cell.kind !== 'kinsect' ? [{ code: 'equipment.unknown', path: `equipment.${cell.slot}`, severity: 'warning' as const, message: `未映射的${typeNameCn || '装备'}记录，原始字节会被保留` }] : []
     const decorationLabels = cell.decorations.filter(Boolean).map(rawValue => {
       const fixed = gameId === 'mh4g' && Boolean(rawValue & 0x8000)
@@ -77,7 +86,7 @@ export class SaveCatalogResolver {
     const iconPath = cell.kind === 'charm' ? charmIconPath(gameId, cell.saveId) : row?.icon_path ? text(row.icon_path) : cell.kind === 'weapon' ? weaponFallbackIconPath(gameId, typeId) : cell.kind === 'armor' && armorPart ? armorFallbackIconPath(gameId, armorPart) : null
     const appearance = !cell.empty && !cell.kind.toString().startsWith('palico') && (gameId === 'mhgu') && cell.kind === 'armor' && cell.appearanceId ? this.resolveArmorAppearance(gameId, cell.saveType, cell.appearanceId) : null
     if (cell.kind === 'armor' && cell.appearanceId && gameId === 'mhgu' && !appearance) diagnostics.push({ code: 'equipment.appearance.unknown', path: `equipment.${cell.slot}.appearanceId`, severity: 'warning', message: `未映射的防具幻化 ID ${cell.appearanceId}，原值会被保留` })
-    return { ...cell, appearance, nameCn: cell.empty ? '空格' : text(row?.name_cn, cell.kind === 'kinsect' ? `猎虫 #${cell.saveId}` : `${typeNameCn || '装备'} #${cell.saveId}`), nameEn: text(row?.name_en), typeNameCn: cell.empty ? '空格' : typeNameCn, iconPath, weaponKey: row?.weapon_key ? text(row.weapon_key) : null, armorDexId: row?.dex_id == null ? null : number(row.dex_id), palicoEquipmentId: row?.equipment_id == null ? null : number(row.equipment_id), decorationLabels, skill1NameCn: skillName(cell.skill1Id), skill2NameCn: skillName(cell.skill2Id), diagnostics }
+    return { ...cell, relic, slots: relic ? (Number.parseInt(cell.recordHex.slice(32, 34), 16) >> 2) & 3 : cell.slots, appearance, nameCn: cell.empty ? '空格' : text(row?.name_cn, cell.kind === 'kinsect' ? `猎虫 #${cell.saveId}` : `${typeNameCn || '装备'} #${cell.saveId}`), nameEn: text(row?.name_en), typeNameCn: cell.empty ? '空格' : typeNameCn, iconPath, weaponKey: row?.weapon_key ? text(row.weapon_key) : null, armorDexId: row?.dex_id == null ? null : number(row.dex_id), palicoEquipmentId: row?.equipment_id == null ? null : number(row.equipment_id), decorationLabels, skill1NameCn: skillName(cell.skill1Id), skill2NameCn: skillName(cell.skill2Id), diagnostics }
   }
   searchArmorAppearances(filters: SaveArmorAppearanceFilters): SaveArmorAppearancePage {
     const part = armorPartForSaveType(filters.gameId, filters.saveType)
@@ -186,6 +195,12 @@ export class SaveCatalogResolver {
       return result
     }
     for (const row of db.prepare('SELECT save_type,save_id FROM catalog_weapons WHERE game_id=? AND (name_cn LIKE ? OR name_en LIKE ? OR name_jp LIKE ?) UNION SELECT i.save_type,i.save_id FROM catalog_armor_save_identities i JOIN catalog_armors a ON a.game_id=i.game_id AND a.dex_id=i.armor_dex_id WHERE i.game_id=? AND (a.name_cn LIKE ? OR a.name_en LIKE ? OR a.name_jp LIKE ?)').all(gameId, like, like, like, gameId, like, like, like) as Row[]) result.add(`${number(row.save_type)}:${number(row.save_id)}`)
+    if (gameId === 'mh4g') {
+      for (const table of ['catalog_loadout_relic_weapon_templates', 'catalog_loadout_relic_armor_templates']) {
+        if (!this.hasTable(db, table)) continue
+        for (const row of db.prepare(`SELECT save_type,save_id FROM ${table} WHERE game_id=? AND (name_cn LIKE ? OR name_en LIKE ?)`).all(gameId, like, like) as Row[]) result.add(`${number(row.save_type)}:${number(row.save_id)}`)
+      }
+    }
     const charms = this.hasTable(db, 'charm_classes')
       ? db.prepare('SELECT save_id FROM charm_classes WHERE name_cn LIKE ? OR name_en LIKE ?').all(like, like) as Row[]
       : db.prepare('SELECT id save_id FROM cn__talismans WHERE name LIKE ? OR english LIKE ?').all(like, like) as Row[]

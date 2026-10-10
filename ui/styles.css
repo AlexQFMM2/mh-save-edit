@@ -26,6 +26,8 @@
   --global-theme-color-data: var(--global-theme-color-gold-bright);
   --global-theme-color-accent: var(--global-theme-color-gold-bright);
   --global-theme-color-success: #a7d49b;
+  --global-theme-color-success-solid: #287a40;
+  --global-theme-color-text-on-success: #fff;
   --global-theme-color-warning: #edaa74;
   --global-theme-color-danger: #ef9b8b;
   --global-theme-color-text-on-accent: #24150e;
