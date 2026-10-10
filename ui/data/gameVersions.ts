@@ -1,9 +1,10 @@
 import type { GameId } from '../../api/core/loadout'
 
-export type PlatformId = 'citra' | 'cemu' | 'yuzu'
+export type WorkspaceGameId = GameId | 'mhp2g'
+export type PlatformId = 'citra' | 'cemu' | 'yuzu' | 'ppsspp'
 
 export type GameVersionDefinition = {
-  id: GameId
+  id: WorkspaceGameId
   title: string
   subtitle: string
   posterPath: string
@@ -12,7 +13,23 @@ export type GameVersionDefinition = {
   platforms: PlatformId[]
 }
 
+export type RuntimeGameVersionDefinition = GameVersionDefinition & { id: GameId }
+
+// P2G currently exposes only items; other features must not use legacy save/loadout adapters.
+export function hasRuntimeWorkspace(game: GameVersionDefinition): game is RuntimeGameVersionDefinition {
+  return game.id !== 'mhp2g'
+}
+
 export const gameVersions: GameVersionDefinition[] = [
+  {
+    id: 'mhp2g',
+    title: 'Monster Hunter Portable 2nd G',
+    subtitle: 'MHP2G · PSP',
+    posterPath: 'home/p2g-post.png',
+    posterAlt: 'Monster Hunter Portable 2nd G 标题海报',
+    backgroundPath: 'home/p2g-bg.webp',
+    platforms: ['ppsspp'],
+  },
   {
     id: 'mh3g',
     title: 'Monster Hunter 3G',

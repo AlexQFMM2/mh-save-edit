@@ -1,13 +1,12 @@
-import type { GameId } from '../../../api/core/loadout'
-import type { GameVersionDefinition } from '../../data/gameVersions'
+import type { GameVersionDefinition, WorkspaceGameId } from '../../data/gameVersions'
 import { GameVersionCard } from '../GameVersionCard/GameVersionCard'
 import './GameVersionGrid.css'
 
 type GameVersionGridProps = {
   games: GameVersionDefinition[]
-  selectedGameId: GameId | null
-  onSelect: (gameId: GameId) => void
-  onPreviewChange: (gameId: GameId | null) => void
+  selectedGameId: WorkspaceGameId | null
+  onSelect: (gameId: WorkspaceGameId) => void
+  onPreviewChange: (gameId: WorkspaceGameId | null) => void
 }
 
 export function GameVersionGrid({ games, selectedGameId, onSelect, onPreviewChange }: GameVersionGridProps) {

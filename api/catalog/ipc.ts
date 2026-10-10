@@ -1,8 +1,12 @@
 import { ipcMain } from 'electron'
 import type DatabaseType from 'better-sqlite3'
 import { createRequire } from 'node:module'
+import { existsSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import type { GameId } from '../core/loadout'
+import { P2gItemCatalogRepository } from './p2gItemRepository'
+import { ItemTermRepository } from '../terminology/itemTermRepository'
+import { itemTermFiltersSchema } from './schemas'
 import { ItemCatalogRepository } from './repository'
 import { DecorationCatalogRepository } from './decorationRepository'
 import { WeaponCatalogRepository } from './weaponRepository'
@@ -12,7 +16,7 @@ import { SkillCatalogRepository } from './skillRepository'
 import { MonsterCatalogRepository } from './monsterRepository'
 import { HunterArtCatalogRepository, QuestCatalogRepository } from './questRepository'
 import { PalicoCatalogRepository } from './palicoRepository'
-import { armorCatalogFiltersSchema, armorIdentitySchema, armorSetFiltersSchema, decorationCatalogFiltersSchema, decorationIdentitySchema, gameIdSchema, hunterArtCatalogFiltersSchema, hunterArtIdentitySchema, itemCatalogFiltersSchema, itemIdentitySchema, monsterCatalogFiltersSchema, monsterIdentitySchema, palicoArmorFiltersSchema, palicoEquipmentIdentitySchema, palicoSkillFiltersSchema, palicoSkillIdentitySchema, palicoSupportMoveFiltersSchema, palicoSupportMoveIdentitySchema, palicoTypeIdentitySchema, palicoWeaponFiltersSchema, questCatalogFiltersSchema, questIdentitySchema, skillCatalogFiltersSchema, skillIdentitySchema, weaponCatalogFiltersSchema, weaponIdentitySchema, weaponMotionFiltersSchema, weaponTreeRequestSchema } from './schemas'
+import { armorCatalogFiltersSchema, armorIdentitySchema, armorSetFiltersSchema, decorationCatalogFiltersSchema, decorationIdentitySchema, gameIdSchema, catalogGameIdSchema, hunterArtCatalogFiltersSchema, hunterArtIdentitySchema, itemCatalogFiltersSchema, itemIdentitySchema, monsterCatalogFiltersSchema, monsterIdentitySchema, palicoArmorFiltersSchema, palicoEquipmentIdentitySchema, palicoSkillFiltersSchema, palicoSkillIdentitySchema, palicoSupportMoveFiltersSchema, palicoSupportMoveIdentitySchema, palicoTypeIdentitySchema, palicoWeaponFiltersSchema, questCatalogFiltersSchema, questIdentitySchema, skillCatalogFiltersSchema, skillIdentitySchema, weaponCatalogFiltersSchema, weaponIdentitySchema, weaponMotionFiltersSchema, weaponTreeRequestSchema } from './schemas'
 import { catalogChannels } from './channels'
 export { catalogChannels }
 
@@ -25,6 +29,16 @@ export function resolveCatalogDataDir(isPackaged: boolean, resourcesPath: string
 }
 
 export function registerCatalogIpc(dataDir: string): () => void {
+  let dictionary: { db: DatabaseType.Database; repository: ItemTermRepository } | undefined
+  const itemTerms = () => {
+    if (dictionary) return dictionary.repository
+    const file = join(dataDir, 'item-terminology.sqlite')
+    if (!existsSync(file)) return undefined
+    const nativeBinding = process.env.MH_SAVE_EDIT_SQLITE_BINDING
+    const db = new Database(file, { readonly: true, fileMustExist: true, ...(nativeBinding ? { nativeBinding } : {}) })
+    try { dictionary = { db, repository: new ItemTermRepository(db) }; return dictionary.repository }
+    catch (error) { db.close(); throw error }
+  }
   const repositories = new Map<GameId, { db: DatabaseType.Database; repository: ItemCatalogRepository; decorations: DecorationCatalogRepository; weapons: WeaponCatalogRepository; weaponMotions: WeaponMotionCatalogRepository; armors: ArmorCatalogRepository; skills: SkillCatalogRepository; monsters: MonsterCatalogRepository; quests: QuestCatalogRepository; hunterArts: HunterArtCatalogRepository; palicoes: PalicoCatalogRepository }>()
   const repositoryEntry = (gameId: GameId) => {
     const cached = repositories.get(gameId)
@@ -32,7 +46,9 @@ export function registerCatalogIpc(dataDir: string): () => void {
     const file = join(dataDir, `${gameId}.sqlite`)
     const nativeBinding = process.env.MH_SAVE_EDIT_SQLITE_BINDING
     const db = new Database(file, { readonly: true, fileMustExist: true, ...(nativeBinding ? { nativeBinding } : {}) })
-    const value = new ItemCatalogRepository(db)
+    let value: ItemCatalogRepository
+    try { value = new ItemCatalogRepository(db, itemTerms()) }
+    catch (error) { db.close(); throw error }
     const decorations = new DecorationCatalogRepository(db)
     const weapons = new WeaponCatalogRepository(db)
     const weaponMotions = new WeaponMotionCatalogRepository(db)
@@ -47,17 +63,31 @@ export function registerCatalogIpc(dataDir: string): () => void {
     return entry
   }
 
+  let p2g: { db: DatabaseType.Database; repository: P2gItemCatalogRepository } | undefined
+  const p2gItems = () => {
+    if (p2g) return p2g.repository
+    if (!existsSync(join(dataDir, 'mhp2g.sqlite'))) throw new Error('P2G 道具资料库尚未安装，请查看 README 中的 P2G 本地接入说明。')
+    const nativeBinding = process.env.MH_SAVE_EDIT_SQLITE_BINDING
+    const db = new Database(join(dataDir, 'mhp2g.sqlite'), { readonly: true, fileMustExist: true, ...(nativeBinding ? { nativeBinding } : {}) })
+    try { p2g = { db, repository: new P2gItemCatalogRepository(db, itemTerms()) }; return p2g.repository }
+    catch (error) { db.close(); throw error }
+  }
+
+  ipcMain.handle(catalogChannels.searchItemTerms, (_event, payload: unknown) => {
+    const filters = itemTermFiltersSchema.parse(payload)
+    return itemTerms()?.search(filters) ?? { available: false, message: '译名词典尚未安装，当前显示各作原译名。', items: [], total: 0, page: filters.page ?? 1, pageSize: filters.pageSize ?? 30, hasNext: false }
+  })
   ipcMain.handle(catalogChannels.searchItems, (_event, payload: unknown) => {
     const filters = itemCatalogFiltersSchema.parse(payload)
-    return repositoryEntry(filters.gameId).repository.searchItems(filters)
+    return filters.gameId === 'mhp2g' ? p2gItems().searchItems(filters) : repositoryEntry(filters.gameId).repository.searchItems({ ...filters, gameId: filters.gameId })
   })
   ipcMain.handle(catalogChannels.getItem, (_event, payload: unknown) => {
     const identity = itemIdentitySchema.parse(payload)
-    return repositoryEntry(identity.gameId).repository.getItem(identity)
+    return identity.gameId === 'mhp2g' ? p2gItems().getItem(identity) : repositoryEntry(identity.gameId).repository.getItem(identity)
   })
   ipcMain.handle(catalogChannels.getItemFacets, (_event, payload: unknown) => {
-    const gameId = gameIdSchema.parse(payload)
-    return repositoryEntry(gameId).repository.getItemFacets(gameId)
+    const gameId = catalogGameIdSchema.parse(payload)
+    return gameId === 'mhp2g' ? p2gItems().getItemFacets() : repositoryEntry(gameId).repository.getItemFacets(gameId)
   })
   ipcMain.handle(catalogChannels.searchDecorations, (_event, payload: unknown) => {
     const filters = decorationCatalogFiltersSchema.parse(payload)
@@ -174,6 +204,8 @@ export function registerCatalogIpc(dataDir: string): () => void {
   ipcMain.handle(catalogChannels.getPalicoCatalogFacets,(_event,payload:unknown)=>{const gameId=gameIdSchema.parse(payload);if(gameId!=='mhgu')throw new Error('当前游戏没有猎猫图鉴');return repositoryEntry(gameId).palicoes.getFacets()})
 
   return () => {
+    dictionary?.db.close(); dictionary = undefined
+    p2g?.db.close(); p2g = undefined
     for (const channel of Object.values(catalogChannels)) ipcMain.removeHandler(channel)
     for (const value of repositories.values()) value.db.close()
     repositories.clear()

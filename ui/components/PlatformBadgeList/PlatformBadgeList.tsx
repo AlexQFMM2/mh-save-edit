@@ -7,7 +7,7 @@ type PlatformBadgeListProps = {
   platforms: PlatformId[]
   showLabel?: boolean
 }
-const platformNames: Record<PlatformId, string> = { citra: 'Citra', cemu: 'Cemu', yuzu: 'Yuzu' }
+const platformNames: Record<PlatformId, string> = { citra: 'Citra', cemu: 'Cemu', yuzu: 'Yuzu', ppsspp: 'PPSSPP' }
 
 export function PlatformBadgeList({ platforms, showLabel = true }: PlatformBadgeListProps) {
   return (
@@ -16,7 +16,7 @@ export function PlatformBadgeList({ platforms, showLabel = true }: PlatformBadge
       <span className="platform-badge-list__items">
         {platforms.map((platform) => (
           <span className="platform-badge" key={platform} title={platformNames[platform]}>
-            {platform === 'cemu' ? <CemuLogo /> : <img className={`platform-badge__image platform-badge__image--${platform}`} src={assetUrl(`home/${platform}.png`)} alt="" />}
+            {platform === 'cemu' ? <CemuLogo /> : <img className={`platform-badge__image platform-badge__image--${platform}`} src={assetUrl(`home/${platform}.${platform === 'ppsspp' ? 'svg' : 'png'}`)} alt="" />}
             <span className="platform-badge__name">{platformNames[platform]}</span>
           </span>
         ))}

@@ -1,0 +1,4 @@
+.catalog-pending-detail{padding:var(--global-spacing-5);min-width:0;overflow-wrap:anywhere}
+.catalog-pending-detail__kind{color:var(--global-theme-color-text-muted);font-size:var(--global-typography-font-size-small)}
+.catalog-pending-detail__name{color:var(--global-theme-color-text-primary);font-size:var(--global-typography-font-size-title)}
+.catalog-pending-detail__status{color:var(--global-theme-color-text-secondary);font-size:var(--global-typography-font-size-body)}

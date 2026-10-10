@@ -1,16 +1,15 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import type { GameId } from '../../../api/core/loadout'
 import { CommonHeader } from '../../components/CommonHeader/CommonHeader'
 import { GuildBackdrop } from '../../components/GuildBackdrop/GuildBackdrop'
 import { GameVersionGrid } from '../../components/GameVersionGrid/GameVersionGrid'
-import { gameVersions } from '../../data/gameVersions'
+import { gameVersions, type WorkspaceGameId } from '../../data/gameVersions'
 import './HomePage.css'
 
 export function HomePage() {
   const navigate = useNavigate()
-  const [selectedGameId, setSelectedGameId] = useState<GameId | null>(null)
-  const [previewedGameId, setPreviewedGameId] = useState<GameId | null>(null)
+  const [selectedGameId, setSelectedGameId] = useState<WorkspaceGameId | null>(null)
+  const [previewedGameId, setPreviewedGameId] = useState<WorkspaceGameId | null>(null)
   const previewedGame = gameVersions.find((game) => game.id === previewedGameId)
   return (
     <main className="home-page">

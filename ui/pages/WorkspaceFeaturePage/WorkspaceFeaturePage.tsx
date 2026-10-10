@@ -1,12 +1,13 @@
-import { useOutletContext } from 'react-router-dom'
-import type { WorkspaceOutletContext } from '../../components/WorkspaceContent/WorkspaceContent'
+import { useOutletContext, useSearchParams } from 'react-router-dom'
+import type { ShellOutletContext } from '../../components/WorkspaceContent/WorkspaceContent'
 import { WorkspacePlaceholder } from '../../components/WorkspacePlaceholder/WorkspacePlaceholder'
 import type { WorkspaceNavItemId } from '../../data/workspaceNavigation'
 import './WorkspaceFeaturePage.css'
 
-type WorkspaceFeaturePageId = Exclude<WorkspaceNavItemId, 'save-editor'>
+type WorkspaceFeaturePageId = WorkspaceNavItemId
 
 const featureContent: Record<WorkspaceFeaturePageId, { title: string; description: string }> = {
+  'save-editor': { title: '存档修改', description: '读取存档并修改个人信息、装备箱与道具箱。' },
   weapons: { title: '武器图鉴', description: '集中查看当前游戏可用武器及其属性、派生和制作资料。' },
   armor: { title: '防具图鉴', description: '集中查看防具部位、套装技能和制作资料。' },
   decorations: { title: '装饰品图鉴', description: '集中查看装饰品技能、槽位和制作资料。' },
@@ -25,9 +26,19 @@ const featureContent: Record<WorkspaceFeaturePageId, { title: string; descriptio
 type WorkspaceFeaturePageProps = { pageId: WorkspaceFeaturePageId }
 
 export function WorkspaceFeaturePage({ pageId }: WorkspaceFeaturePageProps) {
-  const { game } = useOutletContext<WorkspaceOutletContext>()
+  const { game } = useOutletContext<ShellOutletContext>()
+  const [params] = useSearchParams()
 
-  const content = featureContent[pageId]
+  const baseContent = featureContent[pageId]
+  const content = game.id === 'mhp2g' ? {
+    title: baseContent.title,
+    description: pageId === 'loadout'
+      ? 'P2G 配装器待接入，将支持武器、防具和装饰品组合；本作没有护石。'
+      : pageId === 'skills'
+        ? 'P2G 技能图鉴待接入，将展示技能发动效果与防具、装饰品来源。'
+        : `P2G ${baseContent.title}待接入。当前可从侧栏浏览道具图鉴。`,
+  } : baseContent
+  if (game.id === 'mhp2g' && params.get('q')) content.description += ` 关联对象：${params.get('q')}。`
 
   return (
     <div className="workspace-feature-page">

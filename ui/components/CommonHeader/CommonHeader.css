@@ -19,6 +19,11 @@
   align-items: center;
 }
 
+.common-header__tools { display: flex; align-items: center; gap: var(--global-spacing-5); min-width: 0; }
+.common-header__dictionary { display: inline-flex; flex-shrink: 0; align-items: center; gap: var(--global-spacing-2); min-height: 40px; padding: var(--global-spacing-2) var(--global-spacing-3); border: var(--global-border-width) solid var(--global-theme-color-border); border-radius: var(--global-radius-md); color: var(--global-theme-color-text-primary); background: var(--global-theme-color-surface-interactive); font: inherit; font-size: var(--global-typography-font-size-small); cursor: pointer; }
+.common-header__dictionary:hover { border-color: var(--global-theme-color-border-strong); }
+.common-header__dictionary:focus-visible { outline: 2px solid var(--global-theme-color-focus-ring); outline-offset: 2px; }
+
 .common-header__brand {
   gap: var(--global-spacing-4);
 }

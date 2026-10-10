@@ -6,9 +6,9 @@ import Database from 'better-sqlite3'
 
 const root = path.resolve(import.meta.dirname, '..')
 const specs = {
-  mh3g: { db: 'data/mh3g.sqlite', dex: '/tmp/mh3g-dex-direct-sql', table: 'items', names: ['name_en', 'name_cn'] },
-  mh4g: { db: 'data/mh4g.sqlite', dex: '/tmp/mh4g-dex-direct-sql', table: 'items', names: ['name_en', 'name_cn'] },
-  mhgu: { db: 'data/mhgu.sqlite', dex: '/tmp/mhxx-dex-direct-sql', table: 'cn__items', names: ['english', 'name'] },
+  mh3g: { db: 'data/mh3g.sqlite', dex: path.resolve(root, '../research/mh3u/dex/mh3g-dex/direct_sql'), table: 'items', names: ['name_en', 'name_cn'] },
+  mh4g: { db: 'data/mh4g.sqlite', dex: path.resolve(root, '../research/mh4g/dex/mh4g-dex/direct_sql'), table: 'items', names: ['name_en', 'name_cn'] },
+  mhgu: { db: 'data/mhgu.sqlite', dex: path.resolve(root, '../research/mhgu/dex/mhxx-dex/direct_sql'), table: 'cn__items', names: ['english', 'name'] },
 }
 
 function csv(file) {
@@ -80,7 +80,7 @@ function buildGame(gameId, spec) {
   const attrs = new Map(dexItems.map((row) => [hexInteger(row.Hex), row]))
   const sourceDigest = sha256(fs.readdirSync(spec.dex).filter((file) => file.endsWith('.csv')).sort().map((file) => `${file}\0${fs.readFileSync(path.join(spec.dex, file))}`).join('\0'))
   const iconManifestPath = path.join(root, 'data/manifests', `${gameId}-icons.json`)
-  const buildKey = sha256(`${sourceDigest}:${sha256(fs.readFileSync(iconManifestPath))}:catalog-v3`)
+  const buildKey = sha256(`${sourceDigest}:${sha256(fs.readFileSync(iconManifestPath))}:catalog-v4-japanese-column-3`)
   createSchema(db)
   const oldItems = db.prepare(`SELECT * FROM ${spec.table} ORDER BY ${spec.table === 'cn__items' ? 'id' : 'save_id'}`).all()
   const existingBuildKey = db.prepare("SELECT value FROM meta WHERE key = 'catalog_build_key'").get()?.value
@@ -125,7 +125,7 @@ function buildGame(gameId, spec) {
         game_id: gameId, save_id: saveId, dex_id: dexId,
         name_cn: nameCn || clean(dexName?.Itm_Name_1) || nameEn,
         name_en: nameEn || clean(dexName?.Itm_Name_0) || nameCn,
-        name_jp: clean(dexName?.Itm_Name_2), rarity: integer(dexAttr?.Rare), max_stack: integer(dexAttr?.Max),
+        name_jp: clean(dexName?.Itm_Name_3), rarity: integer(dexAttr?.Rare), max_stack: integer(dexAttr?.Max),
         sell_price: integer(dexAttr?.Sell), buy_price: integer(dexAttr?.Buy), hex_id: clean(dexAttr?.Hex),
         icon_path: dexId == null ? null : iconMap[`Itm_${String(dexId).padStart(4, '0')}`] ?? null,
         is_placeholder: placeholder({ name_cn: nameCn, name_en: nameEn, dex_id: dexId }) ? 1 : 0,

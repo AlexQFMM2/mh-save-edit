@@ -1,6 +1,7 @@
 import type Database from 'better-sqlite3'
+import type { ItemTermRepository } from '../terminology/itemTermRepository'
 import type { GameId } from '../core/loadout'
-import type { ArmorRelationTarget, ItemCatalogFilters, ItemDetail, ItemIdentity, ItemRelation, ItemRelationTarget, ItemSummary, MonsterRelationTarget, PageResult, PalicoEquipmentRelationTarget, QuestRelationTarget, WeaponRelationTarget } from './types'
+import type { ArmorRelationTarget, ItemCatalogFilters, ItemDetail, LegacyItemIdentity, ItemRelation, ItemRelationTarget, ItemSummary, MonsterRelationTarget, PageResult, PalicoEquipmentRelationTarget, QuestRelationTarget, WeaponRelationTarget } from './types'
 
 type RawItem = Record<string, unknown>
 type RawRelation = Record<string, unknown>
@@ -13,18 +14,21 @@ function bool(value: unknown): boolean { return value === true || value === 1 ||
 function json(value: unknown): Record<string, string> { try { return JSON.parse(String(value ?? '{}')) as Record<string, string> } catch { return {} } }
 
 export class ItemCatalogRepository {
-  constructor(private readonly db: Database.Database) {}
+  constructor(private readonly db: Database.Database, private readonly terminology?: ItemTermRepository) {
+    if (terminology) for (const row of db.prepare('SELECT DISTINCT game_id FROM catalog_items').all() as { game_id: GameId }[]) terminology.bindCatalog(db, row.game_id)
+  }
 
-  searchItems(filters: ItemCatalogFilters): PageResult<ItemSummary> {
+  searchItems(filters: ItemCatalogFilters & { gameId: GameId }): PageResult<ItemSummary> {
     const pageSize = Math.min(Math.max(filters.pageSize ?? 100, 1), 100)
     const page = Math.max(filters.page ?? 1, 1)
     const values: unknown[] = [filters.gameId]
     const where = ['game_id = ?']
     if (filters.targetSaveId != null) { where.push('save_id = ?'); values.push(filters.targetSaveId) }
     if (!filters.includePlaceholders) where.push('is_placeholder = 0')
+    const matches = this.terminology?.matchItems(filters.gameId, filters.query) ?? new Map<number, string>()
     if (filters.query?.trim()) {
-      where.push('(name_cn LIKE ? OR name_en LIKE ? OR CAST(save_id AS TEXT) = ? OR lower(hex_id) = lower(?))')
-      const query = `%${filters.query.trim()}%`; values.push(query, query, filters.query.trim(), filters.query.trim().replace(/^0x/i, ''))
+      where.push('(name_cn LIKE ? OR name_en LIKE ? OR name_jp LIKE ? OR CAST(save_id AS TEXT) = ? OR lower(hex_id) = lower(?) OR save_id IN (SELECT value FROM json_each(?)))')
+      const query = `%${filters.query.trim()}%`; values.push(query, query, query, filters.query.trim(), filters.query.trim().replace(/^0x/i, ''), JSON.stringify([...matches.keys()]))
     }
     if (filters.rarity != null) { where.push('rarity = ?'); values.push(filters.rarity) }
     if (filters.maxStack != null) { where.push('max_stack = ?'); values.push(filters.maxStack) }
@@ -34,14 +38,14 @@ export class ItemCatalogRepository {
       if (filters.usageKinds?.length) { const kinds = filters.usageKinds.filter((kind) => allowedUsageKinds.has(kind)); if (kinds.length) { relationParts.push(`usage_kind IN (${kinds.map(() => '?').join(',')})`); values.push(...kinds) } }
       if (relationParts.length) { where.push(`EXISTS (SELECT 1 FROM catalog_item_relations r WHERE r.game_id = catalog_items.game_id AND r.item_save_id = catalog_items.save_id AND (${relationParts.join(' OR ')}))`) }
     }
-    const order = filters.sort === 'name' ? 'name_cn COLLATE NOCASE ASC, save_id ASC' : filters.sort === 'rarity' ? 'rarity IS NULL, rarity ASC, save_id ASC' : 'save_id ASC'
+    const order = filters.sort === 'name' ? `${this.terminology ? 'item_display_name(game_id,save_id,name_cn)' : 'name_cn'} COLLATE NOCASE ASC, save_id ASC` : filters.sort === 'rarity' ? 'rarity IS NULL, rarity ASC, save_id ASC' : 'save_id ASC'
     const base = `FROM catalog_items WHERE ${where.join(' AND ')}`
     const total = int((this.db.prepare(`SELECT count(*) AS count ${base}`).get(...values) as { count?: unknown } | undefined)?.count) ?? 0
     const rows = this.db.prepare(`SELECT * ${base} ORDER BY ${order} LIMIT ? OFFSET ?`).all(...values, pageSize, (page - 1) * pageSize) as RawItem[]
-    return { items: rows.map(toSummary), page, pageSize, total, hasNext: page * pageSize < total }
+    return { items: rows.map(row => this.terminology?.project(toSummary(row), filters.query, matches.get(Number(row.save_id))) ?? toSummary(row)), page, pageSize, total, hasNext: page * pageSize < total }
   }
 
-  getItem(identity: ItemIdentity): ItemDetail | null {
+  getItem(identity: LegacyItemIdentity): ItemDetail | null {
     const row = this.db.prepare('SELECT * FROM catalog_items WHERE game_id = ? AND save_id = ?').get(identity.gameId, identity.saveId) as RawItem | undefined
     if (!row) return null
     const relations = this.db.prepare('SELECT * FROM catalog_item_relations WHERE game_id = ? AND item_save_id = ? ORDER BY source_kind, id').all(identity.gameId, identity.saveId) as RawRelation[]
@@ -52,7 +56,7 @@ export class ItemCatalogRepository {
       const relatedRows = this.db.prepare(`SELECT game_id, save_id, dex_id, name_cn, name_en FROM catalog_items WHERE game_id = ? AND dex_id IN (${placeholders})`).all(identity.gameId, ...relatedDexIds) as RawItem[]
       for (const related of relatedRows) {
         const dexId = int(related.dex_id)
-        if (dexId != null) relatedByDex.set(dexId, { gameId: String(related.game_id) as ItemIdentity['gameId'], saveId: int(related.save_id) ?? 0, nameCn: String(related.name_cn ?? ''), nameEn: String(related.name_en ?? '') })
+        if (dexId != null) relatedByDex.set(dexId, { gameId: String(related.game_id) as LegacyItemIdentity['gameId'], saveId: int(related.save_id) ?? 0, nameCn: String(related.name_cn ?? ''), nameEn: String(related.name_en ?? '') })
       }
     }
     const weaponDexIds = [...new Set(relations.filter((relation) => String(relation.usage_kind) === 'weapon').map((relation) => int(relation.target_id)).filter((value): value is number => value != null))]
@@ -95,7 +99,8 @@ export class ItemCatalogRepository {
       const questRows = this.db.prepare(`SELECT dex_id,quest_key,name_cn,name_en FROM catalog_quests WHERE game_id=? AND dex_id IN (${marks})`).all(identity.gameId, ...questIds) as RawItem[]
       for (const quest of questRows) questsById.set(int(quest.dex_id) ?? -1, { gameId: identity.gameId, questKey: String(quest.quest_key), nameCn: String(quest.name_cn), nameEn: String(quest.name_en) })
     }
-    return { ...toSummary(row), nameJp: String(row.name_jp ?? ''), sellPrice: int(row.sell_price), buyPrice: int(row.buy_price), hexId: row.hex_id ? String(row.hex_id) : null, mappingStatus: String(row.mapping_status ?? ''), relations: relations.map((relation) => toRelation(relation, relatedByDex, weaponsByDex, armorsByDex, monstersById, questsById, palicoWeaponsByDex, palicoArmorsByDex)) }
+    const item: ItemDetail = { ...toSummary(row), nameJp: String(row.name_jp ?? ''), sellPrice: int(row.sell_price), buyPrice: int(row.buy_price), hexId: row.hex_id ? String(row.hex_id) : null, mappingStatus: String(row.mapping_status ?? ''), relations: relations.map((relation) => toRelation(relation, relatedByDex, weaponsByDex, armorsByDex, monstersById, questsById, palicoWeaponsByDex, palicoArmorsByDex)) }
+    return this.terminology?.detail(item) ?? item
   }
 
   getItemFacets(gameId: GameId) {

@@ -31,6 +31,13 @@ describe('workspace navigation', () => {
     ])
   })
 
+  it('gives P2G the same nine entries as MH3G without talisman wording', () => {
+    const groups = getWorkspaceNavigation('mhp2g')
+    expect(groups.map(group => group.id)).toEqual(['catalog', 'edit'])
+    expect(groups.flatMap(group => group.items.map(item => item.id))).toEqual(getWorkspaceNavigation('mh3g').flatMap(group => group.items.map(item => item.id)))
+    expect(groups.flatMap(group => group.items).map(item => item.description).join('')).not.toContain('护石')
+  })
+
   it('shows Hunter Arts only for MHGU/XX content',()=>{
     expect(getWorkspaceNavigation('mhgu')[0].items.some(item=>item.id==='hunter-arts')).toBe(true)
     expect(getWorkspaceNavigation('mh3g')[0].items.some(item=>item.id==='hunter-arts')).toBe(false)
@@ -66,6 +73,7 @@ describe('workspace navigation', () => {
   })
 
   it('accepts only configured game ids', () => {
+    expect(isGameId('mhp2g')).toBe(true)
     expect(isGameId('mh3g')).toBe(true)
     expect(isGameId('mh4g')).toBe(true)
     expect(isGameId('mhgu')).toBe(true)

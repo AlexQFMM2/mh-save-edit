@@ -1,6 +1,10 @@
 import type { GameId } from '../core/loadout'
+import type { ItemTermLabel } from '../terminology/types'
 
-export type ItemIdentity = { gameId: GameId; saveId: number }
+export type CatalogGameId = GameId | 'mhp2g'
+export type LegacyItemIdentity = { gameId: GameId; saveId: number; itemId?: never }
+export type P2gItemIdentity = { gameId: 'mhp2g'; itemId: number; saveId?: never }
+export type ItemIdentity = LegacyItemIdentity | P2gItemIdentity
 export type DecorationIdentity = { gameId: GameId; saveId: number }
 export type WeaponIdentity = { gameId: GameId; weaponKey: string }
 export type ArmorIdentity = { gameId: GameId; dexId: number }
@@ -14,9 +18,9 @@ export type ArmorGender = 'both' | 'male' | 'female'
 export type ArmorViewMode = 'list' | 'set'
 export type ArmorSort = 'dexId' | 'name' | 'rarity' | 'slots' | 'baseDefense' | 'maxDefense' | 'fireRes' | 'waterRes' | 'thunderRes' | 'iceRes' | 'dragonRes' | 'skillPoints'
 export type ArmorSetSort = 'source' | 'name' | 'rarity' | 'slots' | 'baseDefense' | 'maxDefense' | 'skillPoints'
-export type ItemSourceKind = 'combination' | 'monster' | 'location' | 'quest' | 'exchange'
+export type ItemSourceKind = 'combination' | 'monster' | 'location' | 'quest' | 'exchange' | 'shop'
 export type ItemUsageKind = 'weapon' | 'armor' | 'decoration' | 'palico-weapon' | 'palico-armor' | 'kinsect'
-export type ItemRelationTarget = Pick<ItemIdentity, 'gameId' | 'saveId'> & { nameCn: string; nameEn: string }
+export type ItemRelationTarget = LegacyItemIdentity & { nameCn: string; nameEn: string }
 export type WeaponRelationTarget = WeaponIdentity & { typeId: number; nameCn: string; nameEn: string }
 export type ArmorRelationTarget = ArmorIdentity & { part: ArmorPartId; nameCn: string; nameEn: string }
 export type MonsterRelationTarget = MonsterIdentity & { nameCn: string; nameEn: string; iconPath: string | null }
@@ -69,7 +73,8 @@ export type DecorationCatalogFacets = {
   skills: Pick<DecorationSkill, 'skillId' | 'nameCn' | 'nameEn'>[]
 }
 
-export type ItemSummary = ItemIdentity & {
+export type ItemSummary = LegacyItemIdentity & {
+  terminology?: ItemTermLabel
   dexId: number | null
   nameCn: string
   nameEn: string
@@ -78,6 +83,8 @@ export type ItemSummary = ItemIdentity & {
   iconPath: string | null
   isPlaceholder: boolean
 }
+
+export type CatalogItemSummary = ItemSummary | (P2gItemIdentity & Omit<ItemSummary, keyof LegacyItemIdentity>)
 
 export type ItemRelation = {
   id: number
@@ -89,7 +96,8 @@ export type ItemRelation = {
   probability: number | null
   rank: number | null
   metadata: Record<string, string>
-  relatedItems: ItemRelationTarget[]
+  relatedItems: (ItemIdentity & { nameCn: string; nameEn: string })[]
+  pendingTarget?: { kind: 'weapon' | 'armor' | 'decoration' | 'monster' | 'quest'; name: string } | null
   relatedWeapon?: WeaponRelationTarget | null
   relatedArmor?: ArmorRelationTarget | null
   relatedMonster?: MonsterRelationTarget | null
@@ -456,6 +464,8 @@ export type SkillCatalogFilters = { gameId: GameId; targetSkillId?: number; quer
 export type SkillCatalogFacets = { directions: ('positive' | 'negative' | 'special')[]; sources: ('armor' | 'decoration' | 'talisman')[] }
 
 export type ItemDetail = ItemSummary & {
+  localization?: { nameSource: string; namePending: boolean; descriptionSource: string; descriptionPending: boolean; descriptionJp?: string }
+  description?: string
   nameJp: string
   sellPrice: number | null
   buyPrice: number | null
@@ -464,16 +474,19 @@ export type ItemDetail = ItemSummary & {
   relations: ItemRelation[]
 }
 
+export type CatalogItemDetail = ItemDetail | (P2gItemIdentity & Omit<ItemDetail, keyof LegacyItemIdentity>)
+
 export type ItemCatalogFilters = {
-  gameId: GameId
+  gameId: CatalogGameId
   targetSaveId?: number
+  targetItemId?: number
   query?: string
   rarity?: number
   maxStack?: number
   sourceKinds?: ItemSourceKind[]
   usageKinds?: ItemUsageKind[]
   includePlaceholders?: boolean
-  sort?: 'saveId' | 'name' | 'rarity'
+  sort?: 'saveId' | 'itemId' | 'name' | 'rarity'
   page?: number
   pageSize?: number
 }

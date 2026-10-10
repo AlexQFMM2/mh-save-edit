@@ -1,3 +1,5 @@
+import type { CatalogGameId, CatalogItemSummary, CatalogItemDetail } from '../api/catalog/types'
+import type { ItemTermFilters, ItemTermPage } from '../api/terminology/types'
 import type { GameId } from '../api/core/loadout'
 import type { ArmorCatalogFacets, ArmorCatalogFilters, ArmorDetail, ArmorIdentity, ArmorSetFilters, ArmorSetSummary, ArmorSummary, DecorationCatalogFacets, DecorationCatalogFilters, DecorationDetail, DecorationIdentity, DecorationSummary, HunterArtCatalogFacets, HunterArtCatalogFilters, HunterArtDetail, HunterArtIdentity, HunterArtSummary, ItemCatalogFilters, ItemDetail, ItemIdentity, ItemSummary, MonsterCatalogFacets, MonsterCatalogFilters, MonsterDetail, MonsterIdentity, MonsterSummary, PageResult, PalicoArmorDetail, PalicoArmorFilters, PalicoArmorSummary, PalicoCatalogFacets, PalicoEquipmentIdentity, PalicoSkillDetail, PalicoSkillFilters, PalicoSkillIdentity, PalicoSkillSummary, PalicoSupportMoveDetail, PalicoSupportMoveFilters, PalicoSupportMoveIdentity, PalicoSupportMoveSummary, PalicoTypeDetail, PalicoTypeIdentity, PalicoTypeSummary, PalicoWeaponDetail, PalicoWeaponFilters, PalicoWeaponSummary, QuestCatalogFacets, QuestCatalogFilters, QuestDetail, QuestIdentity, QuestSummary, SkillCatalogFacets, SkillCatalogFilters, SkillDetail, SkillIdentity, SkillSummary, WeaponCatalogFacets, WeaponCatalogFilters, WeaponDetail, WeaponIdentity, WeaponMotionCatalogResult, WeaponMotionFacets, WeaponMotionFilters, WeaponSummary, WeaponTreeResult } from '../api/catalog/types'
 import type { AutoLoadoutJob, AutoLoadoutJobDetail, AutoLoadoutJobFilters, AutoLoadoutJobState, AutoLoadoutJobSummary, AutoLoadoutRequest, CharmValidationResult, LoadoutArmorCandidate, LoadoutArmorFilters, LoadoutCalculationSnapshot, LoadoutCatalogSnapshot, LoadoutCharm, LoadoutDecoration, LoadoutDecorationFilters, LoadoutFacets, LoadoutPage, LoadoutRelicLookup, LoadoutWeaponCandidate, LoadoutWeaponFilters, LogicalLoadout } from '../api/loadout/types'
@@ -8,9 +10,12 @@ declare global {
     mhSaveEditor: {
       version: string
       catalog: {
-        searchItems(filters: ItemCatalogFilters): Promise<PageResult<ItemSummary>>
-        getItem(identity: ItemIdentity): Promise<ItemDetail | null>
-        getItemFacets(gameId: GameId): Promise<{ rarities: number[]; maxStacks: number[]; relations: { sourceKind: string; usageKind: string | null }[] }>
+        searchItemTerms(filters: ItemTermFilters): Promise<ItemTermPage>
+        searchItems(filters: ItemCatalogFilters & { gameId: GameId }): Promise<PageResult<ItemSummary>>
+        searchItems(filters: ItemCatalogFilters): Promise<PageResult<CatalogItemSummary>>
+        getItem(identity: {gameId: GameId; saveId: number}): Promise<ItemDetail | null>
+        getItem(identity: ItemIdentity): Promise<CatalogItemDetail | null>
+        getItemFacets(gameId: CatalogGameId): Promise<{ rarities: number[]; maxStacks: number[]; relations: { sourceKind: string; usageKind: string | null }[] }>
         searchDecorations(filters: DecorationCatalogFilters): Promise<PageResult<DecorationSummary>>
         getDecoration(identity: DecorationIdentity): Promise<DecorationDetail | null>
         getDecorationFacets(gameId: GameId): Promise<DecorationCatalogFacets>

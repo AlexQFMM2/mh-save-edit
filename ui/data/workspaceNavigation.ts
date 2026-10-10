@@ -12,6 +12,7 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import type { GameId } from '../../api/core/loadout'
+import type { WorkspaceGameId } from './gameVersions'
 
 export type WorkspaceNavItemId =
   | 'weapons'
@@ -43,7 +44,7 @@ export type WorkspaceNavItem = {
   description: string
   path: string
   icon: LucideIcon
-  supportedGames?: GameId[]
+  supportedGames?: WorkspaceGameId[]
 }
 
 export type WorkspaceNavGroup = {
@@ -102,10 +103,17 @@ export function getSaveEditSections(gameId: GameId): SaveEditSection[] {
   return saveEditSections.filter((section) => section.id !== 'palico' || gameId === 'mhgu')
 }
 
-export function workspacePath(gameId: GameId, path: string): string {
+export function workspacePath(gameId: WorkspaceGameId, path: string): string {
   return `/game/${gameId}/${path}`
 }
 
-export function getWorkspaceNavigation(gameId: GameId): WorkspaceNavGroup[] {
-  return workspaceNavigation.map(group=>({...group,items:group.items.filter(item=>!item.supportedGames||item.supportedGames.includes(gameId))})).filter(group=>group.items.length>0)
+export function getWorkspaceNavigation(gameId: WorkspaceGameId): WorkspaceNavGroup[] {
+  return workspaceNavigation.map(group => ({
+    ...group,
+    items: group.items
+      .filter(item => !item.supportedGames || item.supportedGames.includes(gameId))
+      .map(item => gameId === 'mhp2g' && item.id === 'skills'
+        ? { ...item, description: '查看发动效果与装备、装饰品来源' }
+        : item),
+  })).filter(group => group.items.length > 0)
 }

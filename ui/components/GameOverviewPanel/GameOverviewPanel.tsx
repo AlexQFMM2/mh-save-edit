@@ -1,6 +1,6 @@
 import { ArrowRight, BookOpen, FolderOpen, Hammer, Swords } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import type { GameVersionDefinition } from '../../data/gameVersions'
+import { hasRuntimeWorkspace, type GameVersionDefinition } from '../../data/gameVersions'
 import { PlatformBadgeList } from '../PlatformBadgeList/PlatformBadgeList'
 import './GameOverviewPanel.css'
 
@@ -15,6 +15,7 @@ type GameOverviewPanelProps = {
 }
 
 export function GameOverviewPanel({ game }: GameOverviewPanelProps) {
+  const available = hasRuntimeWorkspace(game)
 
   return (
     <article className="game-overview-panel">
@@ -22,12 +23,12 @@ export function GameOverviewPanel({ game }: GameOverviewPanelProps) {
         <div>
           <p className="game-overview-panel__eyebrow">当前游戏工作区</p>
           <h1 className="game-overview-panel__title">{game.title}</h1>
-          <p className="game-overview-panel__description">从这里进入资料、存档修改与配装工具。</p>
+          <p className="game-overview-panel__description">{available ? '从这里进入资料、存档修改与配装工具。' : 'P2G 道具图鉴已恢复；其他图鉴、存档修改与配装功能待接入。'}</p>
         </div>
         <button className="game-overview-panel__open-save" type="button" disabled>
           <FolderOpen size={17} aria-hidden="true" />
           打开存档
-          <span>即将支持</span>
+          <span>{available ? '即将支持' : '待接入'}</span>
         </button>
       </header>
 
@@ -44,7 +45,7 @@ export function GameOverviewPanel({ game }: GameOverviewPanelProps) {
               <span className="game-overview-panel__feature-icon" aria-hidden="true"><Icon size={20} /></span>
               <span className="game-overview-panel__feature-copy">
                 <strong>{item.title}</strong>
-                <small>{item.description}</small>
+                <small>{available ? item.description : item.path === 'catalog/items' ? '浏览道具资料、调合与获取来源。' : '待接入'}</small>
               </span>
               <ArrowRight className="game-overview-panel__feature-arrow" size={17} aria-hidden="true" />
             </Link>

@@ -1,17 +1,20 @@
 import { Outlet } from 'react-router-dom'
-import type { GameVersionDefinition } from '../../data/gameVersions'
+import type { GameVersionDefinition, RuntimeGameVersionDefinition } from '../../data/gameVersions'
 import './WorkspaceContent.css'
 
-export type WorkspaceOutletContext = {
+export type ShellOutletContext = {
   game: GameVersionDefinition
 }
+
+// Feature routes in App validate runtime support before rendering catalog/edit pages.
+export type WorkspaceOutletContext = { game: RuntimeGameVersionDefinition }
 
 type WorkspaceContentProps = {
   game: GameVersionDefinition
 }
 
 export function WorkspaceContent({ game }: WorkspaceContentProps) {
-  const context: WorkspaceOutletContext = { game }
+  const context: ShellOutletContext = { game }
 
   return (
     <section id="workspace-content" className="workspace-content" aria-label={`${game.title} 内容区域`} tabIndex={-1}>

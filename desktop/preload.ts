@@ -1,3 +1,5 @@
+import type { CatalogGameId } from '../api/catalog/types'
+import type { ItemTermFilters } from '../api/terminology/types'
 import { contextBridge, ipcRenderer } from 'electron'
 import { catalogChannels } from '../api/catalog/channels'
 import type { ArmorCatalogFilters, ArmorIdentity, ArmorSetFilters, DecorationCatalogFilters, DecorationIdentity, HunterArtCatalogFilters, HunterArtIdentity, ItemCatalogFilters, ItemIdentity, MonsterCatalogFilters, MonsterIdentity, PalicoArmorFilters, PalicoEquipmentIdentity, PalicoSkillFilters, PalicoSkillIdentity, PalicoSupportMoveFilters, PalicoSupportMoveIdentity, PalicoTypeIdentity, PalicoWeaponFilters, QuestCatalogFilters, QuestIdentity, SkillCatalogFilters, SkillIdentity, WeaponCatalogFilters, WeaponIdentity, WeaponMotionFilters } from '../api/catalog/types'
@@ -10,9 +12,10 @@ import type { SaveArmorAppearanceFilters, SaveBoxWriteTargetRequest, SaveCatalog
 contextBridge.exposeInMainWorld('mhSaveEditor', {
   version: '0.1.0',
   catalog: {
+    searchItemTerms: (filters: ItemTermFilters) => ipcRenderer.invoke(catalogChannels.searchItemTerms, filters),
     searchItems: (filters: ItemCatalogFilters) => ipcRenderer.invoke(catalogChannels.searchItems, filters),
     getItem: (identity: ItemIdentity) => ipcRenderer.invoke(catalogChannels.getItem, identity),
-    getItemFacets: (gameId: GameId) => ipcRenderer.invoke(catalogChannels.getItemFacets, gameId),
+    getItemFacets: (gameId: CatalogGameId) => ipcRenderer.invoke(catalogChannels.getItemFacets, gameId),
     searchDecorations: (filters: DecorationCatalogFilters) => ipcRenderer.invoke(catalogChannels.searchDecorations, filters),
     getDecoration: (identity: DecorationIdentity) => ipcRenderer.invoke(catalogChannels.getDecoration, identity),
     getDecorationFacets: (gameId: GameId) => ipcRenderer.invoke(catalogChannels.getDecorationFacets, gameId),

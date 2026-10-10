@@ -1,4 +1,5 @@
 export const catalogChannels = {
+  searchItemTerms: 'catalog:search-item-terms',
   searchItems: 'catalog:search-items',
   getItem: 'catalog:get-item',
   getItemFacets: 'catalog:get-item-facets',

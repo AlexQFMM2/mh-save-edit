@@ -3,6 +3,7 @@
 .item-list-row[aria-pressed="true"] { background: var(--global-theme-color-surface-row-selected); box-shadow: inset 3px 0 var(--global-theme-color-gold); }
 .item-list-row:focus-visible { position: relative; z-index: 1; outline: 2px solid var(--global-theme-color-focus-ring); outline-offset: -2px; }
 .item-list-row__identity { display: grid; min-width: 0; gap: var(--global-spacing-1); }
+.item-list-row__alias { color: var(--global-theme-color-text-secondary); font-size: var(--global-typography-font-size-small); overflow-wrap: anywhere; }
 .item-list-row__identity strong, .item-list-row__identity small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .item-list-row__identity strong { font-size: var(--global-typography-font-size-body); }
 .item-list-row__identity small { color: var(--global-theme-color-text-muted); font-size: var(--global-typography-font-size-small); }

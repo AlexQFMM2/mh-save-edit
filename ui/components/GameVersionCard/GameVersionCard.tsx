@@ -1,5 +1,5 @@
 import { motion, useReducedMotion } from 'motion/react'
-import type { GameVersionDefinition } from '../../data/gameVersions'
+import { hasRuntimeWorkspace, type GameVersionDefinition } from '../../data/gameVersions'
 import { assetUrl } from '../../lib/assetUrl'
 import { PlatformBadgeList } from '../PlatformBadgeList/PlatformBadgeList'
 import './GameVersionCard.css'
@@ -40,6 +40,7 @@ export function GameVersionCard({ game, selected, onSelect, onPreviewChange }: G
       <span className="game-version-card__copy">
         <span className="game-version-card__title">{game.title}</span>
         <span className="game-version-card__subtitle">{game.subtitle}</span>
+        {!hasRuntimeWorkspace(game) && <span className="game-version-card__status">道具图鉴 · 接入中</span>}
       </span>
     </motion.button>
   )

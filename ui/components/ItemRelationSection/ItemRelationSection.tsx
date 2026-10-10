@@ -1,12 +1,15 @@
+import { itemNumber } from '../../../api/catalog/itemIdentity'
 import { useId, useMemo, useState } from 'react'
 import { ChevronDown } from 'lucide-react'
-import type { ArmorRelationTarget, ItemRelation, MonsterRelationTarget, PalicoEquipmentRelationTarget, QuestRelationTarget, WeaponRelationTarget } from '../../../api/catalog/types'
+import type { ArmorRelationTarget, ItemRelation, ItemIdentity, MonsterRelationTarget, PalicoEquipmentRelationTarget, QuestRelationTarget, WeaponRelationTarget } from '../../../api/catalog/types'
 import './ItemRelationSection.css'
 
 type ItemRelationSectionProps = {
   title: string
   relations: ItemRelation[]
   onSelectItem: (saveId: number) => void
+  onSelectCatalogItem?: (identity: ItemIdentity) => void
+  onSelectPending?: (target: NonNullable<ItemRelation['pendingTarget']>) => void
   onSelectDecoration?: (saveId: number) => void
   onSelectWeapon?: (weapon: WeaponRelationTarget) => void
   onSelectArmor?: (armor: ArmorRelationTarget) => void
@@ -29,7 +32,7 @@ export function sortRelationsByProbability(relations: ItemRelation[]): ItemRelat
     .map(({ relation }) => relation)
 }
 
-export function ItemRelationSection({ title, relations, onSelectItem, onSelectDecoration, onSelectWeapon, onSelectArmor, onSelectMonster, onSelectQuest, onSelectPalicoEquipment }: ItemRelationSectionProps) {
+export function ItemRelationSection({ title, relations, onSelectItem, onSelectCatalogItem, onSelectPending, onSelectDecoration, onSelectWeapon, onSelectArmor, onSelectMonster, onSelectQuest, onSelectPalicoEquipment }: ItemRelationSectionProps) {
   const [expanded, setExpanded] = useState(false)
   const bodyId = useId()
   const sortedRelations = useMemo(() => sortRelationsByProbability(relations), [relations])
@@ -53,31 +56,33 @@ export function ItemRelationSection({ title, relations, onSelectItem, onSelectDe
       {expanded && (
         <ul id={bodyId} className="item-relation-section__body">
           {sortedRelations.map((relation) => (
-            <li key={relation.id}>
+            <li className="item-relation-section__row" key={relation.id}>
               <span className="item-relation-section__main">
-                {relation.usageKind === 'weapon' && onSelectWeapon && relation.relatedWeapon
-                  ? <button type="button" onClick={() => onSelectWeapon(relation.relatedWeapon!)}>{relationLabel(relation)}</button>
+                {relation.pendingTarget && onSelectPending
+                  ? <button className="item-relation-section__target" type="button" onClick={() => onSelectPending(relation.pendingTarget!)}>{relationLabel(relation)}</button>
+                  : relation.usageKind === 'weapon' && onSelectWeapon && relation.relatedWeapon
+                  ? <button className="item-relation-section__target" type="button" onClick={() => onSelectWeapon(relation.relatedWeapon!)}>{relationLabel(relation)}</button>
                   : relation.usageKind === 'armor' && onSelectArmor && relation.relatedArmor
-                  ? <button type="button" onClick={() => onSelectArmor(relation.relatedArmor!)}>{relationLabel(relation)}</button>
+                  ? <button className="item-relation-section__target" type="button" onClick={() => onSelectArmor(relation.relatedArmor!)}>{relationLabel(relation)}</button>
                   : relation.usageKind === 'decoration' && onSelectDecoration && relation.metadata.Target_Save_ID
-                  ? <button type="button" onClick={() => onSelectDecoration(Number(relation.metadata.Target_Save_ID))}>{relationLabel(relation)}</button>
+                  ? <button className="item-relation-section__target" type="button" onClick={() => onSelectDecoration(Number(relation.metadata.Target_Save_ID))}>{relationLabel(relation)}</button>
                   : relation.sourceKind === 'monster' && onSelectMonster && relation.relatedMonster
-                  ? <button type="button" onClick={() => onSelectMonster(relation.relatedMonster!)}>{relationLabel(relation)}</button>
+                  ? <button className="item-relation-section__target" type="button" onClick={() => onSelectMonster(relation.relatedMonster!)}>{relationLabel(relation)}</button>
                   : relation.sourceKind === 'quest' && onSelectQuest && relation.relatedQuest
-                  ? <button type="button" onClick={() => onSelectQuest(relation.relatedQuest!)}>{relationLabel(relation)}</button>
+                  ? <button className="item-relation-section__target" type="button" onClick={() => onSelectQuest(relation.relatedQuest!)}>{relationLabel(relation)}</button>
                   : relation.usageKind === 'palico-weapon' && onSelectPalicoEquipment && relation.relatedPalicoWeapon
-                  ? <button type="button" onClick={() => onSelectPalicoEquipment(relation.relatedPalicoWeapon!)}>{relationLabel(relation)}</button>
+                  ? <button className="item-relation-section__target" type="button" onClick={() => onSelectPalicoEquipment(relation.relatedPalicoWeapon!)}>{relationLabel(relation)}</button>
                   : relation.usageKind === 'palico-armor' && onSelectPalicoEquipment && relation.relatedPalicoArmor
-                  ? <button type="button" onClick={() => onSelectPalicoEquipment(relation.relatedPalicoArmor!)}>{relationLabel(relation)}</button>
+                  ? <button className="item-relation-section__target" type="button" onClick={() => onSelectPalicoEquipment(relation.relatedPalicoArmor!)}>{relationLabel(relation)}</button>
                   : <span>{relationLabel(relation)}</span>}
                 {relation.relatedItems.length > 0 && (
                   <span className="item-relation-section__links">
                     关联道具：
                     {relation.relatedItems.map((target) => (
                       <button
-                        key={target.saveId}
+                        className="item-relation-section__link" key={`${itemNumber(target)}-${target.nameCn}`}
                         type="button"
-                        onClick={() => onSelectItem(target.saveId)}
+                        onClick={() => { if (onSelectCatalogItem) onSelectCatalogItem(target); else if (target.gameId !== 'mhp2g') onSelectItem(target.saveId) }}
                       >
                         {target.nameCn}
                       </button>
@@ -85,9 +90,12 @@ export function ItemRelationSection({ title, relations, onSelectItem, onSelectDe
                   </span>
                 )}
               </span>
-              <small>
+              <small className="item-relation-section__values">
                 {relation.quantity != null ? `× ${relation.quantity}` : ''}
-                {relation.probability != null ? ` · ${relation.probability.toFixed(0)}%` : ''}
+                {relation.probability != null ? ` · ${relation.probability}%` : relation.metadata.evidence ? ' · 概率未知' : ''}
+                {relation.metadata.probabilitySource && ` · ${relation.metadata.probabilitySource}`}
+                {relation.metadata.details && <span className="item-relation-section__evidence">{relation.metadata.details}</span>}
+                {relation.metadata.evidence && <span className="item-relation-section__evidence">{relation.metadata.evidence}</span>}
               </small>
             </li>
           ))}

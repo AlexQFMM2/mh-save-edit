@@ -1,0 +1,12 @@
+.item-terminology { display: grid; grid-template-rows: auto auto minmax(0,1fr); gap: var(--global-spacing-4); height: 100%; min-height: 0; color: var(--global-theme-color-text-primary); }
+.item-terminology__intro { margin: 0; color: var(--global-theme-color-text-secondary); font-size: var(--global-typography-font-size-small); }
+.item-terminology__toolbar { display: flex; flex-wrap: wrap; gap: var(--global-spacing-4); }
+.item-terminology__search,.item-terminology__filter { display: flex; align-items: center; gap: var(--global-spacing-3); font-size: var(--global-typography-font-size-small); }
+.item-terminology__search { flex: 1 1 250px; }
+.item-terminology__label { flex-shrink: 0; white-space: nowrap; }
+.item-terminology__input { width: 100%; min-width: 0; min-height: 40px; padding: var(--global-spacing-2) var(--global-spacing-3); border: var(--global-border-width) solid var(--global-theme-color-border-strong); border-radius: var(--global-radius-md); background: var(--global-theme-color-surface-inset); color: var(--global-theme-color-text-primary); font: inherit; }
+.item-terminology__input:focus-visible,.item-terminology__retry:focus-visible { outline: 2px solid var(--global-theme-color-focus-ring); outline-offset: 2px; }
+.item-terminology__results { min-height: 0; overflow-y: auto; overscroll-behavior: contain; display: flex; flex-direction: column; gap: var(--global-spacing-3); padding: var(--global-spacing-1); }
+.item-terminology__state { color: var(--global-theme-color-text-secondary); font-size: var(--global-typography-font-size-body); }
+.item-terminology__count { margin-right: auto; color: var(--global-theme-color-data); font-size: var(--global-typography-font-size-small); }
+.item-terminology__retry { margin: var(--global-spacing-3); padding: var(--global-spacing-2) var(--global-spacing-3); border: var(--global-border-width) solid var(--global-theme-color-border); border-radius: var(--global-radius-md); color: var(--global-theme-color-text-primary); background: var(--global-theme-color-surface-raised); font: inherit; cursor: pointer; }

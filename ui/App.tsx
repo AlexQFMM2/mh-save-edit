@@ -1,10 +1,12 @@
 import { lazy, Suspense } from 'react'
-import { HashRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { HashRouter, Navigate, Route, Routes, useOutletContext } from 'react-router-dom'
 import { HomePage } from './pages/HomePage/HomePage'
 import { GameHomePage } from './pages/GameHomePage/GameHomePage'
 import { GameOverviewPage } from './pages/GameOverviewPage/GameOverviewPage'
 import { WorkspaceFeaturePage } from './pages/WorkspaceFeaturePage/WorkspaceFeaturePage'
 import { workspaceNavigation } from './data/workspaceNavigation'
+import { hasRuntimeWorkspace } from './data/gameVersions'
+import type { ShellOutletContext } from './components/WorkspaceContent/WorkspaceContent'
 import { SaveEditorPage } from './pages/SaveEditorPage/SaveEditorPage'
 import { SaveSessionProvider } from './components/SaveSessionProvider/SaveSessionProvider'
 import { ItemCatalogPage } from './pages/ItemCatalogPage/ItemCatalogPage'
@@ -21,6 +23,9 @@ const PalicoSupportMovesCatalogPage=lazy(async()=>({default:(await import('./pag
 const PalicoSkillsCatalogPage=lazy(async()=>({default:(await import('./pages/PalicoSkillsCatalogPage/PalicoSkillsCatalogPage')).PalicoSkillsCatalogPage}))
 const PalicoEquipmentCatalogPage=lazy(async()=>({default:(await import('./pages/PalicoEquipmentCatalogPage/PalicoEquipmentCatalogPage')).PalicoEquipmentCatalogPage}))
 function Feature({item}:{item:typeof workspaceNavigation[number]['items'][number]}){
+  const {game}=useOutletContext<ShellOutletContext>()
+  if(item.supportedGames && !item.supportedGames.includes(game.id))return <Navigate to={`/game/${game.id}/overview`} replace/>
+  if(!hasRuntimeWorkspace(game) && item.id!=='items')return <WorkspaceFeaturePage pageId={item.id}/>
   if(item.id==='save-editor')return <SaveEditorPage/>
   if(item.id==='items')return <ItemCatalogPage/>
   if(item.id==='decorations')return <DecorationCatalogPage/>

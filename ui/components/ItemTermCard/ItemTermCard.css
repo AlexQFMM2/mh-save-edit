@@ -1,0 +1,13 @@
+.item-term-card { padding: var(--global-spacing-4); border: var(--global-border-width) solid var(--global-theme-color-border); border-radius: var(--global-radius-md); background: var(--global-theme-color-surface); overflow-wrap: anywhere; }
+.item-term-card__header { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--global-spacing-3); }
+.item-term-card__name { margin: 0; color: var(--global-theme-color-text-primary); font-size: var(--global-typography-font-size-body); }
+.item-term-card__source { color: var(--global-theme-color-accent); font-size: var(--global-typography-font-size-small); }
+.item-term-card__japanese,.item-term-card__aliases,.item-term-card__pending { margin: var(--global-spacing-2) 0; color: var(--global-theme-color-text-secondary); font-size: var(--global-typography-font-size-small); }
+.item-term-card__members { display: grid; grid-template-columns: repeat(auto-fit,minmax(180px,1fr)); gap: var(--global-spacing-2); margin: var(--global-spacing-3) 0; }
+.item-term-card__member { display: flex; gap: var(--global-spacing-3); margin: 0; color: var(--global-theme-color-text-primary); font-size: var(--global-typography-font-size-small); }
+.item-term-card__game { color: var(--global-theme-color-text-secondary); }
+.item-term-card__evidence { margin-top: var(--global-spacing-3); color: var(--global-theme-color-text-secondary); font-size: var(--global-typography-font-size-small); }
+.item-term-card__evidence-toggle { cursor: pointer; }
+.item-term-card__evidence-toggle:focus-visible { outline: 2px solid var(--global-theme-color-focus-ring); outline-offset: 2px; }
+.item-term-card__sources { padding-left: var(--global-spacing-5); margin-bottom: 0; }
+.item-term-card__source-row { margin-top: var(--global-spacing-2); }

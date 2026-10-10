@@ -25,7 +25,7 @@ export function WorkspaceDrawer({ title, children, footer, busy = false, classNa
       if (event.defaultPrevented) return
       if (event.key === 'Escape' && !values.current.busy) { event.preventDefault(); values.current.onEscape(); return }
       if (event.key !== 'Tab') return
-      const focusable = [...(panel.current?.querySelectorAll<HTMLElement>('button:not(:disabled),input:not(:disabled),select:not(:disabled),textarea:not(:disabled),[href],[tabindex]:not([tabindex="-1"])') ?? [])]
+      const focusable = [...(panel.current?.querySelectorAll<HTMLElement>('button:not(:disabled),input:not(:disabled),select:not(:disabled),textarea:not(:disabled),summary,[href],[tabindex]:not([tabindex="-1"])') ?? [])]
       if (!focusable.length) return
       if (event.shiftKey && document.activeElement === focusable[0]) { event.preventDefault(); focusable.at(-1)?.focus() }
       else if (!event.shiftKey && document.activeElement === focusable.at(-1)) { event.preventDefault(); focusable[0].focus() }

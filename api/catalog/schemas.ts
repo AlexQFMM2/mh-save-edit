@@ -1,20 +1,31 @@
 import { z } from 'zod'
 
 export const gameIdSchema = z.enum(['mh3g', 'mh4g', 'mhgu'])
-export const itemIdentitySchema = z.object({ gameId: gameIdSchema, saveId: z.number().int().min(0).max(65535) }).strict()
-export const itemCatalogFiltersSchema = z.object({
-  gameId: gameIdSchema,
-  targetSaveId: z.number().int().min(0).max(65535).optional(),
+export const catalogGameIdSchema = z.enum(['mh3g', 'mh4g', 'mhgu', 'mhp2g'])
+export const itemTermFiltersSchema = z.object({
   query: z.string().trim().max(120).optional(),
-  rarity: z.number().int().min(0).max(20).optional(),
-  maxStack: z.number().int().min(0).max(9999).optional(),
-  sourceKinds: z.array(z.enum(['combination', 'monster', 'location', 'quest', 'exchange'])).max(5).optional(),
-  usageKinds: z.array(z.enum(['weapon', 'armor', 'decoration', 'palico-weapon', 'palico-armor', 'kinsect'])).max(6).optional(),
-  includePlaceholders: z.boolean().optional(),
-  sort: z.enum(['saveId', 'name', 'rarity']).optional(),
+  gameId: catalogGameIdSchema.optional(),
   page: z.number().int().min(1).max(100000).optional(),
   pageSize: z.number().int().min(1).max(100).optional(),
 }).strict()
+const legacyItemIdentitySchema = z.object({ gameId: gameIdSchema, saveId: z.number().int().min(0).max(65535) }).strict()
+export const itemIdentitySchema = z.union([legacyItemIdentitySchema, z.object({gameId:z.literal('mhp2g'),itemId:z.number().int().min(0).max(65535)}).strict()])
+export const itemCatalogFiltersSchema = z.object({
+  gameId: catalogGameIdSchema,
+  targetSaveId: z.number().int().min(0).max(65535).optional(),
+  targetItemId: z.number().int().min(0).max(65535).optional(),
+  query: z.string().trim().max(120).optional(),
+  rarity: z.number().int().min(0).max(20).optional(),
+  maxStack: z.number().int().min(0).max(9999).optional(),
+  sourceKinds: z.array(z.enum(['combination', 'monster', 'location', 'quest', 'exchange', 'shop'])).max(6).optional(),
+  usageKinds: z.array(z.enum(['weapon', 'armor', 'decoration', 'palico-weapon', 'palico-armor', 'kinsect'])).max(6).optional(),
+  includePlaceholders: z.boolean().optional(),
+  sort: z.enum(['saveId', 'itemId', 'name', 'rarity']).optional(),
+  page: z.number().int().min(1).max(100000).optional(),
+  pageSize: z.number().int().min(1).max(100).optional(),
+}).strict().superRefine((value, context) => {
+  if ((value.gameId === 'mhp2g' && value.targetSaveId != null) || (value.gameId !== 'mhp2g' && value.targetItemId != null)) context.addIssue({ code: z.ZodIssueCode.custom, message: '道具身份与游戏不匹配' })
+})
 export const decorationIdentitySchema = z.object({ gameId: gameIdSchema, saveId: z.number().int().min(0).max(65535) }).strict()
 export const decorationCatalogFiltersSchema = z.object({
   gameId: gameIdSchema,
