@@ -9,8 +9,8 @@ export type DecorationIdentity = { gameId: GameId; saveId: number }
 export type WeaponIdentity = { gameId: GameId; weaponKey: string }
 export type ArmorIdentity = { gameId: GameId; dexId: number }
 export type SkillIdentity = { gameId: GameId; skillId: number }
-export type MonsterIdentity = { gameId: GameId; monsterId: number }
-export type QuestIdentity = { gameId: GameId; questKey: string }
+export type MonsterIdentity = { gameId: CatalogGameId; monsterId: number }
+export type QuestIdentity = { gameId: CatalogGameId; questKey: string }
 export type HunterArtIdentity = { gameId: 'mhgu'; hunterArtId: number }
 export type ArmorPartId = 'head' | 'chest' | 'arms' | 'waist' | 'legs'
 export type ArmorCombatType = 'both' | 'blademaster' | 'gunner'
@@ -74,6 +74,7 @@ export type DecorationCatalogFacets = {
 }
 
 export type ItemSummary = LegacyItemIdentity & {
+  matchReason?: string
   terminology?: ItemTermLabel
   dexId: number | null
   nameCn: string
@@ -110,15 +111,16 @@ export type QuestAvailability = 'common' | 'mhgu' | 'mhxx'
 export type QuestKeyStatus = 'normal' | 'key' | 'urgent'
 export type QuestDetailTab = 'info' | 'rewards' | 'unlocks'
 export type QuestRank = 'low' | 'high' | 'g' | 'other'
-export type QuestSearchMatchKind = 'name' | 'id' | 'goal' | 'subGoal' | 'map' | 'monster' | 'reward' | 'hunterArt' | 'special' | 'relatedQuest'
+export type QuestSearchMatchKind = 'name' | 'id' | 'goal' | 'subGoal' | 'map' | 'monster' | 'reward' | 'supply' | 'hunterArt' | 'special' | 'relatedQuest'
 export type MonsterCatalogTab = 'weakness' | 'ailments' | 'drops' | 'quests'
 export type MonsterCatalogFilters = {
-  gameId: GameId
+  gameId: CatalogGameId
   targetMonsterId?: number
   query?: string
   includePlaceholders?: boolean
 }
 export type MonsterSummary = MonsterIdentity & {
+  matchReason?: string
   nameCn: string
   nameEn: string
   nameJp: string
@@ -154,16 +156,18 @@ export type MonsterAilment = {
   toleranceMax: number | null
   duration: number | null
   damage: number | null
+  applicable?: boolean | null
 }
 export type MonsterTrap = {
   id: number
   trapId: number
   nameCn: string
   nameEn: string
-  isEffective: boolean
+  isEffective: boolean | null
   duration: number | null
   durationEnraged: number | null
   durationFatigued: number | null
+  noteJp?: string
 }
 export type MonsterDrop = {
   id: number
@@ -173,8 +177,8 @@ export type MonsterDrop = {
   methodId: number
   methodNameCn: string
   methodNameEn: string
-  item: ItemRelationTarget
-  quantity: number
+  item: ItemIdentity & { nameCn: string; nameEn: string }
+  quantity: number | null
   probability: number
 }
 export type QuestMonsterTarget = MonsterRelationTarget & { slot: number; sourceKind: string }
@@ -233,9 +237,10 @@ export type QuestReward = {
   id: number
   groupKey: string
   region: string
-  item: ItemRelationTarget
-  quantity: number
-  probability: number
+  item: ItemIdentity & { nameCn: string; nameEn: string }
+  quantity: number | null
+  probability: number | null
+  guaranteed?: boolean | null
 }
 export type EvidenceStatus = 'verified' | 'wiki_only' | 'conflict'
 export type QuestSpecialReward = {
@@ -256,6 +261,7 @@ export type QuestRelation = {
   evidenceStatus: EvidenceStatus
 }
 export type QuestDetail = MonsterQuestAppearance & {
+  p2g?: import('./p2gQuestTypes').P2gQuestData
   keyStatus: QuestKeyStatus
   systemKey: string
   systemNameCn: string
@@ -266,7 +272,7 @@ export type QuestDetail = MonsterQuestAppearance & {
   relations: QuestRelation[]
 }
 export type QuestCatalogFilters = {
-  gameId: GameId
+  gameId: CatalogGameId
   targetQuestKey?: string
   query?: string
   system?: string
@@ -281,11 +287,11 @@ export type QuestCatalogFilters = {
   pageSize?: number
 }
 export type QuestCatalogFacets = {
-  systems: { key: string; nameCn: string }[]
-  levels: { id: number; nameCn: string }[]
+  systems: { key: string; nameCn: string; keywords?: string }[]
+  levels: { id: number; nameCn: string; keywords?: string }[]
   ranks: QuestRank[]
-  questTypes: { id: number; nameCn: string }[]
-  locations: { id: number; nameCn: string }[]
+  questTypes: { id: number; nameCn: string; keywords?: string }[]
+  locations: { id: number; nameCn: string; keywords?: string }[]
   availabilities: QuestAvailability[]
 }
 
@@ -354,6 +360,16 @@ export type MonsterDetail = MonsterSummary & {
   traps: MonsterTrap[]
   drops: MonsterDrop[]
   quests: MonsterQuestAppearance[]
+  p2gQuests?: P2gMonsterQuest[]
+}
+export type P2gMonsterQuest = {
+  questKey: string
+  nameCn?: string
+  sourceKey?: string
+  sourceNote?: string
+  linked?: boolean
+  nameJp: string
+  fields: { label: string; value: string }[]
 }
 export type MonsterCatalogFacets = {
   monsterCount: number

@@ -50,7 +50,7 @@ describe('quest and Hunter Art catalog UI', () => {
     const onArt = vi.fn()
     const { rerender } = render(<QuestDetailPanel quest={quest} loading={false} tab="rewards" onSelectMonster={() => undefined} onSelectItem={onItem} onSelectHunterArt={onArt} />)
     fireEvent.click(screen.getByRole('button', { name: '测试素材' }))
-    expect(onItem).toHaveBeenCalledWith(10)
+    expect(onItem).toHaveBeenCalledWith(expect.objectContaining({gameId:'mhgu',saveId:10}))
     fireEvent.click(screen.getByRole('button', { name: /碎月斩Ⅱ/ }))
     expect(onArt).toHaveBeenCalledWith(21)
     rerender(<QuestDetailPanel quest={quest} loading={false} tab="unlocks" onSelectMonster={() => undefined} onSelectHunterArt={onArt} />)

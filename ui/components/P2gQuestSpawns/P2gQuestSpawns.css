@@ -1,0 +1,5 @@
+.p2g-quest-spawns { display: grid; gap: 12px; }
+.p2g-quest-spawns__group { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 0; font-size: var(--global-typography-font-size-small); }
+.p2g-quest-spawns__link { padding: 3px 6px; border: 0; background: transparent; color: var(--global-theme-color-text-primary); cursor: pointer; font-size: var(--global-typography-font-size-body); text-decoration: underline; }
+.p2g-quest-spawns__data { color: var(--global-theme-color-data); }
+.p2g-quest-spawns__note, .p2g-quest-spawns__details { color: var(--global-theme-color-text-secondary); font-size: var(--global-typography-font-size-small); line-height: 1.7; }

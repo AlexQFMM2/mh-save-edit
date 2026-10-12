@@ -1,0 +1,7 @@
+.p2g-quest-individuals { color: var(--global-theme-color-text-secondary); font-size: var(--global-typography-font-size-small); }
+.p2g-quest-individuals__entry { padding-block: 10px; }
+.p2g-quest-individuals__fields { display: flex; flex-wrap: wrap; gap: 12px; }
+.p2g-quest-individuals__field { display: grid; gap: 4px; }
+.p2g-quest-individuals__data { margin: 0; white-space: pre-wrap; color: var(--global-theme-color-data); }
+.p2g-quest-individuals__link { padding: 3px; border: 0; background: transparent; color: var(--global-theme-color-text-primary); font-size: var(--global-typography-font-size-body); text-decoration: underline; cursor: pointer; }
+.p2g-quest-individuals__note { color: var(--global-theme-color-text-muted); }

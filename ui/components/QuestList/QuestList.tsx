@@ -29,7 +29,7 @@ export function QuestList({ items, selectedKey, loading, error, onSelect }: { it
                     </th>
                     <td className="quest-list__cell">{item.questTypeNameCn}</td>
                     <td className="quest-list__cell">{item.locationNameCn}</td>
-                    <td className="quest-list__cell quest-list__goal" title={item.goalCn}>{item.goalCn || '—'}</td>
+                    <td className="quest-list__cell quest-list__goal" title={item.goalCn}>{item.goalCn || (item.gameId === 'mhp2g' ? '未收录' : '—')}</td>
                     <td className="quest-list__cell">{badge && <span className={`quest-list__badge quest-list__badge--${item.keyStatus}`}>{badge}</span>}</td>
                   </tr>
                 )

@@ -1,0 +1,3 @@
+.p2g-quest-info { display: grid; gap: 16px; }
+.p2g-quest-info__text { margin: 6px 0; white-space: pre-wrap; color: var(--global-theme-color-text-secondary); font-size: var(--global-typography-font-size-body); }
+.p2g-quest-info__original, .p2g-quest-info__source { color: var(--global-theme-color-text-muted); font-size: var(--global-typography-font-size-small); }

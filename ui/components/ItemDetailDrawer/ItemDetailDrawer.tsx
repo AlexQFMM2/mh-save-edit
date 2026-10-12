@@ -1,5 +1,6 @@
 import { itemIdentity, itemNumber } from '../../../api/catalog/itemIdentity'
 import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import type { CatalogItemDetail, ItemIdentity } from '../../../api/catalog/types'
 import type { GameId } from '../../../api/core/loadout'
@@ -29,7 +30,7 @@ export function ItemDetailDrawer(props: Props) {
   }, [gameId, id])
   if (!identity) return null
   const go = (path: string) => { onClose(); navigate(path) }
-  return <div className="item-detail-drawer"><DetailDrawer title="关联道具" onClose={onClose}><ItemDetailPanel item={item} loading={loading} error={error} allowCatalogWrite={false}
+  const content = <div className="item-detail-drawer"><DetailDrawer title="关联道具" onClose={onClose}><ItemDetailPanel item={item} loading={loading} error={error} allowCatalogWrite={false}
     onSelectCatalogItem={(target) => go(`/game/${target.gameId}/catalog/items?target=${itemNumber(target)}&item=${itemNumber(target)}`)}
     onSelectPending={(target) => {
       const paths = { weapon: 'weapons', armor: 'armor', decoration: 'decorations', monster: 'monsters', quest: 'quests' }
@@ -42,4 +43,5 @@ export function ItemDetailDrawer(props: Props) {
     onSelectQuest={(quest) => go(`/game/${gameId}/catalog/quests?target=${encodeURIComponent(quest.questKey)}&quest=${encodeURIComponent(quest.questKey)}`)}
     onSelectPalicoEquipment={(equipment) => go(`/game/mhgu/catalog/palico/equipment?view=${equipment.kind === 'weapon' ? 'weapon' : 'armor'}&target=${equipment.equipmentId}&equipment=${equipment.equipmentId}`)}
   /></DetailDrawer></div>
+  return gameId === 'mhp2g' ? createPortal(content, document.body) : content
 }

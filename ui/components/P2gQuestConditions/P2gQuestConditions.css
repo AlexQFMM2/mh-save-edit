@@ -1,0 +1,6 @@
+.p2g-quest-conditions { color: var(--global-theme-color-text-secondary); font-size: var(--global-typography-font-size-body); }
+.p2g-quest-conditions__group { margin: 8px 0; padding-inline-start: 12px; border-inline-start: 1px solid var(--global-theme-color-text-muted); }
+.p2g-quest-conditions__label { cursor: pointer; color: var(--global-theme-color-text-primary); }
+.p2g-quest-conditions__entry { padding: 5px 0; line-height: 1.6; }
+.p2g-quest-conditions__link { border: 0; background: transparent; color: var(--global-theme-color-text-primary); text-decoration: underline; cursor: pointer; font-size: var(--global-typography-font-size-body); }
+.p2g-quest-conditions__note { font-size: var(--global-typography-font-size-small); color: var(--global-theme-color-text-muted); }

@@ -22,7 +22,7 @@ export function normalizeCatalogSearch(value: string): string {
 
 const matchReasons: Record<QuestSearchMatchKind, string> = {
   name: '任务名称', id: '任务 ID', goal: '主目标', subGoal: '副目标', map: '地图', monster: '出现怪物',
-  reward: '报酬道具', hunterArt: '解锁狩技', special: '特殊奖励', relatedQuest: '关联任务',
+  reward: '报酬道具', supply: '支给道具', hunterArt: '解锁狩技', special: '特殊奖励', relatedQuest: '关联任务',
 }
 
 const hunterArtMatchReasons: Record<string, string> = {
@@ -57,10 +57,11 @@ export class QuestCatalogRepository {
   }
 
   getQuest(identity: QuestIdentity): QuestDetail | null {
+    if(identity.gameId==='mhp2g')return null
     const base = this.monsters.getQuest(identity)
     if (!base) return null
     const row = this.db.prepare('SELECT * FROM catalog_quests WHERE game_id=? AND quest_key=?').get(identity.gameId,identity.questKey) as Row
-    const rewards = (this.db.prepare('SELECT * FROM catalog_quest_rewards WHERE game_id=? AND quest_key=? ORDER BY group_key,probability DESC,row_id').all(identity.gameId,identity.questKey) as Row[]).map((value):QuestReward=>({id:int(value.row_id),groupKey:String(value.group_key),region:String(value.region),item:{gameId:identity.gameId,saveId:int(value.item_save_id),nameCn:String(value.item_name_cn),nameEn:String(value.item_name_en)},quantity:int(value.quantity),probability:Number(value.probability)*100}))
+    const rewards = (this.db.prepare('SELECT * FROM catalog_quest_rewards WHERE game_id=? AND quest_key=? ORDER BY group_key,probability DESC,row_id').all(identity.gameId,identity.questKey) as Row[]).map((value):QuestReward=>({id:int(value.row_id),groupKey:String(value.group_key),region:String(value.region),item:{gameId:identity.gameId as GameId,saveId:int(value.item_save_id),nameCn:String(value.item_name_cn),nameEn:String(value.item_name_en)},quantity:int(value.quantity),probability:Number(value.probability)*100}))
     const specialRewards = (this.db.prepare(`SELECT s.*,a.name_cn art_name_cn,a.name_en art_name_en FROM catalog_quest_special_rewards s LEFT JOIN catalog_hunter_arts a ON a.game_id=s.game_id AND a.hunter_art_id=s.hunter_art_id WHERE s.game_id=? AND s.quest_key=? AND s.evidence_status!='conflict' ORDER BY s.row_id`).all(identity.gameId,identity.questKey) as Row[]).map((value):QuestSpecialReward=>({id:int(value.row_id),kind:String(value.reward_kind),nameCn:String(value.name_cn),nameEn:String(value.name_en),nameJp:String(value.name_jp),hunterArt:value.hunter_art_id==null?null:{hunterArtId:int(value.hunter_art_id),nameCn:String(value.art_name_cn),nameEn:String(value.art_name_en)},evidenceStatus:String(value.evidence_status) as EvidenceStatus}))
     const relations = this.relations(identity)
     return {...base,keyStatus:String(row.key_status) as QuestKeyStatus,systemKey:String(row.system_key),systemNameCn:String(row.system_name_cn),rank:String(row.rank_key) as QuestRank,star:nullableInt(row.star),rewards,specialRewards,relations}

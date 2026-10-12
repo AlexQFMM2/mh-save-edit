@@ -1,0 +1,9 @@
+.p2g-monster-quest-drawer { height: 100%; padding: var(--global-spacing-4); overflow: auto; overscroll-behavior: contain; }
+.p2g-monster-quest-drawer__title { margin: 0; color: var(--global-theme-color-text-primary); font-size: var(--global-typography-font-size-title); }
+.p2g-monster-quest-drawer__note { color: var(--global-theme-color-text-secondary); font-size: var(--global-typography-font-size-small); }
+.p2g-monster-quest-drawer__monster { padding: var(--global-spacing-2); border: var(--global-border-width) solid var(--global-theme-color-border-subtle); border-radius: var(--global-radius-sm); background: var(--global-theme-color-surface); color: var(--global-theme-color-accent); font: inherit; cursor: pointer; }
+.p2g-monster-quest-drawer__monster:focus-visible { outline: 2px solid var(--global-theme-color-focus-ring); outline-offset: 2px; }
+.p2g-monster-quest-drawer__fields { display: grid; gap: var(--global-spacing-2); }
+.p2g-monster-quest-drawer__field { display: grid; grid-template-columns: minmax(110px, .5fr) minmax(0, 1fr); gap: var(--global-spacing-3); padding: var(--global-spacing-2); border-bottom: var(--global-border-width) solid var(--global-theme-color-border-row); }
+.p2g-monster-quest-drawer__label { color: var(--global-theme-color-text-secondary); }
+.p2g-monster-quest-drawer__value { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; color: var(--global-theme-color-data); }

@@ -116,9 +116,9 @@ export function ItemCatalogPage() {
     <DecorationDetailDrawer gameId={game.id} decorationSaveId={decorationDrawerId} onClose={() => setDecorationDrawerId(null)} />
     <WeaponDetailDrawer gameId={game.id} weaponKey={weaponDrawerKey} onClose={() => setWeaponDrawerKey(null)} />
     <ArmorDetailDrawer gameId={game.id} armorDexId={armorDrawerId} onClose={() => setArmorDrawerId(null)} />
-    <MonsterDetailDrawer gameId={game.id} monsterId={monsterDrawerId} onClose={() => setMonsterDrawerId(null)} />
-    <QuestDetailDrawer gameId={game.id} questKey={questDrawerKey} onClose={() => setQuestDrawerKey(null)} />
     </>}
+    <QuestDetailDrawer gameId={game.id} questKey={questDrawerKey} onClose={() => setQuestDrawerKey(null)} />
+    <MonsterDetailDrawer gameId={game.id} monsterId={monsterDrawerId} onClose={() => setMonsterDrawerId(null)} />
     <ItemDetailDrawer identity={itemDrawerIdentity} onClose={() => setItemDrawerIdentity(null)} />
     {pendingTarget && <DetailDrawer title="关联资料" onClose={() => setPendingTarget(null)}><CatalogPendingDetail target={pendingTarget} /></DetailDrawer>}
     <PalicoEquipmentDetailDrawer kind={palicoDrawer?.kind ?? 'weapon'} equipmentId={palicoDrawer?.id ?? null} onClose={() => setPalicoDrawer(null)} />

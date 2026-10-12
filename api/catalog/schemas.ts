@@ -99,17 +99,20 @@ export const skillCatalogFiltersSchema = z.object({
   page: z.number().int().min(1).max(100000).optional(),
   pageSize: z.number().int().min(1).max(100).optional(),
 }).strict()
-export const monsterIdentitySchema = z.object({ gameId: gameIdSchema, monsterId: z.number().int().min(1).max(65535) }).strict()
+export const monsterIdentitySchema = z.object({ gameId: catalogGameIdSchema, monsterId: z.number().int().min(1).max(65535) }).strict()
 export const monsterCatalogFiltersSchema = z.object({
-  gameId: gameIdSchema,
+  gameId: catalogGameIdSchema,
   targetMonsterId: z.number().int().min(1).max(65535).optional(),
   query: z.string().trim().max(120).optional(),
   includePlaceholders: z.boolean().optional(),
 }).strict()
-export const questKeySchema = z.string().trim().min(5).max(32).regex(/^(?:dex:\d+|mhgu:q\d{7})$/)
-export const questIdentitySchema = z.object({ gameId: gameIdSchema, questKey: questKeySchema }).strict()
+export const questKeySchema = z.string().trim().min(5).max(32).regex(/^(?:dex:\d+|mhgu:q\d{7}|mhp2g:q[1-9]\d{0,5}|wiki:\d+:\d+:\d+)$/)
+const questKeyMatchesGame = (game: string, key: string) => game === 'mhp2g' ? /^(mhp2g:|wiki:)/.test(key) : game === 'mhgu' ? /^(dex:|mhgu:)/.test(key) : key.startsWith('dex:')
+export const questIdentitySchema = z.object({ gameId: catalogGameIdSchema, questKey: questKeySchema }).strict().superRefine((value, context) => {
+  if (!questKeyMatchesGame(value.gameId, value.questKey)) context.addIssue({code:z.ZodIssueCode.custom,path:['questKey'],message:'任务身份与游戏不匹配'})
+})
 export const questCatalogFiltersSchema = z.object({
-  gameId: gameIdSchema,
+  gameId: catalogGameIdSchema,
   targetQuestKey: questKeySchema.optional(),
   query: z.string().trim().max(120).optional(),
   system: z.string().trim().min(1).max(32).regex(/^[a-z-]+$/).optional(),
@@ -122,7 +125,9 @@ export const questCatalogFiltersSchema = z.object({
   includePlaceholders: z.boolean().optional(),
   page: z.number().int().min(1).max(100000).optional(),
   pageSize: z.number().int().min(1).max(100).optional(),
-}).strict()
+}).strict().superRefine((value, context) => {
+  if (value.targetQuestKey && !questKeyMatchesGame(value.gameId,value.targetQuestKey)) context.addIssue({code:z.ZodIssueCode.custom,path:['targetQuestKey'],message:'任务身份与游戏不匹配'})
+})
 export const hunterArtIdentitySchema = z.object({ gameId: z.literal('mhgu'), hunterArtId: z.number().int().min(0).max(190) }).strict()
 export const hunterArtCatalogFiltersSchema = z.object({
   gameId: gameIdSchema,

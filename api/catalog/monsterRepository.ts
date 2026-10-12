@@ -37,6 +37,8 @@ export class MonsterCatalogRepository {
   }
 
   getMonster(identity: MonsterIdentity): MonsterDetail | null {
+    if (identity.gameId === 'mhp2g') throw new Error('P2G requires its native monster repository')
+    const gameId = identity.gameId
     const monster = this.db.prepare('SELECT * FROM catalog_monsters WHERE game_id=? AND monster_id=?').get(identity.gameId, identity.monsterId) as Row | undefined
     if (!monster) return null
     const weakness = (this.db.prepare('SELECT * FROM catalog_monster_weakness WHERE game_id=? AND monster_id=? ORDER BY part_order,row_id').all(identity.gameId, identity.monsterId) as Row[]).map(toWeakness)
@@ -45,7 +47,7 @@ export class MonsterCatalogRepository {
     const drops = (this.db.prepare('SELECT * FROM catalog_monster_drops WHERE game_id=? AND monster_id=? ORDER BY rank_id,drop_type_id,probability DESC,row_id').all(identity.gameId, identity.monsterId) as Row[]).map((row): MonsterDrop => ({
       id: int(row.row_id), rankId: int(row.rank_id), rankNameCn: String(row.rank_name_cn), rankNameEn: String(row.rank_name_en),
       methodId: int(row.drop_type_id), methodNameCn: String(row.method_name_cn), methodNameEn: String(row.method_name_en),
-      item: { gameId: identity.gameId, saveId: int(row.item_save_id), nameCn: String(row.item_name_cn), nameEn: String(row.item_name_en) },
+      item: { gameId, saveId: int(row.item_save_id), nameCn: String(row.item_name_cn), nameEn: String(row.item_name_en) },
       quantity: int(row.quantity), probability: Number(row.probability) * 100,
     }))
     const questRows = this.db.prepare(`SELECT DISTINCT q.* FROM catalog_quests q JOIN catalog_quest_targets t ON t.game_id=q.game_id AND t.quest_key=q.quest_key WHERE t.game_id=? AND t.monster_id=? ORDER BY q.level_id,q.dex_id,q.quest_key`).all(identity.gameId, identity.monsterId) as Row[]
@@ -61,6 +63,7 @@ export class MonsterCatalogRepository {
   }
 
   getQuest(identity: QuestIdentity): MonsterQuestAppearance | null {
+    if(identity.gameId==='mhp2g')return null
     const row = this.db.prepare('SELECT * FROM catalog_quests WHERE game_id=? AND quest_key=?').get(identity.gameId, identity.questKey) as Row | undefined
     return row ? this.decorateQuests(identity.gameId, [row])[0] : null
   }

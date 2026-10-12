@@ -8,6 +8,14 @@ import { createP2gSource } from './fixtures/p2gCatalogSource.mjs'
 import { buildCatalog } from '../tools/build_mhp2g_catalog.mjs'
 // @ts-expect-error Native ESM build tooling.
 import { sha256 } from '../tools/mhp2g/sources.mjs'
+// @ts-expect-error Synthetic JavaScript fixture.
+import { createMonsterFixture } from './fixtures/p2gMonsterCatalog.mjs'
+// @ts-expect-error Native ESM build tooling.
+import { buildMonsterCatalog } from '../tools/build_mhp2g_monster_catalog.mjs'
+// @ts-expect-error Synthetic JavaScript fixture.
+import { createQuestFixture } from './fixtures/p2gQuestCatalog.mjs'
+// @ts-expect-error Native ESM build tooling.
+import { buildQuestCatalog } from '../tools/build_mhp2g_quest_catalog.mjs'
 const handlers=vi.hoisted(()=>new Map<string,(event:unknown,payload:unknown)=>any>())
 vi.mock('electron',()=>({ipcMain:{handle:(name:string,fn:(event:unknown,payload:unknown)=>any)=>handlers.set(name,fn),removeHandler:(name:string)=>handlers.delete(name)}}))
 import { registerCatalogIpc, catalogChannels } from '../api/catalog/ipc'
@@ -25,6 +33,25 @@ describe('P2G production IPC handler dispatch (no Electron launch)',()=>{
     expect(()=>invoke(catalogChannels.getItem,{gameId:'mhp2g',saveId:1})).toThrow()
     expect(()=>invoke(catalogChannels.searchWeapons,{gameId:'mhp2g'})).toThrow()
     expect(()=>invoke(catalogChannels.searchSkills,{gameId:'mhp2g'})).toThrow()
+  })
+  it('dispatches native P2G monsters without requiring the other three databases',()=>{
+    const dir=fs.mkdtempSync(path.join(os.tmpdir(),'p2g-monster-ipc-'));cleanups.push(()=>fs.rmSync(dir,{recursive:true,force:true}))
+    const f=createMonsterFixture(dir);buildMonsterCatalog(f);cleanups.push(registerCatalogIpc(f.output))
+    const invoke=(channel:string,payload:unknown)=>handlers.get(channel)!(null,payload)
+    expect(invoke(catalogChannels.searchMonsters,{gameId:'mhp2g',query:'テスト獣'})).toHaveLength(1)
+    expect(invoke(catalogChannels.getMonster,{gameId:'mhp2g',monsterId:1}).drops[0].item).toMatchObject({itemId:2})
+    expect(invoke(catalogChannels.getMonsterFacets,'mhp2g').monsterCount).toBe(1)
+    expect(()=>invoke(catalogChannels.getItem,{gameId:'mhp2g',saveId:2})).toThrow()
+    expect(()=>invoke(catalogChannels.getQuest,{gameId:'mhp2g',questKey:'wiki:9:0:1'})).toThrow(/任务资料尚未安装/)
+  })
+  it('dispatches P2G quests and facets, resolves old references, and isolates identities',()=>{
+    const dir=fs.mkdtempSync(path.join(os.tmpdir(),'p2g-quest-ipc-'));cleanups.push(()=>fs.rmSync(dir,{recursive:true,force:true}))
+    const f=createQuestFixture(dir);buildQuestCatalog(f);cleanups.push(registerCatalogIpc(f.output))
+    const invoke=(channel:string,payload:unknown)=>handlers.get(channel)!(null,payload)
+    expect(invoke(catalogChannels.searchQuests,{gameId:'mhp2g'}).total).toBe(3)
+    expect(invoke(catalogChannels.getQuest,{gameId:'mhp2g',questKey:'wiki:9:0:1'}).rewards[0].item).toMatchObject({itemId:2})
+    expect(invoke(catalogChannels.getQuestFacets,'mhp2g').systems).toHaveLength(2)
+    expect(()=>invoke(catalogChannels.getQuest,{gameId:'mhgu',questKey:'mhp2g:q1'})).toThrow()
   })
   it('reports a missing runtime database instead of manufacturing empty catalog data',()=>{
     const dir=fs.mkdtempSync(path.join(os.tmpdir(),'p2g-missing-'));cleanups.push(()=>fs.rmSync(dir,{recursive:true,force:true}));cleanups.push(registerCatalogIpc(dir))

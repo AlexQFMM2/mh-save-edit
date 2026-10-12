@@ -1,3 +1,4 @@
+import { itemNumber } from '../api/catalog/itemIdentity'
 import Database from 'better-sqlite3'
 import { afterEach, describe, expect, it } from 'vitest'
 import { MonsterCatalogRepository } from '../api/catalog/monsterRepository'
@@ -40,7 +41,7 @@ describe('MonsterCatalogRepository', () => {
     })!
     const detail = repo.getMonster(monster)!
     expect(detail.ailments.some((ailment) => ailment.statusId === 12)).toBe(false)
-    expect(detail.drops.every((drop) => drop.probability >= 0 && drop.probability <= 100 && drop.item.saveId >= 0)).toBe(true)
+    expect(detail.drops.every((drop) => drop.probability >= 0 && drop.probability <= 100 && itemNumber(drop.item) >= 0)).toBe(true)
   })
 
   it('preserves null ailment values and invalid trap states', () => {

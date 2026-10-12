@@ -5,6 +5,8 @@ import { existsSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import type { GameId } from '../core/loadout'
 import { P2gItemCatalogRepository } from './p2gItemRepository'
+import { P2gQuestCatalogRepository } from './p2gQuestRepository'
+import { P2gMonsterCatalogRepository } from './p2gMonsterRepository'
 import { ItemTermRepository } from '../terminology/itemTermRepository'
 import { itemTermFiltersSchema } from './schemas'
 import { ItemCatalogRepository } from './repository'
@@ -63,7 +65,7 @@ export function registerCatalogIpc(dataDir: string): () => void {
     return entry
   }
 
-  let p2g: { db: DatabaseType.Database; repository: P2gItemCatalogRepository } | undefined
+  let p2g: { db: DatabaseType.Database; repository: P2gItemCatalogRepository; monsters?: P2gMonsterCatalogRepository; quests?: P2gQuestCatalogRepository } | undefined
   const p2gItems = () => {
     if (p2g) return p2g.repository
     if (!existsSync(join(dataDir, 'mhp2g.sqlite'))) throw new Error('P2G 道具资料库尚未安装，请查看 README 中的 P2G 本地接入说明。')
@@ -71,6 +73,11 @@ export function registerCatalogIpc(dataDir: string): () => void {
     const db = new Database(join(dataDir, 'mhp2g.sqlite'), { readonly: true, fileMustExist: true, ...(nativeBinding ? { nativeBinding } : {}) })
     try { p2g = { db, repository: new P2gItemCatalogRepository(db, itemTerms()) }; return p2g.repository }
     catch (error) { db.close(); throw error }
+  }
+
+  const p2gMonsters = () => {
+    p2gItems()
+    return p2g!.monsters ??= new P2gMonsterCatalogRepository(p2g!.db)
   }
 
   ipcMain.handle(catalogChannels.searchItemTerms, (_event, payload: unknown) => {
@@ -156,27 +163,28 @@ export function registerCatalogIpc(dataDir: string): () => void {
   })
   ipcMain.handle(catalogChannels.searchMonsters, (_event, payload: unknown) => {
     const filters = monsterCatalogFiltersSchema.parse(payload)
-    return repositoryEntry(filters.gameId).monsters.searchMonsters(filters)
+    return filters.gameId === 'mhp2g' ? p2gMonsters().searchMonsters(filters) : repositoryEntry(filters.gameId).monsters.searchMonsters(filters)
   })
   ipcMain.handle(catalogChannels.getMonster, (_event, payload: unknown) => {
     const identity = monsterIdentitySchema.parse(payload)
-    return repositoryEntry(identity.gameId).monsters.getMonster(identity)
+    return identity.gameId === 'mhp2g' ? p2gMonsters().getMonster(identity.monsterId) : repositoryEntry(identity.gameId).monsters.getMonster({...identity,gameId:identity.gameId})
   })
   ipcMain.handle(catalogChannels.getMonsterFacets, (_event, payload: unknown) => {
-    const gameId = gameIdSchema.parse(payload)
-    return repositoryEntry(gameId).monsters.getMonsterFacets(gameId)
+    const gameId = catalogGameIdSchema.parse(payload)
+    return gameId === 'mhp2g' ? p2gMonsters().getMonsterFacets() : repositoryEntry(gameId).monsters.getMonsterFacets(gameId)
   })
+  const p2gQuests = () => { p2gItems(); return p2g!.quests ??= new P2gQuestCatalogRepository(p2g!.db) }
   ipcMain.handle(catalogChannels.getQuest, (_event, payload: unknown) => {
     const identity = questIdentitySchema.parse(payload)
-    return repositoryEntry(identity.gameId).quests.getQuest(identity)
+    return identity.gameId==='mhp2g'?p2gQuests().getQuest(identity.questKey):repositoryEntry(identity.gameId).quests.getQuest(identity)
   })
   ipcMain.handle(catalogChannels.searchQuests, (_event, payload: unknown) => {
     const filters = questCatalogFiltersSchema.parse(payload)
-    return repositoryEntry(filters.gameId).quests.searchQuests(filters)
+    return filters.gameId==='mhp2g'?p2gQuests().searchQuests(filters):repositoryEntry(filters.gameId).quests.searchQuests(filters)
   })
   ipcMain.handle(catalogChannels.getQuestFacets, (_event, payload: unknown) => {
-    const gameId = gameIdSchema.parse(payload)
-    return repositoryEntry(gameId).quests.getQuestFacets(gameId)
+    const gameId = catalogGameIdSchema.parse(payload)
+    return gameId==='mhp2g'?p2gQuests().getQuestFacets():repositoryEntry(gameId).quests.getQuestFacets(gameId)
   })
   ipcMain.handle(catalogChannels.searchHunterArts, (_event, payload: unknown) => {
     const filters = hunterArtCatalogFiltersSchema.parse(payload)

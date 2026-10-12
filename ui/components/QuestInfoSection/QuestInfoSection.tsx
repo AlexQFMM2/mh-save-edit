@@ -1,9 +1,11 @@
-import type { QuestDetail } from '../../../api/catalog/types'
+import type { ItemIdentity, QuestDetail } from '../../../api/catalog/types'
 import { DetailSection } from '../DetailSection/DetailSection'
 import { MonsterIcon } from '../MonsterIcon/MonsterIcon'
+import { P2gQuestInfo } from '../P2gQuestInfo/P2gQuestInfo'
+import { P2gQuestSpawns } from '../P2gQuestSpawns/P2gQuestSpawns'
 import './QuestInfoSection.css'
 
-export function QuestInfoSection({ quest, onSelectMonster }: { quest: QuestDetail; onSelectMonster: (id: number) => void }) {
+export function QuestInfoSection({ quest, onSelectMonster, onSelectItem }: { quest: QuestDetail; onSelectMonster: (id: number) => void; onSelectItem: (item: ItemIdentity) => void }) {
   const stats = [
     ['体系', quest.systemNameCn],
     ['位阶', quest.levelNameCn],
@@ -12,7 +14,7 @@ export function QuestInfoSection({ quest, onSelectMonster }: { quest: QuestDetai
     ['时间', quest.timeMinutes == null ? '—' : `${quest.timeMinutes} 分钟`],
     ['契约金', quest.fee == null ? '—' : `${quest.fee} z`],
     ['报酬金', quest.reward == null ? '—' : `${quest.reward} z`],
-    ['HRP', `${quest.hrp ?? '—'}${quest.hrp2 != null ? ` / ${quest.hrp2}` : ''}`],
+    [quest.gameId === 'mhp2g' ? '公会点数' : 'HRP', `${quest.hrp ?? '—'}${quest.hrp2 != null ? ` / ${quest.hrp2}` : ''}`],
   ]
 
   return (
@@ -24,12 +26,14 @@ export function QuestInfoSection({ quest, onSelectMonster }: { quest: QuestDetai
         <p className="quest-info-section__text">{quest.goalCn || '未收录'}</p>
         {quest.subGoalCn && quest.subGoalCn !== '无' && <p className="quest-info-section__text">副目标：{quest.subGoalCn}</p>}
       </DetailSection>
+      {quest.p2g && <P2gQuestInfo data={quest.p2g} />}
       {quest.modifiers.length > 0 && <DetailSection title="任务状态" className="quest-info-section__group"><p className="quest-info-section__text">{quest.modifiers.map(value => value.nameCn).join('、')}</p></DetailSection>}
       <DetailSection title="出现怪物" className="quest-info-section__group">
         <div className="quest-info-section__monsters">
           {quest.monsters.map(monster => <button className="quest-info-section__monster" key={`${monster.monsterId}-${monster.slot}-${monster.sourceKind}`} type="button" onClick={() => onSelectMonster(monster.monsterId)}><MonsterIcon path={monster.iconPath} name={monster.nameCn} /><span>{monster.nameCn}</span></button>)}
         </div>
       </DetailSection>
+      {quest.p2g && <P2gQuestSpawns quest={quest} onSelectMonster={onSelectMonster} onSelectItem={onSelectItem} />}
     </div>
   )
 }

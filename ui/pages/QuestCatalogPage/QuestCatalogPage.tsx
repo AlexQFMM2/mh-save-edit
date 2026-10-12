@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useOutletContext, useSearchParams } from 'react-router-dom'
-import type { HunterArtIdentity, QuestCatalogFacets, QuestCatalogFilters, QuestDetail, QuestDetailTab, QuestSummary } from '../../../api/catalog/types'
+import type { ItemIdentity, HunterArtIdentity, QuestCatalogFacets, QuestCatalogFilters, QuestDetail, QuestDetailTab, QuestSummary } from '../../../api/catalog/types'
 import { HunterArtDetailDrawer } from '../../components/HunterArtDetailDrawer/HunterArtDetailDrawer'
 import { ItemDetailDrawer } from '../../components/ItemDetailDrawer/ItemDetailDrawer'
 import { ItemPagination } from '../../components/ItemPagination/ItemPagination'
@@ -9,14 +9,14 @@ import { QuestCatalogToolbar } from '../../components/QuestCatalogToolbar/QuestC
 import { QuestDetailDrawer } from '../../components/QuestDetailDrawer/QuestDetailDrawer'
 import { QuestDetailPanel } from '../../components/QuestDetailPanel/QuestDetailPanel'
 import { QuestList } from '../../components/QuestList/QuestList'
-import type { WorkspaceOutletContext } from '../../components/WorkspaceContent/WorkspaceContent'
+import type { ShellOutletContext } from '../../components/WorkspaceContent/WorkspaceContent'
 import './QuestCatalogPage.css'
 
 const tabs: QuestDetailTab[] = ['info', 'rewards', 'unlocks']
 const emptyFacets: QuestCatalogFacets = { systems: [], levels: [], ranks: [], questTypes: [], locations: [], availabilities: [] }
 
 export function QuestCatalogPage() {
-  const { game } = useOutletContext<WorkspaceOutletContext>()
+  const { game } = useOutletContext<ShellOutletContext>()
   const [params, setParams] = useSearchParams()
   const query = params.get('q') ?? ''
   const target = params.get('target') ?? undefined
@@ -32,7 +32,7 @@ export function QuestCatalogPage() {
   const [detailLoading, setDetailLoading] = useState(false)
   const [error, setError] = useState<string>()
   const [detailError, setDetailError] = useState<string>()
-  const [itemDrawer, setItemDrawer] = useState<number | null>(null)
+  const [itemDrawer, setItemDrawer] = useState<ItemIdentity | null>(null)
   const [monsterDrawer, setMonsterDrawer] = useState<number | null>(null)
   const [questDrawer, setQuestDrawer] = useState<string | null>(null)
   const [artDrawer, setArtDrawer] = useState<HunterArtIdentity['hunterArtId'] | null>(null)
@@ -87,7 +87,7 @@ export function QuestCatalogPage() {
     let active = true
     void window.mhSaveEditor.catalog.getQuestFacets(game.id).then(value => {
       if (active) setFacets(value)
-    })
+    }).catch(cause => { if (active) {setFacets(emptyFacets); setError(cause instanceof Error ? cause.message : '任务筛选读取失败')} })
     return () => { active = false }
   }, [game.id])
 
@@ -112,10 +112,11 @@ export function QuestCatalogPage() {
   }, [game.id, query, filters.system, filters.levelId, filters.rank, filters.questTypeId, filters.locationId, filters.keyStatus, filters.availability, filters.includePlaceholders, page, target, hasSelection, update])
 
   useEffect(() => {
-    if (!selected) {
-      return
-    }
     const request = ++detailRequest.current
+    setDetail(null)
+    setDetailError(undefined)
+    if (!selected) { setDetailLoading(false); return }
+    closeDrawers()
     setDetailLoading(true)
     setDetailError(undefined)
     void window.mhSaveEditor.catalog.getQuest({ gameId: game.id, questKey: selected })
@@ -128,6 +129,7 @@ export function QuestCatalogPage() {
       .finally(() => {
         if (request === detailRequest.current) setDetailLoading(false)
       })
+    return () => { ++detailRequest.current }
   }, [game.id, selected])
 
   const changeFilter = (key: string, value: string | undefined) => update({ [key]: value, target: undefined, quest: undefined, page: undefined })
@@ -136,7 +138,7 @@ export function QuestCatalogPage() {
       <QuestCatalogToolbar query={queryInput} filters={filters} facets={facets} showAvailability={game.id === 'mhgu'} onQueryChange={setQueryInput} onChange={changeFilter} onReset={reset} />
       <div className="quest-catalog-page__layout">
         <div className="quest-catalog-page__browser">
-          <QuestList items={result.items} selectedKey={selected} loading={loading} error={error} onSelect={questKey => update({ quest: questKey, target: undefined })} />
+          <QuestList items={result.items} selectedKey={detail?.questKey ?? selected} loading={loading} error={error} onSelect={questKey => update({ quest: questKey, target: undefined })} />
           <ItemPagination page={result.page} pageSize={result.pageSize} total={result.total} hasNext={result.hasNext} ariaLabel="任务列表分页" onPageChange={value => update({ page: value })} />
         </div>
         <QuestDetailPanel
@@ -151,7 +153,7 @@ export function QuestCatalogPage() {
           onSelectHunterArt={value => { closeDrawers(); setArtDrawer(value) }}
         />
       </div>
-      <ItemDetailDrawer gameId={game.id} itemSaveId={itemDrawer} onClose={() => setItemDrawer(null)} />
+      <ItemDetailDrawer identity={itemDrawer} onClose={() => setItemDrawer(null)} />
       <MonsterDetailDrawer gameId={game.id} monsterId={monsterDrawer} onClose={() => setMonsterDrawer(null)} />
       <QuestDetailDrawer gameId={game.id} questKey={questDrawer} onClose={() => setQuestDrawer(null)} />
       {game.id === 'mhgu' && <HunterArtDetailDrawer gameId="mhgu" hunterArtId={artDrawer} onClose={() => setArtDrawer(null)} />}

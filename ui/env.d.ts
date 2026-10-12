@@ -34,10 +34,10 @@ declare global {
         getSkillFacets(gameId: GameId): Promise<SkillCatalogFacets>
         searchMonsters(filters: MonsterCatalogFilters): Promise<MonsterSummary[]>
         getMonster(identity: MonsterIdentity): Promise<MonsterDetail | null>
-        getMonsterFacets(gameId: GameId): Promise<MonsterCatalogFacets>
+        getMonsterFacets(gameId: CatalogGameId): Promise<MonsterCatalogFacets>
         getQuest(identity: QuestIdentity): Promise<QuestDetail | null>
         searchQuests(filters: QuestCatalogFilters): Promise<PageResult<QuestSummary>>
-        getQuestFacets(gameId: GameId): Promise<QuestCatalogFacets>
+        getQuestFacets(gameId: import('../api/catalog/types').CatalogGameId): Promise<QuestCatalogFacets>
         searchHunterArts(filters: HunterArtCatalogFilters): Promise<HunterArtSummary[]>
         getHunterArt(identity: HunterArtIdentity): Promise<HunterArtDetail | null>
         getHunterArtFacets(gameId: GameId): Promise<HunterArtCatalogFacets>
