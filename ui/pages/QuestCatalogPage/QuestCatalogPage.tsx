@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useOutletContext, useSearchParams } from 'react-router-dom'
 import type { ItemIdentity, HunterArtIdentity, QuestCatalogFacets, QuestCatalogFilters, QuestDetail, QuestDetailTab, QuestSummary } from '../../../api/catalog/types'
 import { HunterArtDetailDrawer } from '../../components/HunterArtDetailDrawer/HunterArtDetailDrawer'
@@ -21,7 +21,6 @@ export function QuestCatalogPage() {
   const query = params.get('q') ?? ''
   const target = params.get('target') ?? undefined
   const selected = params.get('quest') ?? target
-  const hasSelection = selected != null
   const page = positive(params.get('page')) ?? 1
   const tab = tabs.includes(params.get('tab') as QuestDetailTab) ? params.get('tab') as QuestDetailTab : 'info'
   const [queryInput, setQueryInput] = useState(query)
@@ -63,6 +62,10 @@ export function QuestCatalogPage() {
     })
   }, [setParams])
 
+  // Selection and detail tabs must not restart list loading.
+  const selectionRef = useRef({ selected, update })
+  useLayoutEffect(() => { selectionRef.current = { selected, update } }, [selected, update])
+
   const closeDrawers = () => {
     setItemDrawer(null)
     setMonsterDrawer(null)
@@ -99,8 +102,9 @@ export function QuestCatalogPage() {
       .then(value => {
         if (!active) return
         setResult(value)
-        if (!hasSelection && value.items[0]) update({ quest: value.items[0].questKey })
-        else if (!hasSelection && value.items.length === 0) setDetail(null)
+        const selection = selectionRef.current
+        if (selection.selected == null && value.items[0]) selection.update({ quest: value.items[0].questKey })
+        else if (selection.selected == null && value.items.length === 0) setDetail(null)
       })
       .catch(cause => {
         if (active) setError(cause instanceof Error ? cause.message : '任务列表读取失败')
@@ -109,7 +113,7 @@ export function QuestCatalogPage() {
         if (active) setLoading(false)
       })
     return () => { active = false }
-  }, [game.id, query, filters.system, filters.levelId, filters.rank, filters.questTypeId, filters.locationId, filters.keyStatus, filters.availability, filters.includePlaceholders, page, target, hasSelection, update])
+  }, [game.id, query, filters.system, filters.levelId, filters.rank, filters.questTypeId, filters.locationId, filters.keyStatus, filters.availability, filters.includePlaceholders, page, target])
 
   useEffect(() => {
     const request = ++detailRequest.current

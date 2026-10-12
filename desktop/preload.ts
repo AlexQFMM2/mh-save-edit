@@ -1,3 +1,4 @@
+import type { P2gSkillEquipmentIdentity, P2gSkillEquipmentDetail } from '../api/catalog/p2gSkillTypes'
 import type { CatalogGameId } from '../api/catalog/types'
 import type { ItemTermFilters } from '../api/terminology/types'
 import { contextBridge, ipcRenderer } from 'electron'
@@ -18,7 +19,7 @@ contextBridge.exposeInMainWorld('mhSaveEditor', {
     getItemFacets: (gameId: CatalogGameId) => ipcRenderer.invoke(catalogChannels.getItemFacets, gameId),
     searchDecorations: (filters: DecorationCatalogFilters) => ipcRenderer.invoke(catalogChannels.searchDecorations, filters),
     getDecoration: (identity: DecorationIdentity) => ipcRenderer.invoke(catalogChannels.getDecoration, identity),
-    getDecorationFacets: (gameId: GameId) => ipcRenderer.invoke(catalogChannels.getDecorationFacets, gameId),
+    getDecorationFacets: (gameId: CatalogGameId) => ipcRenderer.invoke(catalogChannels.getDecorationFacets, gameId),
     searchWeapons: (filters: WeaponCatalogFilters) => ipcRenderer.invoke(catalogChannels.searchWeapons, filters),
     getWeapon: (identity: WeaponIdentity) => ipcRenderer.invoke(catalogChannels.getWeapon, identity),
     getWeaponFacets: (gameId: GameId) => ipcRenderer.invoke(catalogChannels.getWeaponFacets, gameId),
@@ -29,9 +30,10 @@ contextBridge.exposeInMainWorld('mhSaveEditor', {
     searchArmorSets: (filters: ArmorSetFilters) => ipcRenderer.invoke(catalogChannels.searchArmorSets, filters),
     getArmor: (identity: ArmorIdentity) => ipcRenderer.invoke(catalogChannels.getArmor, identity),
     getArmorFacets: (gameId: GameId) => ipcRenderer.invoke(catalogChannels.getArmorFacets, gameId),
+    getP2gSkillEquipment: (identity: P2gSkillEquipmentIdentity): Promise<P2gSkillEquipmentDetail | null> => ipcRenderer.invoke(catalogChannels.getP2gSkillEquipment, identity),
     getSkill: (identity: SkillIdentity) => ipcRenderer.invoke(catalogChannels.getSkill, identity),
     searchSkills: (filters: SkillCatalogFilters) => ipcRenderer.invoke(catalogChannels.searchSkills, filters),
-    getSkillFacets: (gameId: GameId) => ipcRenderer.invoke(catalogChannels.getSkillFacets, gameId),
+    getSkillFacets: (gameId: CatalogGameId) => ipcRenderer.invoke(catalogChannels.getSkillFacets, gameId),
     searchMonsters: (filters: MonsterCatalogFilters) => ipcRenderer.invoke(catalogChannels.searchMonsters, filters),
     getMonster: (identity: MonsterIdentity) => ipcRenderer.invoke(catalogChannels.getMonster, identity),
     getMonsterFacets: (gameId: CatalogGameId) => ipcRenderer.invoke(catalogChannels.getMonsterFacets, gameId),

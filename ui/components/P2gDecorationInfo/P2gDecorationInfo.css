@@ -1,0 +1,6 @@
+.p2g-decoration-info { font-size:var(--global-typography-font-size-small); }
+.p2g-decoration-info__fields { display:grid;gap:var(--global-spacing-2);margin:0; }
+.p2g-decoration-info__field { display:flex;justify-content:space-between;gap:var(--global-spacing-3); }
+.p2g-decoration-info__label { color:var(--global-theme-color-text-muted); }
+.p2g-decoration-info__value { margin:0;color:var(--global-theme-color-data); }
+.p2g-decoration-info__note { color:var(--global-theme-color-text-secondary);line-height:var(--global-typography-line-height-normal);margin-bottom:0; }

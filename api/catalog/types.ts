@@ -1,3 +1,4 @@
+import type { P2gSkillData } from './p2gSkillTypes'
 import type { GameId } from '../core/loadout'
 import type { ItemTermLabel } from '../terminology/types'
 
@@ -5,10 +6,12 @@ export type CatalogGameId = GameId | 'mhp2g'
 export type LegacyItemIdentity = { gameId: GameId; saveId: number; itemId?: never }
 export type P2gItemIdentity = { gameId: 'mhp2g'; itemId: number; saveId?: never }
 export type ItemIdentity = LegacyItemIdentity | P2gItemIdentity
-export type DecorationIdentity = { gameId: GameId; saveId: number }
+export type LegacyDecorationIdentity = { gameId: GameId; saveId: number; itemId?: never }
+export type P2gDecorationIdentity = { gameId: 'mhp2g'; itemId: number; saveId?: never }
+export type DecorationIdentity = LegacyDecorationIdentity | P2gDecorationIdentity
 export type WeaponIdentity = { gameId: GameId; weaponKey: string }
 export type ArmorIdentity = { gameId: GameId; dexId: number }
-export type SkillIdentity = { gameId: GameId; skillId: number }
+export type SkillIdentity = { gameId: CatalogGameId; skillId: number }
 export type MonsterIdentity = { gameId: CatalogGameId; monsterId: number }
 export type QuestIdentity = { gameId: CatalogGameId; questKey: string }
 export type HunterArtIdentity = { gameId: 'mhgu'; hunterArtId: number }
@@ -27,6 +30,7 @@ export type MonsterRelationTarget = MonsterIdentity & { nameCn: string; nameEn: 
 export type QuestRelationTarget = QuestIdentity & { nameCn: string; nameEn: string }
 export type PalicoEquipmentRelationTarget = { gameId: 'mhgu'; kind: 'weapon' | 'armor'; equipmentId: number; nameCn: string; nameEn: string; iconPath: string | null }
 export type DecorationSkill = {
+  nameJp?: string
   skillId: number
   nameCn: string
   nameEn: string
@@ -34,9 +38,11 @@ export type DecorationSkill = {
   activeSkillNameCn: string | null
   activeSkillNameEn: string | null
 }
-export type DecorationMaterial = ItemRelationTarget & { quantity: number; recipeIndex: number }
+export type DecorationMaterial = ItemIdentity & { nameCn: string; nameEn: string; nameJp?: string; quantity: number; recipeIndex: number }
 
 export type DecorationSummary = DecorationIdentity & {
+  nameJp?: string
+  matchReason?: string
   dexId: number | null
   itemSaveId: number | null
   itemDexId: number | null
@@ -50,6 +56,7 @@ export type DecorationSummary = DecorationIdentity & {
 }
 
 export type DecorationDetail = DecorationSummary & {
+  p2g?: { rarity: number | null; buyPrice: number | null; sellPrice: number | null; craftingCost: null; unlockCondition: null; nameSource: string }
   dexIds: number[]
   skills: DecorationSkill[]
   materials: DecorationMaterial[]
@@ -57,20 +64,21 @@ export type DecorationDetail = DecorationSummary & {
 }
 
 export type DecorationCatalogFilters = {
-  gameId: GameId
+  gameId: CatalogGameId
   targetSaveId?: number
+  targetItemId?: number
   query?: string
   skillId?: number
   slots?: number
   includePlaceholders?: boolean
-  sort?: 'saveId' | 'name' | 'slots' | 'skillPoints'
+  sort?: 'saveId' | 'itemId' | 'name' | 'slots' | 'skillPoints'
   page?: number
   pageSize?: number
 }
 
 export type DecorationCatalogFacets = {
   slots: number[]
-  skills: Pick<DecorationSkill, 'skillId' | 'nameCn' | 'nameEn'>[]
+  skills: (Pick<DecorationSkill, 'skillId' | 'nameCn' | 'nameEn'> & { nameJp?: string })[]
 }
 
 export type ItemSummary = LegacyItemIdentity & {
@@ -98,6 +106,7 @@ export type ItemRelation = {
   rank: number | null
   metadata: Record<string, string>
   relatedItems: (ItemIdentity & { nameCn: string; nameEn: string })[]
+  relatedDecoration?: (P2gDecorationIdentity & { nameCn: string }) | null
   pendingTarget?: { kind: 'weapon' | 'armor' | 'decoration' | 'monster' | 'quest'; name: string } | null
   relatedWeapon?: WeaponRelationTarget | null
   relatedArmor?: ArmorRelationTarget | null
@@ -456,13 +465,14 @@ export type ArmorCatalogFacets = {
   skills: Pick<ArmorSkill, 'skillId' | 'nameCn' | 'nameEn'>[]
 }
 
-export type SkillActivationLink = { activationKey: string; nameCn: string; nameEn: string; direction: 'positive' | 'negative' | 'special' }
-export type SkillActivation = { activationKey: string; dexActivationId: number; threshold: number; direction: 'positive' | 'negative' | 'special'; nameCn: string; nameEn: string; nameJp: string; descriptionCn: string; descriptionEn: string; descriptionJp: string; wikiDetail?: { descriptionCn: string; sourceUrl: string; sourceVersion: string; reviewNote: string }; components: SkillActivationLink[] }
-export type SkillDecorationRelation = DecorationIdentity & { nameCn: string; nameEn: string; points: number; slots: number; iconPath: string | null }
+export type SkillActivationLink = { activationKey: string; skillId?: number; nameCn: string; nameEn: string; direction: 'positive' | 'negative' | 'special' }
+export type SkillActivation = { activationKey: string; dexActivationId: number | null; threshold: number; direction: 'positive' | 'negative' | 'special'; nameCn: string; nameEn: string; nameJp: string; descriptionCn: string; descriptionEn: string; descriptionJp: string; wikiDetail?: { descriptionCn: string; sourceUrl: string; sourceVersion: string; reviewNote: string }; components: SkillActivationLink[] }
+export type SkillDecorationRelation = LegacyDecorationIdentity & { nameCn: string; nameEn: string; points: number; slots: number; iconPath: string | null }
 export type SkillArmorRelation = ArmorIdentity & { nameCn: string; nameEn: string; points: number; slots: number; part: ArmorPartId; iconPath: string | null }
 export type SkillTalismanRelation = { rangeKey: string; skillId: number; skillNameCn: string; talismanId: number; talismanNameCn: string; talismanNameEn: string; position: 'A' | 'B'; slotCount: number | null; minPoints: number; maxPoints: number; maxSlots: number | null; rangeStatus: 'exact' | 'rule' | 'unknown'; source: string }
 export type SkillCatalogTab = 'armor' | 'decoration' | 'talisman'
 export type SkillDetail = SkillIdentity & {
+  p2g?: P2gSkillData
   nameCn: string
   nameEn: string
   nameJp: string
@@ -475,11 +485,12 @@ export type SkillDetail = SkillIdentity & {
   armors: SkillArmorRelation[]
   talismans: SkillTalismanRelation[]
 }
-export type SkillSummary = SkillIdentity & { nameCn: string; nameEn: string; nameJp: string; activationCount: number; positiveActivationCount: number; negativeActivationCount: number; specialActivationCount: number; armorCount: number; decorationCount: number; talismanCount: number; isPlaceholder: boolean }
-export type SkillCatalogFilters = { gameId: GameId; targetSkillId?: number; query?: string; direction?: 'positive' | 'negative' | 'special'; source?: 'armor' | 'decoration' | 'talisman' | 'all'; includePlaceholders?: boolean; sort?: 'skillId' | 'name' | 'activationCount'; page?: number; pageSize?: number }
+export type SkillSummary = SkillIdentity & { match?: string; nameCn: string; nameEn: string; nameJp: string; activationCount: number; positiveActivationCount: number; negativeActivationCount: number; specialActivationCount: number; armorCount: number; decorationCount: number; talismanCount: number; isPlaceholder: boolean }
+export type SkillCatalogFilters = { gameId: CatalogGameId; targetSkillId?: number; query?: string; direction?: 'positive' | 'negative' | 'special'; source?: 'armor' | 'decoration' | 'talisman' | 'all'; includePlaceholders?: boolean; sort?: 'skillId' | 'name' | 'activationCount'; page?: number; pageSize?: number }
 export type SkillCatalogFacets = { directions: ('positive' | 'negative' | 'special')[]; sources: ('armor' | 'decoration' | 'talisman')[] }
 
 export type ItemDetail = ItemSummary & {
+  decoration?: P2gDecorationIdentity
   localization?: { nameSource: string; namePending: boolean; descriptionSource: string; descriptionPending: boolean; descriptionJp?: string }
   description?: string
   nameJp: string

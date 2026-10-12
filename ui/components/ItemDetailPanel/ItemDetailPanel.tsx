@@ -35,6 +35,7 @@ export function ItemDetailPanel({ item, loading, error, allowCatalogWrite = true
         <p className="item-detail-panel__description" lang="ja">{p2gDescription(item.localization.descriptionJp)}</p>
       </details>}
       <dl className="item-detail-panel__stats"><div><dt>稀有度</dt><dd>{item.rarity ?? '—'}</dd></div><div><dt>持有上限</dt><dd>{item.maxStack ?? '—'}</dd></div><div><dt>买入</dt><dd>{item.buyPrice == null ? '—' : `${item.buyPrice} z`}</dd></div><div><dt>卖出</dt><dd>{item.sellPrice == null ? '—' : `${item.sellPrice} z`}</dd></div></dl>
+      {item.decoration&&onSelectDecoration&&<button type="button" className="item-detail-panel__decoration-link" onClick={()=>onSelectDecoration(item.decoration!.itemId)}>查看装饰品详情与技能</button>}
       <div className="item-detail-panel__relations">{sections.map(([kind,title]) => <ItemRelationSection key={`${itemNumber(item)}-${kind}`} title={title} relations={grouped.get(kind) ?? []} onSelectItem={selectRelatedItem} onSelectCatalogItem={onSelectCatalogItem} onSelectPending={onSelectPending} onSelectDecoration={onSelectDecoration} onSelectWeapon={onSelectWeapon} onSelectArmor={onSelectArmor} onSelectMonster={onSelectMonster} onSelectQuest={onSelectQuest} onSelectPalicoEquipment={onSelectPalicoEquipment} />)}</div>
     </div>
     {allowCatalogWrite && item.gameId !== 'mhp2g' && <DetailActionBar className="item-detail-panel__actions"><CatalogWriteControl gameId={item.gameId} kind="item" saveId={item.saveId} maxCount={item.maxStack} /></DetailActionBar>}

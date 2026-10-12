@@ -3,7 +3,7 @@ import type {
   DecorationCatalogFacets,
   DecorationCatalogFilters,
   DecorationDetail,
-  DecorationIdentity,
+  LegacyDecorationIdentity,
   DecorationMaterial,
   DecorationSkill,
   DecorationSummary,
@@ -25,7 +25,7 @@ const asBool = (value: unknown): boolean => value === true || value === 1 || val
 export class DecorationCatalogRepository {
   constructor(private readonly db: Database.Database) {}
 
-  searchDecorations(filters: DecorationCatalogFilters): PageResult<DecorationSummary> {
+  searchDecorations(filters: DecorationCatalogFilters & { gameId: GameId }): PageResult<DecorationSummary> {
     const pageSize = Math.min(Math.max(filters.pageSize ?? 100, 1), 100)
     const page = Math.max(filters.page ?? 1, 1)
     const values: unknown[] = [filters.gameId]
@@ -74,7 +74,7 @@ export class DecorationCatalogRepository {
     }
   }
 
-  getDecoration(identity: DecorationIdentity): DecorationDetail | null {
+  getDecoration(identity: LegacyDecorationIdentity): DecorationDetail | null {
     const row = this.db.prepare('SELECT * FROM catalog_decorations WHERE game_id = ? AND save_id = ?').get(identity.gameId, identity.saveId) as RawRow | undefined
     if (!row) return null
     const skills = this.skillsFor([identity.saveId], identity.gameId).get(identity.saveId) ?? []
@@ -116,7 +116,7 @@ export class DecorationCatalogRepository {
     return result
   }
 
-  private materialsFor(identity: DecorationIdentity): DecorationMaterial[] {
+  private materialsFor(identity: LegacyDecorationIdentity): DecorationMaterial[] {
     const rows = this.db.prepare(`SELECT m.recipe_index, m.quantity, i.game_id, i.save_id, i.name_cn, i.name_en
       FROM catalog_decoration_materials m
       LEFT JOIN catalog_items i ON i.game_id = m.game_id AND i.save_id = m.item_save_id

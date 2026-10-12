@@ -26,18 +26,24 @@ export const itemCatalogFiltersSchema = z.object({
 }).strict().superRefine((value, context) => {
   if ((value.gameId === 'mhp2g' && value.targetSaveId != null) || (value.gameId !== 'mhp2g' && value.targetItemId != null)) context.addIssue({ code: z.ZodIssueCode.custom, message: '道具身份与游戏不匹配' })
 })
-export const decorationIdentitySchema = z.object({ gameId: gameIdSchema, saveId: z.number().int().min(0).max(65535) }).strict()
+export const decorationIdentitySchema = z.union([
+  z.object({ gameId: gameIdSchema, saveId: z.number().int().min(0).max(65535) }).strict(),
+  z.object({ gameId: z.literal('mhp2g'), itemId: z.number().int().min(0).max(65535) }).strict(),
+])
 export const decorationCatalogFiltersSchema = z.object({
-  gameId: gameIdSchema,
+  gameId: catalogGameIdSchema,
   targetSaveId: z.number().int().min(0).max(65535).optional(),
+  targetItemId: z.number().int().min(0).max(65535).optional(),
   query: z.string().trim().max(120).optional(),
   skillId: z.number().int().min(0).max(65535).optional(),
   slots: z.number().int().min(0).max(9).optional(),
   includePlaceholders: z.boolean().optional(),
-  sort: z.enum(['saveId', 'name', 'slots', 'skillPoints']).optional(),
+  sort: z.enum(['saveId', 'itemId', 'name', 'slots', 'skillPoints']).optional(),
   page: z.number().int().min(1).max(100000).optional(),
   pageSize: z.number().int().min(1).max(100).optional(),
-}).strict()
+}).strict().superRefine((value, context) => {
+  if ((value.gameId === 'mhp2g' && value.targetSaveId != null) || (value.gameId !== 'mhp2g' && value.targetItemId != null)) context.addIssue({ code: z.ZodIssueCode.custom, message: '装饰品身份与游戏不匹配' })
+})
 
 export const weaponKeySchema = z.string().trim().min(3).max(40).regex(/^\d+:\d+(?::\d+)?$/)
 export const weaponIdentitySchema = z.object({ gameId: gameIdSchema, weaponKey: weaponKeySchema }).strict().superRefine((value, context) => {
@@ -87,9 +93,9 @@ export const weaponMotionFiltersSchema = z.object({
 }).strict()
 
 export const armorIdentitySchema = z.object({ gameId: gameIdSchema, dexId: z.number().int().min(1).max(65535) }).strict()
-export const skillIdentitySchema = z.object({ gameId: gameIdSchema, skillId: z.number().int().min(0).max(65535) }).strict()
+export const skillIdentitySchema = z.object({ gameId: catalogGameIdSchema, skillId: z.number().int().min(0).max(65535) }).strict()
 export const skillCatalogFiltersSchema = z.object({
-  gameId: gameIdSchema,
+  gameId: catalogGameIdSchema,
   targetSkillId: z.number().int().min(0).max(65535).optional(),
   query: z.string().trim().max(120).optional(),
   direction: z.enum(['positive','negative','special']).optional(),
@@ -174,3 +180,5 @@ export const palicoSupportMoveFiltersSchema=z.object({gameId:mhguSchema,targetSu
 export const palicoSkillFiltersSchema=z.object({gameId:mhguSchema,targetPalicoSkillId:z.number().int().min(1).max(95).optional(),query:palicoQuery,memoryCost:z.number().int().min(0).max(20).optional(),generationGroup:z.enum(['A','B','C','fixed']).optional(),learnLevel:z.number().int().min(0).max(99).optional(),unlockKind:z.enum(['initial','innate','monster','level','distribution']).optional()}).strict()
 export const palicoWeaponFiltersSchema=z.object({gameId:mhguSchema,targetEquipmentId:palicoId.optional(),query:palicoQuery,attackType:z.enum(['cut','blunt']).optional(),specializationId:palicoId.optional(),rarity:z.number().int().min(1).max(20).optional(),specialAttackId:z.union([palicoId,z.literal('none')]).optional(),sharpnessId:z.number().int().min(2).max(7).optional(),sort:z.enum(['source','meleeAttack','rangedAttack','affinity','sharpness','defense']).optional(),direction:z.enum(['asc','desc']).optional(),...palicoPage}).strict()
 export const palicoArmorFiltersSchema=z.object({gameId:mhguSchema,targetEquipmentId:palicoId.optional(),query:palicoQuery,part:z.enum(['head','body']).optional(),rarity:z.number().int().min(1).max(20).optional(),sort:z.enum(['source','defense','fireRes','waterRes','thunderRes','iceRes','dragonRes']).optional(),direction:z.enum(['asc','desc']).optional(),...palicoPage}).strict()
+
+export const p2gSkillEquipmentIdentitySchema = z.object({gameId:z.literal("mhp2g"),equipmentKey:z.string().max(64).regex(/^(?:item:\d+|armor_(?:head|chest|arms|waist|legs):\d+)$/)}).strict()

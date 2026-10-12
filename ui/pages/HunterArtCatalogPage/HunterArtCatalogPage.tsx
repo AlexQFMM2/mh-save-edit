@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { Navigate, useOutletContext, useSearchParams } from 'react-router-dom'
 import type { HunterArtCatalogFacets, HunterArtCatalogFilters, HunterArtDetail, HunterArtSummary, HunterArtUnlockKind } from '../../../api/catalog/types'
 import { HunterArtCatalogToolbar } from '../../components/HunterArtCatalogToolbar/HunterArtCatalogToolbar'
@@ -17,7 +17,6 @@ export function HunterArtCatalogPage() {
   const query = params.get('q') ?? ''
   const target = numberParam(params.get('target'))
   const selected = numberParam(params.get('art')) ?? target
-  const hasSelection = selected != null
   const [queryInput, setQueryInput] = useState(query)
   const [facets, setFacets] = useState<HunterArtCatalogFacets>(emptyFacets)
   const [items, setItems] = useState<HunterArtSummary[]>([])
@@ -48,6 +47,9 @@ export function HunterArtCatalogPage() {
       return next
     })
   }, [setParams])
+
+  const selectionRef = useRef({ selected, update })
+  useLayoutEffect(() => { selectionRef.current = { selected, update } }, [selected, update])
 
   const reset = useCallback(() => {
     setQueryInput('')
@@ -81,8 +83,9 @@ export function HunterArtCatalogPage() {
       .then(rows => {
         if (!active) return
         setItems(rows)
-        if (!hasSelection && rows[0]) update({ art: rows[0].hunterArtId })
-        else if (!hasSelection && rows.length === 0) setDetail(null)
+        const selection = selectionRef.current
+        if (selection.selected == null && rows[0]) selection.update({ art: rows[0].hunterArtId })
+        else if (selection.selected == null && rows.length === 0) setDetail(null)
       })
       .catch(cause => {
         if (active) setError(cause instanceof Error ? cause.message : '狩技列表读取失败')
@@ -91,7 +94,7 @@ export function HunterArtCatalogPage() {
         if (active) setLoading(false)
       })
     return () => { active = false }
-  }, [game.id, query, filters.weaponTypeId, filters.level, filters.unlockKind, filters.includePlaceholders, target, hasSelection, update])
+  }, [game.id, query, filters.weaponTypeId, filters.level, filters.unlockKind, filters.includePlaceholders, target])
 
   useEffect(() => {
     if (game.id !== 'mhgu' || selected == null) {

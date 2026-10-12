@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useOutletContext, useSearchParams } from 'react-router-dom'
 import type { SharpnessStage, SortDirection, WeaponAttributeFilter, WeaponCatalogFacets, WeaponCatalogFilters, WeaponDetail, WeaponLink, WeaponMotionCatalogResult, WeaponMotionCategory, WeaponMotionFacets, WeaponMotionSort, WeaponSort, WeaponStyleId, WeaponSummary, WeaponTreeResult, WeaponViewMode } from '../../../api/catalog/types'
 import { HunterArtDetailDrawer } from '../../components/HunterArtDetailDrawer/HunterArtDetailDrawer'
@@ -72,6 +72,9 @@ export function WeaponCatalogPage() {
   const detailRequest = useRef(0)
 
   const update = useCallback((changes: Record<string, string | number | undefined>) => setParams((current) => { const next = new URLSearchParams(current); for (const [key, value] of Object.entries(changes)) { if (value == null || value === '') next.delete(key); else next.set(key, String(value)) } return next }), [setParams])
+  // Both the list and tree may auto-select; neither query depends on the current selection.
+  const selectionRef = useRef({ selectedKey, update })
+  useLayoutEffect(() => { selectionRef.current = { selectedKey, update } }, [selectedKey, update])
   const resetCatalog = useCallback(() => { setQueryInput(''); setDrawerItemId(null); setParams({}) }, [setParams])
   const resetMotions = useCallback(() => {setMotionQueryInput('');setDrawerHunterArtId(null);setParams({view:'motion',type:'1'})},[setParams])
   useEffect(() => { if (queryInput === query) return; const timer = window.setTimeout(() => update({ target: undefined, q: queryInput || undefined, page: undefined, weapon: undefined }), 280); return () => window.clearTimeout(timer) }, [queryInput, query, update])
@@ -98,17 +101,17 @@ export function WeaponCatalogPage() {
     const api = window.mhSaveEditor?.catalog
     if (!api) { setError('图鉴 API 尚未连接，请在 Electron 应用中打开。'); setLoading(false); return }
     const filters: WeaponCatalogFilters = { gameId: game.id, targetWeaponKey, query, weaponTypeId: typeId, attributeId, includeHiddenAttributes, rarity, slots, directlyProducible, finalOnly, includePlaceholders, sort, direction, sharpnessStage, page, pageSize: 100 }
-    void api.searchWeapons(filters).then((result) => { if (!active) return; setItems(result.items); setMeta({ total: result.total, pageSize: result.pageSize, hasNext: result.hasNext }); if (!selectedKey && result.items[0]) update({ weapon: result.items[0].weaponKey }) }).catch((cause) => { if (active) setError(cause instanceof Error ? cause.message : '武器查询失败') }).finally(() => { if (active) setLoading(false) })
+    void api.searchWeapons(filters).then((result) => { if (!active) return; setItems(result.items); setMeta({ total: result.total, pageSize: result.pageSize, hasNext: result.hasNext }); const selection = selectionRef.current; if (!selection.selectedKey && result.items[0]) selection.update({ weapon: result.items[0].weaponKey }) }).catch((cause) => { if (active) setError(cause instanceof Error ? cause.message : '武器查询失败') }).finally(() => { if (active) setLoading(false) })
     return () => { active = false }
-  }, [game.id, targetWeaponKey, query, typeId, attributeId, includeHiddenAttributes, rarity, slots, directlyProducible, finalOnly, includePlaceholders, sort, direction, sharpnessStage, page, update, view])
+  }, [game.id, targetWeaponKey, query, typeId, attributeId, includeHiddenAttributes, rarity, slots, directlyProducible, finalOnly, includePlaceholders, sort, direction, sharpnessStage, page, view])
   useEffect(() => {
     if (view !== 'tree' || typeId == null) { setTree(null); return }
     let active = true; setTreeLoading(true); setTreeError(undefined)
     const api = window.mhSaveEditor?.catalog
     if (!api) { setTreeError('图鉴 API 尚未连接，请在 Electron 应用中打开。'); setTreeLoading(false); return }
-    void api.getWeaponTree(game.id, typeId).then((value) => { if (!active) return; setTree(value); if (!selectedKey && value.nodes[0]) update({ weapon: value.nodes[0].weaponKey }) }).catch((cause) => { if (active) setTreeError(cause instanceof Error ? cause.message : '派生图读取失败') }).finally(() => { if (active) setTreeLoading(false) })
+    void api.getWeaponTree(game.id, typeId).then((value) => { if (!active) return; setTree(value); const selection = selectionRef.current; if (!selection.selectedKey && value.nodes[0]) selection.update({ weapon: value.nodes[0].weaponKey }) }).catch((cause) => { if (active) setTreeError(cause instanceof Error ? cause.message : '派生图读取失败') }).finally(() => { if (active) setTreeLoading(false) })
     return () => { active = false }
-  }, [view, game.id, typeId, update])
+  }, [view, game.id, typeId])
   useEffect(() => {
     if (view==='motion'||!selectedKey) { if(view!=='motion')setDetail(null); return }
     const request = ++detailRequest.current

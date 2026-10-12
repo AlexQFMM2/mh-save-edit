@@ -1,25 +1,63 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useOutletContext, useSearchParams } from 'react-router-dom'
 import type { SkillCatalogFilters, SkillCatalogTab, SkillDetail, SkillSummary } from '../../../api/catalog/types'
-import type { WorkspaceOutletContext } from '../../components/WorkspaceContent/WorkspaceContent'
+import type { ShellOutletContext } from '../../components/WorkspaceContent/WorkspaceContent'
 import { ArmorDetailDrawer } from '../../components/ArmorDetailDrawer/ArmorDetailDrawer'
 import { DecorationDetailDrawer } from '../../components/DecorationDetailDrawer/DecorationDetailDrawer'
+import { SkillDetailDrawer } from '../../components/SkillDetailDrawer/SkillDetailDrawer'
+import { P2gSkillEquipmentDrawer } from '../../components/P2gSkillEquipmentDrawer/P2gSkillEquipmentDrawer'
 import { SkillCatalogToolbar } from '../../components/SkillCatalogToolbar/SkillCatalogToolbar'
 import { SkillDetailPanel } from '../../components/SkillDetailPanel/SkillDetailPanel'
 import { SkillSearchList } from '../../components/SkillSearchList/SkillSearchList'
 import './SkillCatalogPage.css'
 
+type Drawer = {kind:'armor'|'decoration'|'skill';id:number}|null
 const tabs: SkillCatalogTab[] = ['armor', 'decoration', 'talisman']
 export function SkillCatalogPage() {
-  const { game } = useOutletContext<WorkspaceOutletContext>(); const [params, setParams] = useSearchParams()
-  const query = params.get('q') ?? ''; const [queryInput, setQueryInput] = useState(query); const skillId = numberParam(params.get('skill')); const targetSkillId = numberParam(params.get('target')); const tab = tabs.includes(params.get('tab') as SkillCatalogTab) ? params.get('tab') as SkillCatalogTab : 'armor'; const direction = ['positive','negative','special'].includes(params.get('direction') ?? '') ? params.get('direction') as SkillCatalogFilters['direction'] : undefined; const source = ['armor','decoration','talisman'].includes(params.get('source') ?? '') ? params.get('source') as SkillCatalogFilters['source'] : 'all'; const sort = ['name','activationCount'].includes(params.get('sort') ?? '') ? params.get('sort') as NonNullable<SkillCatalogFilters['sort']> : 'skillId'; const includePlaceholders = params.get('debug') === '1'; const page = numberParam(params.get('page')) || 1
-  const [items, setItems] = useState<SkillSummary[]>([]); const [detail, setDetail] = useState<SkillDetail | null>(null); const [meta, setMeta] = useState({ pageSize: 100, total: 0, hasNext: false }); const [loading, setLoading] = useState(true); const [detailLoading, setDetailLoading] = useState(false); const [error, setError] = useState<string>(); const [detailError, setDetailError] = useState<string>(); const request = useRef(0); const [decorationDrawer, setDecorationDrawer] = useState<number | null>(null); const [armorDrawer, setArmorDrawer] = useState<number | null>(null)
-  const update = useCallback((changes: Record<string, string | number | undefined>) => setParams(current => { const next = new URLSearchParams(current); Object.entries(changes).forEach(([key, value]) => value == null || value === '' ? next.delete(key) : next.set(key, String(value))); return next }), [setParams])
-  const reset = useCallback(() => { setQueryInput(''); setDecorationDrawer(null); setArmorDrawer(null); setParams({}) }, [setParams])
-  useEffect(() => setQueryInput(query), [query]); useEffect(() => { if (queryInput === query) return; const timer = window.setTimeout(() => update({ q: queryInput || undefined, target: undefined, skill: undefined, page: undefined }), 280); return () => window.clearTimeout(timer) }, [queryInput, query, update])
-  useEffect(() => { let active = true; setLoading(true); setError(undefined); const api = window.mhSaveEditor?.catalog; if (!api) { setError('图鉴 API 尚未连接，请在 Electron 应用中打开。'); setLoading(false); return () => { active = false } }; void api.searchSkills({ gameId: game.id, targetSkillId, query, direction, source, includePlaceholders, sort, page, pageSize: 100 }).then(result => { if (!active) return; setItems(result.items); setMeta({ pageSize: result.pageSize, total: result.total, hasNext: result.hasNext }); if (skillId == null && result.items[0]) update({ skill: result.items[0].skillId }) }).catch(cause => { if (active) setError(cause instanceof Error ? cause.message : '技能列表读取失败') }).finally(() => { if (active) setLoading(false) }); return () => { active = false } }, [game.id, targetSkillId, query, direction, source, includePlaceholders, sort, page, skillId, update])
-  useEffect(() => { if (skillId == null) { setDetail(null); return }; const id = ++request.current; setDetailLoading(true); setDetailError(undefined); const api = window.mhSaveEditor?.catalog; if (!api) return; void api.getSkill({ gameId: game.id, skillId }).then(value => { if (id === request.current) setDetail(value) }).catch(cause => { if (id === request.current) setDetailError(cause instanceof Error ? cause.message : '技能详情读取失败') }).finally(() => { if (id === request.current) setDetailLoading(false) }); return () => undefined }, [game.id, skillId])
-  const selected = items.some(item => item.skillId === skillId) ? skillId : undefined
-  return <div className="skill-catalog-page"><SkillCatalogToolbar query={queryInput} direction={direction} source={source ?? 'all'} sort={sort} includePlaceholders={includePlaceholders} onQueryChange={setQueryInput} onChange={(key, value) => update({ [key]: value, target: undefined, skill: undefined, page: undefined })} onReset={reset} /><div className="skill-catalog-page__layout"><SkillSearchList items={items} selectedId={selected} loading={loading} error={error} page={page} pageSize={meta.pageSize} total={meta.total} hasNext={meta.hasNext} onSelect={id => update({ skill: id })} onPageChange={next => update({ page: next, skill: undefined })} /><SkillDetailPanel skill={detail} loading={detailLoading} error={detailError} tab={tab} onTabChange={value => update({ tab: value })} onSelectDecoration={value => setDecorationDrawer(value.saveId)} onSelectArmor={value => setArmorDrawer(value.dexId)} /></div><DecorationDetailDrawer gameId={game.id} decorationSaveId={decorationDrawer} onClose={() => setDecorationDrawer(null)} /><ArmorDetailDrawer gameId={game.id} armorDexId={armorDrawer} onClose={() => setArmorDrawer(null)} /></div>
+  const {game}=useOutletContext<ShellOutletContext>(),[params,setParams]=useSearchParams(),isP2g=game.id==='mhp2g'
+  const query=params.get('q')??'',[queryInput,setQueryInput]=useState(query),skillId=numberParam(params.get('skill')),targetSkillId=numberParam(params.get('target'))
+  const requestedTab=params.get('tab') as SkillCatalogTab,tab=tabs.includes(requestedTab)&&(!isP2g||requestedTab!=='talisman')?requestedTab:'armor'
+  const direction=['positive','negative','special'].includes(params.get('direction')??'')?params.get('direction') as SkillCatalogFilters['direction']:undefined
+  const requestedSource=params.get('source'),source=['armor','decoration',...(isP2g?[]:['talisman'])].includes(requestedSource??'')?requestedSource as NonNullable<SkillCatalogFilters['source']>:'all'
+  const sort=['name','activationCount'].includes(params.get('sort')??'')?params.get('sort') as NonNullable<SkillCatalogFilters['sort']>:'skillId'
+  const includePlaceholders=params.get('debug')==='1',page=numberParam(params.get('page'))||1,equipmentKey=isP2g?params.get('equipment'):null
+  const [items,setItems]=useState<SkillSummary[]>([]),[detail,setDetail]=useState<SkillDetail|null>(null),[meta,setMeta]=useState({pageSize:100,total:0,hasNext:false})
+  const [loading,setLoading]=useState(true),[detailLoading,setDetailLoading]=useState(false),[error,setError]=useState<string>(),[detailError,setDetailError]=useState<string>(),[drawer,setDrawer]=useState<Drawer>(null)
+  const update=useCallback((changes:Record<string,string|number|undefined>)=>setParams(current=>{const next=new URLSearchParams(current);Object.entries(changes).forEach(([key,value])=>value==null||value===''?next.delete(key):next.set(key,String(value)));return next}),[setParams])
+  // Selection and detail tabs must not restart the list query or overwrite newer navigation.
+  const selectionRef=useRef({skillId,update})
+  useLayoutEffect(()=>{selectionRef.current={skillId,update}},[skillId,update])
+  const closeEquipment=useCallback(()=>update({equipment:undefined}),[update]),closeDrawer=useCallback(()=>setDrawer(null),[])
+  const reset=useCallback(()=>{setQueryInput('');setDrawer(null);setParams({})},[setParams])
+  useEffect(()=>setQueryInput(query),[query])
+  useEffect(()=>{if(queryInput===query)return;const timer=window.setTimeout(()=>update({q:queryInput||undefined,target:undefined,skill:undefined,page:undefined,equipment:undefined}),280);return()=>window.clearTimeout(timer)},[queryInput,query,update])
+  useEffect(()=>{setDrawer(null)},[game.id,equipmentKey])
+  useEffect(()=>{
+    let active=true;setLoading(true);setError(undefined)
+    const api=window.mhSaveEditor?.catalog
+    if(!api){setError('图鉴 API 尚未连接，请在 Electron 应用中打开。');setLoading(false);return}
+    void api.searchSkills({gameId:game.id,targetSkillId,query,direction,source,includePlaceholders,sort,page,pageSize:100}).then(result=>{
+      if(!active)return
+      setItems(result.items);setMeta({pageSize:result.pageSize,total:result.total,hasNext:result.hasNext})
+      const selection=selectionRef.current
+      if(selection.skillId==null&&result.items[0])selection.update({skill:result.items[0].skillId})
+    }).catch(cause=>{if(active){setItems([]);setError(cause instanceof Error?cause.message:'技能列表读取失败')}}).finally(()=>{if(active)setLoading(false)})
+    return()=>{active=false}
+  },[game.id,targetSkillId,query,direction,source,includePlaceholders,sort,page])
+  useEffect(()=>{
+    let active=true;setDetail(null);setDetailError(undefined)
+    if(skillId==null){setDetailLoading(false);return}
+    setDetailLoading(true);const api=window.mhSaveEditor?.catalog
+    if(!api){setDetailError('图鉴 API 尚未连接，请在 Electron 应用中打开。');setDetailLoading(false);return}
+    void api.getSkill({gameId:game.id,skillId}).then(value=>{if(active)setDetail(value)}).catch(cause=>{if(active)setDetailError(cause instanceof Error?cause.message:'技能详情读取失败')}).finally(()=>{if(active)setDetailLoading(false)})
+    return()=>{active=false}
+  },[game.id,skillId])
+  const selected=items.some(item=>item.skillId===skillId)?skillId:undefined
+  const open=(kind:NonNullable<Drawer>['kind'],id:number)=>{if(equipmentKey)closeEquipment();setDrawer({kind,id})}
+  return <div className="skill-catalog-page"><SkillCatalogToolbar query={queryInput} direction={direction} source={source} sort={sort} includePlaceholders={includePlaceholders} includeTalismans={!isP2g} onQueryChange={setQueryInput} onChange={(key,value)=>{setDrawer(null);update({[key]:value,target:undefined,skill:undefined,page:undefined,equipment:undefined})}} onReset={reset}/>
+    <div className="skill-catalog-page__layout"><SkillSearchList items={items} selectedId={selected} loading={loading} error={error} page={page} pageSize={meta.pageSize} total={meta.total} hasNext={meta.hasNext} onSelect={id=>update({skill:id})} onPageChange={next=>update({page:next,skill:undefined})}/><SkillDetailPanel skill={detail} loading={detailLoading} error={detailError} tab={tab} onTabChange={value=>update({tab:value})} onSelectDecoration={value=>open('decoration',value.saveId)} onSelectArmor={value=>open('armor',value.dexId)} onSelectSkill={id=>open('skill',id)} onSelectP2gEquipment={value=>{setDrawer(null);update({equipment:value.equipmentKey})}}/></div>
+    {game.id !== 'mhp2g'&&<><DecorationDetailDrawer gameId={game.id} decorationSaveId={drawer?.kind==='decoration'?drawer.id:null} onClose={closeDrawer}/><ArmorDetailDrawer gameId={game.id} armorDexId={drawer?.kind==='armor'?drawer.id:null} onClose={closeDrawer}/></>}
+    <SkillDetailDrawer gameId={game.id} skillId={drawer?.kind==='skill'?drawer.id:null} onClose={closeDrawer}/><P2gSkillEquipmentDrawer equipmentKey={equipmentKey} onClose={closeEquipment}/>
+  </div>
 }
-function numberParam(value: string | null) { if (!value) return undefined; const n = Number(value); return Number.isInteger(n) && n >= 0 ? n : undefined }
+function numberParam(value:string|null){if(!value)return undefined;const n=Number(value);return Number.isInteger(n)&&n>=0?n:undefined}

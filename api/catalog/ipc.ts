@@ -1,3 +1,6 @@
+import { P2gDecorationCatalogRepository } from './p2gDecorationRepository'
+import { P2gSkillCatalogRepository } from './p2gSkillRepository'
+import { p2gSkillEquipmentIdentitySchema } from './schemas'
 import { ipcMain } from 'electron'
 import type DatabaseType from 'better-sqlite3'
 import { createRequire } from 'node:module'
@@ -65,7 +68,7 @@ export function registerCatalogIpc(dataDir: string): () => void {
     return entry
   }
 
-  let p2g: { db: DatabaseType.Database; repository: P2gItemCatalogRepository; monsters?: P2gMonsterCatalogRepository; quests?: P2gQuestCatalogRepository } | undefined
+  let p2g: { db: DatabaseType.Database; repository: P2gItemCatalogRepository; monsters?: P2gMonsterCatalogRepository; quests?: P2gQuestCatalogRepository; skills?: P2gSkillCatalogRepository; decorations?: P2gDecorationCatalogRepository } | undefined
   const p2gItems = () => {
     if (p2g) return p2g.repository
     if (!existsSync(join(dataDir, 'mhp2g.sqlite'))) throw new Error('P2G 道具资料库尚未安装，请查看 README 中的 P2G 本地接入说明。')
@@ -74,6 +77,10 @@ export function registerCatalogIpc(dataDir: string): () => void {
     try { p2g = { db, repository: new P2gItemCatalogRepository(db, itemTerms()) }; return p2g.repository }
     catch (error) { db.close(); throw error }
   }
+
+  const p2gDecorations = () => { p2gItems(); return p2g!.decorations ??= new P2gDecorationCatalogRepository(p2g!.db) }
+
+  const p2gSkills = () => { p2gItems(); return p2g!.skills ??= new P2gSkillCatalogRepository(p2g!.db) }
 
   const p2gMonsters = () => {
     p2gItems()
@@ -98,15 +105,15 @@ export function registerCatalogIpc(dataDir: string): () => void {
   })
   ipcMain.handle(catalogChannels.searchDecorations, (_event, payload: unknown) => {
     const filters = decorationCatalogFiltersSchema.parse(payload)
-    return repositoryEntry(filters.gameId).decorations.searchDecorations(filters)
+    return filters.gameId === 'mhp2g' ? p2gDecorations().searchDecorations(filters) : repositoryEntry(filters.gameId).decorations.searchDecorations({ ...filters, gameId: filters.gameId })
   })
   ipcMain.handle(catalogChannels.getDecoration, (_event, payload: unknown) => {
     const identity = decorationIdentitySchema.parse(payload)
-    return repositoryEntry(identity.gameId).decorations.getDecoration(identity)
+    return identity.gameId === 'mhp2g' ? p2gDecorations().getDecoration(identity) : repositoryEntry(identity.gameId).decorations.getDecoration(identity)
   })
   ipcMain.handle(catalogChannels.getDecorationFacets, (_event, payload: unknown) => {
-    const gameId = gameIdSchema.parse(payload)
-    return repositoryEntry(gameId).decorations.getDecorationFacets(gameId)
+    const gameId = catalogGameIdSchema.parse(payload)
+    return gameId === 'mhp2g' ? p2gDecorations().getDecorationFacets() : repositoryEntry(gameId).decorations.getDecorationFacets(gameId)
   })
   ipcMain.handle(catalogChannels.searchWeapons, (_event, payload: unknown) => {
     const filters = weaponCatalogFiltersSchema.parse(payload)
@@ -149,17 +156,18 @@ export function registerCatalogIpc(dataDir: string): () => void {
     const gameId = gameIdSchema.parse(payload)
     return repositoryEntry(gameId).armors.getArmorFacets(gameId)
   })
+  ipcMain.handle(catalogChannels.getP2gSkillEquipment, (_event, payload: unknown) => { const identity = p2gSkillEquipmentIdentitySchema.parse(payload); return p2gSkills().getEquipment(identity.equipmentKey) })
   ipcMain.handle(catalogChannels.getSkill, (_event, payload: unknown) => {
     const identity = skillIdentitySchema.parse(payload)
-    return repositoryEntry(identity.gameId).skills.getSkill(identity)
+    return identity.gameId === 'mhp2g' ? p2gSkills().getSkill(identity.skillId) : repositoryEntry(identity.gameId).skills.getSkill({ ...identity, gameId: identity.gameId })
   })
   ipcMain.handle(catalogChannels.searchSkills, (_event, payload: unknown) => {
     const filters = skillCatalogFiltersSchema.parse(payload)
-    return repositoryEntry(filters.gameId).skills.searchSkills(filters)
+    return filters.gameId === 'mhp2g' ? p2gSkills().searchSkills(filters) : repositoryEntry(filters.gameId).skills.searchSkills({ ...filters, gameId: filters.gameId })
   })
   ipcMain.handle(catalogChannels.getSkillFacets, (_event, payload: unknown) => {
-    const gameId = gameIdSchema.parse(payload)
-    return repositoryEntry(gameId).skills.getSkillFacets(gameId)
+    const gameId = catalogGameIdSchema.parse(payload)
+    return gameId === 'mhp2g' ? p2gSkills().getSkillFacets() : repositoryEntry(gameId).skills.getSkillFacets(gameId)
   })
   ipcMain.handle(catalogChannels.searchMonsters, (_event, payload: unknown) => {
     const filters = monsterCatalogFiltersSchema.parse(payload)

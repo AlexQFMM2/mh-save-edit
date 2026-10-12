@@ -1,0 +1,8 @@
+.p2g-skill-equipment-list { --p2g-skill-equipment-list-component-padding: var(--global-spacing-3); display: grid; gap: var(--global-spacing-2); min-width: 0; }
+.p2g-skill-equipment-list__row { display: flex; align-items: center; gap: var(--global-spacing-3); min-width: 0; width: 100%; padding: var(--p2g-skill-equipment-list-component-padding); text-align: left; cursor: pointer; border: var(--global-border-width) solid var(--global-theme-color-border-subtle); border-radius: var(--global-radius-md); background: var(--global-theme-color-surface-inset); }
+.p2g-skill-equipment-list__row:focus-visible { outline: 2px solid var(--global-theme-color-focus-ring); outline-offset: 2px; }
+.p2g-skill-equipment-list__copy { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.p2g-skill-equipment-list__name { display: block; color: var(--global-theme-color-text-primary); font-size: var(--global-typography-font-size-body); }
+.p2g-skill-equipment-list__secondary { display: block; color: var(--global-theme-color-text-secondary); font-size: var(--global-typography-font-size-small); }
+.p2g-skill-equipment-list__points { color: var(--global-theme-color-data); font-size: var(--global-typography-font-size-body); white-space: nowrap; }
+.p2g-skill-equipment-list__empty { color: var(--global-theme-color-text-muted); font-size: var(--global-typography-font-size-body); }

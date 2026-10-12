@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useOutletContext, useSearchParams } from 'react-router-dom'
 import type { ItemIdentity, MonsterCatalogTab, MonsterDetail, MonsterSummary, QuestAvailability } from '../../../api/catalog/types'
 import { ItemDetailDrawer } from '../../components/ItemDetailDrawer/ItemDetailDrawer'
@@ -37,6 +37,9 @@ export function MonsterCatalogPage() {
     }
     return next
   }), [setParams])
+  // List queries depend on filters, while automatic selection reads the latest URL.
+  const selectionRef = useRef({ selected, update })
+  useLayoutEffect(() => { selectionRef.current = { selected, update } }, [selected, update])
   const closeQuest = useCallback(() => update({ quest: undefined }), [update])
   const closeItem = useCallback(() => setItemDrawer(null), [])
   const reset = useCallback(() => { setQueryInput(''); setItemDrawer(null); setParams({}) }, [setParams])
@@ -54,11 +57,12 @@ export function MonsterCatalogPage() {
     void api.searchMonsters({ gameId: game.id, targetMonsterId: target, query, includePlaceholders }).then(rows => {
       if (!active) return
       setMonsters(rows)
-      if (selected == null && rows[0]) update({ monster: rows[0].monsterId })
+      const selection = selectionRef.current
+      if (selection.selected == null && rows[0]) selection.update({ monster: rows[0].monsterId })
     }).catch(cause => { if (active) setError(cause instanceof Error ? cause.message : '怪物列表读取失败') })
       .finally(() => { if (active) setLoading(false) })
     return () => { active = false }
-  }, [game.id, target, query, includePlaceholders, selected, update])
+  }, [game.id, target, query, includePlaceholders])
   useEffect(() => {
     setItemDrawer(null)
     if (selected == null) { setDetail(null); setDetailLoading(false); return }

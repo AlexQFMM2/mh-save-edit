@@ -23,7 +23,7 @@ export function GameOverviewPanel({ game }: GameOverviewPanelProps) {
         <div>
           <p className="game-overview-panel__eyebrow">当前游戏工作区</p>
           <h1 className="game-overview-panel__title">{game.title}</h1>
-          <p className="game-overview-panel__description">{available ? '从这里进入资料、存档修改与配装工具。' : 'P2G 道具、怪物与任务图鉴已接入；其他图鉴、存档修改与配装功能待接入。'}</p>
+          <p className="game-overview-panel__description">{available ? '从这里进入资料、存档修改与配装工具。' : 'P2G 道具、怪物、任务、技能与装饰品图鉴已接入；其他图鉴、存档修改与配装功能待接入。'}</p>
         </div>
         <button className="game-overview-panel__open-save" type="button" disabled>
           <FolderOpen size={17} aria-hidden="true" />
@@ -45,7 +45,7 @@ export function GameOverviewPanel({ game }: GameOverviewPanelProps) {
               <span className="game-overview-panel__feature-icon" aria-hidden="true"><Icon size={20} /></span>
               <span className="game-overview-panel__feature-copy">
                 <strong>{item.title}</strong>
-                <small>{available ? item.description : item.path === 'catalog/items' ? '浏览道具、怪物、任务资料与关联来源。' : '待接入'}</small>
+                <small>{available ? item.description : item.path === 'catalog/items' ? '浏览道具、怪物、任务、技能与装饰品资料与关联来源。' : '待接入'}</small>
               </span>
               <ArrowRight className="game-overview-panel__feature-arrow" size={17} aria-hidden="true" />
             </Link>

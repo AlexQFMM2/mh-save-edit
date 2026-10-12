@@ -12,7 +12,7 @@ const hasTable = (db: Database.Database, name: string) => Boolean(db.prepare("SE
 export class SkillCatalogRepository {
   constructor(private readonly db: Database.Database) {}
 
-  searchSkills(filters: SkillCatalogFilters): PageResult<SkillSummary> {
+  searchSkills(filters: SkillCatalogFilters & { gameId: GameId }): PageResult<SkillSummary> {
     const pageSize = Math.min(Math.max(filters.pageSize ?? 100, 1), 100)
     const page = Math.max(filters.page ?? 1, 1)
     const values: unknown[] = [filters.gameId]
@@ -39,7 +39,7 @@ export class SkillCatalogRepository {
     return { items: rows.map(row => this.toSummary(row, filters.gameId)), page, pageSize, total, hasNext: page * pageSize < total }
   }
 
-  getSkill(identity: SkillIdentity): SkillDetail | null {
+  getSkill(identity: SkillIdentity & { gameId: GameId }): SkillDetail | null {
     const row = this.db.prepare('SELECT * FROM catalog_skills WHERE game_id=? AND skill_id=?').get(identity.gameId, identity.skillId) as Row | undefined
     if (!row) return null
     const activationRows = hasTable(this.db, 'catalog_skill_activations') ? this.db.prepare('SELECT * FROM catalog_skill_activations WHERE game_id=? AND skill_id=? ORDER BY threshold DESC,dex_activation_id').all(identity.gameId, identity.skillId) as Row[] : []
@@ -62,6 +62,6 @@ export class SkillCatalogRepository {
     return { gameId, skillId: int(row.skill_id), nameCn: str(row.name_cn), nameEn: str(row.name_en), nameJp: str(row.name_jp), activationCount: count(), positiveActivationCount: count('positive'), negativeActivationCount: count('negative'), specialActivationCount: count('special'), armorCount: relationCount('catalog_armor_skills'), decorationCount: relationCount('catalog_decoration_skills'), talismanCount: hasTable(this.db, 'catalog_skill_talisman_ranges') ? relationCount('catalog_skill_talisman_ranges') : 0, isPlaceholder: bool(row.is_placeholder) }
   }
   private toActivation(row: Row, components: SkillActivationLink[]): SkillActivation { return { activationKey: str(row.activation_key), dexActivationId: int(row.dex_activation_id), threshold: int(row.threshold), direction: str(row.direction) as SkillActivation['direction'], nameCn: str(row.name_cn), nameEn: str(row.name_en), nameJp: str(row.name_jp), descriptionCn: str(row.description_cn), descriptionEn: str(row.description_en), descriptionJp: str(row.description_jp), components } }
-  private decorations(identity: SkillIdentity): SkillDecorationRelation[] { return (this.db.prepare('SELECT d.save_id,d.name_cn,d.name_en,d.slots,d.icon_path,sk.points FROM catalog_decoration_skills sk JOIN catalog_decorations d ON d.game_id=sk.game_id AND d.save_id=sk.decoration_save_id WHERE sk.game_id=? AND sk.skill_id=? AND d.is_placeholder=0 ORDER BY sk.points DESC,d.slots,d.save_id').all(identity.gameId, identity.skillId) as Row[]).map(row => ({ gameId: identity.gameId, saveId: int(row.save_id), nameCn: str(row.name_cn), nameEn: str(row.name_en), points: int(row.points), slots: int(row.slots), iconPath: row.icon_path ? str(row.icon_path) : null })) }
-  private armors(identity: SkillIdentity): SkillArmorRelation[] { return (this.db.prepare('SELECT a.dex_id,a.name_cn,a.name_en,a.part,a.slots,a.icon_path,sk.points FROM catalog_armor_skills sk JOIN catalog_armors a ON a.game_id=sk.game_id AND a.dex_id=sk.armor_dex_id WHERE sk.game_id=? AND sk.skill_id=? AND a.is_placeholder=0 ORDER BY sk.points DESC,a.part,a.dex_id').all(identity.gameId, identity.skillId) as Row[]).map(row => ({ gameId: identity.gameId, dexId: int(row.dex_id), nameCn: str(row.name_cn), nameEn: str(row.name_en), points: int(row.points), slots: int(row.slots), part: str(row.part) as ArmorPartId, iconPath: row.icon_path ? str(row.icon_path) : null })) }
+  private decorations(identity: SkillIdentity & { gameId: GameId }): SkillDecorationRelation[] { return (this.db.prepare('SELECT d.save_id,d.name_cn,d.name_en,d.slots,d.icon_path,sk.points FROM catalog_decoration_skills sk JOIN catalog_decorations d ON d.game_id=sk.game_id AND d.save_id=sk.decoration_save_id WHERE sk.game_id=? AND sk.skill_id=? AND d.is_placeholder=0 ORDER BY sk.points DESC,d.slots,d.save_id').all(identity.gameId, identity.skillId) as Row[]).map(row => ({ gameId: identity.gameId, saveId: int(row.save_id), nameCn: str(row.name_cn), nameEn: str(row.name_en), points: int(row.points), slots: int(row.slots), iconPath: row.icon_path ? str(row.icon_path) : null })) }
+  private armors(identity: SkillIdentity & { gameId: GameId }): SkillArmorRelation[] { return (this.db.prepare('SELECT a.dex_id,a.name_cn,a.name_en,a.part,a.slots,a.icon_path,sk.points FROM catalog_armor_skills sk JOIN catalog_armors a ON a.game_id=sk.game_id AND a.dex_id=sk.armor_dex_id WHERE sk.game_id=? AND sk.skill_id=? AND a.is_placeholder=0 ORDER BY sk.points DESC,a.part,a.dex_id').all(identity.gameId, identity.skillId) as Row[]).map(row => ({ gameId: identity.gameId, dexId: int(row.dex_id), nameCn: str(row.name_cn), nameEn: str(row.name_en), points: int(row.points), slots: int(row.slots), part: str(row.part) as ArmorPartId, iconPath: row.icon_path ? str(row.icon_path) : null })) }
 }

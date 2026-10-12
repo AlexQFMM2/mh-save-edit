@@ -64,6 +64,8 @@ export function ItemRelationSection({ title, relations, onSelectItem, onSelectCa
                   ? <button className="item-relation-section__target" type="button" onClick={() => onSelectWeapon(relation.relatedWeapon!)}>{relationLabel(relation)}</button>
                   : relation.usageKind === 'armor' && onSelectArmor && relation.relatedArmor
                   ? <button className="item-relation-section__target" type="button" onClick={() => onSelectArmor(relation.relatedArmor!)}>{relationLabel(relation)}</button>
+                  : relation.relatedDecoration && onSelectDecoration
+                  ? <button className="item-relation-section__target" type="button" onClick={() => onSelectDecoration(relation.relatedDecoration!.itemId)}>{relationLabel(relation)}</button>
                   : relation.usageKind === 'decoration' && onSelectDecoration && relation.metadata.Target_Save_ID
                   ? <button className="item-relation-section__target" type="button" onClick={() => onSelectDecoration(Number(relation.metadata.Target_Save_ID))}>{relationLabel(relation)}</button>
                   : relation.sourceKind === 'monster' && onSelectMonster && relation.relatedMonster

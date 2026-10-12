@@ -1,3 +1,4 @@
+import { decorationIdentity } from '../../../api/catalog/decorationIdentity'
 import { itemNumber, itemIdentity } from '../../../api/catalog/itemIdentity'
 import { DetailDrawer } from '../../components/DetailDrawer/DetailDrawer'
 import { CatalogPendingDetail } from '../../components/CatalogPendingDetail/CatalogPendingDetail'
@@ -112,8 +113,8 @@ export function ItemCatalogPage() {
       <section className="item-catalog-page__list" aria-label="道具列表"><ItemList items={items} selectedId={selectedVisible ? selectedId : undefined} loading={loading} error={error} onSelect={(id) => updateParams({ item: id })} /><ItemPagination page={page} pageSize={resultMeta.pageSize} total={resultMeta.total} hasNext={resultMeta.hasNext} onPageChange={(value) => updateParams({ page: value, item: undefined })} /></section>
       <ItemDetailPanel item={detail} loading={detailLoading} error={detailError} onSelectCatalogItem={(identity) => { closeRelationDrawers(); setItemDrawerIdentity(identity) }} onSelectPending={(target) => { closeRelationDrawers(); setPendingTarget(target) }} onSelectDecoration={(saveId) => { closeRelationDrawers(); setDecorationDrawerId(saveId) }} onSelectWeapon={(weapon) => { closeRelationDrawers(); setWeaponDrawerKey(weapon.weaponKey) }} onSelectArmor={(armor) => { closeRelationDrawers(); setArmorDrawerId(armor.dexId) }} onSelectMonster={(monster) => { closeRelationDrawers(); setMonsterDrawerId(monster.monsterId) }} onSelectQuest={(quest) => { closeRelationDrawers(); setQuestDrawerKey(quest.questKey) }} onSelectPalicoEquipment={(equipment) => { closeRelationDrawers(); setPalicoDrawer({ kind: equipment.kind, id: equipment.equipmentId }) }} />
     </div>
+    <DecorationDetailDrawer identity={decorationDrawerId==null?null:decorationIdentity(game.id,decorationDrawerId)} onClose={() => setDecorationDrawerId(null)} />
     {game.id !== 'mhp2g' && <>
-    <DecorationDetailDrawer gameId={game.id} decorationSaveId={decorationDrawerId} onClose={() => setDecorationDrawerId(null)} />
     <WeaponDetailDrawer gameId={game.id} weaponKey={weaponDrawerKey} onClose={() => setWeaponDrawerKey(null)} />
     <ArmorDetailDrawer gameId={game.id} armorDexId={armorDrawerId} onClose={() => setArmorDrawerId(null)} />
     </>}

@@ -4,3 +4,5 @@
 .item-detail-panel__translation { margin: var(--global-spacing-3) 0; color: var(--global-theme-color-text-secondary); font-size: var(--global-typography-font-size-small); overflow-wrap: anywhere; }
 .item-detail-panel__original { margin: var(--global-spacing-3) 0 var(--global-spacing-4); }
 .item-detail-panel__original-toggle { color: var(--global-theme-color-text-secondary); font-size: var(--global-typography-font-size-small); cursor: pointer; overflow-wrap: anywhere; }
+
+.item-detail-panel__decoration-link{border:0;background:transparent;padding:var(--global-spacing-2) 0;color:var(--global-theme-color-text-primary);font-size:var(--global-typography-font-size-small);text-align:left;text-decoration:underline;cursor:pointer}

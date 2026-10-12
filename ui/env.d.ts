@@ -1,3 +1,4 @@
+import type { P2gSkillEquipmentIdentity, P2gSkillEquipmentDetail } from '../api/catalog/p2gSkillTypes'
 import type { CatalogGameId, CatalogItemSummary, CatalogItemDetail } from '../api/catalog/types'
 import type { ItemTermFilters, ItemTermPage } from '../api/terminology/types'
 import type { GameId } from '../api/core/loadout'
@@ -18,7 +19,7 @@ declare global {
         getItemFacets(gameId: CatalogGameId): Promise<{ rarities: number[]; maxStacks: number[]; relations: { sourceKind: string; usageKind: string | null }[] }>
         searchDecorations(filters: DecorationCatalogFilters): Promise<PageResult<DecorationSummary>>
         getDecoration(identity: DecorationIdentity): Promise<DecorationDetail | null>
-        getDecorationFacets(gameId: GameId): Promise<DecorationCatalogFacets>
+        getDecorationFacets(gameId: CatalogGameId): Promise<DecorationCatalogFacets>
         searchWeapons(filters: WeaponCatalogFilters): Promise<PageResult<WeaponSummary>>
         getWeapon(identity: WeaponIdentity): Promise<WeaponDetail | null>
         getWeaponFacets(gameId: GameId): Promise<WeaponCatalogFacets>
@@ -29,9 +30,10 @@ declare global {
         searchArmorSets(filters: ArmorSetFilters): Promise<PageResult<ArmorSetSummary>>
         getArmor(identity: ArmorIdentity): Promise<ArmorDetail | null>
         getArmorFacets(gameId: GameId): Promise<ArmorCatalogFacets>
+        getP2gSkillEquipment(identity: P2gSkillEquipmentIdentity): Promise<P2gSkillEquipmentDetail | null>
         getSkill(identity: SkillIdentity): Promise<SkillDetail | null>
         searchSkills(filters: SkillCatalogFilters): Promise<PageResult<SkillSummary>>
-        getSkillFacets(gameId: GameId): Promise<SkillCatalogFacets>
+        getSkillFacets(gameId: CatalogGameId): Promise<SkillCatalogFacets>
         searchMonsters(filters: MonsterCatalogFilters): Promise<MonsterSummary[]>
         getMonster(identity: MonsterIdentity): Promise<MonsterDetail | null>
         getMonsterFacets(gameId: CatalogGameId): Promise<MonsterCatalogFacets>
