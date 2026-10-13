@@ -1,3 +1,4 @@
+import { decorationKey } from './identity'
 import { createHash } from 'node:crypto'
 import { calculateLoadout } from './calculator'
 import { getGameLoadoutRules } from './rules'
@@ -9,13 +10,21 @@ import { SearchBudgetExpired, SearchControl, type SearchContext } from './search
 import { ARMOR_LOADOUT_SLOTS, type AutoLoadoutRequest, type AutoLoadoutResult, type AutoLoadoutSearchReport, type LoadoutArmor, type LoadoutCatalogSnapshot, type LogicalLoadout } from './types'
 
 function fingerprint(loadout: LogicalLoadout) {
-  return createHash('sha256').update(JSON.stringify({ weapon: loadout.weapon?.candidateKey, armor: ARMOR_LOADOUT_SLOTS.map(slot => loadout.armor[slot]?.candidateKey), charm: loadout.charm && [loadout.charm.classId, loadout.charm.slots, loadout.charm.skill1, loadout.charm.skill2], decorations: [loadout.weapon, ...ARMOR_LOADOUT_SLOTS.map(slot => loadout.armor[slot]), loadout.charm].map(value => value?.decorations.map(point => point.saveId).sort((a, b) => a - b)) })).digest('hex').slice(0, 20)
+  return createHash('sha256').update(JSON.stringify({ weapon: loadout.weapon?.candidateKey, armor: ARMOR_LOADOUT_SLOTS.map(slot => loadout.armor[slot]?.candidateKey), charm: loadout.charm && [loadout.charm.classId, loadout.charm.slots, loadout.charm.skill1, loadout.charm.skill2], decorations: [loadout.weapon, ...ARMOR_LOADOUT_SLOTS.map(slot => loadout.armor[slot]), loadout.charm].map(value => value?.decorations.map(point => decorationKey(point)).sort()) })).digest('hex').slice(0, 20)
 }
 
 /** A complete gear combination is checked immediately; no Cartesian product is materialized. */
 export async function runAutoLoadout(snapshot: LoadoutCatalogSnapshot, request: AutoLoadoutRequest, context: SearchContext): Promise<AutoLoadoutSearchReport> {
   if (!request.baseLoadout.weapon) throw new Error('自动配装需要先选择具体武器')
   if (request.dataVersion !== snapshot.dataVersion) throw new Error('配装数据版本已变化，请重新打开自动配装')
+  if (snapshot.gameId === 'mhp2g') {
+    if (request.baseLoadout.charm) throw new Error('P2G 没有护石')
+    const fixed = structuredClone(request.baseLoadout)
+    for (const part of ARMOR_LOADOUT_SLOTS) if (fixed.armor[part]?.lock === 'unlocked') delete fixed.armor[part]
+    for (const item of [fixed.weapon, ...Object.values(fixed.armor)]) if (item && item.lock !== 'equipmentAndDecorations') item.decorations = []
+    const issue = calculateLoadout(snapshot, fixed).issues.find(value => !value.code.startsWith('slot.'))
+    if (issue) throw new Error(`固定装备不适用：${issue.message}`)
+  }
   const control = new SearchControl(request, context)
   const results: AutoLoadoutResult[] = []
   const seen = new Set<string>()
@@ -35,17 +44,17 @@ export async function runAutoLoadout(snapshot: LoadoutCatalogSnapshot, request: 
         const candidates: LoadoutArmor[] = []
         for (const armor of snapshot.armors) {
           await control.tick()
-          if (armor.part === part && armor.sourceKind === 'catalog' && armor.saveType != null && armor.saveId != null && (armor.combat === 'both' || armor.combat === weaponCombat) && (armor.gender === 'both' || armor.gender === request.baseLoadout.gender)) candidates.push({ ...armor, decorations: [], lock: 'unlocked' })
+          if (armor.part === part && armor.sourceKind === 'catalog' && (armor.gameId === 'mhp2g' ? Boolean(armor.armorKey) : armor.saveType != null && armor.saveId != null) && (armor.combat === 'both' || armor.combat === weaponCombat) && (armor.gender === 'both' || armor.gender === request.baseLoadout.gender)) candidates.push({ ...armor, decorations: [], lock: 'unlocked' })
         }
         // Keep every compatible candidate, including signed points and modifiers.
         bySlot.push(candidates)
       }
     }
-    control.stage = '准备护石候选'
+    control.stage = snapshot.gameId === 'mhp2g' ? '准备防具组合' : '准备护石候选'
     const fixedCharm = request.baseLoadout.charm && request.baseLoadout.charm.lock !== 'unlocked'
-    const generated = fixedCharm ? { candidates: [], warnings: [] } : await searchCharms(snapshot, relevant, control)
+    const generated = snapshot.gameId === 'mhp2g' || fixedCharm ? { candidates: [], warnings: [] } : await searchCharms(snapshot, relevant, control)
     warnings.push(...generated.warnings)
-    const charms = fixedCharm ? [structuredClone(request.baseLoadout.charm)] : [...generated.candidates, null]
+    const charms = snapshot.gameId === 'mhp2g' ? [null] : fixedCharm ? [structuredClone(request.baseLoadout.charm)] : [...generated.candidates, null]
     const canReach = createSearchBounds(snapshot, request, bySlot, charms)
     const orderedArmors = createArmorOrdering(snapshot, request, bySlot, relevant)
     const search = async (depth: number, spent: number, limit: number, previousLimit: number): Promise<boolean> => {
@@ -73,7 +82,7 @@ export async function runAutoLoadout(snapshot: LoadoutCatalogSnapshot, request: 
         control.verified++
         if (!candidate) continue
         const calculation = calculateLoadout(snapshot, candidate)
-        if (calculation.encoding === 'blocked' || !request.targets.every(target => (calculation.skills.find(value => value.skillId === target.skillId)?.total ?? 0) >= target.threshold)) continue
+        if (calculation.encoding === 'blocked' || snapshot.gameId === 'mhp2g' && calculation.legality !== 'confirmed' || !request.targets.every(target => (calculation.skills.find(value => value.skillId === target.skillId)?.total ?? 0) >= target.threshold)) continue
         const key = fingerprint(candidate)
         if (seen.has(key)) continue
         seen.add(key)

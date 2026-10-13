@@ -6,6 +6,7 @@ package/
 data/*.sqlite
 data/*.sqlite-*
 data/manifests/
+data/mhp2g-save-profile.json
 ui/public/assets/catalog/icons/
 ui/public/assets/catalog/appearance/
 build/app-icon.ico

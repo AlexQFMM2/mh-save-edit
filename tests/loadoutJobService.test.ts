@@ -4,6 +4,8 @@ import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import { afterEach, describe, expect, it } from 'vitest'
 import { AutoLoadoutJobService } from '../api/loadout/jobService'
+import { p2gLoadoutFixture } from './fixtures/p2gLoadout'
+import { runAutoLoadout } from '../api/loadout/autoSearch'
 import { createEmptyLogicalLoadout, type AutoLoadoutRequest, type LoadoutCatalogSnapshot } from '../api/loadout/types'
 
 class FakeWorker extends EventEmitter {
@@ -26,6 +28,33 @@ function createHarness(path: string) {
 }
 
 describe('AutoLoadoutJobService', () => {
+  it('shares the worker queue across P2G and legacy games and restores native result identities', async () => {
+    const directory = mkdtempSync(join(tmpdir(), 'mh-p2g-jobs-')); directories.push(directory)
+    const path = join(directory, 'jobs.sqlite'), fixture = p2gLoadoutFixture()
+    const report = await runAutoLoadout(fixture.snapshot, fixture.request, { checkpoint: async () => {}, progress: () => {} })
+    const { service, workers } = createHarness(path)
+    const native = service.start(fixture.request), legacy = service.start(request())
+    expect(service.list({ gameId: 'mhp2g' }).map(job => job.jobId)).toEqual([native.jobId])
+    expect(service.get(legacy.jobId).status).toBe('queued')
+    service.control(native.jobId, 'pause'); service.control(native.jobId, 'resume')
+    expect(workers[0].messages).toContainEqual({ type: 'pause' })
+    expect(workers[0].messages).toContainEqual({ type: 'resume' })
+    workers[0].emit('message', { type: 'finished', results: report.results, value: report.progress })
+    await new Promise(resolve => setTimeout(resolve, 0))
+    expect(service.get(legacy.jobId).status).toBe('running')
+    service.dispose()
+    const restored = createHarness(path)
+    try {
+      const detail = restored.service.get(native.jobId)
+      expect(detail.status).toBe('completed')
+      expect(detail.results).toEqual(report.results)
+      expect(detail.request.baseLoadout.charm).toBeNull()
+      expect(detail.results[0].loadout.weapon).toMatchObject({ gameId: 'mhp2g', weaponKey: 'weapon_blademaster:1', saveId: null })
+      expect(restored.service.get(legacy.jobId).status).toBe('interrupted')
+      expect(restored.workers).toHaveLength(0)
+    } finally { restored.service.dispose() }
+  })
+
   it('runs only one worker and starts queued jobs in creation order', async () => {
     const directory = mkdtempSync(join(tmpdir(), 'mh-loadout-jobs-')); directories.push(directory)
     const { service, workers } = createHarness(join(directory, 'jobs.sqlite'))

@@ -1,5 +1,6 @@
 import type { ArmorLoadoutSlot, LegalityStatus, LoadoutActivation, LoadoutCalculationSnapshot, LoadoutDecoration, LoadoutIssue, LoadoutResult, LoadoutSkillPoint, LoadoutSkillResult, LogicalLoadout } from './types'
 import { ARMOR_LOADOUT_SLOTS } from './types'
+import { decorationKey, decorationId, isDecorationForGame } from './identity'
 import { getGameLoadoutRules, type LoadoutContribution } from './rules'
 import { findMh4gCharmWitness, MH4G_WITNESS_NOTICE_CODE } from './mh4gCharmWitnesses'
 
@@ -26,7 +27,7 @@ function activationFor(points: number, activations: LoadoutActivation[]): { acti
   const positive = activations.filter(value => value.direction === 'positive').sort((a, b) => a.threshold - b.threshold)
   const negative = activations.filter(value => value.direction === 'negative').sort((a, b) => b.threshold - a.threshold)
   const activePositive = positive.filter(value => points >= value.threshold).at(-1) ?? null
-  const activeNegative = negative.find(value => points <= value.threshold) ?? null
+  const activeNegative = negative.filter(value => points <= value.threshold).at(-1) ?? null
   const active = activePositive ?? activeNegative
   const next = activePositive ? positive.find(value => value.threshold > activePositive.threshold) ?? null : positive.find(value => value.threshold > points) ?? null
   return { active, next }
@@ -35,6 +36,7 @@ function activationFor(points: number, activations: LoadoutActivation[]): { acti
 export function calculateLoadout(snapshot: LoadoutCalculationSnapshot, loadout: LogicalLoadout): LoadoutResult {
   const rules = getGameLoadoutRules(snapshot.gameId)
   const issues: LoadoutIssue[] = []
+  if (loadout.gameId !== snapshot.gameId || snapshot.gameId === 'mhp2g' && loadout.charm) issues.push({ code: 'loadout.identity', path: 'loadout', severity: 'error', message: '配装游戏不一致或 P2G 包含护石' })
   const contributions = new Map<number, Contribution>()
   const slotResults: LoadoutResult['slots'] = []
   const armorStats: LoadoutResult['armorStats'] = []
@@ -47,8 +49,8 @@ export function calculateLoadout(snapshot: LoadoutCalculationSnapshot, loadout: 
     if (values.length > 3) localIssues.push({ code: 'decorations.record-capacity', path, severity: 'error', message: `装饰珠记录超过 3 颗容量（当前 ${values.length} 颗）`, source: 'loadout-calculator' })
     if (usedSlots > naturalSlots) localIssues.push({ code: 'slots.over-capacity', path, severity: 'warning', message: `装饰珠超出 ${usedSlots - naturalSlots} 孔`, source: 'loadout-calculator' })
     for (const decoration of values) {
-      const catalog = snapshot.decorations.find((candidate) => candidate.saveId === decoration.saveId)
-      if (!catalog) localIssues.push({ code: 'decoration.unknown', path, severity: 'info', message: `未知装饰珠 ID ${decoration.saveId}；保留记录但不计算未知技能贡献`, source: 'loadout-calculator' })
+      const catalog = snapshot.decorations.find((candidate) => decorationKey(candidate) === decorationKey(decoration) && isDecorationForGame(decoration, snapshot.gameId))
+      if (!catalog) localIssues.push({ code: 'decoration.unknown', path, severity: 'info', message: `未知装饰珠 ID ${decorationId(decoration)}；保留记录但不计算未知技能贡献`, source: 'loadout-calculator' })
       for (const point of catalog?.skills ?? []) add(contributions, point, 'decorations')
     }
     return { usedSlots, localIssues }
@@ -59,7 +61,7 @@ export function calculateLoadout(snapshot: LoadoutCalculationSnapshot, loadout: 
     const { usedSlots, localIssues } = addDecorations('weapon.decorations', loadout.weapon.slots, loadout.weapon.decorations, 'weapon')
     if (loadout.weapon.instance?.issues.length) localIssues.push(...loadout.weapon.instance.issues)
     issues.push(...localIssues)
-    slotResults.push({ slot: 'weapon', lock: loadout.weapon.lock, nameCn: loadout.weapon.nameCn, decorations: loadout.weapon.decorations.map(({ saveId, nameCn, slots }) => ({ saveId, nameCn, slots })), naturalSlots: loadout.weapon.slots, usedSlots, remainingSlots: loadout.weapon.slots - usedSlots, legality: loadout.weapon.instance?.legality ?? statusFromIssues(localIssues), encoding: loadout.weapon.instance?.encoding ?? 'encodable', issues: localIssues })
+    slotResults.push({ slot: 'weapon', lock: loadout.weapon.lock, nameCn: loadout.weapon.nameCn, decorations: loadout.weapon.decorations, naturalSlots: loadout.weapon.slots, usedSlots, remainingSlots: loadout.weapon.slots - usedSlots, legality: loadout.weapon.instance?.legality ?? statusFromIssues(localIssues), encoding: loadout.weapon.instance?.encoding ?? 'encodable', issues: localIssues })
   } else issues.push({ code: 'slot.weapon.empty', path: 'weapon', severity: 'error', message: '请选择具体武器' })
 
   for (const slot of ARMOR_LOADOUT_SLOTS) {
@@ -75,7 +77,7 @@ export function calculateLoadout(snapshot: LoadoutCalculationSnapshot, loadout: 
     localIssues.push(...rules.validateArmorCompatibility(loadout.weapon, armor, `armor.${slot}.combat`))
     if (armor.instance?.issues.length) localIssues.push(...armor.instance.issues)
     issues.push(...localIssues)
-    slotResults.push({ slot, lock: armor.lock, nameCn: armor.nameCn, decorations: armor.decorations.map(({ saveId, nameCn, slots }) => ({ saveId, nameCn, slots })), naturalSlots: armor.slots, usedSlots, remainingSlots: armor.slots - usedSlots, legality: armor.instance?.legality ?? statusFromIssues(localIssues), encoding: armor.instance?.encoding ?? 'encodable', issues: localIssues })
+    slotResults.push({ slot, lock: armor.lock, nameCn: armor.nameCn, decorations: armor.decorations, naturalSlots: armor.slots, usedSlots, remainingSlots: armor.slots - usedSlots, legality: armor.instance?.legality ?? statusFromIssues(localIssues), encoding: armor.instance?.encoding ?? 'encodable', issues: localIssues })
   }
 
   if (loadout.charm) {
@@ -84,7 +86,7 @@ export function calculateLoadout(snapshot: LoadoutCalculationSnapshot, loadout: 
     const { usedSlots, localIssues } = addDecorations('charm.decorations', loadout.charm.slots, loadout.charm.decorations, 'charm')
     localIssues.push(...loadout.charm.issues)
     issues.push(...localIssues)
-    slotResults.push({ slot: 'charm', lock: loadout.charm.lock, nameCn: loadout.charm.classNameCn, decorations: loadout.charm.decorations.map(({ saveId, nameCn, slots }) => ({ saveId, nameCn, slots })), naturalSlots: loadout.charm.slots, usedSlots, remainingSlots: loadout.charm.slots - usedSlots, legality: loadout.charm.legality, encoding: loadout.charm.encoding, issues: localIssues })
+    slotResults.push({ slot: 'charm', lock: loadout.charm.lock, nameCn: loadout.charm.classNameCn, decorations: loadout.charm.decorations, naturalSlots: loadout.charm.slots, usedSlots, remainingSlots: loadout.charm.slots - usedSlots, legality: loadout.charm.legality, encoding: loadout.charm.encoding, issues: localIssues })
   }
 
   const torsoSkillId = rules.torsoSkillId
@@ -92,7 +94,7 @@ export function calculateLoadout(snapshot: LoadoutCalculationSnapshot, loadout: 
   if (torsoCopies > 0) {
     for (const [skillId, value] of contributions) {
       if (skillId === torsoSkillId) continue
-      const chestDecorShare = loadout.armor.chest?.decorations.flatMap(value => value.skills).filter(value => value.skillId === skillId).reduce((sum, value) => sum + value.points, 0) ?? 0
+      const chestDecorShare = loadout.armor.chest?.decorations.flatMap(value => snapshot.decorations.find(candidate => decorationKey(candidate) === decorationKey(value))?.skills ?? []).filter(value => value.skillId === skillId).reduce((sum, value) => sum + value.points, 0) ?? 0
       value.special += (value.chest + chestDecorShare) * torsoCopies
     }
   }
@@ -108,7 +110,7 @@ export function calculateLoadout(snapshot: LoadoutCalculationSnapshot, loadout: 
     if (total === 0 && !definition.activations.length) continue
     const activation = activationFor(total, definition.activations)
     if (activation.active) active.push(activation.active)
-    skillResults.push({ skillId: definition.skillId, nameCn: definition.nameCn, ...value, total, activation: activation.active, nextActivation: activation.next })
+    skillResults.push({ skillId: definition.skillId, nameCn: definition.nameCn, ...value, total, activation: activation.active, specialRule: definition.specialRule, nextActivation: activation.next })
   }
   skillResults.sort((a, b) => Number(Boolean(b.activation)) - Number(Boolean(a.activation)) || b.total - a.total || a.skillId - b.skillId)
 

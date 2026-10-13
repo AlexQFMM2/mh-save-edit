@@ -1,3 +1,4 @@
+import type { LoadoutGame } from '../api/loadout/types'
 import type { P2gSkillEquipmentIdentity, P2gSkillEquipmentDetail } from '../api/catalog/p2gSkillTypes'
 import type { CatalogGameId, CatalogItemSummary, CatalogItemDetail } from '../api/catalog/types'
 import type { ItemTermFilters, ItemTermPage } from '../api/terminology/types'
@@ -20,16 +21,23 @@ declare global {
         searchDecorations(filters: DecorationCatalogFilters): Promise<PageResult<DecorationSummary>>
         getDecoration(identity: DecorationIdentity): Promise<DecorationDetail | null>
         getDecorationFacets(gameId: CatalogGameId): Promise<DecorationCatalogFacets>
+        searchWeapons(filters: import('../api/catalog/p2gWeaponTypes').P2gWeaponFilters): Promise<import('../api/catalog/p2gWeaponTypes').P2gWeaponPage>
         searchWeapons(filters: WeaponCatalogFilters): Promise<PageResult<WeaponSummary>>
+        getWeapon(identity: import('../api/catalog/p2gWeaponTypes').P2gWeaponIdentity): Promise<import('../api/catalog/p2gWeaponTypes').P2gWeaponDetail | null>
         getWeapon(identity: WeaponIdentity): Promise<WeaponDetail | null>
+        getWeaponFacets(gameId: 'mhp2g'): Promise<import('../api/catalog/p2gWeaponTypes').P2gWeaponFacets>
         getWeaponFacets(gameId: GameId): Promise<WeaponCatalogFacets>
+        getWeaponTree(gameId: 'mhp2g', weaponTypeId: number): Promise<import('../api/catalog/p2gWeaponTypes').P2gWeaponTree>
         getWeaponTree(gameId: GameId, weaponTypeId: number): Promise<WeaponTreeResult>
         searchWeaponMotions(filters: WeaponMotionFilters): Promise<WeaponMotionCatalogResult>
         getWeaponMotionFacets(gameId: GameId): Promise<WeaponMotionFacets>
+        searchArmors(filters: import('../api/catalog/p2gArmorTypes').P2gArmorFilters): Promise<PageResult<import('../api/catalog/p2gArmorTypes').P2gArmorSummary>>
         searchArmors(filters: ArmorCatalogFilters): Promise<PageResult<ArmorSummary>>
+        searchArmorSets(filters: import('../api/catalog/p2gArmorTypes').P2gArmorSetFilters): Promise<PageResult<import('../api/catalog/p2gArmorTypes').P2gArmorSetSummary>>
         searchArmorSets(filters: ArmorSetFilters): Promise<PageResult<ArmorSetSummary>>
+        getArmor(identity: import('../api/catalog/p2gArmorTypes').P2gArmorIdentity): Promise<import('../api/catalog/p2gArmorTypes').P2gArmorDetail | null>
         getArmor(identity: ArmorIdentity): Promise<ArmorDetail | null>
-        getArmorFacets(gameId: GameId): Promise<ArmorCatalogFacets>
+        getArmorFacets(gameId: CatalogGameId): Promise<ArmorCatalogFacets>
         getP2gSkillEquipment(identity: P2gSkillEquipmentIdentity): Promise<P2gSkillEquipmentDetail | null>
         getSkill(identity: SkillIdentity): Promise<SkillDetail | null>
         searchSkills(filters: SkillCatalogFilters): Promise<PageResult<SkillSummary>>
@@ -59,10 +67,10 @@ declare global {
         searchWeapons(filters: LoadoutWeaponFilters): Promise<LoadoutPage<LoadoutWeaponCandidate>>
         searchArmors(filters: LoadoutArmorFilters): Promise<LoadoutPage<LoadoutArmorCandidate>>
         searchDecorations(filters: LoadoutDecorationFilters): Promise<LoadoutPage<LoadoutDecoration>>
-        getFacets(gameId: GameId): Promise<LoadoutFacets>
-        getBootstrap(gameId: GameId): Promise<LoadoutCalculationSnapshot>
-        getSnapshot(gameId: GameId): Promise<LoadoutCatalogSnapshot>
-        getRelicLookups(gameId: GameId): Promise<LoadoutRelicLookup[]>
+        getFacets(gameId: LoadoutGame): Promise<LoadoutFacets>
+        getBootstrap(gameId: LoadoutGame): Promise<LoadoutCalculationSnapshot>
+        getSnapshot(gameId: LoadoutGame): Promise<LoadoutCatalogSnapshot>
+        getRelicLookups(gameId: LoadoutGame): Promise<LoadoutRelicLookup[]>
         reconcileLoadout(loadout: LogicalLoadout): Promise<LogicalLoadout>
         validateCharm(charm: LoadoutCharm): Promise<CharmValidationResult>
         startAuto(request: AutoLoadoutRequest): Promise<AutoLoadoutJob>

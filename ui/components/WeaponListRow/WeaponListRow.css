@@ -14,3 +14,5 @@
 .weapon-list-row__type { font-size: var(--global-typography-font-size-small); }
 .weapon-list-row__special { display: grid; gap: var(--global-spacing-1); min-width: 0; }
 .weapon-list-row__special > small { overflow: hidden; color: var(--global-theme-color-data); font-size: var(--global-typography-font-size-caption); text-overflow: ellipsis; white-space: nowrap; }
+
+.weapon-list-row__number{color:var(--global-theme-color-data)}

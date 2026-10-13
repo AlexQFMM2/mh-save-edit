@@ -1,7 +1,16 @@
+import Database from 'better-sqlite3'
+// @ts-expect-error Synthetic ESM fixture.
+import { armorFixture } from './fixtures/p2gArmorCatalog.mjs'
+// @ts-expect-error Native ESM builder.
+import { appendArmors } from '../tools/mhp2g/armorCatalog.mjs'
 // @ts-expect-error Synthetic ESM fixture.
 import { createDecorationFixture } from './fixtures/p2gDecorationCatalog.mjs'
 // @ts-expect-error ESM builder.
 import { buildDecorationCatalog } from '../tools/build_mhp2g_decoration_catalog.mjs'
+// @ts-expect-error Synthetic ESM fixture.
+import { createWeaponFixture } from './fixtures/p2gWeaponCatalog.mjs'
+// @ts-expect-error ESM builder.
+import { buildWeaponCatalog } from '../tools/build_mhp2g_weapon_catalog.mjs'
 // @ts-expect-error Synthetic ESM fixture.
 import { createSkillFixture } from './fixtures/p2gSkillCatalog.mjs'
 // @ts-expect-error ESM builder.
@@ -30,6 +39,40 @@ import { registerCatalogIpc, catalogChannels } from '../api/catalog/ipc'
 const cleanups:(()=>void)[]=[]
 afterEach(()=>{cleanups.splice(0).reverse().forEach(fn=>fn());handlers.clear()})
 describe('P2G production IPC handler dispatch (no Electron launch)',()=>{
+  it('dispatches native armor, sets and bidirectional item recipes without a save identity',()=>{
+    const dir=fs.mkdtempSync(path.join(os.tmpdir(),'p2g-armor-ipc-'));cleanups.push(()=>fs.rmSync(dir,{recursive:true,force:true}))
+    const weapon=createWeaponFixture(dir);buildWeaponCatalog(weapon)
+    const synthetic=armorFixture(),db=new Database(path.join(weapon.output,'mhp2g.sqlite'))
+    try {
+      for(const recipe of synthetic.evidence.recipes)recipe.recipe_key=`armor:${recipe.recipe_key}`
+      db.exec("DELETE FROM catalog_item_relation_targets WHERE relation_id IN (SELECT id FROM catalog_item_relations WHERE usage_kind='armor'); DELETE FROM catalog_item_relations WHERE usage_kind='armor'")
+      for(const r of synthetic.evidence.recipes)for(const m of r.materials)db.prepare("INSERT INTO catalog_item_relations(source_key,item_id,source_kind,usage_kind,target_name,quantity,metadata) VALUES (?,?,'armor','armor','Synthetic',?,'{}')").run(`creation:${r.recipe_key}:${m.position}`,m.item_id,m.quantity)
+      db.transaction(()=>appendArmors(db,synthetic.evidence))()
+      db.prepare('INSERT INTO meta VALUES (?,?)').run('armor_schema','mhp2g-armors-v1')
+    } finally {synthetic.db.close();db.close()}
+    cleanups.push(registerCatalogIpc(weapon.output))
+    const call=(channel:string,value:unknown)=>handlers.get(channel)!(null,value)
+    expect(call(catalogChannels.searchArmors,{gameId:'mhp2g'}).total).toBe(3)
+    expect(call(catalogChannels.searchArmorSets,{gameId:'mhp2g',gender:'female'}).total).toBe(1)
+    expect(call(catalogChannels.getArmor,{gameId:'mhp2g',armorKey:'armor_head:1'}).recipes).toHaveLength(2)
+    expect(call(catalogChannels.getArmorFacets,'mhp2g').rarities).toEqual([2])
+    expect(call(catalogChannels.getItem,{gameId:'mhp2g',itemId:1}).armorRecipes).toHaveLength(2)
+    expect(()=>call(catalogChannels.getArmor,{gameId:'mhp2g',dexId:1})).toThrow()
+  })
+  it('uses the existing read-only weapon channels with native identities and complete cross-class edges',()=>{
+    const dir=fs.mkdtempSync(path.join(os.tmpdir(),'p2g-weapon-ipc-'));cleanups.push(()=>fs.rmSync(dir,{recursive:true,force:true}))
+    const fixture=createWeaponFixture(dir);buildWeaponCatalog(fixture)
+    cleanups.push(registerCatalogIpc(fixture.output))
+    const call=(name:string,value:unknown)=>handlers.get(name)!(null,value)
+    expect(call(catalogChannels.searchWeapons,{gameId:'mhp2g',sort:'nativeId'})).toMatchObject({total:10})
+    const weapon=call(catalogChannels.getWeapon,{gameId:'mhp2g',weaponKey:'weapon_blademaster:1'})
+    expect(weapon.nativeIndex).toBe(1);expect(weapon).not.toHaveProperty('saveId')
+    expect(call(catalogChannels.getWeaponFacets,'mhp2g').weaponTypes).toHaveLength(11)
+    expect(call(catalogChannels.getWeaponTree,{gameId:'mhp2g',weaponTypeId:1}).edges).toHaveLength(4)
+    expect(()=>call(catalogChannels.getWeapon,{gameId:'mhp2g',weaponKey:'1:2'})).toThrow()
+    expect(()=>call(catalogChannels.searchWeaponMotions,{gameId:'mhp2g',weaponTypeId:1})).toThrow()
+    expect(call(catalogChannels.searchItems,{gameId:'mhp2g'}).total).toBeGreaterThan(0)
+  })
   it('opens an item-only database without instantiating other catalogs and rejects legacy identities',()=>{
     const dir=fs.mkdtempSync(path.join(os.tmpdir(),'p2g-ipc-'));cleanups.push(()=>fs.rmSync(dir,{recursive:true,force:true}))
     const source=path.join(dir,'source.sqlite'),output=path.join(dir,'runtime');createP2gSource(source);buildCatalog({source,output,expectedSha256:sha256(source)})

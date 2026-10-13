@@ -1,7 +1,8 @@
 import type Database from 'better-sqlite3'
 import { createRequire } from 'node:module'
 import { join } from 'node:path'
-import type { GameId } from '../core/loadout'
+import type { SaveGameId as GameId } from './types'
+import { P2gSaveCatalog } from './p2g/catalog'
 import type { SaveArmorAppearance, SaveArmorAppearanceFilters, SaveArmorAppearancePage, SaveEquipmentCell, SaveItemCell, SavePalicoGenerationRules } from './types'
 import { armorFallbackIconPath, charmIconPath, weaponFallbackIconPath } from './catalogIconPaths'
 import { armorPartForSaveType, ARMOR_APPEARANCE_SPRITE_PATH } from './armorParts'
@@ -22,6 +23,9 @@ export type SaveCatalogEquipmentIdentity = {
 }
 
 export class SaveCatalogResolver {
+  private p2gCatalog?: P2gSaveCatalog
+  private p2g() { return this.p2gCatalog ??= new P2gSaveCatalog(this.db('mhp2g')) }
+  patchP2gRecord(source: Buffer, changes: Parameters<P2gSaveCatalog['patch']>[1]) { return this.p2g().patch(source, changes) }
   private readonly databases = new Map<GameId, Database.Database>()
   constructor(private readonly dataDir: string) {}
   private db(gameId: GameId) {
@@ -34,11 +38,13 @@ export class SaveCatalogResolver {
   }
   private hasTable(db: Database.Database, name: string) { return Boolean(db.prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name=?").get(name)) }
   item(gameId: GameId, cell: Omit<SaveItemCell, 'nameCn' | 'nameEn' | 'iconPath' | 'maxStack' | 'rarity' | 'diagnostics'>): SaveItemCell {
-    const row = cell.itemId ? this.db(gameId).prepare('SELECT name_cn,name_en,icon_path,max_stack,rarity,is_placeholder FROM catalog_items WHERE game_id=? AND save_id=?').get(gameId, cell.itemId) as Row | undefined : undefined
+    const row = cell.itemId ? this.db(gameId).prepare(`SELECT name_cn,name_en,icon_path,max_stack,rarity,is_placeholder FROM catalog_items WHERE game_id=? AND ${gameId === 'mhp2g' ? 'item_id' : 'save_id'}=?`).get(gameId, cell.itemId) as Row | undefined : undefined
     const diagnostics = !cell.empty && !row ? [{ code: 'item.unknown', path: `items.${cell.slot}`, severity: 'warning' as const, message: `未知道具 ID ${cell.itemId}，原值会被保留` }] : []
+    if (gameId === 'mhp2g' && !cell.empty && (cell.count < 1 || cell.count > 99)) diagnostics.push({ code: 'item.count.unusual', path: `items.${cell.slot}`, severity: 'warning', message: `数量 ${cell.count} 不在自然箱格范围 1～99 内，原值已保留` })
     return { ...cell, nameCn: cell.empty ? '空格' : text(row?.name_cn, `未知道具 #${cell.itemId}`), nameEn: text(row?.name_en), iconPath: row?.icon_path ? text(row.icon_path) : null, maxStack: row?.max_stack == null ? null : number(row.max_stack), rarity: row?.rarity == null ? null : number(row.rarity), diagnostics }
   }
   equipment(gameId: GameId, cell: Omit<SaveEquipmentCell, 'nameCn' | 'nameEn' | 'typeNameCn' | 'iconPath' | 'weaponKey' | 'armorDexId' | 'palicoEquipmentId' | 'decorationLabels' | 'skill1NameCn' | 'skill2NameCn' | 'diagnostics'>): SaveEquipmentCell {
+    if (gameId === 'mhp2g') return this.p2g().equipment(cell)
     const db = this.db(gameId)
     let row: Row | undefined
     let relic: SaveEquipmentCell['relic']
@@ -106,6 +112,7 @@ export class SaveCatalogResolver {
     return { appearanceId: number(row.id), nameCn: text(row.name), nameEn: text(row.english), nameJp: '', part, rarity: row.rarity == null ? null : number(row.rarity), iconPath: ARMOR_APPEARANCE_SPRITE_PATH, iconSource: 'custom-appearance-sprite', sourceStatus: 'confirmed', iconFallback: false }
   }
   resolveArmorAppearance(gameId: GameId, saveType: number, appearanceId: number): SaveArmorAppearance | null {
+    if (gameId === 'mhp2g') return null
     const part = armorPartForSaveType(gameId, saveType)
     if (gameId !== 'mhgu' || !Number.isInteger(appearanceId) || appearanceId <= 0 || !part) return null
     const table = { head: 'cn__armor_head', chest: 'cn__armor_chest', arms: 'cn__armor_arms', waist: 'cn__armor_waist', legs: 'cn__armor_legs' }[part]
@@ -135,16 +142,17 @@ export class SaveCatalogResolver {
   }
   itemSearchIds(gameId: GameId, query: string): Set<number> {
     const like = `%${query.trim()}%`
-    const rows = this.db(gameId).prepare('SELECT save_id FROM catalog_items WHERE game_id=? AND (name_cn LIKE ? OR name_en LIKE ? OR name_jp LIKE ?)').all(gameId, like, like, like) as Row[]
+    const rows = this.db(gameId).prepare(`SELECT ${gameId === 'mhp2g' ? 'item_id' : 'save_id'} save_id FROM catalog_items WHERE game_id=? AND (name_cn LIKE ? OR name_en LIKE ? OR name_jp LIKE ?)`).all(gameId, like, like, like) as Row[]
     return new Set(rows.map(row => number(row.save_id)))
   }
-  itemKnown(gameId: GameId, saveId: number): boolean { if (!saveId) return true; try { return Boolean(this.db(gameId).prepare('SELECT 1 FROM catalog_items WHERE game_id=? AND save_id=?').get(gameId, saveId)) } catch { return false } }
+  itemKnown(gameId: GameId, saveId: number): boolean { if (!saveId) return true; try { return Boolean(this.db(gameId).prepare(`SELECT 1 FROM catalog_items WHERE game_id=? AND ${gameId === 'mhp2g' ? 'item_id' : 'save_id'}=?`).get(gameId, saveId)) } catch { return false } }
   requireItem(gameId: GameId, saveId: number): { maxStack: number | null; nameCn: string } {
-    const row = this.db(gameId).prepare('SELECT name_cn,max_stack FROM catalog_items WHERE game_id=? AND save_id=? AND is_placeholder=0').get(gameId, saveId) as Row | undefined
+    const row = this.db(gameId).prepare(`SELECT name_cn,max_stack FROM catalog_items WHERE game_id=? AND ${gameId === 'mhp2g' ? 'item_id' : 'save_id'}=? AND is_placeholder=0`).get(gameId, saveId) as Row | undefined
     if (!row) throw new Error(`道具 ID ${saveId} 不属于 ${gameId.toUpperCase()} 的可用图鉴资料`)
     return { maxStack: row.max_stack == null ? null : number(row.max_stack), nameCn: text(row.name_cn) }
   }
   resolveEquipmentIdentity(gameId: GameId, saveType: number, saveId: number, palico: boolean, saveLevel?: number): SaveCatalogEquipmentIdentity | null {
+    if (gameId === 'mhp2g') return this.p2g().identity(saveType, saveId, palico)
     if (!saveType || !saveId) return null
     const db = this.db(gameId)
     if (palico) {
@@ -185,10 +193,12 @@ export class SaveCatalogResolver {
     return value
   }
   equipmentKnown(gameId: GameId, saveType: number, saveId: number, palico: boolean): boolean {
+    if (gameId === 'mhp2g') return this.p2g().identity(saveType, saveId, palico) != null
     if (!saveType) return true
     try { return this.resolveEquipmentIdentity(gameId, saveType, saveId, palico) != null } catch { return false }
   }
   equipmentSearchKeys(gameId: GameId, query: string, palico: boolean): Set<string> {
+    if (gameId === 'mhp2g') return palico ? new Set() : this.p2g().search(query)
     const db = this.db(gameId); const like = `%${query.trim()}%`; const result = new Set<string>()
     if (palico) {
       for (const row of db.prepare('SELECT 22 save_type,save_id FROM catalog_palico_weapons WHERE game_id=? AND (name_cn LIKE ? OR name_en LIKE ? OR name_jp LIKE ?) UNION ALL SELECT CASE part WHEN \'head\' THEN 23 ELSE 24 END save_type,save_id FROM catalog_palico_armors WHERE game_id=? AND (name_cn LIKE ? OR name_en LIKE ? OR name_jp LIKE ?)').all(gameId, like, like, like, gameId, like, like, like) as Row[]) result.add(`${number(row.save_type)}:${number(row.save_id)}`)

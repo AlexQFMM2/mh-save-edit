@@ -1,21 +1,13 @@
-.armor-stats-panel .detail-section__body{display:grid;gap:var(--global-spacing-4)}
-.armor-stats-panel__defense{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--global-spacing-2)}
-.armor-stats-panel__defense>div{display:grid;gap:var(--global-spacing-1);padding:var(--global-spacing-3);border:var(--global-border-width) solid var(--global-theme-color-border-subtle);border-radius:var(--global-radius-md);background:var(--global-theme-color-surface-inset)}
-.armor-stats-panel__defense span{color:var(--global-theme-color-text-secondary);font-size:var(--global-typography-font-size-caption);line-height:var(--global-typography-line-height-normal)}
-.armor-stats-panel__defense strong{color:var(--global-theme-color-data);font-size:var(--global-typography-font-size-body);font-weight:var(--global-typography-font-weight-bold);line-height:var(--global-typography-line-height-tight)}
-.armor-stats-panel__resistances{display:grid;gap:var(--global-spacing-2);margin:0;padding:var(--global-spacing-3);border:var(--global-border-width) solid var(--global-theme-color-border-subtle);border-radius:var(--global-radius-md);background:var(--global-theme-color-surface-inset)}
-.armor-stats-panel__resistances h4{margin:0;color:var(--global-theme-color-text-secondary);font-size:var(--global-typography-font-size-caption);font-weight:var(--global-typography-font-weight-semibold);line-height:var(--global-typography-line-height-normal)}
-.armor-stats-panel__resistances h3{margin:0;color:var(--global-theme-color-text-secondary);font-size:var(--global-typography-font-size-caption);font-weight:var(--global-typography-font-weight-semibold);line-height:var(--global-typography-line-height-normal)}
-.armor-stats-panel__resistance-values{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:var(--global-spacing-2)}
-.armor-stats-panel__resistance-values>div{display:grid;justify-items:center;gap:var(--global-spacing-1);min-width:0}
-.armor-stats-panel__resistance-values span{color:var(--global-theme-color-text-secondary);font-size:var(--global-typography-font-size-caption);line-height:var(--global-typography-line-height-normal)}
-.armor-stats-panel__resistance-values strong{font-size:var(--global-typography-font-size-body);font-weight:var(--global-typography-font-weight-bold);line-height:var(--global-typography-line-height-tight)}
-.armor-stats-panel__resistance-values .is-fire strong{color:var(--global-element-color-fire)}
-.armor-stats-panel__resistance-values .is-water strong{color:var(--global-element-color-water)}
-.armor-stats-panel__resistance-values .is-thunder strong{color:var(--global-element-color-thunder)}
-.armor-stats-panel__resistance-values .is-ice strong{color:var(--global-element-color-ice)}
-.armor-stats-panel__resistance-values .is-dragon strong{color:var(--global-element-color-dragon)}
-.armor-stats-panel__meta{display:flex;align-items:center;justify-content:space-between;gap:var(--global-spacing-3);margin:0;color:var(--global-theme-color-text-secondary);font-size:var(--global-typography-font-size-small);line-height:var(--global-typography-line-height-normal)}
-.armor-stats-panel__meta>span:last-child{display:inline-flex;align-items:center;gap:var(--global-spacing-2);white-space:nowrap}
-.armor-stats-panel .equipment-slot-indicator{display:inline-flex}
-@media(max-width:440px){.armor-stats-panel__meta{align-items:flex-start;flex-direction:column}.armor-stats-panel__resistance-values{gap:var(--global-spacing-1)}}
+.armor-stats-panel__body { display: grid; gap: var(--global-spacing-4); }
+.armor-stats-panel__resistances { display: grid; gap: var(--global-spacing-2); margin: 0; padding: var(--global-spacing-3); border: var(--global-border-width) solid var(--global-theme-color-border-subtle); border-radius: var(--global-radius-md); background: var(--global-theme-color-surface-inset); }
+.armor-stats-panel__label { margin: 0; color: var(--global-theme-color-text-secondary); font-size: var(--global-typography-font-size-caption); font-weight: var(--global-typography-font-weight-semibold); }
+.armor-stats-panel__resistance-values { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); gap: var(--global-spacing-2); }
+.armor-stats-panel__resistance { display: grid; justify-items: center; gap: var(--global-spacing-1); min-width: 0; }
+.armor-stats-panel__value { font-size: var(--global-typography-font-size-body); }
+.armor-stats-panel__value--fire { color: var(--global-element-color-fire); }
+.armor-stats-panel__value--water { color: var(--global-element-color-water); }
+.armor-stats-panel__value--thunder { color: var(--global-element-color-thunder); }
+.armor-stats-panel__value--ice { color: var(--global-element-color-ice); }
+.armor-stats-panel__value--dragon { color: var(--global-element-color-dragon); }
+.armor-stats-panel__meta { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--global-spacing-3); color: var(--global-theme-color-text-secondary); font-size: var(--global-typography-font-size-small); }
+.armor-stats-panel__slots { display: inline-flex; align-items: center; gap: var(--global-spacing-2); white-space: nowrap; }

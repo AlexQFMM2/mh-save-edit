@@ -36,13 +36,15 @@ export function CharmEditorForm({ snapshot, current, pointMinimum = -32768, poin
     for (const point of [current?.skill1, current?.skill2]) if (point && !values.some(item => item.value === String(point.skillId))) values.push({ value: String(point.skillId), label: point.nameCn, keywords: [`0x${point.skillId.toString(16)}`, '未知技能', '保留原值'] })
     return values
   }, [current, skills])
-  const draft = useMemo<EditableCharm>(() => ({
+  const draft = useMemo<EditableCharm>(() => {
+    if (snapshot.gameId === 'mhp2g') throw new Error('P2G 没有护石')
+    return ({
     kind: 'charm', gameId: snapshot.gameId, classId: Number(classId) || 0,
     classNameCn: selectedClass?.nameCn ?? current?.classNameCn ?? '自定义护石', iconPath: selectedClass?.iconPath ?? current?.iconPath ?? null, slots,
     skill1: pointFor(skills, skill1, points1, current?.skill1), skill2: pointFor(skills, skill2, points2, current?.skill2),
     decorations: current?.decorations ?? [], legality: current?.legality ?? 'unknown', encoding: current?.encoding ?? 'encodable', issues: current?.issues ?? [], instance: current?.instance,
     lock: current?.lock ?? 'unlocked',
-  }), [classId, current, points1, points2, selectedClass?.nameCn, skill1, skill2, skills, slots, snapshot.gameId])
+  }) }, [classId, current, points1, points2, selectedClass?.nameCn, skill1, skill2, skills, slots, snapshot.gameId])
   const validation = useMemo(() => {
     const base = validateCharm(snapshot, draft)
     const outside = [draft.skill1, draft.skill2].find(point => point && (point.points < pointMinimum || point.points > pointMaximum))

@@ -1,4 +1,6 @@
+import { P2gArmorCatalogRepository } from './p2gArmorRepository'
 import { P2gDecorationCatalogRepository } from './p2gDecorationRepository'
+import { P2gWeaponCatalogRepository } from './p2gWeaponRepository'
 import { P2gSkillCatalogRepository } from './p2gSkillRepository'
 import { p2gSkillEquipmentIdentitySchema } from './schemas'
 import { ipcMain } from 'electron'
@@ -68,7 +70,7 @@ export function registerCatalogIpc(dataDir: string): () => void {
     return entry
   }
 
-  let p2g: { db: DatabaseType.Database; repository: P2gItemCatalogRepository; monsters?: P2gMonsterCatalogRepository; quests?: P2gQuestCatalogRepository; skills?: P2gSkillCatalogRepository; decorations?: P2gDecorationCatalogRepository } | undefined
+  let p2g: { db: DatabaseType.Database; repository: P2gItemCatalogRepository; monsters?: P2gMonsterCatalogRepository; quests?: P2gQuestCatalogRepository; skills?: P2gSkillCatalogRepository; decorations?: P2gDecorationCatalogRepository; weapons?: P2gWeaponCatalogRepository; armors?: P2gArmorCatalogRepository } | undefined
   const p2gItems = () => {
     if (p2g) return p2g.repository
     if (!existsSync(join(dataDir, 'mhp2g.sqlite'))) throw new Error('P2G 道具资料库尚未安装，请查看 README 中的 P2G 本地接入说明。')
@@ -79,6 +81,8 @@ export function registerCatalogIpc(dataDir: string): () => void {
   }
 
   const p2gDecorations = () => { p2gItems(); return p2g!.decorations ??= new P2gDecorationCatalogRepository(p2g!.db) }
+  const p2gArmors = () => { p2gItems(); return p2g!.armors ??= new P2gArmorCatalogRepository(p2g!.db) }
+  const p2gWeapons = () => { p2gItems(); return p2g!.weapons ??= new P2gWeaponCatalogRepository(p2g!.db) }
 
   const p2gSkills = () => { p2gItems(); return p2g!.skills ??= new P2gSkillCatalogRepository(p2g!.db) }
 
@@ -117,19 +121,19 @@ export function registerCatalogIpc(dataDir: string): () => void {
   })
   ipcMain.handle(catalogChannels.searchWeapons, (_event, payload: unknown) => {
     const filters = weaponCatalogFiltersSchema.parse(payload)
-    return repositoryEntry(filters.gameId).weapons.searchWeapons(filters)
+    return filters.gameId === 'mhp2g' ? p2gWeapons().searchWeapons(filters) : repositoryEntry(filters.gameId).weapons.searchWeapons(filters)
   })
   ipcMain.handle(catalogChannels.getWeapon, (_event, payload: unknown) => {
     const identity = weaponIdentitySchema.parse(payload)
-    return repositoryEntry(identity.gameId).weapons.getWeapon(identity)
+    return identity.gameId === 'mhp2g' ? p2gWeapons().getWeapon(identity) : repositoryEntry(identity.gameId).weapons.getWeapon(identity)
   })
   ipcMain.handle(catalogChannels.getWeaponFacets, (_event, payload: unknown) => {
-    const gameId = gameIdSchema.parse(payload)
-    return repositoryEntry(gameId).weapons.getWeaponFacets(gameId)
+    const gameId = catalogGameIdSchema.parse(payload)
+    return gameId === 'mhp2g' ? p2gWeapons().getWeaponFacets() : repositoryEntry(gameId).weapons.getWeaponFacets(gameId)
   })
   ipcMain.handle(catalogChannels.getWeaponTree, (_event, payload: unknown) => {
     const request = weaponTreeRequestSchema.parse(payload)
-    return repositoryEntry(request.gameId).weapons.getWeaponTree(request.gameId, request.weaponTypeId)
+    return request.gameId === 'mhp2g' ? p2gWeapons().getWeaponTree(request.weaponTypeId) : repositoryEntry(request.gameId).weapons.getWeaponTree(request.gameId, request.weaponTypeId)
   })
   ipcMain.handle(catalogChannels.searchWeaponMotions, (_event, payload: unknown) => {
     const filters = weaponMotionFiltersSchema.parse(payload)
@@ -142,19 +146,19 @@ export function registerCatalogIpc(dataDir: string): () => void {
   })
   ipcMain.handle(catalogChannels.searchArmors, (_event, payload: unknown) => {
     const filters = armorCatalogFiltersSchema.parse(payload)
-    return repositoryEntry(filters.gameId).armors.searchArmors(filters)
+    return filters.gameId === 'mhp2g' ? p2gArmors().searchArmors(filters) : repositoryEntry(filters.gameId).armors.searchArmors(filters)
   })
   ipcMain.handle(catalogChannels.searchArmorSets, (_event, payload: unknown) => {
     const filters = armorSetFiltersSchema.parse(payload)
-    return repositoryEntry(filters.gameId).armors.searchArmorSets(filters)
+    return filters.gameId === 'mhp2g' ? p2gArmors().searchArmorSets(filters) : repositoryEntry(filters.gameId).armors.searchArmorSets(filters)
   })
   ipcMain.handle(catalogChannels.getArmor, (_event, payload: unknown) => {
     const identity = armorIdentitySchema.parse(payload)
-    return repositoryEntry(identity.gameId).armors.getArmor(identity)
+    return identity.gameId === 'mhp2g' ? p2gArmors().getArmor(identity) : repositoryEntry(identity.gameId).armors.getArmor(identity)
   })
   ipcMain.handle(catalogChannels.getArmorFacets, (_event, payload: unknown) => {
-    const gameId = gameIdSchema.parse(payload)
-    return repositoryEntry(gameId).armors.getArmorFacets(gameId)
+    const gameId = catalogGameIdSchema.parse(payload)
+    return gameId === 'mhp2g' ? p2gArmors().getArmorFacets() : repositoryEntry(gameId).armors.getArmorFacets(gameId)
   })
   ipcMain.handle(catalogChannels.getP2gSkillEquipment, (_event, payload: unknown) => { const identity = p2gSkillEquipmentIdentitySchema.parse(payload); return p2gSkills().getEquipment(identity.equipmentKey) })
   ipcMain.handle(catalogChannels.getSkill, (_event, payload: unknown) => {

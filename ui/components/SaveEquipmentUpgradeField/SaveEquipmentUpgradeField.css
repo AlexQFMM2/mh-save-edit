@@ -1,0 +1,5 @@
+.save-equipment-upgrade-field { display: grid; gap: var(--global-spacing-2); padding: var(--global-spacing-3); border: 1px solid var(--global-theme-color-border); }
+.save-equipment-upgrade-field__field { display: flex; align-items: center; flex-wrap: wrap; gap: var(--global-spacing-3); }
+.save-equipment-upgrade-field__label { color: var(--global-theme-color-text-primary); font-size: var(--global-typography-font-size-body); }
+.save-equipment-upgrade-field__input { width: 6em; min-height: var(--global-control-height); font-size: var(--global-typography-font-size-body); color: var(--global-theme-color-data); background: var(--global-theme-color-surface); border: 1px solid var(--global-theme-color-border); }
+.save-equipment-upgrade-field__note { margin: 0; font-size: var(--global-typography-font-size-small); color: var(--global-theme-color-text-secondary); }

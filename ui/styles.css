@@ -45,6 +45,13 @@
   --global-sharpness-color-blue: #526fd1;
   --global-sharpness-color-white: #f4eee4;
   --global-sharpness-color-purple: #b45bb6;
+  --global-horn-note-color-white: #eee;
+  --global-horn-note-color-purple: #c49ae8;
+  --global-horn-note-color-blue: #89b6ef;
+  --global-horn-note-color-yellow: #e5d66a;
+  --global-horn-note-color-red: #ee9292;
+  --global-horn-note-color-green: #93cf9c;
+  --global-horn-note-color-cyan: #91dce5;
   --global-theme-color-text-primary: #f7ead5;
   --global-theme-color-text-secondary: #cdbba3;
   --global-theme-color-text-muted: #9f8973;

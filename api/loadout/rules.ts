@@ -6,6 +6,7 @@ const hasSpecial=(skillId:number,map:Map<number,LoadoutContribution>,snapshot:Lo
 const rangedTypeIds=new Set([12,13,14])
 const base=(gameId:GameLoadoutRules['gameId'],torsoSkillId:number):GameLoadoutRules=>({gameId,torsoSkillId,getWeaponCombatType:weapon=>rangedTypeIds.has(weapon.typeId)||/轻弩|重弩|弓|bowgun|bow/i.test(`${weapon.typeNameCn} ${weapon.nameEn}`)?'gunner':'blademaster',validateArmorCompatibility(weapon,armor,path){if(!weapon||armor.combat==='both'||armor.combat===this.getWeaponCombatType(weapon))return [];return[{code:'armor.combat-mismatch',path,severity:'warning',message:`防具职业 ${armor.combat==='gunner'?'远程':'近战'} 与武器不兼容`,source:`${gameId}-loadout-rules`}]},calculateSpecialModifiers(){}})
 const mh3g=base('mh3g',1),mh4g=base('mh4g',1),mhgu:GameLoadoutRules={...base('mhgu',203),gameId:'mhgu',calculateSpecialModifiers(snapshot,loadout,contributions){if(hasSpecial(205,contributions,snapshot)&&loadout.charm)for(const[skillId,value]of contributions)if(skillId!==205)value.special+=value.charm;if(hasSpecial(204,contributions,snapshot))for(const[skillId,value]of contributions)if(skillId!==204&&skillId!==205&&skillId!==this.torsoSkillId)value.special+=2}}
-const rules:Record<GameLoadoutRules['gameId'],GameLoadoutRules>={mh3g,mh4g,mhgu}
+const mhp2g: GameLoadoutRules = { ...base('mhp2g', 1), getWeaponCombatType: weapon => rangedTypeIds.has(weapon.typeId) ? 'gunner' : 'blademaster' }
+const rules:Record<GameLoadoutRules['gameId'],GameLoadoutRules>={mh3g,mh4g,mhgu,mhp2g}
 export function getGameLoadoutRules(gameId:GameLoadoutRules['gameId']){return rules[gameId]}
 export function unknownSkillPoint(skillId:number,points:number):LoadoutSkillPoint{return{skillId,nameCn:`未知技能 0x${skillId.toString(16).toUpperCase()}`,points}}

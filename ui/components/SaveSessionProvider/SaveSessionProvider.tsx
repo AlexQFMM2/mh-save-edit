@@ -18,6 +18,7 @@ type ContextValue = {
   undo(): Promise<void>
   redo(): Promise<void>
   save(): Promise<SaveResult | null>
+  saveAs(): Promise<SaveResult | null>
   saveAndClose(): Promise<void>
   close(discard?: boolean): Promise<void>
   notify(message: string, tone?: 'success' | 'warning' | 'error'): void
@@ -25,7 +26,7 @@ type ContextValue = {
 
 const SaveSessionContext = createContext<ContextValue | null>(null)
 const message = (cause: unknown) => cause instanceof Error ? cause.message : String(cause || '操作失败')
-const gameFromHash = (hash: string) => /^#\/game\/(mh3g|mh4g|mhgu)(?:\/|$)/.exec(hash)?.[1] ?? null
+const gameFromHash = (hash: string) => /^#\/game\/(mh3g|mh4g|mhgu|mhp2g)(?:\/|$)/.exec(hash)?.[1] ?? null
 
 export function SaveSessionProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<SaveSessionSnapshot | null>(null); const [characters, setCharacters] = useState<SaveCharacterSummary[]>([])
@@ -109,6 +110,7 @@ export function SaveSessionProvider({ children }: { children: ReactNode }) {
   const undo = useCallback(() => perform(async () => { if (!session) return; const result = await window.mhSaveEditor.save.undo(session.sessionId, session.revision); setSession(result.session); notify(result.message) }), [notify, perform, session])
   const redo = useCallback(() => perform(async () => { if (!session) return; const result = await window.mhSaveEditor.save.redo(session.sessionId, session.revision); setSession(result.session); notify(result.message) }), [notify, perform, session])
   const save = useCallback(() => perform(async () => { if (!session) return null; const result = await window.mhSaveEditor.save.saveCurrent(session.sessionId, session.revision); if (!result.cancelled) { setSession(result.session); notify(result.message) }; return result }), [notify, perform, session])
+  const saveAs = useCallback(() => perform(async () => { if (!session) return null; const result = await window.mhSaveEditor.save.saveAs(session.sessionId, session.revision); if (!result.cancelled) { setSession(result.session); notify(result.message) }; return result }), [notify, perform, session])
   const saveAndClose = useCallback(() => perform(async () => {
     const current = sessionRef.current
     if (!current) return
@@ -143,7 +145,7 @@ export function SaveSessionProvider({ children }: { children: ReactNode }) {
     setNavigationBlockReason(null)
     continueNavigation(targetHash)
   }), [continueNavigation, pendingNavigation, perform])
-  const value = useMemo<ContextValue>(() => ({ session, characters, busy, error, navigationBlockReason, setNavigationBlockReason, open, refreshCharacters, selectCharacter, getSection, apply, undo, redo, save, saveAndClose, close, notify }), [session, characters, busy, error, navigationBlockReason, open, refreshCharacters, selectCharacter, getSection, apply, undo, redo, save, saveAndClose, close, notify])
+  const value = useMemo<ContextValue>(() => ({ session, characters, busy, error, navigationBlockReason, setNavigationBlockReason, open, refreshCharacters, selectCharacter, getSection, apply, undo, redo, save, saveAs, saveAndClose, close, notify }), [session, characters, busy, error, navigationBlockReason, open, refreshCharacters, selectCharacter, getSection, apply, undo, redo, save, saveAs, saveAndClose, close, notify])
   return <SaveSessionContext.Provider value={value}>
     {children}
     {pendingNavigation && session && <ConfirmationDialog

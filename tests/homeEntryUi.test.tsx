@@ -3,11 +3,27 @@ import { cleanup, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import App from '../ui/App'
+import { p2gLoadoutFixture } from './fixtures/p2gLoadout'
 
 const searchItems = vi.fn(async () => ({ items: [], total: 0, page: 1, pageSize: 100, hasNext: false }))
 const getItemFacets = vi.fn(async () => ({ rarities: [], maxStacks: [], relations: [] }))
-const catalogAccess = vi.fn(() => ({ searchItems, getItemFacets }))
-const loadoutAccess = vi.fn(() => ({}))
+const emptyPage = () => ({ items: [], total: 0, page: 1, pageSize: 100, hasNext: false })
+const searchDecorations = vi.fn(async () => emptyPage())
+const searchSkills = vi.fn(async () => emptyPage())
+const searchWeapons = vi.fn(async () => emptyPage())
+const searchArmors = vi.fn(async () => emptyPage())
+const searchArmorSets = vi.fn(async () => emptyPage())
+const searchMonsters = vi.fn(async () => [])
+const searchQuests = vi.fn(async () => emptyPage())
+const catalogAccess = vi.fn(() => ({
+  searchItems, getItemFacets, searchDecorations, searchSkills, searchWeapons, searchMonsters, searchQuests, searchArmors, searchArmorSets,
+  getArmorFacets: async () => ({ parts: [], combats: [], genders: [], rarities: [], slots: [], skills: [] }),
+  getDecorationFacets: async () => ({ slots: [], skills: [] }),
+  getWeaponFacets: async () => ({ weaponTypes: [], attributes: [], rarities: [], slots: [], sharpnessStages: ['base'] }),
+  getQuestFacets: async () => ({ systems: [], levels: [], questTypes: [], locations: [], ranks: [], availabilities: [] }),
+}))
+const getBootstrap = vi.fn(async () => p2gLoadoutFixture().snapshot)
+const loadoutAccess = vi.fn(() => ({ getBootstrap, getFacets: async () => ({ skills: [], weaponTypes: [], weaponRarities: [], armorRarities: [], charmClasses: [] }), listAutoLoadoutJobs: async () => [], subscribeAutoLoadoutJobs: () => () => {} }))
 const openSave = vi.fn()
 
 beforeEach(() => {
@@ -33,7 +49,7 @@ describe('P2G home entry boundary', () => {
     await user.keyboard('{Enter}')
     await screen.findByRole('heading', { name: 'Monster Hunter Portable 2nd G' })
     expect(window.location.hash).toBe('#/game/mhp2g/overview')
-    expect(screen.getByRole('button', { name: /打开存档/ }).hasAttribute('disabled')).toBe(true)
+    expect(screen.getByRole('button', { name: /打开存档/ }).hasAttribute('disabled')).toBe(false)
     expect(screen.getByRole('link', { name: /资料图鉴/ }).getAttribute('href')).toBe('#/game/mhp2g/catalog/items')
     expect(document.querySelectorAll('.workspace-sidebar a')).toHaveLength(10)
     expect(screen.getByText('PPSSPP')).toBeTruthy()
@@ -54,18 +70,39 @@ describe('P2G home entry boundary', () => {
   })
 
   it.each([
-    ['catalog/decorations', '装饰品图鉴'], ['catalog/skills', '技能图鉴'],
-    ['catalog/weapons', '武器图鉴'], ['catalog/armor', '防具图鉴'],
-    ['catalog/monsters', '怪物图鉴'], ['catalog/quests', '任务图鉴'],
-    ['edit', '存档修改'], ['edit/loadout', '配装器'],
-  ])('keeps P2G %s available as an honest placeholder without runtime calls', async (path, title) => {
+    ['catalog/decorations', '.decoration-catalog-page', searchDecorations], ['catalog/skills', '.skill-catalog-page', searchSkills],
+    ['catalog/armor', '.armor-catalog-page', searchArmorSets], ['catalog/weapons', '.weapon-catalog-page', searchWeapons], ['catalog/monsters', '.monster-catalog-page', searchMonsters], ['catalog/quests', '.quest-catalog-page', searchQuests],
+  ])('opens the implemented P2G %s route using native read-only queries', async (path, selector, search) => {
     window.history.replaceState(null, '', `/#/game/mhp2g/${path}`)
     render(<App />)
-    await screen.findByRole('heading', { name: title })
-    expect(screen.getByText('功能开发中')).toBeTruthy()
+    await waitFor(() => expect(search).toHaveBeenCalledWith(expect.objectContaining({ gameId: 'mhp2g' })), { timeout: 5000 })
+    expect(document.querySelector(selector)).toBeTruthy()
+    expect(screen.queryByText('功能开发中')).toBeNull()
+    expect(window.location.hash).toBe(`#/game/mhp2g/${path}`)
+    expect(loadoutAccess).not.toHaveBeenCalled()
+    expect(openSave).not.toHaveBeenCalled()
+  })
+
+  it.each([
+    ['edit', '存档修改'],
+  ])('opens the P2G %s environment picker without reading a save', async (path, title) => {
+    window.history.replaceState(null, '', `/#/game/mhp2g/${path}`)
+    render(<App />)
+    await screen.findByRole('heading', { name: '选择存档环境' })
+    expect(screen.getByText('P2G · PPSSPP')).toBeTruthy()
     expect(window.location.hash).toBe(`#/game/mhp2g/${path}`)
     expect(catalogAccess).not.toHaveBeenCalled()
     expect(loadoutAccess).not.toHaveBeenCalled()
+    expect(openSave).not.toHaveBeenCalled()
+  })
+
+  it('opens the native six-slot loadout route without opening a save', async () => {
+    window.history.replaceState(null, '', '/#/game/mhp2g/edit/loadout')
+    render(<App />)
+    await screen.findByRole('region', { name: '六槽装备与属性' })
+    expect(document.querySelectorAll('.loadout-equipment-row')).toHaveLength(6)
+    expect(screen.queryByRole('button', { name: '选择护石' })).toBeNull()
+    expect(getBootstrap).toHaveBeenCalledWith('mhp2g')
     expect(openSave).not.toHaveBeenCalled()
   })
 

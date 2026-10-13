@@ -36,7 +36,9 @@ function Flow() {
   return copied ? <AutoLoadoutDrawer snapshot={snapshot} loadout={base()} calculation={calculateLoadout(snapshot, base())} onApply={vi.fn()} onClose={vi.fn()} /> : <AutoLoadoutHistoryDrawer gameId="mhgu" snapshot={snapshot} onApply={vi.fn()} onClose={vi.fn()} onCopyConditions={() => setCopied(true)} />
 }
 async function openHistory() {
-  fireEvent.click(await screen.findByRole('button', { name: /合成发动10.*MHGU/ }))
+  // The history query is debounced; allow cold parallel-suite scheduling before
+  // asserting the loaded row, while still requiring a concrete result.
+  fireEvent.click(await screen.findByRole('button', { name: /合成发动10.*MHGU/ }, { timeout: 5000 }))
   await screen.findByRole('dialog', { name: '自动任务详情' })
 }
 describe('copy historical conditions into an editable new form', () => {

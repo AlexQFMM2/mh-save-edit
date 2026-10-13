@@ -3,9 +3,11 @@ import { closeSync, copyFileSync, existsSync, fsyncSync, openSync, readFileSync,
 import { basename, dirname, join } from 'node:path'
 import { applyPatches, bufferToHex, diffBuffers, hexToBuffer, readU16, writeU16, type BytePatch } from './binary'
 import { SaveCatalogResolver } from './catalogResolver'
-import { Mh3uSaveAdapter } from './adapters/mh3u'
-import { Mh4gSaveAdapter } from './adapters/mh4g'
-import { MhguSaveAdapter } from './adapters/mhgu'
+import { openSaveAdapter } from './adapters'
+import { Mhp2gSaveAdapter } from './adapters/mhp2g'
+import { P2gSaveFiles } from './p2g/files'
+import { readP2gProfile } from './p2g/profile'
+import { p2gSaveIdentity } from './p2g/identity'
 import type { SaveDocumentAdapter } from './adapters/types'
 import type { LoadoutSlot, LogicalLoadout } from '../loadout/types'
 import { SAVE_BOX_ITEM_STACK_MAX, type SaveArmorAppearanceFilters, SaveBoxDomain, SaveBoxSection, SaveBoxWriteTarget, SaveBoxWriteTargetRequest, SaveCatalogEquipmentRequest, SaveCatalogItemRequest, SaveCatalogItemWritePreview, SaveCharacterSummary, SaveCommand, SaveDiagnostic, SaveExportRequest, SaveFormatId, SaveImportApplyRequest, SaveImportPreview, SaveImportRequest, SaveLoadoutWritePreview, SaveLoadoutWriteRequest, SaveMutationResult, SaveOpenRequest, SaveOpenResult, SavePalicoSection, SavePersonalSection, SaveResult, SaveSectionRequest, SaveSectionSnapshot, SaveSessionSnapshot, SaveValidationResult } from './types'
@@ -15,6 +17,7 @@ type OpenSession = {
   id: string
   adapter: SaveDocumentAdapter
   path: string
+  p2gFiles?: P2gSaveFiles
   fingerprint: string
   baseline: Buffer
   revision: number
@@ -29,9 +32,7 @@ type WritableLoadoutEntry = NonNullable<LogicalLoadout['weapon'] | LogicalLoadou
 function hash(bytes: Buffer): string { return createHash('sha256').update(bytes).digest('hex') }
 
 function createAdapter(bytes: Buffer, request: SaveOpenRequest, fileName: string): SaveDocumentAdapter {
-  if (request.formatId === 'mh3g-3ds-citra' || request.formatId === 'mh3u-wiiu-cemu') return new Mh3uSaveAdapter(bytes, request.formatId)
-  if (request.formatId === 'mh4g-3ds-citra') return new Mh4gSaveAdapter(bytes)
-  return new MhguSaveAdapter(bytes, request.formatId, fileName)
+  return openSaveAdapter(bytes, request.formatId, fileName)
 }
 
 export class SaveSessionService {
@@ -40,7 +41,7 @@ export class SaveSessionService {
   private readonly resolver: SaveCatalogResolver
   private readonly sectionCache = new Map<string, SaveSectionSnapshot>()
   private readonly imports = new Map<string, ImportDraft>()
-  constructor(dataDir: string) { this.resolver = new SaveCatalogResolver(dataDir) }
+  constructor(private readonly dataDir: string) { this.resolver = new SaveCatalogResolver(dataDir) }
 
   subscribe(listener: (snapshot: SaveSessionSnapshot | null) => void) { this.listeners.add(listener); return () => this.listeners.delete(listener) }
   searchArmorAppearances(filters: SaveArmorAppearanceFilters) { return this.resolver.searchArmorAppearances(filters) }
@@ -58,24 +59,29 @@ export class SaveSessionService {
       sessionId: session.id, revision: session.revision, state: session.state, contentGameId: adapter.meta.contentGameId, formatId: adapter.meta.formatId,
       platform: adapter.meta.platform, emulator: adapter.meta.emulator, fileName: basename(session.path), characterSlot: adapter.selectedCharacter,
       characterName: character?.name ?? null, dirty: !adapter.payload.equals(session.baseline), readOnly, undoCount: session.undo.length, redoCount: session.redo.length,
-      diagnostics, capabilities: { canWrite: !readOnly, canSaveAs: true, canEditPersonal: !readOnly, canEditItems: !readOnly, canEditEquipment: !readOnly, canEditPalicoes: !readOnly && adapter.meta.palicoCount > 0, canSwapItems: false, canSwapEquipment: false, hasCharacters: adapter.characters().length > 1, hasPalicoes: adapter.meta.palicoCount > 0, itemCapacity: adapter.meta.itemCapacity, itemCountMax: adapter.meta.itemCountMax, hunterEquipmentCapacity: adapter.meta.hunterEquipmentCapacity, palicoEquipmentCapacity: adapter.meta.palicoEquipmentCapacity },
+      diagnostics, capabilities: { canWrite: !readOnly, canSaveAs: true, canEditPersonal: !readOnly, canEditItems: !readOnly, canEditEquipment: !readOnly, canEditPalicoes: !readOnly && adapter.meta.palicoCount > 0, canSwapItems: adapter instanceof Mhp2gSaveAdapter, canSwapEquipment: adapter instanceof Mhp2gSaveAdapter, hasCharacters: adapter.characters().length > 1, hasPalicoes: adapter.meta.palicoCount > 0, itemCapacity: adapter.meta.itemCapacity, itemCountMax: adapter.meta.itemCountMax, hunterEquipmentCapacity: adapter.meta.hunterEquipmentCapacity, palicoEquipmentCapacity: adapter.meta.palicoEquipmentCapacity },
     }
   }
   openPath(path: string, request: SaveOpenRequest): SaveOpenResult {
     if (this.session) throw new Error('请先关闭当前存档')
-    const bytes = readFileSync(path)
-    const adapter = createAdapter(bytes, request, basename(path))
+    const p2gFiles = request.formatId === 'mhp2g-psp-ppsspp' ? new P2gSaveFiles(path) : undefined
+    const bytes = p2gFiles?.pair.bin ?? readFileSync(path)
+    const adapter = p2gFiles ? new Mhp2gSaveAdapter(bytes, p2gFiles.pair.sfo, readP2gProfile(this.dataDir)) : createAdapter(bytes, request, basename(path))
     if (adapter.meta.contentGameId !== request.contentGameId) throw new Error('存档内容版本与当前游戏不一致')
     const characters = adapter.characters()
     if (characters.length === 1) adapter.selectCharacter(0)
-    this.session = { id: randomUUID(), adapter, path, fingerprint: hash(bytes), baseline: Buffer.from(adapter.payload), revision: 1, undo: [], redo: [], state: adapter.selectedCharacter == null ? 'selectingCharacter' : 'readyClean' }
+    this.session = { id: randomUUID(), adapter, path, p2gFiles, fingerprint: hash(bytes), baseline: Buffer.from(adapter.payload), revision: 1, undo: [], redo: [], state: adapter.selectedCharacter == null ? 'selectingCharacter' : 'readyClean' }
     this.sectionCache.clear(); this.emit()
     return { cancelled: false, session: this.snapshot(), characters }
   }
   selectCharacter(sessionId: string, slot: number, revision?: number): SaveSessionSnapshot {
     const session = this.requireIdentity(sessionId, revision)
     if (!session.adapter.payload.equals(session.baseline)) throw new Error('存档存在未保存修改，不能切换角色')
-    session.adapter.selectCharacter(slot); session.revision += 1; session.state = session.adapter.payload.equals(session.baseline) ? 'readyClean' : 'readyDirty'; this.sectionCache.clear(); this.emit()
+    const previousSlot = session.adapter.selectedCharacter
+    session.adapter.selectCharacter(slot)
+    // History patches use absolute offsets; do not expose another character's edits.
+    if (previousSlot !== slot) { session.undo = []; session.redo = []; this.imports.clear() }
+    session.revision += 1; session.state = session.adapter.payload.equals(session.baseline) ? 'readyClean' : 'readyDirty'; this.sectionCache.clear(); this.emit()
     return this.snapshot()!
   }
   characters(sessionId: string, revision?: number): SaveCharacterSummary[] { return this.requireIdentity(sessionId, revision).adapter.characters() }
@@ -146,6 +152,7 @@ export class SaveSessionService {
         else {
           const snapshot = this.snapshot()!; if (isItems ? !snapshot.capabilities.canSwapItems : !snapshot.capabilities.canSwapEquipment) throw new Error('当前格式尚未开放安全物理换位')
           if (isItems) { const a = session.adapter.item(command.sourceSlot); const b = session.adapter.item(command.targetSlot); session.adapter.setItem(command.sourceSlot, b.itemId, b.count); session.adapter.setItem(command.targetSlot, a.itemId, a.count) }
+          else if (session.adapter instanceof Mhp2gSaveAdapter) session.adapter.swapEquipment(command.sourceSlot, command.targetSlot)
           else { const a = hexToBuffer(session.adapter.equipment(command.sourceSlot, palico).recordHex); const b = hexToBuffer(session.adapter.equipment(command.targetSlot, palico).recordHex); session.adapter.setEquipment(command.sourceSlot, b, palico); session.adapter.setEquipment(command.targetSlot, a, palico) }
         }
         section = isItems ? 'item-box' : 'equipment-box'; if (!message) message = '箱格操作已加入修改草稿，尚未保存。'
@@ -163,6 +170,7 @@ export class SaveSessionService {
   private patchEquipmentRecord(adapter: SaveDocumentAdapter, domain: 'hunter-equipment' | 'palico-equipment', source: Buffer, changes: Extract<SaveCommand, { kind: 'set-equipment-fields' }>['changes']): Buffer {
     const palico = domain === 'palico-equipment'; const record = Buffer.from(source); const format = adapter.meta.formatId
     if (record.length !== adapter.meta.recordSize) throw new Error(`装备记录必须为 ${adapter.meta.recordSize} 字节`)
+    if (adapter instanceof Mhp2gSaveAdapter) { if (palico) throw new Error('P2G 没有猫装备'); return this.resolver.patchP2gRecord(record, changes) }
     if (palico) {
       const nextType = changes.saveType ?? record[0]
       const nextAppearance = changes.appearanceId ?? readU16(record, 4)
@@ -200,6 +208,7 @@ export class SaveSessionService {
   validate(sessionId: string, revision: number): SaveValidationResult { const session = this.requireIdentity(sessionId, revision); const diagnostics = session.adapter.validate(); return { valid: !diagnostics.some(issue => issue.severity === 'error'), diagnostics } }
   save(sessionId: string, revision: number, targetPath?: string): SaveResult {
     const session = this.requireIdentity(sessionId, revision); const validation = this.validate(sessionId, revision); if (!validation.valid) throw new Error('存档校验未通过，已阻止保存')
+    if (session.adapter instanceof Mhp2gSaveAdapter) return this.saveP2g(session, targetPath)
     session.state = 'saving'; this.emit(); const output = session.adapter.serialize(); const destination = targetPath ?? session.path
     let backup: string | undefined
     try {
@@ -217,6 +226,23 @@ export class SaveSessionService {
       session.state = 'readyDirty'; this.emit(); throw error
     }
   }
+  private saveP2g(session: OpenSession, targetPath?: string): SaveResult {
+    const adapter = session.adapter
+    if (!(adapter instanceof Mhp2gSaveAdapter) || !session.p2gFiles) throw new Error('P2G 成对文件会话缺失')
+    session.state = 'saving'; this.emit()
+    try {
+      const pair = adapter.serializePair()
+      const verify = (written: { bin: Buffer; sfo: Buffer }) => {
+        const reopened = new Mhp2gSaveAdapter(written.bin, written.sfo, adapter.profile)
+        if (!reopened.payload.equals(adapter.payload) || reopened.validate().some(d => d.severity === 'error')) throw new Error('P2G 保存后解密重读与修改草稿不一致')
+      }
+      const result = session.p2gFiles.save(pair, verify, targetPath)
+      session.p2gFiles = result.files; session.path = join(result.files.directory, 'MHP2NDG.BIN'); session.fingerprint = hash(pair.bin)
+      session.baseline = Buffer.from(adapter.payload); session.undo = []; session.redo = []; session.revision++; session.state = 'readyClean'
+      this.sectionCache.clear(); this.emit()
+      return { cancelled: false, session: this.snapshot()!, message: `已保存并重读复核 MHP2NDG.BIN / PARAM.SFO${result.backup ? '，原文件已成对备份' : '，完整副本已建立'}` }
+    } catch (error) { session.state = adapter.payload.equals(session.baseline) ? 'readyClean' : 'readyDirty'; this.emit(); throw error }
+  }
   exportBox(request: SaveExportRequest, targetPath: string) {
     const session = this.requireIdentity(request.sessionId, request.revision)
     const adapter = session.adapter
@@ -224,7 +250,7 @@ export class SaveSessionService {
     if (!capacity) throw new Error('当前存档没有该箱子域')
     const records: ImportedRecord[] = request.domain === 'items'
       ? adapter.items(0, capacity).filter(value => !value.empty).map(value => ({ slot: value.slot, itemId: value.itemId, count: value.count }))
-      : Array.from({ length: capacity }, (_, slot) => adapter.equipment(slot, request.domain === 'palico-equipment')).filter(value => !value.empty).map(value => ({ slot: value.slot, recordHex: value.recordHex }))
+      : Array.from({ length: capacity }, (_, slot) => adapter.equipment(slot, request.domain === 'palico-equipment')).filter(value => adapter instanceof Mhp2gSaveAdapter || !value.empty).map(value => ({ slot: value.slot, recordHex: value.recordHex }))
     if (request.format === 'csv') {
       writeFileSync(targetPath, `\ufeff${this.exportLegacyCsv(adapter, request.domain).join('\r\n')}\r\n`, 'utf8'); return
     }
@@ -295,14 +321,14 @@ export class SaveSessionService {
     let added = 0; let overwritten = 0; let cleared = 0; let unknown = 0
     for (const record of records) {
       const emptyBefore = request.domain === 'items' ? adapter.item(record.slot).empty : adapter.equipment(record.slot, request.domain === 'palico-equipment').empty
-      const emptyAfter = request.domain === 'items' ? !record.itemId : /^0+$/.test(record.recordHex ?? '')
+      const emptyAfter = request.domain === 'items' ? !record.itemId : adapter instanceof Mhp2gSaveAdapter ? record.recordHex?.slice(0, 2) === '00' : /^0+$/.test(record.recordHex ?? '')
       if (emptyBefore && !emptyAfter) added += 1
       else if (!emptyBefore && emptyAfter) cleared += 1
       else if (!emptyBefore && !emptyAfter) overwritten += 1
       if (!emptyAfter) {
         const known = request.domain === 'items'
           ? this.resolver.itemKnown(adapter.meta.contentGameId, record.itemId!)
-          : (() => { const bytes = hexToBuffer(record.recordHex!, adapter.meta.recordSize); const saveType = (adapter.meta.formatId === 'mhgu-switch-yuzu' || adapter.meta.formatId === 'mhxx-3ds-citra') && request.domain === 'hunter-equipment' ? readU16(bytes, 0) & 0x1f : bytes[0]; return this.resolver.equipmentKnown(adapter.meta.contentGameId, saveType, readU16(bytes, 2), request.domain === 'palico-equipment') })()
+          : (() => { const bytes = hexToBuffer(record.recordHex!, adapter.meta.recordSize); const saveType = adapter instanceof Mhp2gSaveAdapter ? bytes[1] : (adapter.meta.formatId === 'mhgu-switch-yuzu' || adapter.meta.formatId === 'mhxx-3ds-citra') && request.domain === 'hunter-equipment' ? readU16(bytes, 0) & 0x1f : bytes[0]; return this.resolver.equipmentKnown(adapter.meta.contentGameId, saveType, readU16(bytes, 2), request.domain === 'palico-equipment') })()
         if (!known) { unknown += 1; diagnostics.push({ code: 'import.record.unknown', path: `slots.${record.slot}`, severity: 'warning', message: `物理格 ${record.slot + 1} 的资料身份未知；应用后仍会保留原始值` }) }
       }
     }
@@ -316,7 +342,7 @@ export class SaveSessionService {
     const adapter = session.adapter; const before = Buffer.from(adapter.payload); const palico = draft.domain === 'palico-equipment'
     const capacity = draft.domain === 'items' ? adapter.meta.itemCapacity : palico ? adapter.meta.palicoEquipmentCapacity : adapter.meta.hunterEquipmentCapacity
     try {
-      if (request.replaceAll) for (let slot = 0; slot < capacity; slot += 1) draft.domain === 'items' ? adapter.setItem(slot, 0, 0) : adapter.setEquipment(slot, Buffer.alloc(adapter.meta.recordSize), palico)
+      if (request.replaceAll) for (let slot = 0; slot < capacity; slot += 1) { if (adapter instanceof Mhp2gSaveAdapter && draft.records.some(r => r.slot === slot)) continue; draft.domain === 'items' ? adapter.setItem(slot, 0, 0) : adapter.setEquipment(slot, Buffer.alloc(adapter.meta.recordSize), palico) }
       for (const record of draft.records) draft.domain === 'items' ? adapter.setItem(record.slot, record.itemId!, record.count!) : adapter.setEquipment(record.slot, hexToBuffer(record.recordHex!, adapter.meta.recordSize), palico)
     } catch (error) { adapter.payload = before; throw error }
     const section = draft.domain === 'items' ? 'item-box' as const : 'equipment-box' as const; const patches = diffBuffers(before, adapter.payload)
@@ -411,6 +437,12 @@ export class SaveSessionService {
     for (let slot = 0; slot < session.adapter.meta.hunterEquipmentCapacity; slot += 1) if (session.adapter.equipment(slot).empty) { if (targets.length < entries.length) targets.push(slot); else remainingEmpty += 1 }
     if (targets.length < entries.length) throw new Error(`装备箱空间不足：需要 ${entries.length} 格，只有 ${targets.length} 格`)
     const records = entries.map(({ entry }) => {
+      if (entry.gameId !== session.adapter.meta.contentGameId) throw new Error('装备游戏版本与当前存档不一致')
+      if (entry.gameId === 'mhp2g') {
+        const identity = p2gSaveIdentity(entry.kind === 'weapon' ? entry.weaponKey : entry.armorKey)
+        const base = this.createCatalogEquipmentRecord(session.adapter, 'hunter-equipment', identity.saveType, identity.saveId, 0, 0)
+        return this.patchEquipmentRecord(session.adapter, 'hunter-equipment', base, { decorations: this.decorationValuesForRecord(session.adapter, entry.decorations) })
+      }
       if (entry.instance?.formatId && entry.instance.formatId !== session.adapter.meta.formatId) throw new Error(`${entry.kind === 'charm' ? entry.classNameCn : entry.nameCn}的实例格式与当前存档不一致`)
       if (entry.kind === 'weapon') {
         const level = entry.instance ? undefined : entry.saveLevel ?? 0
@@ -471,9 +503,12 @@ export class SaveSessionService {
     } else if (!record.subarray(12).every(value => value === 0)) throw new Error('装备实例包含无法确认来源的扩展字节')
     return record
   }
-  private decorationValuesForRecord(adapter: SaveDocumentAdapter, values: { saveId: number; fixed?: boolean }[]): number[] {
-    if (adapter.meta.formatId !== 'mh4g-3ds-citra') return values.map(value => value.saveId)
-    return values.map(value => (value.saveId & 0x7fff) | ((value.fixed ?? Boolean(value.saveId & 0x8000)) ? 0x8000 : 0))
+  private decorationValuesForRecord(adapter: SaveDocumentAdapter, values: { saveId?: number; itemId?: number; gameId?: string; fixed?: boolean }[]): number[] {
+    return values.map(value => {
+      if (adapter instanceof Mhp2gSaveAdapter) { if (value.gameId !== 'mhp2g' || value.itemId == null) throw new Error('装饰品游戏身份不匹配'); return value.itemId }
+      if (value.saveId == null) throw new Error('装饰品缺少已验证的存档身份')
+      return adapter.meta.formatId !== 'mh4g-3ds-citra' ? value.saveId : (value.saveId & 0x7fff) | ((value.fixed ?? Boolean(value.saveId & 0x8000)) ? 0x8000 : 0)
+    })
   }
   private findExistingRecord(adapter: SaveDocumentAdapter, saveType: number, saveId: number, level: number, exact?: Buffer): Buffer | null {
     for (let slot = 0; slot < adapter.meta.hunterEquipmentCapacity; slot += 1) {
@@ -488,7 +523,7 @@ export class SaveSessionService {
   private exportLegacyCsv(adapter: SaveDocumentAdapter, domain: SaveBoxDomain): string[] {
     const gu = adapter.meta.formatId === 'mhgu-switch-yuzu' || adapter.meta.formatId === 'mhxx-3ds-citra'
     if (domain === 'items') {
-      const preamble = gu ? 'MHXX_GU_TRANSFER,1,ITEM_BOX' : adapter.meta.formatId === 'mh4g-3ds-citra' ? 'MH4G_SAVE_EDITOR_FORM,1,item_box' : 'MH3U_TRANSFER,1,ITEM_CHEST'
+      const preamble = adapter instanceof Mhp2gSaveAdapter ? 'MHP2G_TRANSFER,1,ITEM_BOX' : gu ? 'MHXX_GU_TRANSFER,1,ITEM_BOX' : adapter.meta.formatId === 'mh4g-3ds-citra' ? 'MH4G_SAVE_EDITOR_FORM,1,item_box' : 'MH3U_TRANSFER,1,ITEM_CHEST'
       const header = gu ? 'slot,id,count' : 'page,slot,item_id,count'; const lines = [preamble, header]
       for (const value of adapter.items(0, adapter.meta.itemCapacity)) lines.push(gu ? `${value.slot + 1},${value.itemId},${value.count}` : `${Math.floor(value.slot / 100) + 1},${value.slot % 100 + 1},${value.itemId},${value.count}`)
       return lines
@@ -499,7 +534,7 @@ export class SaveSessionService {
       for (let slot = 0; slot < capacity; slot += 1) { const value = adapter.equipment(slot, palico); lines.push(`${palico ? 'palico' : 'hunter'},${slot + 1},${value.saveType},${value.saveId},${value.appearanceId ?? 0},${palico ? 0 : value.level},${value.decorations[0] ?? 0},${value.decorations[1] ?? 0},${value.decorations[2] ?? 0},${value.skill1Id ?? 0},${value.skill1Points ?? 0},${value.skill2Id ?? 0},${value.skill2Points ?? 0},${value.slots ?? 0}`) }
       return lines
     }
-    const preamble = adapter.meta.formatId === 'mh4g-3ds-citra' ? 'MH4G_SAVE_EDITOR_FORM,1,equipment_box' : 'MH3U_TRANSFER,1,EQUIPMENT_BOX'
+    const preamble = adapter instanceof Mhp2gSaveAdapter ? 'MHP2G_TRANSFER,1,EQUIPMENT_BOX' : adapter.meta.formatId === 'mh4g-3ds-citra' ? 'MH4G_SAVE_EDITOR_FORM,1,equipment_box' : 'MH3U_TRANSFER,1,EQUIPMENT_BOX'
     const header = ['page', 'slot', 'equipment_type', ...Array.from({ length: adapter.meta.recordSize }, (_, index) => `byte_${index}`)].join(','); const lines = [preamble, header]
     for (let slot = 0; slot < capacity; slot += 1) { const value = adapter.equipment(slot); const bytes = hexToBuffer(value.recordHex, adapter.meta.recordSize); lines.push(`${Math.floor(slot / 100) + 1},${slot % 100 + 1},${value.saveType},${[...bytes].join(',')}`) }
     return lines
@@ -507,7 +542,7 @@ export class SaveSessionService {
   private importLegacyCsv(adapter: SaveDocumentAdapter, domain: SaveBoxDomain, source: string, diagnostics: SaveDiagnostic[]): ImportedRecord[] {
     const lines = source.replace(/^\ufeff/, '').split(/\r?\n/).map(value => value.trim()).filter(Boolean); if (lines.length < 2) throw new Error('导入文件缺少版本标识或字段标题')
     const gu = adapter.meta.formatId === 'mhgu-switch-yuzu' || adapter.meta.formatId === 'mhxx-3ds-citra'
-    const expectedPreamble = gu
+    const expectedPreamble = adapter instanceof Mhp2gSaveAdapter ? `MHP2G_TRANSFER,1,${domain === 'items' ? 'ITEM_BOX' : 'EQUIPMENT_BOX'}` : gu
       ? `MHXX_GU_TRANSFER,1,${domain === 'items' ? 'ITEM_BOX' : 'EQUIPMENT_BOX'}`
       : adapter.meta.formatId === 'mh4g-3ds-citra'
         ? `MH4G_SAVE_EDITOR_FORM,1,${domain === 'items' ? 'item_box' : 'equipment_box'}`
@@ -533,7 +568,7 @@ export class SaveSessionService {
         const palico = domain === 'palico-equipment'
         if (header[0] === 'page' && header[2] === 'equipment_type' && header[3] === 'byte_0') {
           const page = integer(values[0], 1, Math.ceil(adapter.meta.hunterEquipmentCapacity / 100)); const localSlot = integer(values[1], 1, 100); const type = integer(values[2], 0, 255); const bytes = values.slice(3).map(value => integer(value, 0, 255)); const slot = page == null || localSlot == null ? -1 : (page - 1) * 100 + localSlot - 1
-          if (values.length !== 3 + adapter.meta.recordSize || slot < 0 || slot >= adapter.meta.hunterEquipmentCapacity || type === null || bytes.some(value => value === null) || bytes[0] !== type) throw new Error('装备原始列无效')
+          if (values.length !== 3 + adapter.meta.recordSize || slot < 0 || slot >= adapter.meta.hunterEquipmentCapacity || type === null || bytes.some(value => value === null) || (adapter instanceof Mhp2gSaveAdapter ? bytes[1] : bytes[0]) !== type) throw new Error('装备原始列无效')
           records.push({ slot, recordHex: bufferToHex(Buffer.from(bytes as number[])) }); return
         }
         if (header.join(',') === 'slot,record_hex') { const slot = Number(values[0]); const recordHex = values[1]; if (!Number.isInteger(slot) || slot < 0 || !recordHex || recordHex.length !== adapter.meta.recordSize * 2) throw new Error('装备记录无效'); records.push({ slot, recordHex }); return }
@@ -566,6 +601,7 @@ export class SaveSessionService {
     }
     if (typeof record.recordHex !== 'string' || !/^[0-9a-f]+$/i.test(record.recordHex) || record.recordHex.length !== adapter.meta.recordSize * 2) return false
     const bytes = Buffer.from(record.recordHex, 'hex')
+    if (adapter instanceof Mhp2gSaveAdapter) return domain === 'hunter-equipment'
     const empty = bytes.every(value => value === 0)
     if (empty) return true
     if (domain === 'palico-equipment') return this.isGu(adapter) && [22, 23, 24].includes(bytes[0])

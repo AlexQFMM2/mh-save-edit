@@ -20,8 +20,22 @@ describe('weapon tree layout', () => {
     expect([...matches]).toEqual(['7:4'])
     expect([...contextualWeaponKeys(values, edges, matches)].sort()).toEqual(['7:1', '7:3', '7:4'])
   })
-  it('rejects cycles', () => {
-    expect(() => layoutWeaponTree(nodes.slice(0, 2), [...edges.slice(0, 1), { parentWeaponKey: '7:2', childWeaponKey: '7:1', branchOrder: 0 }])).toThrow()
+  it('positions cycles deterministically without mutating or discarding source edges', () => {
+    const cyclic = [...edges, { parentWeaponKey: '7:4', childWeaponKey: '7:3', branchOrder: 0 }]
+    const original = structuredClone(cyclic)
+    const positions = layoutWeaponTree(nodes, cyclic)
+    expect(layoutWeaponTree([...nodes].reverse(), [...cyclic].reverse())).toEqual(positions)
+    expect(cyclic).toEqual(original)
+    expect(positions).toHaveLength(nodes.length)
+    expect(positions.every(p => Number.isFinite(p.x) && Number.isFinite(p.y))).toBe(true)
+    const depth = new Map(positions.map(p => [p.weaponKey, p.depth]))
+    expect(depth.get('7:4')!).toBeGreaterThan(depth.get('7:3')!)
+    expect([...contextualWeaponKeys(nodes, cyclic, new Set(['7:4']))].sort()).toEqual(['7:1', '7:3', '7:4'])
+  })
+  it('handles a rootless cycle and a self edge without overlapping positions', () => {
+    const cycle = [{ parentWeaponKey: '7:1', childWeaponKey: '7:2', branchOrder: 0 }, { parentWeaponKey: '7:2', childWeaponKey: '7:1', branchOrder: 0 }, { parentWeaponKey: '7:2', childWeaponKey: '7:2', branchOrder: 1 }]
+    const positions = layoutWeaponTree(nodes.slice(0, 2), cycle)
+    expect(new Set(positions.map(p => `${p.x}:${p.y}`)).size).toBe(2)
   })
   it('keeps nodes in the same depth column on separate rows', () => {
     const sharedChildNodes = [node('7:1', 1), node('7:2', 2), node('7:3', 3), node('7:4', 4), node('7:5', 5)]

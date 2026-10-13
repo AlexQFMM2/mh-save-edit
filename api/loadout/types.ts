@@ -1,11 +1,12 @@
 import type { GameId } from '../core/loadout'
 import type { Mh4gCharmNativeInput, Mh4gCharmWitness } from './mh4gCharmTypes'
 
-export type LoadoutGame = GameId
+export type LoadoutGame = GameId | 'mhp2g'
 export type LoadoutSlot = 'weapon' | 'head' | 'chest' | 'arms' | 'waist' | 'legs' | 'charm'
 export type ArmorLoadoutSlot = Exclude<LoadoutSlot, 'weapon' | 'charm'>
 export type LegalityStatus = 'confirmed' | 'invalid' | 'unknown'
 export type EncodingStatus = 'encodable' | 'blocked'
+export type LoadoutEncodingStatus = EncodingStatus | 'unsupported'
 export type InstanceSource = 'catalogTemplate' | 'importedLoadout' | 'saveInstance'
 export type LoadoutLock = 'unlocked' | 'equipment' | 'equipmentAndDecorations'
 
@@ -28,9 +29,10 @@ export type LoadoutInstanceState = {
   patches?: { offset: number; before: number; after: number }[]
 }
 
-export type LoadoutDecoration = {
-  saveId: number
+export type LoadoutDecoration = ({ saveId: number; gameId?: GameId; itemId?: never } | { gameId: 'mhp2g'; itemId: number; saveId?: never }) & {
   nameCn: string
+  nameJp?: string
+  iconPath?: string | null
   slots: number
   skills: LoadoutSkillPoint[]
   fixed?: boolean
@@ -38,19 +40,17 @@ export type LoadoutDecoration = {
 
 export type LoadoutSkillPoint = { skillId: number; nameCn: string; points: number }
 
-export type LoadoutWeaponCandidate = {
+type LoadoutWeaponFields = {
   kind: 'weapon'
-  gameId: LoadoutGame
   candidateKey: string
   sourceKind: 'catalog' | 'relicTemplate'
   weaponKey: string | null
   templateKey: string | null
-  saveType: number
-  saveId: number
   /** Native upgrade level stored beside saveId; required to identify GU/XX weapon rows. */
   saveLevel?: number
   nameCn: string
   nameEn: string
+  nameJp?: string
   typeId: number
   typeNameCn: string
   rarity: number | null
@@ -65,9 +65,13 @@ export type LoadoutWeaponCandidate = {
   decorations?: LoadoutDecoration[]
 }
 
-export type LoadoutArmorCandidate = {
+export type LoadoutWeaponCandidate = LoadoutWeaponFields & (
+  { gameId: GameId; saveType: number; saveId: number } |
+  { gameId: 'mhp2g'; sourceKind: 'catalog'; weaponKey: string; saveType: null; saveId: null; instance?: never }
+)
+
+type LoadoutArmorFields = {
   kind: 'armor'
-  gameId: LoadoutGame
   candidateKey: string
   sourceKind: 'catalog' | 'relicTemplate'
   dexId: number | null
@@ -76,6 +80,7 @@ export type LoadoutArmorCandidate = {
   saveId: number | null
   nameCn: string
   nameEn: string
+  nameJp?: string
   part: ArmorLoadoutSlot
   combat: 'both' | 'blademaster' | 'gunner'
   gender: 'both' | 'male' | 'female'
@@ -95,11 +100,16 @@ export type LoadoutArmorCandidate = {
   decorations?: LoadoutDecoration[]
 }
 
+export type LoadoutArmorCandidate = LoadoutArmorFields & (
+  { gameId: GameId; armorKey?: never } |
+  { gameId: 'mhp2g'; sourceKind: 'catalog'; armorKey: string; dexId: null; saveType: null; saveId: null; instance?: never }
+)
+
 export type LoadoutCharm = {
   kind: 'charm'
   /** Keeps picker identity access type-safe; charms are edited, never catalog-selected. */
   candidateKey?: undefined
-  gameId: LoadoutGame
+  gameId: GameId
   classId: number
   classNameCn: string
   iconPath?: string | null
@@ -140,6 +150,9 @@ export type LoadoutActivation = {
   threshold: number
   direction: 'positive' | 'negative' | 'special'
   nameCn: string
+  nameJp?: string
+  description?: string
+  components?: { activationKey: string; skillId: number; nameCn: string }[]
 }
 
 export type LoadoutSkillDefinition = {
@@ -148,6 +161,7 @@ export type LoadoutSkillDefinition = {
   nameEn: string
   nameJp: string
   activations: LoadoutActivation[]
+  specialRule?: string
 }
 
 export type LoadoutCharmClass = {
@@ -215,12 +229,12 @@ export type LoadoutSlotResult = {
   slot: LoadoutSlot
   lock: LoadoutLock
   nameCn: string
-  decorations: { saveId: number; nameCn: string; slots: number }[]
+  decorations: LoadoutDecoration[]
   naturalSlots: number
   usedSlots: number
   remainingSlots: number
   legality: LegalityStatus
-  encoding: EncodingStatus
+  encoding: LoadoutEncodingStatus
   issues: LoadoutIssue[]
 }
 
@@ -238,6 +252,7 @@ export type LoadoutSkillResult = {
   special: number
   total: number
   activation: LoadoutActivation | null
+  specialRule?: string
   nextActivation: LoadoutActivation | null
 }
 
@@ -251,7 +266,7 @@ export type LoadoutResult = {
   activations: LoadoutActivation[]
   issues: LoadoutIssue[]
   legality: LegalityStatus
-  encoding: EncodingStatus
+  encoding: LoadoutEncodingStatus
 }
 
 export type CharmValidationResult = {
@@ -317,6 +332,10 @@ export type LoadoutFacets = { skills: { skillId: number; nameCn: string; nameEn:
 
 export const LOADOUT_SLOTS: readonly LoadoutSlot[] = ['weapon', 'head', 'chest', 'arms', 'waist', 'legs', 'charm']
 export const ARMOR_LOADOUT_SLOTS: readonly ArmorLoadoutSlot[] = ['head', 'chest', 'arms', 'waist', 'legs']
+
+export function getLoadoutSlots(gameId: LoadoutGame): readonly LoadoutSlot[] {
+  return gameId === 'mhp2g' ? LOADOUT_SLOTS.filter(slot => slot !== 'charm') : LOADOUT_SLOTS
+}
 
 export function createEmptyLogicalLoadout(gameId: LoadoutGame, dataVersion = ''): LogicalLoadout {
   return { schemaVersion: 1, dataVersion, gameId, name: '未命名配装', gender: 'male', weapon: null, armor: {}, charm: null }

@@ -1,4 +1,7 @@
+import type { LoadoutGame } from '../api/loadout/types'
+import type { P2gArmorFilters, P2gArmorSetFilters, P2gArmorIdentity } from '../api/catalog/p2gArmorTypes'
 import type { P2gSkillEquipmentIdentity, P2gSkillEquipmentDetail } from '../api/catalog/p2gSkillTypes'
+import type { P2gWeaponIdentity, P2gWeaponFilters } from '../api/catalog/p2gWeaponTypes'
 import type { CatalogGameId } from '../api/catalog/types'
 import type { ItemTermFilters } from '../api/terminology/types'
 import { contextBridge, ipcRenderer } from 'electron'
@@ -20,16 +23,16 @@ contextBridge.exposeInMainWorld('mhSaveEditor', {
     searchDecorations: (filters: DecorationCatalogFilters) => ipcRenderer.invoke(catalogChannels.searchDecorations, filters),
     getDecoration: (identity: DecorationIdentity) => ipcRenderer.invoke(catalogChannels.getDecoration, identity),
     getDecorationFacets: (gameId: CatalogGameId) => ipcRenderer.invoke(catalogChannels.getDecorationFacets, gameId),
-    searchWeapons: (filters: WeaponCatalogFilters) => ipcRenderer.invoke(catalogChannels.searchWeapons, filters),
-    getWeapon: (identity: WeaponIdentity) => ipcRenderer.invoke(catalogChannels.getWeapon, identity),
-    getWeaponFacets: (gameId: GameId) => ipcRenderer.invoke(catalogChannels.getWeaponFacets, gameId),
-    getWeaponTree: (gameId: GameId, weaponTypeId: number) => ipcRenderer.invoke(catalogChannels.getWeaponTree, { gameId, weaponTypeId }),
+    searchWeapons: (filters: WeaponCatalogFilters | P2gWeaponFilters) => ipcRenderer.invoke(catalogChannels.searchWeapons, filters),
+    getWeapon: (identity: WeaponIdentity | P2gWeaponIdentity) => ipcRenderer.invoke(catalogChannels.getWeapon, identity),
+    getWeaponFacets: (gameId: CatalogGameId) => ipcRenderer.invoke(catalogChannels.getWeaponFacets, gameId),
+    getWeaponTree: (gameId: CatalogGameId, weaponTypeId: number) => ipcRenderer.invoke(catalogChannels.getWeaponTree, { gameId, weaponTypeId }),
     searchWeaponMotions: (filters: WeaponMotionFilters) => ipcRenderer.invoke(catalogChannels.searchWeaponMotions, filters),
     getWeaponMotionFacets: (gameId: GameId) => ipcRenderer.invoke(catalogChannels.getWeaponMotionFacets, gameId),
-    searchArmors: (filters: ArmorCatalogFilters) => ipcRenderer.invoke(catalogChannels.searchArmors, filters),
-    searchArmorSets: (filters: ArmorSetFilters) => ipcRenderer.invoke(catalogChannels.searchArmorSets, filters),
-    getArmor: (identity: ArmorIdentity) => ipcRenderer.invoke(catalogChannels.getArmor, identity),
-    getArmorFacets: (gameId: GameId) => ipcRenderer.invoke(catalogChannels.getArmorFacets, gameId),
+    searchArmors: (filters: ArmorCatalogFilters | P2gArmorFilters) => ipcRenderer.invoke(catalogChannels.searchArmors, filters),
+    searchArmorSets: (filters: ArmorSetFilters | P2gArmorSetFilters) => ipcRenderer.invoke(catalogChannels.searchArmorSets, filters),
+    getArmor: (identity: ArmorIdentity | P2gArmorIdentity) => ipcRenderer.invoke(catalogChannels.getArmor, identity),
+    getArmorFacets: (gameId: CatalogGameId) => ipcRenderer.invoke(catalogChannels.getArmorFacets, gameId),
     getP2gSkillEquipment: (identity: P2gSkillEquipmentIdentity): Promise<P2gSkillEquipmentDetail | null> => ipcRenderer.invoke(catalogChannels.getP2gSkillEquipment, identity),
     getSkill: (identity: SkillIdentity) => ipcRenderer.invoke(catalogChannels.getSkill, identity),
     searchSkills: (filters: SkillCatalogFilters) => ipcRenderer.invoke(catalogChannels.searchSkills, filters),
@@ -59,10 +62,10 @@ contextBridge.exposeInMainWorld('mhSaveEditor', {
     searchWeapons: (filters: LoadoutWeaponFilters) => ipcRenderer.invoke(loadoutChannels.searchWeapons, filters),
     searchArmors: (filters: LoadoutArmorFilters) => ipcRenderer.invoke(loadoutChannels.searchArmors, filters),
     searchDecorations: (filters: LoadoutDecorationFilters) => ipcRenderer.invoke(loadoutChannels.searchDecorations, filters),
-    getFacets: (gameId: GameId) => ipcRenderer.invoke(loadoutChannels.getFacets, gameId),
-    getBootstrap: (gameId: GameId) => ipcRenderer.invoke(loadoutChannels.getBootstrap, gameId),
-    getSnapshot: (gameId: GameId) => ipcRenderer.invoke(loadoutChannels.getSnapshot, gameId),
-    getRelicLookups: (gameId: GameId) => ipcRenderer.invoke(loadoutChannels.getRelicLookups, gameId),
+    getFacets: (gameId: LoadoutGame) => ipcRenderer.invoke(loadoutChannels.getFacets, gameId),
+    getBootstrap: (gameId: LoadoutGame) => ipcRenderer.invoke(loadoutChannels.getBootstrap, gameId),
+    getSnapshot: (gameId: LoadoutGame) => ipcRenderer.invoke(loadoutChannels.getSnapshot, gameId),
+    getRelicLookups: (gameId: LoadoutGame) => ipcRenderer.invoke(loadoutChannels.getRelicLookups, gameId),
     reconcileLoadout: (loadout: LogicalLoadout) => ipcRenderer.invoke(loadoutChannels.reconcileLoadout, loadout),
     validateCharm: (charm: LoadoutCharm) => ipcRenderer.invoke(loadoutChannels.validateCharm, charm),
     startAuto: (request: AutoLoadoutRequest) => ipcRenderer.invoke(loadoutChannels.startAuto, request),

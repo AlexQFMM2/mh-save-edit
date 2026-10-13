@@ -12,6 +12,6 @@ export function weaponSpecialColumnLabel(kind?: WeaponKind): string {
   return '斩味'
 }
 
-export function WeaponListColumns({ kind }: { kind?: WeaponKind }) {
-  return <div className="weapon-list-columns" aria-hidden="true"><span>武器名称</span><span>稀有</span><span>攻击</span><span>属性</span><span>会心</span><span>孔</span><span>生产</span><span>{weaponSpecialColumnLabel(kind)}</span></div>
+export function WeaponListColumns({ kind, nativeIdentity }: { kind?: WeaponKind; nativeIdentity?: boolean }) {
+  return <div className="weapon-list-columns" aria-hidden="true"><span>武器名称</span><span>稀有</span><span>攻击</span><span>属性</span><span>{nativeIdentity ? '原始会心' : '会心'}</span><span>孔</span><span>生产</span><span>{weaponSpecialColumnLabel(kind)}</span></div>
 }

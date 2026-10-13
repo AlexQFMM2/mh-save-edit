@@ -1,9 +1,11 @@
+import { resolveAutoTargets } from './resultValidation'
 import { BrowserWindow, ipcMain } from 'electron'
 import type DatabaseType from 'better-sqlite3'
 import { createRequire } from 'node:module'
 import { join } from 'node:path'
-import { gameIdSchema } from '../catalog/schemas'
-import type { GameId } from '../core/loadout'
+import { loadoutGameSchema } from './schemas'
+import { P2gLoadoutCatalogRepository } from './p2gRepository'
+import type { LoadoutGame } from './types'
 import { loadoutChannels } from './channels'
 import { normalizeLegacyTransientLoadoutFields, reconcileImportedLoadout } from './file'
 import { AutoLoadoutJobService } from './jobService'
@@ -15,13 +17,13 @@ const require = createRequire(import.meta.url)
 const Database = require('better-sqlite3') as typeof DatabaseType
 
 export function registerLoadoutIpc(dataDir: string, stateDir: string): () => void {
-  const repositories = new Map<GameId, { db: DatabaseType.Database; repository: LoadoutCatalogRepository }>()
-  const repository = (gameId: GameId) => {
+  const repositories = new Map<LoadoutGame, { db: DatabaseType.Database; repository: LoadoutCatalogRepository | P2gLoadoutCatalogRepository }>()
+  const repository = (gameId: LoadoutGame) => {
     const cached = repositories.get(gameId)
     if (cached) return cached.repository
     const nativeBinding = process.env.MH_SAVE_EDIT_SQLITE_BINDING
     const db = new Database(join(dataDir, `${gameId}.sqlite`), { readonly: true, fileMustExist: true, ...(nativeBinding ? { nativeBinding } : {}) })
-    const value = new LoadoutCatalogRepository(db, gameId)
+    const value = gameId === 'mhp2g' ? new P2gLoadoutCatalogRepository(db) : new LoadoutCatalogRepository(db, gameId)
     repositories.set(gameId, { db, repository: value })
     return value
   }
@@ -32,11 +34,7 @@ export function registerLoadoutIpc(dataDir: string, stateDir: string): () => voi
     const versionedLoadout = retry ? { ...input.baseLoadout, dataVersion: snapshot.dataVersion } : input.baseLoadout
     if (versionedLoadout.gameId !== input.gameId) throw new Error('配装与请求游戏不一致')
     const baseLoadout = reconcileImportedLoadout(snapshot, versionedLoadout)
-    const targets = input.targets.map(target => {
-      const activation = snapshot.skills.flatMap(skill => skill.activations).find(value => value.activationKey === target.activationKey && value.skillId === target.skillId && value.direction === 'positive')
-      if (!activation) throw new Error(`自动配装目标不存在或不可用：${target.nameCn}`)
-      return { activationKey: activation.activationKey, skillId: activation.skillId, threshold: activation.threshold, nameCn: activation.nameCn }
-    })
+    const targets = resolveAutoTargets(snapshot, input.targets)
     const request = { ...input, dataVersion: snapshot.dataVersion, baseLoadout, targets }
     return { snapshot, request }
   }
@@ -48,10 +46,10 @@ export function registerLoadoutIpc(dataDir: string, stateDir: string): () => voi
   ipcMain.handle(loadoutChannels.searchWeapons, (_event, payload: unknown) => { const filters = loadoutWeaponFiltersSchema.parse(payload); return repository(filters.gameId).searchWeapons(filters) })
   ipcMain.handle(loadoutChannels.searchArmors, (_event, payload: unknown) => { const filters = loadoutArmorFiltersSchema.parse(payload); return repository(filters.gameId).searchArmors(filters) })
   ipcMain.handle(loadoutChannels.searchDecorations, (_event, payload: unknown) => { const filters = loadoutDecorationFiltersSchema.parse(payload); return repository(filters.gameId).searchDecorations(filters) })
-  ipcMain.handle(loadoutChannels.getFacets, (_event, payload: unknown) => { const gameId = gameIdSchema.parse(payload); return repository(gameId).getFacets() })
-  ipcMain.handle(loadoutChannels.getBootstrap, (_event, payload: unknown) => { const gameId = gameIdSchema.parse(payload); return repository(gameId).getBootstrap() })
-  ipcMain.handle(loadoutChannels.getSnapshot, (_event, payload: unknown) => { const gameId = gameIdSchema.parse(payload); return repository(gameId).getSnapshot() })
-  ipcMain.handle(loadoutChannels.getRelicLookups, (_event, payload: unknown) => { const gameId = gameIdSchema.parse(payload); return repository(gameId).getRelicLookups() })
+  ipcMain.handle(loadoutChannels.getFacets, (_event, payload: unknown) => { const gameId = loadoutGameSchema.parse(payload); return repository(gameId).getFacets() })
+  ipcMain.handle(loadoutChannels.getBootstrap, (_event, payload: unknown) => { const gameId = loadoutGameSchema.parse(payload); return repository(gameId).getBootstrap() })
+  ipcMain.handle(loadoutChannels.getSnapshot, (_event, payload: unknown) => { const gameId = loadoutGameSchema.parse(payload); return repository(gameId).getSnapshot() })
+  ipcMain.handle(loadoutChannels.getRelicLookups, (_event, payload: unknown) => { const gameId = loadoutGameSchema.parse(payload); return repository(gameId).getRelicLookups() })
   ipcMain.handle(loadoutChannels.reconcileLoadout, (_event, payload: unknown) => { const loadout = logicalLoadoutSchema.parse(normalizeLegacyTransientLoadoutFields(payload)); return reconcileImportedLoadout(repository(loadout.gameId).getSnapshot(), loadout) })
   ipcMain.handle(loadoutChannels.validateCharm, (_event, payload: unknown) => { const charm = loadoutCharmSchema.parse(payload); return repository(charm.gameId).validateCharm(charm) })
   ipcMain.handle(loadoutChannels.startAuto, (_event, payload: unknown) => service.start(autoLoadoutRequestSchema.parse(payload)))

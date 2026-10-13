@@ -29,7 +29,7 @@ export function HunterArtCatalogPage() {
   const [monsterDrawer, setMonsterDrawer] = useState<number | null>(null)
   const detailRequest = useRef(0)
   const filters: HunterArtCatalogFilters = {
-    gameId: game.id,
+    gameId: 'mhgu',
     query,
     weaponTypeId: numberParam(params.get('weapon')),
     level: levelParam(params.get('level')),

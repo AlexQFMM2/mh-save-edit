@@ -1,6 +1,6 @@
 import { PackagePlus } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import type { GameId } from '../../../api/core/loadout'
+import type { SaveGameId as GameId } from '../../../api/save/types'
 import { SAVE_BOX_ITEM_STACK_MAX, type SaveBoxWriteTarget, type SaveCatalogItemWritePreview } from '../../../api/save/types'
 import { CatalogWriteDrawer } from '../CatalogWriteDrawer/CatalogWriteDrawer'
 import { useOptionalSaveSession } from '../SaveSessionProvider/SaveSessionProvider'

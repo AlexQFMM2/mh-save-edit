@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 'react'
 import { commitLoadoutDraft, getLoadoutDraft, restoreLoadoutDraft, setLoadoutDraftJob, subscribeLoadoutDraft, undoLoadoutDraft } from '../../stores/loadoutDraftStore'
-import { useOutletContext } from 'react-router-dom'
+import { useNavigate, useOutletContext } from 'react-router-dom'
 import { calculateLoadout } from '../../../api/loadout/calculator'
 import { applyCharmValidation } from '../../../api/loadout/charm'
 import { normalizeLegacyTransientLoadoutFields } from '../../../api/loadout/file'
 import { logicalLoadoutSchema } from '../../../api/loadout/schemas'
-import { createEmptyLogicalLoadout, LOADOUT_SLOTS, type ArmorLoadoutSlot, type AutoLoadoutJobSummary, type LoadoutArmorCandidate, type LoadoutCalculationSnapshot, type LoadoutDecoration, type LoadoutFacets, type LoadoutLock, type LoadoutSlot, type LoadoutWeaponCandidate, type LogicalLoadout } from '../../../api/loadout/types'
+import { createEmptyLogicalLoadout, getLoadoutSlots, type ArmorLoadoutSlot, type AutoLoadoutJobSummary, type LoadoutArmorCandidate, type LoadoutCalculationSnapshot, type LoadoutDecoration, type LoadoutFacets, type LoadoutLock, type LoadoutSlot, type LoadoutWeaponCandidate, type LogicalLoadout } from '../../../api/loadout/types'
 import { AutoLoadoutDrawer } from '../../components/AutoLoadoutDrawer/AutoLoadoutDrawer'
 import { AutoLoadoutHistoryDrawer } from '../../components/AutoLoadoutHistoryDrawer/AutoLoadoutHistoryDrawer'
 import { CharmPickerDrawer } from '../../components/CharmPickerDrawer/CharmPickerDrawer'
@@ -16,7 +16,7 @@ import { LoadoutLegalitySummary } from '../../components/LoadoutLegalitySummary/
 import { LoadoutSaveWriteDrawer } from '../../components/LoadoutSaveWriteDrawer/LoadoutSaveWriteDrawer'
 import { LoadoutSkillMatrix } from '../../components/LoadoutSkillMatrix/LoadoutSkillMatrix'
 import { LoadoutToolbar } from '../../components/LoadoutToolbar/LoadoutToolbar'
-import type { WorkspaceOutletContext } from '../../components/WorkspaceContent/WorkspaceContent'
+import type { ShellOutletContext } from '../../components/WorkspaceContent/WorkspaceContent'
 import type { SaveLoadoutWritePreview } from '../../../api/save/types'
 import { useSaveSession } from '../../components/SaveSessionProvider/SaveSessionProvider'
 import './LoadoutBuilderPage.css'
@@ -26,7 +26,8 @@ const clone = <T,>(value: T): T => structuredClone(value)
 const cycleLock = (lock: LoadoutLock): LoadoutLock => lock === 'unlocked' ? 'equipment' : lock === 'equipment' ? 'equipmentAndDecorations' : 'unlocked'
 
 export function LoadoutBuilderPage() {
-  const { game } = useOutletContext<WorkspaceOutletContext>()
+  const navigate = useNavigate()
+  const { game } = useOutletContext<ShellOutletContext>()
   const saveSession = useSaveSession()
   const [snapshot, setSnapshot] = useState<LoadoutCalculationSnapshot>()
   const [facets, setFacets] = useState<LoadoutFacets>()
@@ -128,6 +129,7 @@ export function LoadoutBuilderPage() {
       const checked = logicalLoadoutSchema.safeParse(normalizeLegacyTransientLoadoutFields(JSON.parse(await file.text())))
       if (!checked.success) throw new Error(`配装文件结构无效：${checked.error.issues[0]?.message ?? '未知字段错误'}`)
       if (!snapshot) throw new Error('当前配装资料尚未加载')
+      if (checked.data.gameId !== game.id) throw new Error('文件游戏版本与当前页面不匹配')
       const versionChanged = checked.data.dataVersion !== snapshot.dataVersion
       const reconciled = await window.mhSaveEditor.loadout.reconcileLoadout(checked.data)
       commit(() => reconciled)
@@ -144,12 +146,12 @@ export function LoadoutBuilderPage() {
 
   return <div className="loadout-builder-page">
     <LoadoutToolbar loadout={loadout} result={result} notice={notice} canUndo={draft.undo.length > 0} activeJobCount={activeJobCount} unreadJobCount={unreadJobCount} onUndo={undoOnce} onNameChange={value => commit(current => ({ ...current, name: value }))} onGenderChange={value => commit(current => ({ ...current, gender: value }))} onReset={() => { commit(() => createEmptyLogicalLoadout(game.id, snapshot.dataVersion)); setNotice('已重置配装') }} onNew={newLoadout} onImport={importFile} onExport={exportFile} onOpenAuto={() => setDrawer({ kind: 'auto' })} onOpenHistory={() => setDrawer({ kind: 'history' })} onWriteToSave={saveSession.session?.contentGameId === game.id && !saveSession.session.readOnly ? () => void openWritePreview() : undefined} />
-    <LoadoutEquipmentTable slots={LOADOUT_SLOTS} loadout={loadout} result={result} onChoose={choose} onClear={clear} onDecorate={slot => setDrawer({ kind: 'decorations', slot })} onToggleLock={toggleLock} />
-    <div className="loadout-builder-page__analysis"><LoadoutSkillMatrix skills={result.skills} /><LoadoutLegalitySummary result={result} onIssueClick={path => setNotice(`问题位置：${path}`)} /></div>
-    {drawer?.kind === 'equipment' && <EquipmentPickerDrawer gameId={game.id} slot={drawer.slot} facets={facets} relicLookups={snapshot.relicLookups} decorations={snapshot.decorations} current={equipment(drawer.slot) as LoadoutWeaponCandidate | LoadoutArmorCandidate | null} onApply={candidate => applyEquipment(drawer.slot, candidate)} onClose={() => setDrawer(null)} />}
+    <LoadoutEquipmentTable slots={getLoadoutSlots(game.id)} loadout={loadout} result={result} onChoose={choose} onClear={clear} onDecorate={slot => setDrawer({ kind: 'decorations', slot })} onToggleLock={toggleLock} />
+    <div className="loadout-builder-page__analysis"><LoadoutSkillMatrix gameId={game.id} skills={result.skills} /><LoadoutLegalitySummary result={result} onIssueClick={path => setNotice(`问题位置：${path}`)} /></div>
+    {drawer?.kind === 'equipment' && <EquipmentPickerDrawer gameId={game.id} slot={drawer.slot} facets={facets} relicLookups={snapshot.relicLookups} decorations={snapshot.decorations} current={equipment(drawer.slot) as LoadoutWeaponCandidate | LoadoutArmorCandidate | null} onOpenCatalog={navigate} onApply={candidate => applyEquipment(drawer.slot, candidate)} onClose={() => setDrawer(null)} />}
     {drawer?.kind === 'charm' && <CharmPickerDrawer snapshot={snapshot} current={loadout.charm} onApply={applyCharm} onClose={() => setDrawer(null)} />}
     {drawer?.kind === 'decorations' && activeDecoration && <DecorationEditorDrawer decorations={snapshot.decorations} skills={snapshot.skills} current={activeDecoration.decorations} capacity={activeDecoration.slots} canUndo={draft.undo.length > 0} onUndo={undoOnce} onChange={value => applyDecorations(drawer.slot, value)} onClose={() => setDrawer(null)} />}
-    {drawer?.kind === 'auto' && <AutoLoadoutDrawer snapshot={snapshot} loadout={loadout} calculation={result} initialJobId={currentAutoJobId} onJobStarted={setCurrentAutoJobId} onApply={applyAutoResult} onClose={() => setDrawer(null)} />}
+    {drawer?.kind === 'auto' && <AutoLoadoutDrawer onOpenCatalog={navigate} snapshot={snapshot} loadout={loadout} calculation={result} initialJobId={currentAutoJobId} onJobStarted={setCurrentAutoJobId} onApply={applyAutoResult} onClose={() => setDrawer(null)} />}
     {drawer?.kind === 'history' && <AutoLoadoutHistoryDrawer gameId={game.id} snapshot={snapshot} onApply={applyAutoResult} onJobsChanged={refreshJobs} onCopyConditions={() => setDrawer({ kind: 'auto' })} onClose={() => setDrawer(null)} />}
     {drawer?.kind === 'save' && <LoadoutSaveWriteDrawer preview={drawer.preview} busy={writeBusy} onClose={() => setDrawer(null)} onApply={() => void applyWritePreview()} />}
   </div>

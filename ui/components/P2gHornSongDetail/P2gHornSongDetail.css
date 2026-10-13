@@ -1,0 +1,24 @@
+.p2g-horn-song-detail {
+  display: grid;
+  gap: var(--global-spacing-2);
+  min-width: 0;
+  padding-bottom: var(--global-spacing-3);
+  border-bottom: var(--global-border-width) solid var(--global-theme-color-border-subtle);
+  font-size: var(--global-typography-font-size-small);
+  line-height: var(--global-typography-line-height-normal);
+}
+.p2g-horn-song-detail__title { color: var(--global-theme-color-text-primary); font-size: var(--global-typography-font-size-body); }
+.p2g-horn-song-detail__sequence { color: var(--global-theme-color-text-secondary); }
+.p2g-horn-song-detail__text { margin: 0; color: var(--global-theme-color-text-secondary); overflow-wrap: anywhere; }
+.p2g-horn-song-detail__number { color: var(--global-theme-color-data); font-variant-numeric: tabular-nums; }
+.p2g-horn-song-detail__instant { color: var(--global-theme-color-text-primary); }
+.p2g-horn-song-detail__table-wrap { min-width: 0; overflow-x: auto; overscroll-behavior: contain; }
+.p2g-horn-song-detail__table { width: 100%; border-collapse: collapse; text-align: left; }
+.p2g-horn-song-detail__caption { text-align: left; color: var(--global-theme-color-text-muted); margin-bottom: var(--global-spacing-1); }
+.p2g-horn-song-detail__heading { font-weight: normal; color: var(--global-theme-color-text-secondary); padding: var(--global-spacing-1); white-space: nowrap; }
+.p2g-horn-song-detail__value { color: var(--global-theme-color-data); padding: var(--global-spacing-1); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.p2g-horn-song-detail__rules { min-width: 0; }
+.p2g-horn-song-detail__summary { padding: var(--global-spacing-2) 0; color: var(--global-theme-color-text-primary); cursor: pointer; }
+.p2g-horn-song-detail__summary:focus-visible { outline: 2px solid var(--global-theme-color-accent); outline-offset: 2px; }
+.p2g-horn-song-detail__conditions { margin: var(--global-spacing-2) 0 0; padding-left: var(--global-spacing-4); color: var(--global-theme-color-text-secondary); }
+.p2g-horn-song-detail__condition { margin-top: var(--global-spacing-1); overflow-wrap: anywhere; }

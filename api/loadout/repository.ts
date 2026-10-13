@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto'
 import type Database from 'better-sqlite3'
+import type { GameId } from '../core/loadout'
 import { validateCharm } from './charm'
 import { readMh4gCharmEvidence } from './mh4gCharmRepository'
 import { readFinalWeaponKeys } from '../catalog/finalWeapons'
@@ -46,7 +47,7 @@ export class LoadoutCatalogRepository {
   private finalWeaponKeys?: Set<string>
   private armorsCache?: LoadoutArmorCandidate[]
   private relicLookupsCache?: LoadoutCalculationSnapshot['relicLookups']
-  constructor(private readonly db: Database.Database, private readonly gameId: LoadoutCatalogSnapshot['gameId']) {}
+  constructor(private readonly db: Database.Database, private readonly gameId: GameId) {}
 
   getBootstrap(): LoadoutCalculationSnapshot {
     if (this.bootstrapCache) return this.bootstrapCache
@@ -93,7 +94,7 @@ export class LoadoutCatalogRepository {
   searchWeapons(filters: LoadoutWeaponFilters): LoadoutPage<LoadoutWeaponCandidate> {
     const query = filters.query?.trim().toLocaleLowerCase() ?? ''
     const finals = filters.finalOnly ? (this.finalWeaponKeys ??= readFinalWeaponKeys(this.db, this.gameId)) : undefined
-    const items = this.getWeapons().filter(value => (filters.saveType == null || value.saveType === filters.saveType) && (filters.saveId == null || value.saveId === filters.saveId) && (!finals || (value.sourceKind === 'catalog' && value.weaponKey != null && finals.has(value.weaponKey))) && (!filters.typeId || value.typeId === filters.typeId) && (!filters.sourceKind || filters.sourceKind === 'all' || value.sourceKind === filters.sourceKind) && (filters.rarity == null || value.rarity === filters.rarity) && (filters.slots == null || value.slots === filters.slots) && (filters.directlyProducible == null || Boolean(value.directlyProducible) === filters.directlyProducible) && (!query || `${value.nameCn} ${value.nameEn} ${value.saveId} 0x${value.saveId.toString(16)}`.toLocaleLowerCase().includes(query))).sort((a, b) => filters.sort === 'rarity' ? (b.rarity ?? -1) - (a.rarity ?? -1) || a.candidateKey.localeCompare(b.candidateKey) : filters.sort === 'slots' ? b.slots - a.slots || a.candidateKey.localeCompare(b.candidateKey) : filters.sort === 'attack' ? (b.attack ?? -1) - (a.attack ?? -1) || a.candidateKey.localeCompare(b.candidateKey) : a.candidateKey.localeCompare(b.candidateKey))
+    const items = this.getWeapons().filter(value => (filters.saveType == null || value.saveType === filters.saveType) && (filters.saveId == null || value.saveId === filters.saveId) && (!finals || (value.sourceKind === 'catalog' && value.weaponKey != null && finals.has(value.weaponKey))) && (!filters.typeId || value.typeId === filters.typeId) && (!filters.sourceKind || filters.sourceKind === 'all' || value.sourceKind === filters.sourceKind) && (filters.rarity == null || value.rarity === filters.rarity) && (filters.slots == null || value.slots === filters.slots) && (filters.directlyProducible == null || Boolean(value.directlyProducible) === filters.directlyProducible) && (!query || `${value.nameCn} ${value.nameEn} ${value.saveId} 0x${value.saveId?.toString(16)}`.toLocaleLowerCase().includes(query))).sort((a, b) => filters.sort === 'rarity' ? (b.rarity ?? -1) - (a.rarity ?? -1) || a.candidateKey.localeCompare(b.candidateKey) : filters.sort === 'slots' ? b.slots - a.slots || a.candidateKey.localeCompare(b.candidateKey) : filters.sort === 'attack' ? (b.attack ?? -1) - (a.attack ?? -1) || a.candidateKey.localeCompare(b.candidateKey) : a.candidateKey.localeCompare(b.candidateKey))
     return page(items, filters.page, filters.pageSize)
   }
 
@@ -106,7 +107,7 @@ export class LoadoutCatalogRepository {
 
   searchDecorations(filters: LoadoutDecorationFilters): LoadoutPage<LoadoutDecoration> {
     const query = filters.query?.trim().toLocaleLowerCase() ?? ''
-    const items = this.getBootstrap().decorations.filter(value => (filters.skillId == null || value.skills.some(skill => skill.skillId === filters.skillId)) && (!query || `${value.nameCn} ${value.saveId} 0x${value.saveId.toString(16)}`.toLocaleLowerCase().includes(query)))
+    const items = this.getBootstrap().decorations.filter(value => (filters.skillId == null || value.skills.some(skill => skill.skillId === filters.skillId)) && (!query || `${value.nameCn} ${value.saveId} 0x${value.saveId?.toString(16)}`.toLocaleLowerCase().includes(query)))
     return page(items, filters.page, filters.pageSize)
   }
 

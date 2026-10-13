@@ -1,0 +1,12 @@
+.p2g-armor-recipe-list { min-width: 0; }
+.p2g-armor-recipe-list__body { display: grid; gap: var(--global-spacing-3); }
+.p2g-armor-recipe-list__recipe { padding: var(--global-spacing-3); border: var(--global-border-width) solid var(--global-theme-color-border-subtle); border-radius: var(--global-radius-md); background: var(--global-theme-color-surface-inset); }
+.p2g-armor-recipe-list__heading { display: flex; justify-content: space-between; gap: var(--global-spacing-2); margin: 0 0 var(--global-spacing-2); color: var(--global-theme-color-text-primary); font-size: var(--global-typography-font-size-small); }
+.p2g-armor-recipe-list__data { color: var(--global-theme-color-data); white-space: nowrap; }
+.p2g-armor-recipe-list__hint { margin: var(--global-spacing-2) 0; color: var(--global-theme-color-text-secondary); font-size: var(--global-typography-font-size-caption); }
+.p2g-armor-recipe-list__materials { display: grid; gap: var(--global-spacing-2); margin: var(--global-spacing-2) 0 0; padding: 0; list-style: none; }
+.p2g-armor-recipe-list__material { display: flex; justify-content: space-between; gap: var(--global-spacing-2); font-size: var(--global-typography-font-size-small); }
+.p2g-armor-recipe-list__link { border: 0; padding: 0; background: transparent; color: var(--global-theme-color-accent); font: inherit; text-align: left; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.p2g-armor-recipe-list__link:disabled { color: var(--global-theme-color-text-primary); cursor: default; text-decoration: none; }
+.p2g-armor-recipe-list__link:focus-visible, .p2g-armor-recipe-list__toggle:focus-visible { outline: 2px solid var(--global-theme-color-focus-ring); outline-offset: 3px; }
+.p2g-armor-recipe-list__toggle { padding: var(--global-spacing-3); color: var(--global-theme-color-accent); font-size: var(--global-typography-font-size-body); cursor: pointer; }

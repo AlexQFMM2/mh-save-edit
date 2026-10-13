@@ -1,14 +1,17 @@
+import { P2gArmorRecipeList } from '../P2gArmorRecipeList/P2gArmorRecipeList'
+import type { P2gArmorLink } from '../../../api/catalog/p2gArmorTypes'
 import { itemNumber } from '../../../api/catalog/itemIdentity'
 import type { ArmorRelationTarget, CatalogItemDetail, ItemIdentity, ItemRelation, MonsterRelationTarget, PalicoEquipmentRelationTarget, QuestRelationTarget, WeaponRelationTarget } from '../../../api/catalog/types'
 import { useSearchParams } from 'react-router-dom'
 import { itemTranslationSourceLabel } from '../../utils/itemTerminologyPresentation'
 import { CatalogIcon } from '../CatalogIcon/CatalogIcon'
+import { P2gWeaponRecipeList } from '../P2gWeaponRecipeList/P2gWeaponRecipeList'
 import { ItemRelationSection } from '../ItemRelationSection/ItemRelationSection'
 import { CatalogWriteControl } from '../CatalogWriteControl/CatalogWriteControl'
 import { DetailActionBar } from '../DetailActionBar/DetailActionBar'
 import './ItemDetailPanel.css'
 
-type ItemDetailPanelProps = { item: CatalogItemDetail | null; loading: boolean; error?: string; allowCatalogWrite?: boolean; onSelectItem?: (saveId: number) => void; onSelectCatalogItem?: (identity: ItemIdentity) => void; onSelectPending?: (target: NonNullable<ItemRelation['pendingTarget']>) => void; onSelectDecoration?: (saveId: number) => void; onSelectWeapon?: (weapon: WeaponRelationTarget) => void; onSelectArmor?: (armor: ArmorRelationTarget) => void; onSelectMonster?: (monster: MonsterRelationTarget) => void; onSelectQuest?: (quest: QuestRelationTarget) => void; onSelectPalicoEquipment?: (equipment: PalicoEquipmentRelationTarget) => void }
+type ItemDetailPanelProps = { onSelectP2gArmor?: (armor:P2gArmorLink)=>void; item: CatalogItemDetail | null; loading: boolean; error?: string; allowCatalogWrite?: boolean; onSelectItem?: (saveId: number) => void; onSelectCatalogItem?: (identity: ItemIdentity) => void; onSelectPending?: (target: NonNullable<ItemRelation['pendingTarget']>) => void; onSelectDecoration?: (saveId: number) => void; onSelectWeapon?: (weapon: WeaponRelationTarget) => void; onSelectArmor?: (armor: ArmorRelationTarget) => void; onSelectMonster?: (monster: MonsterRelationTarget) => void; onSelectQuest?: (quest: QuestRelationTarget) => void; onSelectPalicoEquipment?: (equipment: PalicoEquipmentRelationTarget) => void }
 const sections = [
   ['combination','调合'], ['shop','商店购买'], ['monster','怪物获取'], ['location','地图采集'], ['quest','任务奖励'], ['exchange','山菜爷'],
   ['weapon','武器用途'], ['armor','防具用途'], ['decoration','装饰珠用途'], ['palico-weapon','猫武器用途'], ['palico-armor','猫防具用途'], ['kinsect','猎虫用途'],
@@ -16,7 +19,7 @@ const sections = [
 // P2G color commands stay in the source for the later patch, not in readable text.
 const p2gDescription = (text: string) => text.replace(/~C[0-9A-F]{2}/g, '')
 
-export function ItemDetailPanel({ item, loading, error, allowCatalogWrite = true, onSelectItem, onSelectCatalogItem, onSelectPending, onSelectDecoration, onSelectWeapon, onSelectArmor, onSelectMonster, onSelectQuest, onSelectPalicoEquipment }: ItemDetailPanelProps) {
+export function ItemDetailPanel({ item, loading, error, allowCatalogWrite = true, onSelectItem, onSelectCatalogItem, onSelectPending, onSelectDecoration, onSelectWeapon, onSelectP2gArmor, onSelectArmor, onSelectMonster, onSelectQuest, onSelectPalicoEquipment }: ItemDetailPanelProps) {
   const [params, setParams] = useSearchParams()
   const selectRelatedItem = (saveId: number) => { if (onSelectItem) { onSelectItem(saveId); return }; const next = new URLSearchParams(params); next.set('item', String(saveId)); setParams(next) }
   if (loading) return <aside className="item-detail-panel item-detail-panel--state" aria-live="polite">正在读取详细资料…</aside>
@@ -36,8 +39,10 @@ export function ItemDetailPanel({ item, loading, error, allowCatalogWrite = true
       </details>}
       <dl className="item-detail-panel__stats"><div><dt>稀有度</dt><dd>{item.rarity ?? '—'}</dd></div><div><dt>持有上限</dt><dd>{item.maxStack ?? '—'}</dd></div><div><dt>买入</dt><dd>{item.buyPrice == null ? '—' : `${item.buyPrice} z`}</dd></div><div><dt>卖出</dt><dd>{item.sellPrice == null ? '—' : `${item.sellPrice} z`}</dd></div></dl>
       {item.decoration&&onSelectDecoration&&<button type="button" className="item-detail-panel__decoration-link" onClick={()=>onSelectDecoration(item.decoration!.itemId)}>查看装饰品详情与技能</button>}
+      {item.gameId === 'mhp2g' && item.weaponRecipes && <P2gWeaponRecipeList recipes={item.weaponRecipes} showOutputs onSelectItem={onSelectCatalogItem} onSelectWeapon={onSelectWeapon} />}
+      {item.gameId==='mhp2g'&&item.armorRecipes&&<P2gArmorRecipeList recipes={item.armorRecipes} showOutputs onSelectItem={onSelectCatalogItem?id=>onSelectCatalogItem({gameId:'mhp2g',itemId:id}):undefined} onSelectArmor={onSelectP2gArmor}/>}
       <div className="item-detail-panel__relations">{sections.map(([kind,title]) => <ItemRelationSection key={`${itemNumber(item)}-${kind}`} title={title} relations={grouped.get(kind) ?? []} onSelectItem={selectRelatedItem} onSelectCatalogItem={onSelectCatalogItem} onSelectPending={onSelectPending} onSelectDecoration={onSelectDecoration} onSelectWeapon={onSelectWeapon} onSelectArmor={onSelectArmor} onSelectMonster={onSelectMonster} onSelectQuest={onSelectQuest} onSelectPalicoEquipment={onSelectPalicoEquipment} />)}</div>
     </div>
-    {allowCatalogWrite && item.gameId !== 'mhp2g' && <DetailActionBar className="item-detail-panel__actions"><CatalogWriteControl gameId={item.gameId} kind="item" saveId={item.saveId} maxCount={item.maxStack} /></DetailActionBar>}
+    {allowCatalogWrite && <DetailActionBar className="item-detail-panel__actions"><CatalogWriteControl gameId={item.gameId} kind="item" saveId={item.gameId === 'mhp2g' ? item.itemId : item.saveId} maxCount={item.maxStack} /></DetailActionBar>}
   </aside>
 }

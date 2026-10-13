@@ -1,12 +1,12 @@
-import type { ArmorSummary } from '../../../api/catalog/types'
+import { armorKey, type CatalogArmorSummary, type CatalogArmorKey } from '../../utils/catalogArmor'
 import { ArmorListRow } from '../ArmorListRow/ArmorListRow'
 import './ArmorList.css'
 
-export function ArmorList({ items, selectedDexId, loading, error, onSelect }: { items: ArmorSummary[]; selectedDexId?: number; loading: boolean; error?: string; onSelect: (dexId: number) => void }) {
+export function ArmorList({ mode = 'browse', items, selectedDexId, loading, error, onSelect }: { mode?: 'browse' | 'select'; items: CatalogArmorSummary[]; selectedDexId?: CatalogArmorKey; loading: boolean; error?: string; onSelect: (dexId: CatalogArmorKey) => void }) {
   if (!items.length&&loading)return <div className="armor-list armor-list--state" role="status">正在读取防具列表…</div>
   if (!items.length&&error)return <div className="armor-list armor-list--state" role="alert">{error}</div>
   if (!items.length)return <div className="armor-list armor-list--state">没有符合条件的防具。</div>
-  return <div className={`armor-list${loading?' armor-list--loading':''}`} aria-busy={loading}>
-    <table><thead><tr><th>防具</th><th>部位</th><th>职业</th><th>性别</th><th>稀有</th><th>孔</th><th>基础防御</th><th>最大防御</th><th>火</th><th>水</th><th>雷</th><th>冰</th><th>龙</th><th>技能</th></tr></thead><tbody>{items.map(armor=><ArmorListRow key={armor.dexId} armor={armor} selected={armor.dexId===selectedDexId} onSelect={onSelect}/>)}</tbody></table>
+  return <div className={`armor-list${loading?' armor-list--loading':''}`} aria-busy={loading} aria-label={mode === 'select' ? '选择防具候选' : '防具列表'}>
+    <table className="armor-list__table"><thead className="armor-list__head"><tr><th className="armor-list__heading">防具</th><th className="armor-list__heading">部位</th><th className="armor-list__heading">职业</th><th className="armor-list__heading">性别</th><th className="armor-list__heading">稀有</th><th className="armor-list__heading">孔</th><th className="armor-list__heading">基础防御</th><th className="armor-list__heading">最大防御</th><th className="armor-list__heading">火</th><th className="armor-list__heading">水</th><th className="armor-list__heading">雷</th><th className="armor-list__heading">冰</th><th className="armor-list__heading">龙</th><th className="armor-list__heading">技能</th></tr></thead><tbody className="armor-list__body">{items.map(armor=><ArmorListRow key={armorKey(armor)} armor={armor} selected={armorKey(armor)===selectedDexId} onSelect={onSelect}/>)}</tbody></table>
   </div>
 }

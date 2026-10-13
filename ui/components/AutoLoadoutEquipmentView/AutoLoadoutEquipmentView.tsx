@@ -5,10 +5,10 @@ import { EquipmentPickerContent, type EquipmentPickerCandidate } from '../Equipm
 import './AutoLoadoutEquipmentView.css'
 
 export type AutoLoadoutEquipmentValue = EquipmentPickerCandidate | EditableCharm
-type Props = { slot: LoadoutSlot; snapshot: LoadoutCalculationSnapshot; current: AutoLoadoutEquipmentValue | null; onApply(value: AutoLoadoutEquipmentValue | null): void; onBack(): void }
+type Props = { slot: LoadoutSlot; snapshot: LoadoutCalculationSnapshot; current: AutoLoadoutEquipmentValue | null; onApply(value: AutoLoadoutEquipmentValue | null): void; onBack(): void; onOpenCatalog(path: string): void }
 
 /** Content subview only: the owning auto drawer keeps the sole portal and focus trap. */
-export function AutoLoadoutEquipmentView({ slot, snapshot, current, onApply, onBack }: Props) {
+export function AutoLoadoutEquipmentView({ slot, snapshot, current, onApply, onBack, onOpenCatalog }: Props) {
   const view = useRef<HTMLDivElement>(null)
   useEffect(() => { view.current?.focus() }, [])
   const [selected, setSelected] = useState<AutoLoadoutEquipmentValue | null>(current)
@@ -26,9 +26,9 @@ export function AutoLoadoutEquipmentView({ slot, snapshot, current, onApply, onB
   const select = useCallback((value: EquipmentPickerCandidate | null) => { setSelected(value); setBlocked(value?.instance?.encoding === 'blocked') }, [])
   const editCharm = useCallback((value: EditableCharm, validation: CharmValidationResult) => { setSelected(value); setBlocked(validation.encoding === 'blocked') }, [])
   return <div className="auto-loadout-equipment-view" ref={view} tabIndex={-1}>
-    <p className="auto-loadout-equipment-view__notice">仅编辑搜索条件。应用后返回条件；返回或 Escape 放弃本次选择，不影响主配装或已有任务。更换装备不自动迁移旧珠；防具和护石是否固定由条件页单独设置。</p>
+    <p className="auto-loadout-equipment-view__notice">仅编辑搜索条件。应用后返回条件；返回或 Escape 放弃本次选择，不影响主配装或已有任务。更换装备不自动迁移旧珠；{snapshot.gameId === 'mhp2g' ? '防具是否固定由条件页单独设置。' : '防具和护石是否固定由条件页单独设置。'}</p>
     <div className="auto-loadout-equipment-view__content">
-      {slot === 'charm' ? <CharmEditorForm snapshot={snapshot} current={current?.kind === 'charm' ? current : null} onChange={editCharm} /> : error ? <div role="alert" className="auto-loadout-equipment-view__error">{error}<button type="button" className="auto-loadout-equipment-view__action" onClick={() => setAttempt(value => value + 1)}>重试</button></div> : !facets ? <p role="status">正在读取筛选资料…</p> : <EquipmentPickerContent gameId={snapshot.gameId} slot={slot} facets={facets} relicLookups={snapshot.relicLookups} decorations={snapshot.decorations} current={current?.kind !== 'charm' ? current : null} onSelectionChange={select} />}
+      {slot === 'charm' ? <CharmEditorForm snapshot={snapshot} current={current?.kind === 'charm' ? current : null} onChange={editCharm} /> : error ? <div role="alert" className="auto-loadout-equipment-view__error">{error}<button type="button" className="auto-loadout-equipment-view__action" onClick={() => setAttempt(value => value + 1)}>重试</button></div> : !facets ? <p role="status">正在读取筛选资料…</p> : <EquipmentPickerContent gameId={snapshot.gameId} slot={slot} facets={facets} relicLookups={snapshot.relicLookups} decorations={snapshot.decorations} current={current?.kind !== 'charm' ? current : null} onSelectionChange={select} onOpenCatalog={onOpenCatalog} />}
     </div>
     <footer className="auto-loadout-equipment-view__footer">
       <button className="auto-loadout-equipment-view__action" type="button" onClick={onBack}>返回条件</button>

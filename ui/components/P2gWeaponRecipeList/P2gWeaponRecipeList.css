@@ -1,0 +1,14 @@
+.p2g-weapon-recipe-list__recipe{padding:var(--global-spacing-3);border:var(--global-border-width) solid var(--global-theme-color-border-subtle);border-radius:var(--global-radius-md)}
+.p2g-weapon-recipe-list__recipe+.p2g-weapon-recipe-list__recipe{margin-top:var(--global-spacing-3)}
+.p2g-weapon-recipe-list__heading{display:flex;justify-content:space-between;gap:var(--global-spacing-2);margin:0 0 var(--global-spacing-2);color:var(--global-theme-color-text-primary);font-size:var(--global-typography-font-size-body)}
+.p2g-weapon-recipe-list__materials,.p2g-weapon-recipe-list__outputs{display:grid;gap:var(--global-spacing-2);margin:0;padding:0;list-style:none}
+.p2g-weapon-recipe-list__outputs{margin-top:var(--global-spacing-3)}
+.p2g-weapon-recipe-list__row{display:flex;justify-content:space-between;gap:var(--global-spacing-2)}
+.p2g-weapon-recipe-list__output{display:grid;gap:var(--global-spacing-1)}
+.p2g-weapon-recipe-list__link{padding:var(--global-spacing-1) 0;border:0;background:none;color:var(--global-theme-color-text-primary);font-size:var(--global-typography-font-size-small);text-align:left;cursor:pointer}
+.p2g-weapon-recipe-list__link:hover{color:var(--global-theme-color-accent)}
+.p2g-weapon-recipe-list__link:focus-visible{outline:2px solid var(--global-theme-color-accent);outline-offset:2px}
+.p2g-weapon-recipe-list__data{color:var(--global-theme-color-data);font-size:var(--global-typography-font-size-small)}
+.p2g-weapon-recipe-list__hint{margin:0 0 var(--global-spacing-2);color:var(--global-theme-color-text-muted);font-size:var(--global-typography-font-size-small);line-height:var(--global-typography-line-height-normal)}
+
+.p2g-weapon-recipe-list__toggle{padding:var(--global-spacing-2);color:var(--global-theme-color-text-primary);font-size:var(--global-typography-font-size-body);cursor:pointer}.p2g-weapon-recipe-list__body{padding-top:var(--global-spacing-3)}.p2g-weapon-recipe-list__toggle:focus-visible{outline:2px solid var(--global-theme-color-accent);outline-offset:2px}

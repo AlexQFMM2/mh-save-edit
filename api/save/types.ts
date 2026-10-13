@@ -1,7 +1,8 @@
 import type { GameId } from '../core/loadout'
+export type SaveGameId = GameId | 'mhp2g'
 import type { LoadoutSlot, LogicalLoadout } from '../loadout/types'
 
-export type SaveFormatId = 'mh3g-3ds-citra' | 'mh3u-wiiu-cemu' | 'mh4g-3ds-citra' | 'mhgu-switch-yuzu' | 'mhxx-3ds-citra'
+export type SaveFormatId = 'mhp2g-psp-ppsspp' | 'mh3g-3ds-citra' | 'mh3u-wiiu-cemu' | 'mh4g-3ds-citra' | 'mhgu-switch-yuzu' | 'mhxx-3ds-citra'
 export type SaveSectionKey = 'personal-info' | 'item-box' | 'equipment-box' | 'palico'
 export type SaveSessionState = 'closed' | 'opening' | 'selectingCharacter' | 'readyClean' | 'readyDirty' | 'validating' | 'saving' | 'closing'
 export type SaveBoxDomain = 'items' | 'hunter-equipment' | 'palico-equipment'
@@ -36,10 +37,10 @@ export type SaveSessionSnapshot = {
   sessionId: string
   revision: number
   state: SaveSessionState
-  contentGameId: GameId
+  contentGameId: SaveGameId
   formatId: SaveFormatId
-  platform: '3ds' | 'wiiu' | 'switch'
-  emulator: 'citra' | 'cemu' | 'yuzu'
+  platform: 'psp' | '3ds' | 'wiiu' | 'switch'
+  emulator: 'ppsspp' | 'citra' | 'cemu' | 'yuzu'
   fileName: string
   characterSlot: number | null
   characterName: string | null
@@ -53,7 +54,7 @@ export type SaveSessionSnapshot = {
 
 export type SaveEnvironment = {
   formatId: SaveFormatId
-  contentGameId: GameId
+  contentGameId: SaveGameId
   title: string
   platform: SaveSessionSnapshot['platform']
   emulator: SaveSessionSnapshot['emulator']
@@ -138,6 +139,10 @@ export type SaveEquipmentCell = {
   iconPath: string | null
   weaponKey: string | null
   relic?: { templateKey: string; weaponTypeId: number | null }
+  armorKey?: string | null
+  equipped?: boolean
+  upgradeWord?: number
+  upgrade?: { label: string; maximum: number; naturalMaximum: number; value: number }
   armorDexId: number | null
   palicoEquipmentId: number | null
   decorationLabels: { saveId: number; rawValue: number; nameCn: string; slots: number | null; fixed: boolean }[]
@@ -242,7 +247,7 @@ export type SavePalicoSection = {
 
 export type SaveSectionSnapshot = SavePersonalSection | SaveBoxSection | SavePalicoSection
 
-export type SaveOpenRequest = { contentGameId: GameId; formatId: SaveFormatId }
+export type SaveOpenRequest = { contentGameId: SaveGameId; formatId: SaveFormatId }
 export type SaveOpenResult = { cancelled: boolean; session: SaveSessionSnapshot | null; characters: SaveCharacterSummary[] }
 export type SaveSectionRequest = { sessionId: string; revision: number; section: SaveSectionKey; page?: number; domain?: SaveBoxDomain; selectedIndex?: number; query?: string; locateAfterSlot?: number }
 
@@ -283,7 +288,7 @@ export type SaveImportPreview = {
 export type SaveExportRequest = { sessionId: string; revision: number; domain: SaveBoxDomain; format: 'csv' | 'full' }
 export type SaveImportRequest = { sessionId: string; revision: number; domain: SaveBoxDomain; format: 'csv' | 'full' }
 export type SaveImportApplyRequest = { sessionId: string; revision: number; token: string; replaceAll?: boolean }
-export type SaveCatalogItemRequest = { sessionId: string; revision: number; gameId: GameId; saveId: number; count: number; targetSlot?: number }
+export type SaveCatalogItemRequest = { sessionId: string; revision: number; gameId: SaveGameId; saveId: number; count: number; targetSlot?: number }
 export type SaveCatalogItemWritePreview = {
   capacity: number
   nonEmptyCount: number
@@ -291,7 +296,7 @@ export type SaveCatalogItemWritePreview = {
   requestedCount: number
   targets: { slot: number; page: number; cell: number; beforeCount: number; afterCount: number; addedCount: number }[]
 }
-export type SaveCatalogEquipmentRequest = { sessionId: string; revision: number; gameId: GameId; domain: 'hunter-equipment' | 'palico-equipment'; saveType: number; saveId: number; level?: number; appearanceId?: number; targetSlot?: number }
+export type SaveCatalogEquipmentRequest = { sessionId: string; revision: number; gameId: SaveGameId; domain: 'hunter-equipment' | 'palico-equipment'; saveType: number; saveId: number; level?: number; appearanceId?: number; targetSlot?: number }
 export type SaveLoadoutWriteRequest = { sessionId: string; revision: number; loadout: LogicalLoadout }
 export type SaveLoadoutWritePreview = {
   capacity: number
@@ -311,6 +316,7 @@ export type SaveBoxWriteTarget = {
 }
 
 export const SAVE_ENVIRONMENTS: SaveEnvironment[] = [
+  { formatId: 'mhp2g-psp-ppsspp', contentGameId: 'mhp2g', title: 'P2G · PPSSPP', platform: 'psp', emulator: 'ppsspp', description: '日版 / 汉化版；选择 MHP2NDG.BIN，同目录须有 PARAM.SFO。保存时一起更新。' },
   { formatId: 'mh3g-3ds-citra', contentGameId: 'mh3g', title: 'MH3G · 3DS · Citra', platform: '3ds', emulator: 'citra', description: '选择 Citra 的 user1、user2 或 user3 单角色文件。' },
   { formatId: 'mh3u-wiiu-cemu', contentGameId: 'mh3g', title: 'MH3U · Wii U · Cemu', platform: 'wiiu', emulator: 'cemu', description: '选择 Cemu 存档目录中的 user1、user2 或 user3。' },
   { formatId: 'mh4g-3ds-citra', contentGameId: 'mh4g', title: 'MH4G · 3DS · Citra', platform: '3ds', emulator: 'citra', description: '选择 Citra 的 MH4G user1、user2 或 user3。' },

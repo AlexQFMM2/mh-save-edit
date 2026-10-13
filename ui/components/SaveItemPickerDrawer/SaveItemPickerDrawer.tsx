@@ -1,7 +1,7 @@
 import { Search } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
-import type { ItemSummary } from '../../../api/catalog/types'
-import type { GameId } from '../../../api/core/loadout'
+import type { CatalogItemSummary as ItemSummary } from '../../../api/catalog/types'
+import type { SaveGameId as GameId } from '../../../api/save/types'
 import { SAVE_BOX_ITEM_STACK_MAX } from '../../../api/save/types'
 import { CatalogIcon } from '../CatalogIcon/CatalogIcon'
 import { WorkspaceDrawer } from '../WorkspaceDrawer/WorkspaceDrawer'
@@ -32,7 +32,7 @@ export function SaveItemPickerDrawer({ gameId, selectedId, initialCount, onApply
       void window.mhSaveEditor.catalog.searchItems({ gameId, query, pageSize: 100 }).then(result => {
         if (!live) return
         setItems(result.items)
-        setSelected(current => result.items.find(item => item.saveId === current?.saveId) ?? result.items.find(item => item.saveId === selectedId) ?? result.items[0])
+        setSelected(current => result.items.find(item => (item.gameId === 'mhp2g' ? item.itemId : item.saveId) === (current?.gameId === 'mhp2g' ? current.itemId : current?.saveId)) ?? result.items.find(item => (item.gameId === 'mhp2g' ? item.itemId : item.saveId) === selectedId) ?? result.items[0])
       }).catch(cause => { if (live) setError(cause instanceof Error ? cause.message : '道具候选读取失败') }).finally(() => { if (live) setLoading(false) })
     }, query ? 120 : 0)
     return () => { live = false; window.clearTimeout(timer) }
@@ -47,7 +47,7 @@ export function SaveItemPickerDrawer({ gameId, selectedId, initialCount, onApply
     else if (event.key === 'ArrowUp') next = Math.max(0, index - 1)
     else if (event.key === 'Home') next = 0
     else if (event.key === 'End') next = items.length - 1
-    else if (event.key === 'Enter') { event.preventDefault(); apply(items[index]); return }
+    else if (event.key === 'Enter') { event.preventDefault(); select(items[index]); return }
     else return
     event.preventDefault()
     const item = items[next]
@@ -62,7 +62,7 @@ export function SaveItemPickerDrawer({ gameId, selectedId, initialCount, onApply
     <div className="save-item-picker">
       <label><Search aria-hidden="true" /><input autoFocus value={query} onChange={event => setQuery(event.target.value)} placeholder="搜索名称、英文名或 ID" /></label>
       {error && <p role="alert">{error}</p>}
-      <div role="listbox" aria-label="道具结果" aria-busy={loading}>{items.map((item, index) => <button ref={element => { buttons.current[index] = element }} type="button" role="option" tabIndex={selected?.saveId === item.saveId || (!selected && index === 0) ? 0 : -1} aria-selected={selected?.saveId === item.saveId} key={item.saveId} onClick={() => select(item)} onDoubleClick={() => apply(item)} onKeyDown={event => move(event, index)}><CatalogIcon path={item.iconPath} name={item.nameCn} /><span><strong>{item.nameCn}</strong><small>{item.nameEn || `ID ${item.saveId}`} · 稀有度 {item.rarity ?? '—'} · 携带上限 {item.maxStack ?? '—'}</small></span></button>)}</div>
+      <div role="listbox" aria-label="道具结果" aria-busy={loading}>{items.map((item, index) => <button ref={element => { buttons.current[index] = element }} type="button" role="option" tabIndex={(selected?.gameId === 'mhp2g' ? selected.itemId : selected?.saveId) === (item.gameId === 'mhp2g' ? item.itemId : item.saveId) || (!selected && index === 0) ? 0 : -1} aria-selected={(selected?.gameId === 'mhp2g' ? selected.itemId : selected?.saveId) === (item.gameId === 'mhp2g' ? item.itemId : item.saveId)} key={(item.gameId === 'mhp2g' ? item.itemId : item.saveId)} onClick={() => select(item)} onKeyDown={event => move(event, index)}><CatalogIcon path={item.iconPath} name={item.nameCn} /><span><strong>{item.nameCn}</strong><small>{item.nameEn || `ID ${(item.gameId === 'mhp2g' ? item.itemId : item.saveId)}`} · 稀有度 {item.rarity ?? '—'} · 携带上限 {item.maxStack ?? '—'}</small></span></button>)}</div>
     </div>
   </WorkspaceDrawer>
 }

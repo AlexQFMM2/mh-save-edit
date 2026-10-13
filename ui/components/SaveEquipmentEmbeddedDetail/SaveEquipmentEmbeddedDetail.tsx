@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import type { ArmorDetail, PalicoArmorDetail, PalicoWeaponDetail, WeaponDetail } from '../../../api/catalog/types'
-import type { GameId } from '../../../api/core/loadout'
+import type { SaveGameId as GameId } from '../../../api/save/types'
 import type { SaveEquipmentCell } from '../../../api/save/types'
 import { ArmorDetailPanel } from '../ArmorDetailPanel/ArmorDetailPanel'
 import { ArmorAppearanceComparison } from '../ArmorAppearanceComparison/ArmorAppearanceComparison'
@@ -8,11 +8,14 @@ import { PalicoSharpnessLevel } from '../PalicoSharpnessLevel/PalicoSharpnessLev
 import { WeaponCoreStats } from '../WeaponCoreStats/WeaponCoreStats'
 import { WeaponTypeDetail } from '../WeaponTypeDetail/WeaponTypeDetail'
 import { RelicEquipmentDetail } from '../RelicEquipmentDetail/RelicEquipmentDetail'
+import { getCatalogWeapon, type CatalogWeaponDetail } from '../../utils/catalogWeapon'
+import { getCatalogArmor, type CatalogArmorDetail } from '../../utils/catalogArmor'
+import { WeaponDetailPanel } from '../WeaponDetailPanel/WeaponDetailPanel'
 import './SaveEquipmentEmbeddedDetail.css'
 
 type CatalogDetail =
-  | { kind: 'weapon'; value: WeaponDetail }
-  | { kind: 'armor'; value: ArmorDetail }
+  | { kind: 'weapon'; value: CatalogWeaponDetail }
+  | { kind: 'armor'; value: CatalogArmorDetail }
   | { kind: 'palico-weapon'; value: PalicoWeaponDetail }
   | { kind: 'palico-armor'; value: PalicoArmorDetail }
 
@@ -29,11 +32,11 @@ export function SaveEquipmentEmbeddedDetail({ gameId, cell }: { gameId: GameId; 
     const load = async (): Promise<CatalogDetail | undefined> => {
       if (gameId === 'mh4g' && cell.relic) return undefined
       if (cell.kind === 'weapon' && cell.weaponKey) {
-        const value = await window.mhSaveEditor.catalog.getWeapon({ gameId, weaponKey: cell.weaponKey })
+        const value = await getCatalogWeapon(gameId, cell.weaponKey)
         return value ? { kind: 'weapon', value } : undefined
       }
-      if (cell.kind === 'armor' && cell.armorDexId != null) {
-        const value = await window.mhSaveEditor.catalog.getArmor({ gameId, dexId: cell.armorDexId })
+      if (cell.kind === 'armor' && (cell.armorKey != null || cell.armorDexId != null)) {
+        const value = await getCatalogArmor(gameId, cell.armorKey ?? cell.armorDexId!)
         return value ? { kind: 'armor', value } : undefined
       }
       if (cell.kind === 'palico-weapon' && cell.palicoEquipmentId != null) {
@@ -51,12 +54,13 @@ export function SaveEquipmentEmbeddedDetail({ gameId, cell }: { gameId: GameId; 
       if (sequence === request.current) { setDetail(undefined); setError(cause instanceof Error ? cause.message : '装备资料读取失败') }
     }).finally(() => { if (sequence === request.current) setLoading(false) })
     return () => { request.current += 1 }
-  }, [cell.armorDexId, cell.kind, cell.palicoEquipmentId, cell.saveId, cell.slot, cell.weaponKey, cell.relic?.templateKey, gameId])
+  }, [cell.armorKey, cell.armorDexId, cell.kind, cell.palicoEquipmentId, cell.saveId, cell.slot, cell.weaponKey, cell.relic?.templateKey, gameId])
 
   return <div className={`save-equipment-embedded-detail${loading ? ' is-loading' : ''}`} aria-busy={loading}>
     {gameId === 'mhgu' && !cell.empty && cell.kind === 'armor' && (cell.appearanceId ?? 0) > 0 && <ArmorAppearanceComparison cell={cell} />}
     {gameId === 'mh4g' && cell.relic && <RelicEquipmentDetail cell={cell} />}
-    {detail?.kind === 'weapon' && <section className="save-equipment-embedded-detail__catalog"><WeaponCoreStats weapon={detail.value} compact /><WeaponTypeDetail gameId={gameId} weapon={detail.value} sharpnessStage="base" />{detail.value.specialSummary.length > 0 && <p>{detail.value.specialSummary.join(' · ')}</p>}</section>}
+    {detail?.kind === 'weapon' && detail.value.gameId === 'mhp2g' && <section className="save-equipment-embedded-detail__catalog"><WeaponDetailPanel gameId="mhp2g" weapon={detail.value} loading={false} layout="embedded" sharpnessStage="base" allowCatalogWrite={false} /></section>}
+    {detail?.kind === 'weapon' && detail.value.gameId !== 'mhp2g' && gameId !== 'mhp2g' && <section className="save-equipment-embedded-detail__catalog"><WeaponCoreStats weapon={detail.value} compact /><WeaponTypeDetail gameId={gameId} weapon={detail.value} sharpnessStage="base" />{detail.value.specialSummary.length > 0 && <p>{detail.value.specialSummary.join(' · ')}</p>}</section>}
     {detail?.kind === 'armor' && <section className="save-equipment-embedded-detail__catalog save-equipment-embedded-detail__armor-catalog"><ArmorDetailPanel armor={detail.value} loading={false} allowCatalogWrite={false} /></section>}
     {detail?.kind === 'palico-weapon' && <PalicoWeaponStats value={detail.value} />}
     {detail?.kind === 'palico-armor' && <PalicoArmorStats value={detail.value} />}

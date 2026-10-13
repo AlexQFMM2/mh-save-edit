@@ -1,10 +1,11 @@
-import type { GameId } from '../../../api/core/loadout'
-import type { SharpnessStage, WeaponSharpnessProfile } from '../../../api/catalog/types'
+import type { CatalogGameId } from '../../../api/catalog/types'
+import type { CatalogWeaponSharpness } from '../../utils/catalogWeapon'
+import type { SharpnessStage } from '../../../api/catalog/types'
 import { weaponSharpnessStages } from '../../utils/weaponCatalog'
 import { WeaponSharpnessBar } from '../WeaponSharpnessBar/WeaponSharpnessBar'
 import './WeaponSharpnessComparison.css'
 
-type Props = { gameId: GameId; profile: WeaponSharpnessProfile; selectedStage?: SharpnessStage; compact?: boolean }
+type Props = { gameId: CatalogGameId; profile: CatalogWeaponSharpness; selectedStage?: SharpnessStage; compact?: boolean }
 
 export function WeaponSharpnessComparison({ gameId, profile, selectedStage = 'base', compact = false }: Props) {
   const stages = weaponSharpnessStages(profile, gameId)

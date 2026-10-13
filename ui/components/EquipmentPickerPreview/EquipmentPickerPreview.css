@@ -1,0 +1,19 @@
+.equipment-picker-preview {
+  min-width: 0;
+  min-height: 0;
+  max-width: 100%;
+  padding: var(--global-spacing-4);
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border: var(--global-border-width) solid var(--global-theme-color-border-subtle);
+  border-radius: var(--global-radius-md);
+  background: var(--global-theme-color-surface-inset);
+}
+.equipment-picker-preview__title { margin: 0 0 var(--global-spacing-2); color: var(--global-theme-color-data); font-size: var(--global-typography-font-size-title); line-height: var(--global-typography-line-height-tight); }
+.equipment-picker-preview__line { min-width: 0; margin: var(--global-spacing-1) 0; overflow-wrap: anywhere; color: var(--global-theme-color-text-secondary); font-size: var(--global-typography-font-size-small); line-height: var(--global-typography-line-height-normal); }
+.equipment-picker-preview__difference { margin: var(--global-spacing-3) 0; padding: var(--global-spacing-2); border: var(--global-border-width) solid var(--global-theme-color-border); color: var(--global-theme-color-data); font-size: var(--global-typography-font-size-small); }
+.equipment-picker-preview__empty { display: grid; place-items: center; height: 100%; min-height: var(--global-state-min-height-compact); margin: 0; padding: var(--global-state-padding-compact); color: var(--global-state-color); font-size: var(--global-typography-font-size-small); line-height: var(--global-state-line-height); text-align: center; }
+.equipment-picker-preview__error { padding: var(--global-spacing-3); color: var(--global-state-error-color); font-size: var(--global-typography-font-size-small); }
+.equipment-picker-preview__retry { margin-left: var(--global-spacing-3); padding: var(--global-spacing-1) var(--global-spacing-2); border: var(--global-border-width) solid var(--global-theme-color-border); border-radius: var(--global-radius-sm); background: var(--global-theme-color-surface); color: var(--global-theme-color-text-primary); font: inherit; cursor: pointer; }
+.equipment-picker-preview__retry:focus-visible { outline: 2px solid var(--global-theme-color-focus-ring); outline-offset: 2px; }

@@ -5,6 +5,7 @@ import { validateMh4gCharm } from './mh4gCharmValidation'
 import { validateMhguCharm } from './mhguCharmValidation'
 
 export function validateCharm(snapshot: LoadoutCalculationSnapshot, charm: LoadoutCharm): CharmValidationResult {
+  if (snapshot.gameId === 'mhp2g') throw new Error('P2G 没有护石')
   const issues: LoadoutIssue[] = []
   if (!Number.isInteger(charm.classId) || charm.classId < 0 || charm.classId > 65535) issues.push({ code: 'charm.class.encoding', path: 'charm.classId', severity: 'error', message: '护石品级 ID 无法编码' })
   if (!Number.isInteger(charm.slots) || charm.slots < 0 || charm.slots > 3) issues.push({ code: 'charm.slots.encoding', path: 'charm.slots', severity: 'error', message: '护石孔位必须为 0～3' })

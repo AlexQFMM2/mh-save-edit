@@ -13,11 +13,11 @@ export type GameVersionDefinition = {
   platforms: PlatformId[]
 }
 
-export type RuntimeGameVersionDefinition = GameVersionDefinition & { id: GameId }
+export type RuntimeGameVersionDefinition = GameVersionDefinition
 
-// P2G has dedicated item/monster/quest/skill/decoration catalogs; it must not use legacy save/loadout adapters.
+// All installed games share the catalog, loadout and save workspace.
 export function hasRuntimeWorkspace(game: GameVersionDefinition): game is RuntimeGameVersionDefinition {
-  return game.id !== 'mhp2g'
+  return Boolean(game.id)
 }
 
 export const gameVersions: GameVersionDefinition[] = [

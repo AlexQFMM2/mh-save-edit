@@ -63,7 +63,10 @@
 
 @media (max-width: 800px) {
   .game-shell__body,
-  .game-shell--sidebar-collapsed .game-shell__body { grid-template-columns: minmax(0, 1fr); }
+  .game-shell--sidebar-collapsed .game-shell__body {
+    grid-template-columns: minmax(0, 1fr);
+    padding-left: var(--game-shell-page-sidebar-collapsed-width);
+  }
 }
 
 @media (max-width: 600px) {

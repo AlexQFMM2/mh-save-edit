@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef } from 'react'
-import { Background, ReactFlow, ReactFlowProvider, type Edge, type NodeTypes, type ReactFlowInstance } from '@xyflow/react'
+import { Background, MarkerType, ReactFlow, ReactFlowProvider, type Edge, type NodeTypes, type ReactFlowInstance } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
-import type { WeaponCatalogFilters, WeaponTreeResult } from '../../../api/catalog/types'
+import type { WeaponCatalogFilters } from '../../../api/catalog/types'
+import type { CatalogWeaponTree } from '../../utils/catalogWeapon'
 import { contextualWeaponKeys, weaponMatchesFilters } from '../../utils/weaponCatalog'
 import { layoutWeaponTree, WEAPON_TREE_NODE_MIN_HEIGHT, WEAPON_TREE_NODE_ROW_GAP, WEAPON_TREE_NODE_WIDTH } from '../../utils/weaponTreeLayout'
 import { WeaponTreeControls } from '../WeaponTreeControls/WeaponTreeControls'
@@ -12,23 +13,23 @@ import './WeaponTreeCanvas.css'
 
 const nodeTypes: NodeTypes = { weapon: WeaponTreeNodeView }
 const layoutCache = new Map<string, ReturnType<typeof layoutWeaponTree>>()
-type FilterSlice = Pick<WeaponCatalogFilters, 'query' | 'attributeId' | 'includeHiddenAttributes' | 'rarity' | 'slots' | 'directlyProducible' | 'finalOnly'>
+type FilterSlice = Pick<WeaponCatalogFilters, 'query' | 'attributeId' | 'includeHiddenAttributes' | 'rarity' | 'slots' | 'directlyProducible' | 'finalOnly'> & { queryWeaponKeys?: ReadonlySet<string> }
 
-export function WeaponTreeCanvas(props: { tree: WeaponTreeResult; filters: FilterSlice; selectedKey?: string; sharpnessStage: NonNullable<WeaponCatalogFilters['sharpnessStage']>; onSelect: (weaponKey: string) => void }) {
+export function WeaponTreeCanvas(props: { tree: CatalogWeaponTree; filters: FilterSlice; selectedKey?: string; sharpnessStage: NonNullable<WeaponCatalogFilters['sharpnessStage']>; onSelect: (weaponKey: string) => void }) {
   return <ReactFlowProvider><WeaponTreeCanvasInner {...props} /></ReactFlowProvider>
 }
 
-function WeaponTreeCanvasInner({ tree, filters, selectedKey, sharpnessStage, onSelect }: { tree: WeaponTreeResult; filters: FilterSlice; selectedKey?: string; sharpnessStage: NonNullable<WeaponCatalogFilters['sharpnessStage']>; onSelect: (weaponKey: string) => void }) {
+function WeaponTreeCanvasInner({ tree, filters, selectedKey, sharpnessStage, onSelect }: { tree: CatalogWeaponTree; filters: FilterSlice; selectedKey?: string; sharpnessStage: NonNullable<WeaponCatalogFilters['sharpnessStage']>; onSelect: (weaponKey: string) => void }) {
   const instanceRef = useRef<ReactFlowInstance<WeaponFlowNode, Edge> | null>(null)
   const layoutKey = `${tree.gameId}:${tree.weaponTypeId}:${tree.dataVersion}`
   const positions = useMemo(() => {
     const cached = layoutCache.get(layoutKey)
     if (cached) return cached
-    const value = layoutWeaponTree(tree.nodes, tree.edges, WEAPON_TREE_NODE_WIDTH, WEAPON_TREE_NODE_MIN_HEIGHT + WEAPON_TREE_NODE_ROW_GAP)
+    const value = layoutWeaponTree(tree.nodes, tree.edges, WEAPON_TREE_NODE_WIDTH + 56, WEAPON_TREE_NODE_MIN_HEIGHT + WEAPON_TREE_NODE_ROW_GAP)
     layoutCache.set(layoutKey, value)
     return value
   }, [layoutKey, tree.nodes, tree.edges])
-  const matchedKeys = useMemo(() => tree.nodes.filter((node) => weaponMatchesFilters(node, filters)).map((node) => node.weaponKey), [tree.nodes, filters])
+  const matchedKeys = useMemo(() => tree.nodes.filter((node) => !node.isCrossType && weaponMatchesFilters(node, filters)).map((node) => node.weaponKey), [tree.nodes, filters])
   const matched = useMemo(() => new Set(matchedKeys), [matchedKeys])
   const contextual = useMemo(() => contextualWeaponKeys(tree.nodes, tree.edges, matched), [tree.nodes, tree.edges, matched])
   const parents = useMemo(() => {
@@ -57,7 +58,20 @@ function WeaponTreeCanvasInner({ tree, filters, selectedKey, sharpnessStage, onS
     const positionMap = new Map(positions.map((position) => [position.weaponKey, position]))
     return tree.nodes.map((weapon) => ({ id: weapon.weaponKey, type: 'weapon', position: positionMap.get(weapon.weaponKey) ?? { x: 0, y: 0 }, draggable: false, selectable: false, focusable: false, data: { gameId: tree.gameId, weapon, sharpnessStage, matched: matched.has(weapon.weaponKey), contextual: contextual.has(weapon.weaponKey), selectedKey, onSelect: selectAndCenter, onNavigate: navigate } }))
   }, [tree.nodes, tree.gameId, positions, sharpnessStage, matched, contextual, selectedKey, parents, children, orderedKeys])
-  const edges = useMemo<Edge[]>(() => tree.edges.map((edge) => ({ id: `${edge.parentWeaponKey}>${edge.childWeaponKey}`, source: edge.parentWeaponKey, target: edge.childWeaponKey, type: 'step', animated: false, style: { stroke: matched.has(edge.childWeaponKey) && contextual.has(edge.parentWeaponKey) ? '#dcb85f' : contextual.has(edge.parentWeaponKey) && contextual.has(edge.childWeaponKey) ? '#977446' : '#554131', strokeWidth: matched.has(edge.childWeaponKey) ? 2.2 : 1.2, opacity: contextual.has(edge.parentWeaponKey) || contextual.has(edge.childWeaponKey) ? 1 : .28 } })), [tree.edges, matched, contextual])
+  const edges = useMemo<Edge[]>(() => {
+    const depth = new Map(positions.map(p => [p.weaponKey, p.depth]))
+    return tree.edges.map(edge => {
+      const back = (depth.get(edge.childWeaponKey) ?? 0) <= (depth.get(edge.parentWeaponKey) ?? 0)
+      const label = [edge.isCrossType ? '跨类型' : '', back ? '回向强化' : ''].filter(Boolean).join(' · ')
+      return { id: `${edge.parentWeaponKey}>${edge.childWeaponKey}`, source: edge.parentWeaponKey, target: edge.childWeaponKey,
+        sourceHandle: back ? 'return-source' : undefined, targetHandle: back ? 'return-target' : undefined,
+        type: back ? 'smoothstep' : 'step', animated: false, label: label || undefined,
+        labelStyle: { fill: 'var(--global-theme-color-text-primary)', fontSize: 'var(--global-typography-font-size-small)' },
+        labelBgStyle: { fill: 'var(--global-theme-color-surface-inset)', stroke: 'var(--global-theme-color-border)' },
+        markerEnd: { type: MarkerType.ArrowClosed }, className: back ? 'weapon-tree-canvas__return-edge' : undefined,
+        style: { stroke: matched.has(edge.childWeaponKey) && contextual.has(edge.parentWeaponKey) ? '#dcb85f' : contextual.has(edge.parentWeaponKey) && contextual.has(edge.childWeaponKey) ? '#977446' : '#554131', strokeWidth: matched.has(edge.childWeaponKey) ? 2.2 : 1.2, strokeDasharray: back ? '6 4' : undefined, opacity: contextual.has(edge.parentWeaponKey) || contextual.has(edge.childWeaponKey) ? 1 : .28 } }
+    })
+  }, [tree.edges, positions, matched, contextual])
   useEffect(() => {
     if (!selectedKey || !instanceRef.current) return
     const node = instanceRef.current.getNode(selectedKey)

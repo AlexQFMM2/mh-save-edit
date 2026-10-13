@@ -20,6 +20,7 @@ export function DecorationDetailPanel({ item, loading, error, allowCatalogWrite 
       <h2 className="decoration-detail-panel__title">{item.nameCn}</h2><p className="decoration-detail-panel__subtitle">{item.nameJp||item.nameEn}</p>
     </div></header>
     <dl className="decoration-detail-panel__stats"><div className="decoration-detail-panel__stat"><dt className="decoration-detail-panel__label">孔位</dt><dd className="decoration-detail-panel__value"><EquipmentSlotIndicator slots={item.slots}/></dd></div><div className="decoration-detail-panel__stat"><dt className="decoration-detail-panel__label">{item.p2g?'卖出价格':'价格'}</dt><dd className="decoration-detail-panel__value">{price==null?(item.p2g?'未收录':'—'):`${price} z`}</dd></div></dl>
+    {allowCatalogWrite && item.gameId === 'mhp2g' && <CatalogWriteControl gameId="mhp2g" kind="item" saveId={item.itemId} maxCount={99}/>}
     {allowCatalogWrite && item.gameId!=='mhp2g' && item.itemSaveId != null && <CatalogWriteControl gameId={item.gameId} kind="item" saveId={item.itemSaveId} maxCount={99}/>}
     <div className="decoration-detail-panel__scroll">
       <DecorationSkillSection skills={item.skills} onSelectSkill={onSelectSkill}/>

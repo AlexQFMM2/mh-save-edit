@@ -284,3 +284,5 @@ research/mhgu/dex/mhxx-dex    <- D:\MH\unpack\mhxx-dex
 - 技术上可重建、可打包不等于可公开分发。只有用户明确批准的独立发布包才能包含指定数据产物，且不得由公开 Git 历史或公开 Action artifact 中转。
 - 2026-09-11 用户已明确批准私有仓库的 Windows 预览例外：三套运行时 SQLite 与内容哈希图标可保存为密码保护的私有 Release 资产，并由 Actions Secret 在临时 Windows runner 中解密后注入成员可见、短期保留的预览 artifact。此例外不包含 Dex、ROM、GMD、CSV、manifest、crosswalk、审计报告、存档或其他研究输入，也不授权公开 Release；仓库改为公开可见前必须先禁用该流程并删除相关资产。
 - 2026-10-08 用户明确批准公开发行并方便社区继续开发，取代上述运行资产的私有发布限制：`data/mh3g.sqlite`、`data/mh4g.sqlite`、`data/mhgu.sqlite`、`ui/public/assets/catalog/icons/*.png` 内容哈希图标及 `build/app-icon.ico`、`build/app-icon.png` 可作为独立的公开运行资产 Release 包和 Windows 应用包发布。公开 Actions 可下载这些已批准的运行资产进行测试和打包，无须私有资产密码。运行资产仍不得进入 Git 历史，Dex 原件、ROM、GMD、CSV、manifest、crosswalk、审计报告、存档及其他研究输入仍不在授权范围内。
+
+- 2026-10-13 用户在 P2G 应用侧验收后要求提交 GitHub、生成新 Release 并更新资源包用于实际修改测试。本次发行将 `data/mhp2g.sqlite`、`data/item-terminology.sqlite`、`data/mhp2g-save-profile.json` 与 P2G 内容哈希 PNG 图标加入独立公开运行资源 v5 和 Windows 应用包；沿用既有三作运行资产。上述文件仍不得进入 Git 历史；个人存档、研究输入、manifest、crosswalk、审计报告及自动配装状态库不包含在发行范围内。

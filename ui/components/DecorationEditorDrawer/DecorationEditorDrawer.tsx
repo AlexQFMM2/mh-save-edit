@@ -1,3 +1,4 @@
+import { decorationId } from '../../../api/loadout/identity'
 import type { LoadoutDecoration, LoadoutSkillDefinition } from '../../../api/loadout/types'
 import { DecorationEditorContent } from '../DecorationEditorContent/DecorationEditorContent'
 import { LoadoutWorkspaceDrawer } from '../LoadoutWorkspaceDrawer/LoadoutWorkspaceDrawer'
@@ -19,9 +20,9 @@ export function DecorationEditorDrawer({ decorations, skills, current, capacity,
   const update = (ids: number[]) => {
     const retained = [...current]
     onChange(ids.map(saveId => {
-      const index = retained.findIndex(item => item.saveId === saveId)
+      const index = retained.findIndex(item => decorationId(item) === saveId)
       if (index >= 0) return retained.splice(index, 1)[0]
-      return decorations.find(item => item.saveId === saveId) ?? { saveId, nameCn: `未知装饰珠 #${saveId}`, slots: 0, skills: [], fixed: true }
+      return decorations.find(item => decorationId(item) === saveId) ?? { saveId, nameCn: `未知装饰珠 #${saveId}`, slots: 0, skills: [], fixed: true }
     }))
   }
   return <LoadoutWorkspaceDrawer title="编辑装饰珠" onClose={onClose} footer={<>
@@ -30,7 +31,7 @@ export function DecorationEditorDrawer({ decorations, skills, current, capacity,
   </>}>
     <div className="decoration-editor-drawer">
       <p className="decoration-editor-drawer__notice">添加或移除立即更新当前配装，每一步均可撤销；关闭不会回退修改，也不会写入存档。</p>
-      <DecorationEditorContent decorations={decorations} skills={skills} value={current.map(item => item.saveId)} capacity={capacity} onChange={update} />
+      <DecorationEditorContent decorations={decorations} skills={skills} value={current.map(item => decorationId(item))} capacity={capacity} onChange={update} />
     </div>
   </LoadoutWorkspaceDrawer>
 }

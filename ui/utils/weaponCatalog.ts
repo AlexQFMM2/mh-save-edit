@@ -1,4 +1,5 @@
-import type { GameId } from '../../api/core/loadout'
+import type { CatalogGameId } from '../../api/catalog/types'
+import type { CatalogWeaponSharpness, CatalogWeaponSummary } from './catalogWeapon'
 import type { SharpnessStage, WeaponCatalogFilters, WeaponSharpnessProfile, WeaponSummary, WeaponTreeEdge, WeaponTreeNode } from '../../api/catalog/types'
 
 export const sharpnessColors = ['red', 'orange', 'yellow', 'green', 'blue', 'white', 'purple'] as const
@@ -16,17 +17,18 @@ export type SharpnessStageView = {
 
 const sharpnessLabels: Record<SharpnessColor, string> = { red: '红', orange: '橙', yellow: '黄', green: '绿', blue: '蓝', white: '白', purple: '紫' }
 
-export function weaponSharpnessStages(profile: WeaponSharpnessProfile, gameId: GameId): SharpnessStageView[] {
+export function weaponSharpnessStages(profile: CatalogWeaponSharpness, gameId: CatalogGameId): SharpnessStageView[] {
   const total = sharpnessColors.reduce((sum, color) => sum + profile[color], 0)
   const definitions: { id: SharpnessStage; label: string; shortLabel: string; cutoff: number }[] = [
     { id: 'base', label: '基础', shortLabel: '基', cutoff: profile.baseCutoff },
-    { id: 'handicraft1', label: '匠+1', shortLabel: gameId === 'mhgu' ? '匠1' : '匠', cutoff: profile.handicraft1Cutoff ?? profile.baseCutoff },
+    { id: 'handicraft1', label: gameId === 'mhp2g' ? '匠' : '匠+1', shortLabel: gameId === 'mhgu' ? '匠1' : '匠', cutoff: profile.handicraft1Cutoff ?? profile.baseCutoff },
   ]
   if (gameId === 'mhgu') definitions.push({ id: 'handicraft2', label: '匠+2', shortLabel: '匠2', cutoff: profile.handicraft2Cutoff ?? profile.handicraft1Cutoff ?? profile.baseCutoff })
   return definitions.map((definition) => {
     let remaining = Math.max(0, Math.min(total, definition.cutoff))
     const segments = Object.fromEntries(sharpnessColors.map((color) => {
-      const value = Math.min(profile[color], remaining)
+      const native = profile.nativeSegments?.[definition.id === 'base' ? 'base' : 'handicraft']
+      const value = native ? native[sharpnessColors.indexOf(color)] : Math.min(profile[color], remaining)
       remaining -= value
       return [color, value]
     })) as Record<SharpnessColor, number>
@@ -36,12 +38,12 @@ export function weaponSharpnessStages(profile: WeaponSharpnessProfile, gameId: G
   })
 }
 
-export function weaponMatchesFilters(weapon: WeaponSummary, filters: Pick<WeaponCatalogFilters, 'query' | 'attributeId' | 'includeHiddenAttributes' | 'rarity' | 'slots' | 'directlyProducible' | 'finalOnly'>): boolean {
+export function weaponMatchesFilters(weapon: CatalogWeaponSummary, filters: Pick<WeaponCatalogFilters, 'query' | 'attributeId' | 'includeHiddenAttributes' | 'rarity' | 'slots' | 'directlyProducible' | 'finalOnly'> & { queryWeaponKeys?: ReadonlySet<string> }): boolean {
   const query = filters.query?.trim().toLocaleLowerCase()
   if (query) {
     const numeric = /^0x[0-9a-f]+$/i.test(query) ? Number.parseInt(query.slice(2), 16) : /^\d+$/.test(query) ? Number(query) : null
-    const matchesText = weapon.nameCn.toLocaleLowerCase().includes(query) || weapon.nameEn.toLocaleLowerCase().includes(query)
-    if (!matchesText && (numeric == null || (weapon.saveId !== numeric && weapon.dexId !== numeric))) return false
+    const matchesText = weapon.nameCn.toLocaleLowerCase().includes(query) || weapon.nameEn.toLocaleLowerCase().includes(query) || (weapon.nameJp ?? '').toLocaleLowerCase().includes(query) || weapon.weaponKey.toLocaleLowerCase().includes(query) || (weapon.matchReason ?? '').toLocaleLowerCase().includes(query)
+    if (!filters.queryWeaponKeys?.has(weapon.weaponKey) && !matchesText && (numeric == null || (weapon.saveId !== numeric && weapon.dexId !== numeric && weapon.nativeIndex !== numeric))) return false
   }
   if (filters.rarity != null && weapon.rarity !== filters.rarity) return false
   if (filters.slots != null && weapon.slots !== filters.slots) return false
@@ -53,7 +55,7 @@ export function weaponMatchesFilters(weapon: WeaponSummary, filters: Pick<Weapon
   return true
 }
 
-export function contextualWeaponKeys(nodes: WeaponTreeNode[], edges: WeaponTreeEdge[], matches: Set<string>): Set<string> {
+export function contextualWeaponKeys(nodes: CatalogWeaponSummary[], edges: WeaponTreeEdge[], matches: Set<string>): Set<string> {
   const parents = new Map<string, string[]>()
   const children = new Map<string, string[]>()
   for (const edge of edges) {

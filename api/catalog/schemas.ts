@@ -1,4 +1,6 @@
+import { p2gArmorIdentitySchema, p2gArmorFiltersSchema, p2gArmorSetFiltersSchema } from './p2gArmorSchemas'
 import { z } from 'zod'
+import { p2gWeaponFiltersSchema, p2gWeaponIdentitySchema, p2gWeaponTreeRequestSchema } from './p2gWeaponSchemas'
 
 export const gameIdSchema = z.enum(['mh3g', 'mh4g', 'mhgu'])
 export const catalogGameIdSchema = z.enum(['mh3g', 'mh4g', 'mhgu', 'mhp2g'])
@@ -46,13 +48,13 @@ export const decorationCatalogFiltersSchema = z.object({
 })
 
 export const weaponKeySchema = z.string().trim().min(3).max(40).regex(/^\d+:\d+(?::\d+)?$/)
-export const weaponIdentitySchema = z.object({ gameId: gameIdSchema, weaponKey: weaponKeySchema }).strict().superRefine((value, context) => {
+const legacyWeaponIdentitySchema = z.object({ gameId: gameIdSchema, weaponKey: weaponKeySchema }).strict().superRefine((value, context) => {
   const parts = value.weaponKey.split(':')
   if ((value.gameId === 'mhgu' && parts.length !== 3) || (value.gameId !== 'mhgu' && parts.length !== 2)) {
     context.addIssue({ code: z.ZodIssueCode.custom, path: ['weaponKey'], message: '武器键与游戏版本不匹配' })
   }
 })
-export const weaponCatalogFiltersSchema = z.object({
+const legacyWeaponCatalogFiltersSchema = z.object({
   gameId: gameIdSchema,
   targetWeaponKey: weaponKeySchema.optional(),
   query: z.string().trim().max(120).optional(),
@@ -80,7 +82,9 @@ export const weaponCatalogFiltersSchema = z.object({
     context.addIssue({ code: z.ZodIssueCode.custom, path: ['sharpnessStage'], message: '当前游戏不支持匠+2' })
   }
 })
-export const weaponTreeRequestSchema = z.object({ gameId: gameIdSchema, weaponTypeId: z.number().int().min(1).max(14) }).strict()
+export const weaponIdentitySchema = z.union([legacyWeaponIdentitySchema, p2gWeaponIdentitySchema])
+export const weaponCatalogFiltersSchema = z.union([legacyWeaponCatalogFiltersSchema, p2gWeaponFiltersSchema])
+export const weaponTreeRequestSchema = z.union([z.object({ gameId: gameIdSchema, weaponTypeId: z.number().int().min(1).max(14) }).strict(), p2gWeaponTreeRequestSchema])
 const weaponStyleSchema = z.enum(['guild','striker','aerial','adept','alchemy','valor'])
 export const weaponMotionFiltersSchema = z.object({
   gameId: z.literal('mhgu'),
@@ -92,7 +96,7 @@ export const weaponMotionFiltersSchema = z.object({
   direction: z.enum(['asc','desc']).optional(),
 }).strict()
 
-export const armorIdentitySchema = z.object({ gameId: gameIdSchema, dexId: z.number().int().min(1).max(65535) }).strict()
+const legacyArmorIdentitySchema = z.object({ gameId: gameIdSchema, dexId: z.number().int().min(1).max(65535) }).strict()
 export const skillIdentitySchema = z.object({ gameId: catalogGameIdSchema, skillId: z.number().int().min(0).max(65535) }).strict()
 export const skillCatalogFiltersSchema = z.object({
   gameId: catalogGameIdSchema,
@@ -158,12 +162,12 @@ const armorCommonFilters = {
   page: z.number().int().min(1).max(100000).optional(),
   pageSize: z.number().int().min(1).max(100).optional(),
 }
-export const armorCatalogFiltersSchema = z.object({
+const legacyArmorCatalogFiltersSchema = z.object({
   ...armorCommonFilters,
   part: z.enum(['head', 'chest', 'arms', 'waist', 'legs']).optional(),
   sort: z.enum(['dexId', 'name', 'rarity', 'slots', 'baseDefense', 'maxDefense', 'fireRes', 'waterRes', 'thunderRes', 'iceRes', 'dragonRes', 'skillPoints']).optional(),
 }).strict()
-export const armorSetFiltersSchema = z.object({
+const legacyArmorSetFiltersSchema = z.object({
   ...armorCommonFilters,
   sort: z.enum(['source', 'name', 'rarity', 'slots', 'baseDefense', 'maxDefense', 'skillPoints']).optional(),
 }).strict()
@@ -182,3 +186,7 @@ export const palicoWeaponFiltersSchema=z.object({gameId:mhguSchema,targetEquipme
 export const palicoArmorFiltersSchema=z.object({gameId:mhguSchema,targetEquipmentId:palicoId.optional(),query:palicoQuery,part:z.enum(['head','body']).optional(),rarity:z.number().int().min(1).max(20).optional(),sort:z.enum(['source','defense','fireRes','waterRes','thunderRes','iceRes','dragonRes']).optional(),direction:z.enum(['asc','desc']).optional(),...palicoPage}).strict()
 
 export const p2gSkillEquipmentIdentitySchema = z.object({gameId:z.literal("mhp2g"),equipmentKey:z.string().max(64).regex(/^(?:item:\d+|armor_(?:head|chest|arms|waist|legs):\d+)$/)}).strict()
+
+export const armorIdentitySchema = z.union([legacyArmorIdentitySchema, p2gArmorIdentitySchema])
+export const armorCatalogFiltersSchema = z.union([legacyArmorCatalogFiltersSchema, p2gArmorFiltersSchema])
+export const armorSetFiltersSchema = z.union([legacyArmorSetFiltersSchema, p2gArmorSetFiltersSchema])

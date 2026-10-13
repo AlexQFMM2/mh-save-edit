@@ -1,3 +1,5 @@
+import { hasP2gArmors, P2gArmorCatalogRepository } from './p2gArmorRepository'
+import { hasP2gWeapons, P2gWeaponCatalogRepository } from './p2gWeaponRepository'
 import { decorationItemMatches, decorationUsageTargets, hasP2gDecorations } from './p2gDecorationLinks'
 import { questItemMatches, questItemRelations } from './p2gQuestLinks'
 import { hasP2gQuests } from './p2gQuestRepository'
@@ -12,6 +14,8 @@ const requiredColumns: Record<string, string[]> = {
   catalog_item_relation_targets: ['relation_id','position','item_id'],
 }
 export class P2gItemCatalogRepository {
+  private readonly armors?: P2gArmorCatalogRepository
+  private readonly weapons?: P2gWeaponCatalogRepository
   private readonly localized: boolean
   private readonly monsters: boolean
   constructor(private readonly db: Database.Database, private readonly terminology?: ItemTermRepository) {
@@ -23,6 +27,8 @@ export class P2gItemCatalogRepository {
     }
     this.localized = Boolean(db.prepare("SELECT 1 FROM sqlite_master WHERE name='catalog_item_localization' AND type='table'").get())
     this.monsters = Boolean(db.prepare("SELECT 1 FROM sqlite_master WHERE name='catalog_monster_drops' AND type='table'").get())
+    if (hasP2gArmors(db)) this.armors = new P2gArmorCatalogRepository(db)
+    if (hasP2gWeapons(db)) this.weapons = new P2gWeaponCatalogRepository(db)
     terminology?.bindCatalog(db, 'mhp2g')
   }
   searchItems(filters: ItemCatalogFilters): PageResult<CatalogItemSummary> {
@@ -31,6 +37,8 @@ export class P2gItemCatalogRepository {
     if (!filters.includePlaceholders) where.push('is_placeholder=0')
     const matches = this.terminology?.matchItems('mhp2g', filters.query) ?? new Map<number, string>()
     const decorationMatches = decorationItemMatches(this.db, filters.query)
+    const armorMatches = this.armors?.getMaterialItemMatches(filters.query) ?? new Map<number, string>()
+    const weaponMatches = this.weapons?.getMaterialItemMatches(filters.query) ?? new Map<number, string>()
     const taskMatches = questItemMatches(this.db, filters.query)
     const monsterMatches = new Map<number, string>()
     if (this.monsters && filters.query?.trim()) {
@@ -42,8 +50,8 @@ export class P2gItemCatalogRepository {
     }
     if (filters.query?.trim()) {
       const alias = this.localized ? ' OR item_id IN (SELECT item_id FROM catalog_item_localization WHERE instr(original_name,?)>0)' : ''
-      where.push(`(name_cn LIKE ? OR name_jp LIKE ? OR CAST(item_id AS TEXT)=? OR item_id IN (SELECT value FROM json_each(?)) OR item_id IN (SELECT value FROM json_each(?)) OR item_id IN (SELECT value FROM json_each(?)) OR item_id IN (SELECT value FROM json_each(?))${alias})`)
-      values.push(`%${filters.query.trim()}%`, `%${filters.query.trim()}%`, filters.query.trim(), JSON.stringify([...matches.keys()]), JSON.stringify([...monsterMatches.keys()]), JSON.stringify([...taskMatches.keys()]), JSON.stringify([...decorationMatches.keys()]))
+      where.push(`(name_cn LIKE ? OR name_jp LIKE ? OR CAST(item_id AS TEXT)=? OR item_id IN (SELECT value FROM json_each(?)) OR item_id IN (SELECT value FROM json_each(?)) OR item_id IN (SELECT value FROM json_each(?)) OR item_id IN (SELECT value FROM json_each(?)) OR item_id IN (SELECT value FROM json_each(?)) OR item_id IN (SELECT value FROM json_each(?))${alias})`)
+      values.push(`%${filters.query.trim()}%`, `%${filters.query.trim()}%`, filters.query.trim(), JSON.stringify([...matches.keys()]), JSON.stringify([...monsterMatches.keys()]), JSON.stringify([...taskMatches.keys()]), JSON.stringify([...decorationMatches.keys()]), JSON.stringify([...weaponMatches.keys()]), JSON.stringify([...armorMatches.keys()]))
       if (this.localized) values.push(filters.query.trim())
     }
     if (filters.rarity != null) { where.push('rarity=?'); values.push(filters.rarity) }
@@ -54,7 +62,7 @@ export class P2gItemCatalogRepository {
     const total = (this.db.prepare(`SELECT count(*) AS total FROM catalog_items WHERE ${condition}`).get(...values) as Row).total
     const order = filters.sort === 'name' ? `${this.terminology ? 'item_display_name(game_id,item_id,name_cn)' : 'name_cn'},item_id` : filters.sort === 'rarity' ? 'rarity IS NULL,rarity,item_id' : 'item_id'
     const rows = this.db.prepare(`SELECT * FROM catalog_items WHERE ${condition} ORDER BY ${order} LIMIT ? OFFSET ?`).all(...values, pageSize, (page-1)*pageSize) as Row[]
-    return { items: rows.map(row => ({...(decorationMatches.has(row.item_id) ? {matchReason:`命中：装饰品材料·${decorationMatches.get(row.item_id)}`} : {}),...(this.terminology?.project(summary(row), filters.query, matches.get(row.item_id)) ?? summary(row)), ...(taskMatches.has(row.item_id) ? {matchReason:`命中：来源任务·${taskMatches.get(row.item_id)}`} : {}), ...(monsterMatches.has(row.item_id) ? {matchReason:`命中：来源怪物·${monsterMatches.get(row.item_id)}`} : {})})), total, page, pageSize, hasNext: page*pageSize < total }
+    return { items: rows.map(row => ({...(armorMatches.has(row.item_id) ? {matchReason: armorMatches.get(row.item_id)} : {}),...(weaponMatches.has(row.item_id) ? { matchReason: weaponMatches.get(row.item_id) } : {}),...(decorationMatches.has(row.item_id) ? {matchReason:`命中：装饰品材料·${decorationMatches.get(row.item_id)}`} : {}),...(this.terminology?.project(summary(row), filters.query, matches.get(row.item_id)) ?? summary(row)), ...(taskMatches.has(row.item_id) ? {matchReason:`命中：来源任务·${taskMatches.get(row.item_id)}`} : {}), ...(monsterMatches.has(row.item_id) ? {matchReason:`命中：来源怪物·${monsterMatches.get(row.item_id)}`} : {})})), total, page, pageSize, hasNext: page*pageSize < total }
   }
   getItem(identity: P2gItemIdentity): CatalogItemDetail | null {
     const row = this.db.prepare('SELECT * FROM catalog_items WHERE item_id=?').get(identity.itemId) as Row | undefined
@@ -76,6 +84,14 @@ export class P2gItemCatalogRepository {
     if(hasP2gDecorations(this.db)&&this.db.prepare('SELECT 1 FROM p2g_decorations WHERE item_id=?').get(identity.itemId))item.decoration={gameId:'mhp2g',itemId:identity.itemId}
     const decorationTargets = decorationUsageTargets(this.db)
     item.relations = item.relations.map(r => { const target = decorationTargets.get(r.id); return target ? {...r, pendingTarget:null, relatedDecoration:target, targetName:target.nameCn} : r })
+    if (this.weapons && item.gameId === 'mhp2g') {
+      item.weaponRecipes = this.weapons.getItemWeaponUsages(identity.itemId)
+      item.relations = item.relations.filter(r => r.usageKind !== 'weapon')
+    }
+    if (this.armors && item.gameId === 'mhp2g') {
+      item.armorRecipes = this.armors.getItemArmorUsages(identity.itemId)
+      item.relations = item.relations.filter(r => r.usageKind !== 'armor')
+    }
     item.relations.push(...questItemRelations(this.db,identity.itemId))
     return this.terminology?.detail(item) ?? item
   }

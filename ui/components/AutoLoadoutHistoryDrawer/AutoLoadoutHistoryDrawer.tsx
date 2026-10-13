@@ -1,3 +1,4 @@
+import { validateAutoResult } from '../../../api/loadout/resultValidation'
 import { Copy, Pause, Play, RotateCcw, Square, Trash2 } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState, type KeyboardEvent } from 'react'
 import { saveAutoLoadoutDraft } from '../../stores/autoLoadoutDraftStore'
@@ -13,7 +14,7 @@ type Props = { gameId: LoadoutGame; snapshot: LoadoutCalculationSnapshot; onAppl
 type DetailTab = 'conditions' | 'progress' | 'results'
 const terminalStatuses: AutoLoadoutJobStatus[] = ['completed', 'cancelled', 'failed', 'interrupted']
 const statusOptions = [{ value: 'all', label: '全部状态' }, { value: 'queued', label: '排队中' }, { value: 'running', label: '运行中' }, { value: 'paused', label: '已暂停' }, { value: 'completed', label: '已完成' }, { value: 'cancelled', label: '已取消' }, { value: 'failed', label: '失败' }, { value: 'interrupted', label: '已中断' }]
-const gameOptions = [{ value: 'current', label: '当前版本' }, { value: 'all', label: '全部版本' }, { value: 'mh3g', label: 'MH3G' }, { value: 'mh4g', label: 'MH4G' }, { value: 'mhgu', label: 'MHGU / XX' }]
+const gameOptions = [{ value: 'current', label: '当前版本' }, { value: 'all', label: '全部版本' }, { value: 'mhp2g', label: 'MHP2G' }, { value: 'mh3g', label: 'MH3G' }, { value: 'mh4g', label: 'MH4G' }, { value: 'mhgu', label: 'MHGU / XX' }]
 const dateFormatter = new Intl.DateTimeFormat('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
 const detailTabs: DetailTab[] = ['conditions', 'progress', 'results']
 
@@ -103,10 +104,7 @@ export function AutoLoadoutHistoryDrawer({ gameId, snapshot, onApply, onJobsChan
     setError(undefined)
     try {
       const reconciled = await window.mhSaveEditor.loadout.reconcileLoadout({ ...selectedResult.loadout, dataVersion: snapshot.dataVersion })
-      const calculation = calculateLoadout(snapshot, reconciled)
-      if (calculation.encoding === 'blocked') throw new Error(`结果结构不可编码：${calculation.issues.find(issue => issue.severity === 'error')?.message ?? '请检查配装诊断'}`)
-      const missing = selectedJob.targets.find(target => (calculation.skills.find(skill => skill.skillId === target.skillId)?.total ?? 0) < target.threshold)
-      if (missing) throw new Error(`当前资料复核后不再满足目标：${missing.nameCn}`)
+      validateAutoResult(snapshot, reconciled, selectedJob.targets)
       await window.mhSaveEditor.loadout.selectAutoLoadoutJobResult(selectedJob.jobId, selectedResult.fingerprint)
       onApply(reconciled)
     } catch (cause) { setError(cause instanceof Error ? cause.message : '应用历史结果失败') }

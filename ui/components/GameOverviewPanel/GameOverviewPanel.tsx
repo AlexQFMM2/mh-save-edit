@@ -1,5 +1,5 @@
 import { ArrowRight, BookOpen, FolderOpen, Hammer, Swords } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { hasRuntimeWorkspace, type GameVersionDefinition } from '../../data/gameVersions'
 import { PlatformBadgeList } from '../PlatformBadgeList/PlatformBadgeList'
 import './GameOverviewPanel.css'
@@ -15,6 +15,7 @@ type GameOverviewPanelProps = {
 }
 
 export function GameOverviewPanel({ game }: GameOverviewPanelProps) {
+  const navigate = useNavigate()
   const available = hasRuntimeWorkspace(game)
 
   return (
@@ -25,10 +26,10 @@ export function GameOverviewPanel({ game }: GameOverviewPanelProps) {
           <h1 className="game-overview-panel__title">{game.title}</h1>
           <p className="game-overview-panel__description">{available ? '从这里进入资料、存档修改与配装工具。' : 'P2G 道具、怪物、任务、技能与装饰品图鉴已接入；其他图鉴、存档修改与配装功能待接入。'}</p>
         </div>
-        <button className="game-overview-panel__open-save" type="button" disabled>
+        <button className="game-overview-panel__open-save" type="button" disabled={!available} onClick={() => navigate(`/game/${game.id}/edit`)}>
           <FolderOpen size={17} aria-hidden="true" />
           打开存档
-          <span>{available ? '即将支持' : '待接入'}</span>
+          <span>{available ? '选择环境' : '待接入'}</span>
         </button>
       </header>
 

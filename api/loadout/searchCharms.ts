@@ -5,6 +5,7 @@ import type { SearchControl } from './searchControl'
 
 /** Relevant positive skill points plus slots; never turns NULL into a slot count. */
 export async function searchCharms(snapshot: LoadoutCatalogSnapshot, relevant: Set<number>, control: SearchControl) {
+  if (snapshot.gameId === 'mhp2g') return { candidates: [], warnings: [] }
   const candidates: NonNullable<LogicalLoadout['charm']>[] = []
   const warnings = new Set<string>()
   const seen = new Set<string>()

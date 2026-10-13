@@ -1,8 +1,8 @@
 {
   "name": "mh-save-edit",
-  "version": "0.1.11",
+  "version": "0.1.12",
   "private": true,
-  "description": "Monster Hunter save editor for MH3G, MH4G and MHGU.",
+  "description": "Monster Hunter save editor for MHP2G, MH3G, MH4G and MHGU.",
   "type": "module",
   "main": "out/main/index.js",
   "scripts": {
@@ -88,7 +88,10 @@
         "filter": [
           "mh3g.sqlite",
           "mh4g.sqlite",
-          "mhgu.sqlite"
+          "mhgu.sqlite",
+          "mhp2g.sqlite",
+          "item-terminology.sqlite",
+          "mhp2g-save-profile.json"
         ]
       },
       {

@@ -1,3 +1,4 @@
+import { decorationKey, isDecorationForGame } from './identity'
 import { applyCharmValidation } from './charm'
 import type {
   ArmorLoadoutSlot,
@@ -26,7 +27,9 @@ export function normalizeLegacyTransientLoadoutFields(input: unknown): unknown {
 
 function decorationsFromSnapshot(snapshot: LoadoutCatalogSnapshot, values: LoadoutDecoration[]): LoadoutDecoration[] {
   return values.map((value) => {
-    const catalog = snapshot.decorations.find((candidate) => candidate.saveId === value.saveId)
+    if (!isDecorationForGame(value, snapshot.gameId)) throw new Error('装饰品游戏版本与配装不一致')
+    const catalog = snapshot.decorations.find((candidate) => decorationKey(candidate) === decorationKey(value))
+    if (!catalog && snapshot.gameId === 'mhp2g') throw new Error(`装饰品已不在当前资料中：${value.nameCn}`)
     if (!catalog) return { ...clone(value), skills: [] }
     return { ...clone(catalog), fixed: value.fixed }
   })
@@ -35,6 +38,11 @@ function decorationsFromSnapshot(snapshot: LoadoutCatalogSnapshot, values: Loado
 function weaponFromSnapshot(snapshot: LoadoutCatalogSnapshot, imported: LoadoutWeapon): LoadoutWeapon {
   const catalog = snapshot.weapons.find((candidate) => candidate.candidateKey === imported.candidateKey)
   if (!catalog) throw new Error(`导入武器已不在当前资料中：${imported.nameCn}`)
+  if (imported.gameId !== snapshot.gameId) throw new Error('装备游戏版本与配装不一致')
+  if (catalog.gameId === 'mhp2g') {
+    if (imported.gameId !== 'mhp2g' || catalog.weaponKey !== imported.weaponKey) throw new Error('P2G 装备身份与候选键不一致')
+    return { ...clone(catalog), decorations: decorationsFromSnapshot(snapshot, imported.decorations), lock: imported.lock }
+  }
   const editable = catalog.sourceKind === 'relicTemplate'
     ? {
         slots: imported.slots,
@@ -64,6 +72,11 @@ function armorFromSnapshot(snapshot: LoadoutCatalogSnapshot, slot: ArmorLoadoutS
     if (matches.length === 1) catalog = matches[0]
   }
   if (!catalog) throw new Error(`导入${slot}防具已不在当前资料中：${imported.nameCn}`)
+  if (imported.gameId !== snapshot.gameId) throw new Error('装备游戏版本与配装不一致')
+  if (catalog.gameId === 'mhp2g') {
+    if (imported.gameId !== 'mhp2g' || catalog.armorKey !== imported.armorKey) throw new Error('P2G 装备身份与候选键不一致')
+    return { ...clone(catalog), decorations: decorationsFromSnapshot(snapshot, imported.decorations), lock: imported.lock }
+  }
   const editable = catalog.sourceKind === 'relicTemplate'
     ? {
         slots: imported.slots,
@@ -87,6 +100,7 @@ function armorFromSnapshot(snapshot: LoadoutCatalogSnapshot, slot: ArmorLoadoutS
 }
 
 export function reconcileImportedLoadout(snapshot: LoadoutCatalogSnapshot, imported: LogicalLoadout): LogicalLoadout {
+  if (snapshot.gameId === 'mhp2g' && imported.charm) throw new Error('P2G 没有护石')
   if (snapshot.gameId !== imported.gameId) throw new Error('文件游戏版本与当前页面不匹配')
   const next: LogicalLoadout = {
     schemaVersion: 1,
@@ -109,7 +123,7 @@ export function reconcileImportedLoadout(snapshot: LoadoutCatalogSnapshot, impor
       const definition = snapshot.skills.find((candidate) => candidate.skillId === value.skillId)
       return { ...value, nameCn: definition?.nameCn ?? value.nameCn }
     }
-    const draft = { ...clone(imported.charm), gameId: snapshot.gameId, skill1: skill(imported.charm.skill1), skill2: skill(imported.charm.skill2), decorations }
+    const draft = { ...clone(imported.charm), gameId: imported.charm.gameId, skill1: skill(imported.charm.skill1), skill2: skill(imported.charm.skill2), decorations }
     next.charm = applyCharmValidation(snapshot, draft)
   }
   return next

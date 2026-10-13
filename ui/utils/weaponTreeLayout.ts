@@ -1,4 +1,6 @@
-import type { WeaponTreeEdge, WeaponTreeNode } from '../../api/catalog/types'
+import type { WeaponTreeEdge } from '../../api/catalog/types'
+
+import type { CatalogWeaponSummary } from './catalogWeapon'
 
 export type WeaponNodePosition = { weaponKey: string; x: number; y: number; depth: number; order: number }
 
@@ -7,18 +9,34 @@ export const WEAPON_TREE_NODE_WIDTH = 285
 export const WEAPON_TREE_NODE_MIN_HEIGHT = 168
 export const WEAPON_TREE_NODE_ROW_GAP = 28
 
-export function layoutWeaponTree(nodes: WeaponTreeNode[], edges: WeaponTreeEdge[], gapX = 250, gapY = 92): WeaponNodePosition[] {
+export function layoutWeaponTree(nodes: CatalogWeaponSummary[], edges: WeaponTreeEdge[], gapX = 250, gapY = 92): WeaponNodePosition[] {
   const rowSpacing = Math.max(gapY, WEAPON_TREE_NODE_MIN_HEIGHT + WEAPON_TREE_NODE_ROW_GAP)
   const byKey = new Map(nodes.map((node) => [node.weaponKey, node]))
   const children = new Map<string, WeaponTreeEdge[]>()
+  const stableNodes = [...nodes].sort((left, right) => (left.nativeIndex ?? left.dexId ?? Number.MAX_SAFE_INTEGER) - (right.nativeIndex ?? right.dexId ?? Number.MAX_SAFE_INTEGER) || left.weaponKey.localeCompare(right.weaponKey))
   const indegree = new Map(nodes.map((node) => [node.weaponKey, 0]))
   for (const edge of edges) {
     if (!byKey.has(edge.parentWeaponKey) || !byKey.has(edge.childWeaponKey)) continue
     children.set(edge.parentWeaponKey, [...(children.get(edge.parentWeaponKey) ?? []), edge])
-    indegree.set(edge.childWeaponKey, (indegree.get(edge.childWeaponKey) ?? 0) + 1)
   }
   for (const list of children.values()) list.sort((left, right) => left.branchOrder - right.branchOrder || left.childWeaponKey.localeCompare(right.childWeaponKey))
-  const stableNodes = [...nodes].sort((left, right) => (left.dexId ?? Number.MAX_SAFE_INTEGER) - (right.dexId ?? Number.MAX_SAFE_INTEGER) || left.weaponKey.localeCompare(right.weaponKey))
+  // Remove DFS feedback edges from the positioning graph only. The caller's
+  // complete graph remains intact and the canvas renders these as return edges.
+  const visiting = new Set<string>(), visited = new Set<string>()
+  const visit = (key: string) => {
+    if (visited.has(key)) return
+    visiting.add(key)
+    const forward: WeaponTreeEdge[] = []
+    for (const edge of children.get(key) ?? []) {
+      if (visiting.has(edge.childWeaponKey)) continue
+      visit(edge.childWeaponKey)
+      forward.push(edge)
+      indegree.set(edge.childWeaponKey, (indegree.get(edge.childWeaponKey) ?? 0) + 1)
+    }
+    children.set(key, forward)
+    visiting.delete(key); visited.add(key)
+  }
+  for (const node of stableNodes) visit(node.weaponKey)
   const queue = stableNodes.filter((node) => indegree.get(node.weaponKey) === 0).map((node) => node.weaponKey)
   const depth = new Map(queue.map((key) => [key, 0]))
   for (let index = 0; index < queue.length; index += 1) {
@@ -30,7 +48,6 @@ export function layoutWeaponTree(nodes: WeaponTreeNode[], edges: WeaponTreeEdge[
       if (next === 0) queue.push(edge.childWeaponKey)
     }
   }
-  if (queue.length !== nodes.length) throw new Error('武器派生图包含环或无法解析的边')
 
   const row = new Map<string, number>()
   let nextLeafRow = 0

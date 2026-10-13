@@ -1,5 +1,5 @@
 import { Check } from 'lucide-react'
-import { LOADOUT_SLOTS, type AutoLoadoutResult, type LoadoutSlot } from '../../../api/loadout/types'
+import { getLoadoutSlots, type AutoLoadoutResult, type LoadoutSlot } from '../../../api/loadout/types'
 import { EquipmentSlotIndicator } from '../EquipmentSlotIndicator/EquipmentSlotIndicator'
 import { LoadoutSlotIcon } from '../LoadoutSlotIcon/LoadoutSlotIcon'
 import './AutoLoadoutResultRow.css'
@@ -30,9 +30,9 @@ export function AutoLoadoutResultRow({ index, result, selected, onSelect }: Prop
       <span className="auto-loadout-result-row__selection"><Check className="auto-loadout-result-row__selection-icon" aria-hidden="true" />{selected ? '已选择' : '选择此结果'}</span>
     </button>
     <div className="auto-loadout-result-row__table-scroller">
-      <table className="auto-loadout-result-row__table" aria-label={`结果 ${index} 七槽装备明细`}>
+      <table className="auto-loadout-result-row__table" aria-label={`结果 ${index} ${result.loadout.gameId === 'mhp2g' ? '六' : '七'}槽装备明细`}>
         <thead><tr><th className="auto-loadout-result-row__column auto-loadout-result-row__column--part">部位</th><th className="auto-loadout-result-row__column">装备</th><th className="auto-loadout-result-row__column auto-loadout-result-row__column--decorations">装饰珠</th><th className="auto-loadout-result-row__column auto-loadout-result-row__column--slots">孔位</th></tr></thead>
-        <tbody>{LOADOUT_SLOTS.map(slot => {
+        <tbody>{getLoadoutSlots(result.loadout.gameId).map(slot => {
           const item = result.calculation.slots.find(value => value.slot === slot)
           const equipment = slot === 'weapon' ? result.loadout.weapon : slot === 'charm' ? result.loadout.charm : result.loadout.armor[slot]
           const empty = !item

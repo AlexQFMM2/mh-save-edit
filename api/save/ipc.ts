@@ -1,4 +1,5 @@
 import { BrowserWindow, dialog, ipcMain } from 'electron'
+import { join } from 'node:path'
 import type { SaveOpenRequest } from './types'
 import { saveChannels } from './channels'
 import { saveArmorAppearanceSchema, saveBoxWriteTargetSchema, saveCatalogEquipmentSchema, saveCatalogItemSchema, saveCharacterSchema, saveCloseSchema, saveCommandSchema, saveIdentitySchema, saveImportApplySchema, saveLoadoutPreviewSchema, saveLoadoutWriteSchema, saveOpenSchema, saveSectionSchema, saveSessionIdSchema, saveTransferSchema } from './schemas'
@@ -11,7 +12,7 @@ export function registerSaveIpc(dataDir: string): RegisteredSaveIpc {
   const unsubscribe = service.subscribe(snapshot => {
     for (const window of BrowserWindow.getAllWindows()) window.webContents.send(saveChannels.sessionChanged, snapshot)
   })
-  const openTitle = (request: SaveOpenRequest) => request.formatId.includes('mhgu') || request.formatId.includes('mhxx') ? '选择 system 存档' : '选择角色存档文件'
+  const openTitle = (request: SaveOpenRequest) => request.contentGameId === 'mhp2g' ? '选择 MHP2NDG.BIN（同目录需要 PARAM.SFO）' : request.formatId.includes('mhgu') || request.formatId.includes('mhxx') ? '选择 system 存档' : '选择角色存档文件'
 
   ipcMain.handle(saveChannels.getSession, () => service.snapshot())
   ipcMain.handle(saveChannels.searchArmorAppearances, (_event, payload: unknown) => service.searchArmorAppearances(saveArmorAppearanceSchema.parse(payload)))
@@ -31,6 +32,11 @@ export function registerSaveIpc(dataDir: string): RegisteredSaveIpc {
   ipcMain.handle(saveChannels.saveCurrent, (_event, payload: unknown) => { const value = saveIdentitySchema.parse(payload); return service.save(value.sessionId, value.revision) })
   ipcMain.handle(saveChannels.saveAs, async (_event, payload: unknown) => {
     const value = saveIdentitySchema.parse(payload)
+    if (service.snapshot()?.contentGameId === 'mhp2g') {
+      const selected = await dialog.showOpenDialog({ title: '选择副本保存位置（将在其中新建 ULJM05500 目录）', properties: ['openDirectory', 'createDirectory'] })
+      if (selected.canceled || !selected.filePaths[0]) return { cancelled: true, session: service.snapshot(), message: '已取消另存为' }
+      return service.save(value.sessionId, value.revision, join(selected.filePaths[0], 'ULJM05500', 'MHP2NDG.BIN'))
+    }
     const selected = await dialog.showSaveDialog({ title: '另存存档为', defaultPath: service.suggestedFileName(), properties: ['showOverwriteConfirmation'] })
     if (selected.canceled || !selected.filePath) return { cancelled: true, session: service.snapshot(), message: '已取消另存为' }
     return service.save(value.sessionId, value.revision, selected.filePath)

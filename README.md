@@ -1,10 +1,10 @@
 # MH Save Editor
 
-基于 React + Electron + TypeScript 的离线 Monster Hunter 图鉴、配装器与存档编辑器，当前维护 MH3G、MH4G、MHGU/XX 三套内容资料。
+基于 React + Electron + TypeScript 的离线 Monster Hunter 图鉴、配装器与存档编辑器，当前维护 MHP2G、MH3G、MH4G、MHGU/XX 四套内容资料。
 
-**当前应用版本：[v0.1.11](https://github.com/AlexQFMM2/mh-save-edit/releases/tag/v0.1.11)**。本版修复 MH4G 发掘装备参数无法回填、详情无法显示的问题，并增加装备格子的绿色“挖”字标记，详见[更新说明](docs/releases/v0.1.11.md)。
+**当前应用版本：[v0.1.12](https://github.com/AlexQFMM2/mh-save-edit/releases/tag/v0.1.12)**。本版接入 P2G 七类图鉴、六槽手动／自动配装及 PPSSPP 存档编辑，内置运行资源 v5 和四作道具译名词典，详见[更新说明](docs/releases/v0.1.12.md)。
 
-**维护与交接说明更新于 2026-10-12。** 已有三作以 bug 修复和社区贡献为主。P2G 恢复逐步接入：当前开发工作区已恢复首页图片、侧栏九个入口和本地道具、怪物、任务图鉴；其他图鉴、存档编辑与配装显示待接入，不计入下方正式支持范围。跨作品统一业务数据表及整体数据重构计划已放弃，扩展按游戏独立推进。P2G 按“图鉴优先、游戏补丁最后”的方向接入，原文与译名的共用输入及未完成事项见 [P2G 图鉴与中文资料](docs/mhp2g-localization.md)。当前新增独立的[道具译名词典](docs/item-terminology.md)：有明确日文对应的名称采用 GU 官方简中，保留各作译名供搜索；各作编号、数值、关系与存档格式仍独立维护。
+**维护与交接说明更新于 2026-10-13。** 已有三作以 bug 修复和社区贡献为主。P2G 已接入七类图鉴、六槽手动／自动配装及 PPSSPP 存档编辑；应用侧检查与剩余游戏内验收见[P2G 整体验收](docs/mhp2g-acceptance.md)。P2G 已纳入本版应用与公开运行资源 v5；PPSSPP 游戏内保存往返仍待实际测试。跨作品统一业务数据表及整体数据重构计划已放弃，扩展按游戏独立推进。P2G 按“图鉴优先、游戏补丁最后”的方向接入，原文与译名的共用输入及未完成事项见 [P2G 图鉴与中文资料](docs/mhp2g-localization.md)。当前新增独立的[道具译名词典](docs/item-terminology.md)：有明确日文对应的名称采用 GU 官方简中，保留各作译名供搜索；各作编号、数值、关系与存档格式仍独立维护。
 
 本文集中记录运行方法、真实代码入口、已遇到的难点及新作品接入方法，方便接手者从一个具体问题开始。
 
@@ -18,12 +18,13 @@
 
 ## 当前范围与边界
 
-已有三作离线图鉴、独立于存档的手动/自动配装，以及五种存档格式的编辑工作区。支持个人信息、道具箱、装备箱、GU/XX 猎猫的部分字段，以及撤销/重做、兼容 CSV、同格式箱子完整备份、图鉴加入装备箱、配装整套写入、保存前备份和保存后回读。
+已有四作离线图鉴、独立于存档的手动/自动配装，以及六种存档格式的编辑工作区。支持个人信息、道具箱、装备箱、GU/XX 猎猫的部分字段，以及撤销/重做、兼容 CSV、同格式箱子完整备份、图鉴加入装备箱、配装整套写入、保存前备份和保存后回读。
 
 内容库标识与存档格式标识是两回事：
 
 | 内容库 | 存档格式标识 | 对应环境 |
 | --- | --- | --- |
+| `mhp2g` | `mhp2g-psp-ppsspp` | MHP2G / PSP / PPSSPP |
 | `mh3g` | `mh3g-3ds-citra` | MH3G / 3DS / Citra |
 | `mh3g` | `mh3u-wiiu-cemu` | MH3U / Wii U / Cemu |
 | `mh4g` | `mh4g-3ds-citra` | MH4G / 3DS / Citra |
@@ -34,7 +35,7 @@
 
 当前需要保留的边界：
 
-- Windows 发布流水线通过了测试、打包和原生模块检查，但五格式的完整真实存档样本、对应模拟器重开及全部高 DPI 场景尚未完成系统验收。自动化通过不能代替游戏内回读。
+- Windows 发布流水线通过了测试、打包和原生模块检查，但六格式的完整真实存档样本、对应模拟器重开及全部高 DPI 场景尚未完成系统验收。自动化通过不能代替游戏内回读。
 - 猎猫等级和 EXP 保持只读；随身装备、背包、快捷栏、箱格物理换位不在当前开放修改范围。其他高级字段以界面能力和格式校验为准。
 - 自动配装不承诺覆盖游戏中全部自然生成的护石；MH4G 使用经过复核的有限候选集合。发掘装备的部分自然生成规则仍未知。
 - 技能名称、发动阈值与效果说明不等于完整伤害模拟器。动作值与说明中未经确认的字段不能当作已证明的计算公式。
@@ -52,12 +53,15 @@
 
 ### 从源码运行
 
-需要 **Node.js 22、pnpm 11**。在项目根目录下载[运行资产 v4](https://github.com/AlexQFMM2/mh-save-edit/releases/tag/runtime-assets-v4)，按原目录结构解压。该包无需密码，包含：
+需要 **Node.js 22、pnpm 11**。在项目根目录下载[运行资产 v5](https://github.com/AlexQFMM2/mh-save-edit/releases/tag/runtime-assets-v5)，按原目录结构解压。该包无需密码，包含：
 
 ```text
 data/mh3g.sqlite
 data/mh4g.sqlite
 data/mhgu.sqlite
+data/mhp2g.sqlite
+data/item-terminology.sqlite
+data/mhp2g-save-profile.json
 ui/public/assets/catalog/icons/*.png
 build/app-icon.ico
 build/app-icon.png
@@ -86,21 +90,21 @@ pnpm build
 
 Linux 开发脚本会清理 Electron 的 Node 调试环境变量，并追加 `--noSandbox`；正式打包不使用这个开发参数。
 
-### P2G 本地接入
+### P2G 支持范围
 
 **P2G 任务图鉴已本地接入：450 个本体任务＋52 个 Wiki 活动／挑战任务。** 支持中日文检索、筛选、报酬与支给、解锁条件及道具／怪物双向关联，详见[任务图鉴说明](docs/mhp2g-quest-catalog.md)。已备份并安装新库，现有连接在重启应用后加载。
 
 **P2G 怪物图鉴已本地接入。** 构建、来源和保留的未知项见 [怪物图鉴说明](docs/mhp2g-monster-catalog.md)，验收见[怪物实施记录](plan/mhp2g-monster-catalog/README.md)。
 
-**P2G 技能与装饰品图鉴均已本地接入。** 技能包含 99 个系统、213 条正常发动、胴系统倍加和 7 个复合技能；装饰品包含 168 颗珠、281 条技能点、192 套配方与 597 条材料。支持中日文检索、筛选和道具／技能双向详情关联。技能阈值与效果保留 Wiki 来源；珠的稀有度、制造费用和解锁条件明确显示“未收录”。重建、验收与回退见[技能说明](docs/mhp2g-skill-catalog.md)、[装饰品说明](docs/mhp2g-decoration-catalog.md)。共享图鉴选择条目时的重复加载及装饰品滚动跳顶已修复。**图鉴剩余主线为完整武器与防具**，接手入口见[装备阶段交接](docs/mhp2g-equipment-handoff.md)。本次按用户要求收尾提交源码，不推送或发布。
+**P2G 技能与装饰品图鉴均已本地接入。** 技能包含 99 个系统、213 条正常发动、胴系统倍加和 7 个复合技能；装饰品包含 168 颗珠、281 条技能点、192 套配方与 597 条材料。支持中日文检索、筛选和道具／技能双向详情关联。技能阈值与效果保留 Wiki 来源；珠的稀有度、制造费用和解锁条件明确显示“未收录”。重建、验收与回退见[技能说明](docs/mhp2g-skill-catalog.md)、[装饰品说明](docs/mhp2g-decoration-catalog.md)。共享图鉴选择条目时的重复加载及装饰品滚动跳顶已修复。完整武器与防具随后也已接入，分别包含 1,501 把武器、2,081 件正常防具；数据证据见[装备阶段交接](docs/mhp2g-equipment-handoff.md)。
 
-P2G 复用工作区和共享图鉴组件，各领域使用独立查询仓库与 `data/mhp2g.sqlite`。侧栏提供道具、装饰品、技能、武器、防具、怪物、任务、修改和配装器；目前道具、怪物、任务、技能与装饰品图鉴可查询，其余页面明确提示待接入。P2G 没有护石；防具技能资料详情不代表完整防具图鉴，存档和配装仍待接入。
+P2G 复用工作区和共享图鉴组件，各领域使用独立查询仓库与 `data/mhp2g.sqlite`。侧栏提供道具、装饰品、技能、武器、防具、怪物、任务、修改和配装器；七类图鉴及两类修改入口均已开放。P2G 没有护石，配装采用六槽；[存档编辑](docs/mhp2g-save-editor.md)支持已确认的个人字段、道具、正常装备、装珠、强化与 BIN/SFO 成对保存。名字、性别、HR 只读，猫和任务进度编辑未开放。
 
-已恢复的 `mhp2g-items-v1` 快照含 1,261 条原生道具记录（含默认隐藏的占位条目）、172 组调合配方，以及商店、采集、怪物、任务与制作用途。本地图标快照已覆盖全部 1,260 个正常道具：按原生图形和颜色编号生成 277 张 PNG，列表、详情与关联道具抽屉共用。名称与说明已切换为核对过的日版原文输入，部分关联补充日文 Wiki 历史镜像。1,260 件正常道具已有中文显示名：717 件采用已确认的 GU 官方用词，543 件使用项目译名。最后一批 146 件的说明也已补齐中文，可展开查看日文；其余说明显示日文原文。用户界面仅展示译名来源，不展示内部审校状态。旧汉化名称仅作为搜索别名。具体覆盖与后续装备接入见 [P2G 图鉴与中文资料](docs/mhp2g-localization.md)。Wiki 获取条件尚未完成游戏内验证，缺失概率保持未知。稀有度和存档编号尚未核实，当前只支持浏览，不能写入 P2G 存档。
+已恢复的 `mhp2g-items-v1` 快照含 1,261 条原生道具记录（含默认隐藏的占位条目）、172 组调合配方，以及商店、采集、怪物、任务与制作用途。本地图标快照已覆盖全部 1,260 个正常道具：按原生图形和颜色编号生成 277 张 PNG，列表、详情与关联道具抽屉共用。名称与说明已切换为核对过的日版原文输入，部分关联补充日文 Wiki 历史镜像。1,260 件正常道具已有中文显示名：717 件采用已确认的 GU 官方用词，543 件使用项目译名。最后一批 146 件的说明也已补齐中文，可展开查看日文；其余说明显示日文原文。用户界面仅展示译名来源，不展示内部审校状态。旧汉化名称仅作为搜索别名。具体覆盖与后续装备接入见 [P2G 图鉴与中文资料](docs/mhp2g-localization.md)。Wiki 获取条件尚未完成游戏内验证，缺失概率保持未知。部分道具显示字段仍保留未知值；原生道具编号与当前 PPSSPP 存档的对应已核实，可通过共享入口加入道具箱。
 
 怪物模块另含 84 条原生怪物记录、742 行肉质、4,377 条掉落和 601 条出没记录；全部怪物有原生图标。道具与怪物可双向打开详情抽屉，关联搜索显示命中原因。未确认的部位、状态和数量保持未知，任务原名保留日文。
 
-该 P2G 资料库仍为本地研究产物，不包含在已公开的运行资产 v4 和 Windows 打包清单中。未安装时，道具页面会提示资料库缺失；现有三作可正常使用。持有已核对的私有 r9、日版文本和译名快照时，先按 [中文资料构建说明](docs/mhp2g-localization.md#构建与验收) 生成译名输入，再运行：
+P2G 资料库、存档格式参数及词典已包含在公开运行资产 v5 和 Windows 包中，无须自行构建。需要从私有研究输入重建时，持有已核对的 r9、日版文本和译名快照后，先按 [中文资料构建说明](docs/mhp2g-localization.md#构建与验收) 生成译名输入，再运行：
 
 ```bash
 pnpm data:build:p2g-items --source /path/to/pilot-r9/mhp2g-pilot.sqlite --output /path/to/new-output --localization /path/to/localization/localization.json
@@ -111,7 +115,7 @@ pnpm data:audit:p2g-items --source /path/to/pilot-r9/mhp2g-pilot.sqlite --delive
 
 带图标构建时，在第一条命令中增加 `--icons /path/to/icons-v1/manifest.json`，并把输出 `icons/*.png` 复制到已忽略的 `ui/public/assets/catalog/icons/`。完整提取、来源证据与验收步骤见 [P2G 道具图标](docs/mhp2g-item-icons.md)。更新本地数据库后需重新启动应用，让主进程重新打开资料库。
 
-构建器验证 r9 输入指纹并拒绝覆盖已有输出目录。原始输入、数据库和生成的 manifest/audit 均不提交；仓库中的 [合成样本](tests/fixtures/p2gCatalogSource.mjs) 可用于运行 P2G 构建、查询、IPC 与 UI 测试。后续逐个接入其他图鉴，再建立存档编号映射及配装规则，无须恢复旧的统一数据重构计划。
+构建器验证 r9 输入指纹并拒绝覆盖已有输出目录。原始输入、数据库和生成的 manifest/audit 均不提交；仓库中的 [合成样本](tests/fixtures/p2gCatalogSource.mjs) 可用于运行 P2G 构建、查询、IPC 与 UI 测试。上面的命令仅重建道具阶段输入；完整资料应继续按各领域文档生成，不能用道具子集覆盖当前完整库。存档格式资源构建见[存档编辑器](docs/mhp2g-save-editor.md#私有格式资源)。
 
 ### 修改功能与重建资料的区别
 
@@ -127,7 +131,7 @@ pnpm data:audit:p2g-items --source /path/to/pilot-r9/mhp2g-pilot.sqlite --delive
 | --- | --- |
 | 启动、窗口、资料路径、服务生命周期 | [desktop/main.ts](desktop/main.ts)、[desktop/preload.ts](desktop/preload.ts)、[api/catalog/ipc.ts](api/catalog/ipc.ts) |
 | 图鉴查询、关系和展示数据 | [api/catalog/](api/catalog/)、[ui/pages/](ui/pages/)、[ui/components/](ui/components/) |
-| 五格式字节解析、校验、加密、序列化 | [api/save/adapters/](api/save/adapters/)、[api/save/binary.ts](api/save/binary.ts) |
+| 六格式字节解析、校验、加密、序列化 | [api/save/adapters/](api/save/adapters/)、[api/save/binary.ts](api/save/binary.ts) |
 | 存档会话、字段补丁、撤销、导入导出、备份保存 | [api/save/sessionService.ts](api/save/sessionService.ts) |
 | 图鉴身份与存档编号之间的解析 | [api/save/catalogResolver.ts](api/save/catalogResolver.ts) |
 | 配装模型、计算和各作特殊规则 | [api/loadout/types.ts](api/loadout/types.ts)、[calculator.ts](api/loadout/calculator.ts)、[rules.ts](api/loadout/rules.ts) |
@@ -142,7 +146,7 @@ pnpm data:audit:p2g-items --source /path/to/pilot-r9/mhp2g-pilot.sqlite --delive
 
 ## 各游戏独立维护的原则
 
-三套 SQLite 各自保存对应游戏的数据。共用页面、查询接口和部分 `catalog_*` 表形状，是为了复用现有功能；**不再追求让不同作品的原始表、装备编号、技能含义和译名完全统一**。也不需要为了贯彻这一点拆掉已经稳定的公共组件。
+四套游戏 SQLite 各自保存对应游戏的数据，译名词典另存为独立 SQLite。共用页面、查询接口和部分 `catalog_*` 表形状，是为了复用现有功能；**不再追求让不同作品的原始表、装备编号、技能含义和译名完全统一**。也不需要为了贯彻这一点拆掉已经稳定的公共组件。
 
 后续修改遵循以下原则：
 
@@ -203,7 +207,7 @@ Dex 的技能系编号不一定等于原生编号；GU/XX 已遇到过这类错�
 
 ## 新作品如何接入
 
-P2G 已恢复本地道具、怪物和任务图鉴，详见 [P2G 本地接入](#p2g-本地接入)。G、2dos、P3、世界、崛起、荒野尚未接入，也没有排期。以下是贡献者可以选择的接入路径，不是恢复一轮跨作品重构的任务清单。
+P2G 已接入本地七类图鉴、配装与存档编辑，详见 [P2G 本地接入](#p2g-本地接入)。G、2dos、P3、世界、崛起、荒野尚未接入，也没有排期。以下是贡献者可以选择的接入路径，不是恢复一轮跨作品重构的任务清单。
 
 ### 先选一作、一个版本、一个闭环
 
@@ -236,7 +240,7 @@ P2G 已恢复本地道具、怪物和任务图鉴，详见 [P2G 本地接入](#p
 | 资料与存档桥接 | 新作自己的构建器/迁移、[api/catalog/](api/catalog/)、[api/save/catalogResolver.ts](api/save/catalogResolver.ts)；当前一些 Repository 内有游戏分支，并非全部数据驱动 |
 | 配装规则与历史 | [api/loadout/](api/loadout/)、[ui/stores/](ui/stores/)；核对快照、技能计算、候选生成、保存格式及旧历史复核的兼容性 |
 | 界面入口 | [ui/data/gameVersions.ts](ui/data/gameVersions.ts)、[workspaceNavigation.ts](ui/data/workspaceNavigation.ts)、[ui/App.tsx](ui/App.tsx) 和相关页面；平台选项和专属功能不能照搬旧作 |
-| 审计和交付 | [audit_runtime_catalog.mjs](tools/audit_runtime_catalog.mjs)、[verifyPackagedRuntime.mjs](tools/runtime/verifyPackagedRuntime.mjs)、[CI 工作流](.github/workflows/ci.yml)、[package.json](package.json)；当前数据库白名单与图标数量针对三作，新加文件不会自动成为可发布资料 |
+| 审计和交付 | [audit_runtime_catalog.mjs](tools/audit_runtime_catalog.mjs)、[verifyPackagedRuntime.mjs](tools/runtime/verifyPackagedRuntime.mjs)、[CI 工作流](.github/workflows/ci.yml)、[package.json](package.json)；当前白名单包含四作数据库、译名词典、P2G 存档格式参数与 2,400 张图标，新加文件不会自动成为可发布资料 |
 
 接入前可用 `rg "mh3g|mh4g|mhgu|SaveFormatId" api ui tools .github` 查找分支，再逐个确认；不要对命中结果做机械全局替换，也不要无依据扩大所有 schema 限制。
 
@@ -252,9 +256,9 @@ Issue 或 PR 请尽量说明应用版本、游戏/地区/平台/存档格式、�
 
 ### 源码、运行资产、研究输入分开维护
 
-公开 Git 历史保存源代码、构建器、schema、合成测试和文档。三套运行 SQLite、内容哈希图标及应用图标已获准通过独立公开 Release 和 Windows 应用包分发，仍不直接提交到 Git。
+公开 Git 历史保存源代码、构建器、schema、合成测试和文档。四套游戏 SQLite、独立译名词典、P2G 存档格式参数 JSON、内容哈希图标及应用图标已获准通过独立公开 Release 和 Windows 应用包分发，仍不直接提交到 Git。
 
-Dex 原件、ROM/ISO、完整 RomFS/ExeFS、原始资源容器、CSV、manifest、crosswalk、研究审计报告及用户存档不在该公开运行包授权范围内。新增作品的数据和图片也不会自动继承三作的分发范围，应单独明确来源和可发布文件。详见 [AGENTS.md](AGENTS.md)。
+Dex 原件、ROM/ISO、完整 RomFS/ExeFS、原始资源容器、CSV、manifest、crosswalk、研究审计报告及用户存档不在该公开运行包授权范围内。后续新增作品的数据和图片不会自动继承本次分发范围，应单独明确来源和可发布文件。详见 [AGENTS.md](AGENTS.md)。
 
 提交前检查 `git status --short`、`git diff --cached --name-only` 及对应文件的 `git check-ignore -v` 结果，避免把研究输出或运行资料强制加入版本控制。
 

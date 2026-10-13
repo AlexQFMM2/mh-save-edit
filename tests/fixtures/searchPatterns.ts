@@ -2,7 +2,7 @@ import { getGameLoadoutRules } from '../../api/loadout/rules'
 import { ARMOR_LOADOUT_SLOTS, createEmptyLogicalLoadout, type AutoLoadoutRequest, type LoadoutArmor, type LoadoutCatalogSnapshot, type LoadoutDecoration, type LoadoutGame } from '../../api/loadout/types'
 
 /** Fully synthetic arithmetic/search fixture, with a structurally complete loadout. */
-export function createPatternFixture(gameId: LoadoutGame = 'mhgu') {
+export function createPatternFixture(gameId: Exclude<LoadoutGame, 'mhp2g'> = 'mhgu') {
   const torsoId = getGameLoadoutRules(gameId).torsoSkillId
   const jewel = (saveId: number, slots: number, a: number, b: number): LoadoutDecoration => ({ saveId, nameCn: `J${saveId}`, slots, skills: [{ skillId: 10, nameCn: 'A', points: a }, { skillId: 11, nameCn: 'B', points: b }] })
   const snapshot: LoadoutCatalogSnapshot = { gameId, dataVersion: 'synthetic', weapons: [], armors: [], charmClasses: [], charmRanges: [], relicLookups: [], decorations: [jewel(1, 1, 2, -1), jewel(2, 1, -1, 2), jewel(3, 2, 2, 2), jewel(4, 3, 4, -3)], skills: [10, 11, torsoId, 204, 205].map(skillId => ({ skillId, nameCn: String(skillId), nameEn: '', nameJp: '', activations: [{ skillId, activationKey: String(skillId), threshold: skillId >= 204 ? 10 : 1, direction: skillId >= 204 ? 'special' : 'positive', nameCn: String(skillId) }] })) }

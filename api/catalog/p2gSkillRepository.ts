@@ -1,3 +1,5 @@
+import { hasP2gArmors, P2gArmorCatalogRepository } from './p2gArmorRepository'
+import type { P2gArmorSummary } from './p2gArmorTypes'
 import { hasP2gDecorations } from './p2gDecorationLinks'
 import type Database from 'better-sqlite3'
 import type { PageResult, SkillActivationLink, SkillCatalogFacets, SkillCatalogFilters, SkillDetail, SkillSummary } from './types'
@@ -11,20 +13,29 @@ const matchLabel: Record<string,string> = {name:'技能系',activation:'发动�
 export const hasP2gSkills = (db: Database.Database) => Boolean(db.prepare("SELECT 1 FROM meta WHERE key='skill_schema' AND value='mhp2g-skills-v1'").get())
 
 export class P2gSkillCatalogRepository {
+  private readonly armorRepository?: P2gArmorCatalogRepository
+  private readonly armorNames?: Map<string,P2gArmorSummary & {legacyAlias:string}>
+
   constructor(private readonly db: Database.Database) {
+    if (hasP2gArmors(db)) {
+      this.armorRepository = new P2gArmorCatalogRepository(db)
+      this.armorNames = new Map((db.prepare('SELECT armor_key,legacy_alias,detail_json FROM p2g_armors').all() as {armor_key:string;legacy_alias:string;detail_json:string}[]).map(r=>[r.armor_key,{...JSON.parse(r.detail_json),legacyAlias:r.legacy_alias}]))
+    }
     if (!hasP2gSkills(db)) throw new Error('P2G 技能资料尚未安装，请构建并安装技能资料库后重启应用；道具、怪物和任务图鉴仍可使用。')
   }
   private stored(): StoredSkill[] { return (this.db.prepare('SELECT detail_json FROM p2g_skills ORDER BY skill_id').all() as {detail_json:string}[]).map(row=>JSON.parse(row.detail_json)) }
   private equipment(skillId: number): P2gSkillEquipmentSummary[] {
     return (this.db.prepare('SELECT e.detail_json,p.points FROM p2g_skill_points p JOIN p2g_skill_equipment e USING(equipment_key) WHERE p.skill_id=? AND e.is_placeholder=0 ORDER BY p.points DESC,e.equipment_key,p.position').all(skillId) as {detail_json:string;points:number}[]).map(row=>{
-      const e=JSON.parse(row.detail_json) as StoredEquipment
+      let e=JSON.parse(row.detail_json) as StoredEquipment
+      if(e.kind==='armor'&&this.armorNames){const a=this.armorNames.get(e.equipmentKey);if(!a)return null;e={...e,nameCn:a.nameCn,iconPath:a.iconPath,nameSource:'防具图鉴'}}
       return {...(e.kind==='decoration'&&hasP2gDecorations(this.db)?{decorationItemId:e.itemId!}:{}),gameId:'mhp2g',equipmentKey:e.equipmentKey,kind:e.kind,nameCn:e.nameCn,nameJp:e.nameJp,nameSource:e.nameSource,slots:e.slots,iconPath:e.iconPath,part:e.part,points:row.points}
-    })
+    }).filter((e): e is P2gSkillEquipmentSummary => e !== null)
   }
   searchSkills(filters: SkillCatalogFilters): PageResult<SkillSummary> {
     const page=Math.max(1,filters.page??1),pageSize=Math.max(1,Math.min(100,filters.pageSize??100)),q=normalize(filters.query??'')
     const hits=new Map<number,{kind:string;label:string}>()
-    if(q) for(const hit of this.db.prepare('SELECT skill_id,kind,label FROM p2g_skill_search WHERE instr(normalized_text,?)>0 ORDER BY id').all(q) as {skill_id:number;kind:string;label:string}[])if(!hits.has(hit.skill_id))hits.set(hit.skill_id,hit)
+    if(q) for(const hit of this.db.prepare('SELECT skill_id,kind,label FROM p2g_skill_search WHERE instr(normalized_text,?)>0 ORDER BY id').all(q) as {skill_id:number;kind:string;label:string}[])if(!hits.has(hit.skill_id)&&!(this.armorNames&&hit.kind==='armor'))hits.set(hit.skill_id,hit)
+    if(q&&this.armorNames)for(const a of this.armorNames.values())if(normalize(`${a.nameCn} ${a.nameJp} ${a.armorKey} ${a.legacyAlias}`).includes(q))for(const p of a.skills)if(!hits.has(p.skillId))hits.set(p.skillId,{kind:'armor',label:a.nameCn})
     const rows=filters.gameId!=='mhp2g'?[]:this.stored().map(s=>{
       const equipment=this.equipment(s.skillId),hit=hits.get(s.skillId)
       return {gameId:'mhp2g' as const,skillId:s.skillId,nameCn:s.nameCn,nameEn:'',nameJp:s.nameJp,activationCount:s.activations.length,positiveActivationCount:s.activations.filter(a=>a.direction==='positive').length,negativeActivationCount:s.activations.filter(a=>a.direction==='negative').length,specialActivationCount:s.specialRule?1:0,armorCount:equipment.filter(e=>e.kind==='armor').length,decorationCount:equipment.filter(e=>e.kind==='decoration').length,talismanCount:0,isPlaceholder:false,match:hit?`命中：${matchLabel[hit.kind]}·${hit.label}`:undefined}
@@ -42,7 +53,11 @@ export class P2gSkillCatalogRepository {
   getEquipment(key: string): P2gSkillEquipmentDetail | null {
     const row=this.db.prepare('SELECT detail_json FROM p2g_skill_equipment WHERE equipment_key=? AND is_placeholder=0').get(key) as {detail_json:string}|undefined
     if(!row)return null
-    const e=JSON.parse(row.detail_json) as StoredEquipment
+    let e=JSON.parse(row.detail_json) as StoredEquipment
+    if(e.kind==='armor'&&this.armorRepository){
+      const a=this.armorRepository.getArmor({gameId:'mhp2g',armorKey:key});if(!a)return null
+      e={...e,nameCn:a.nameCn,nameSource:a.nameSource,iconPath:a.iconPath,recipes:a.recipes.map(r=>({recipeKey:r.recipeKey,materials:r.materials.map(m=>({itemId:m.itemId,quantity:m.quantity}))}))}
+    }
     const names=new Map(this.stored().map(s=>[s.skillId,s]))
     return {...e,...(e.kind==='decoration'&&hasP2gDecorations(this.db)?{decorationItemId:e.itemId!}:{}),gameId:'mhp2g',skills:e.skills.map(s=>({...s,nameCn:names.get(s.skillId)!.nameCn,nameJp:names.get(s.skillId)!.nameJp})),recipes:e.recipes.map(recipe=>({...recipe,materials:recipe.materials.map(m=>{
       const item=this.db.prepare('SELECT name_cn,name_jp FROM catalog_items WHERE item_id=?').get(m.itemId) as {name_cn:string;name_jp:string}

@@ -1,6 +1,8 @@
 # Game data
 
-三套只读 SQLite 数据库在本地构建后放在这里：`mh3g.sqlite`、`mh4g.sqlite`、`mhgu.sqlite`。
+四套只读游戏数据库为 `mh3g.sqlite`、`mh4g.sqlite`、`mhgu.sqlite`、`mhp2g.sqlite`；另有 `item-terminology.sqlite` 译名词典和 `mhp2g-save-profile.json` 存档格式参数。
+
+从公开 [运行资源 v5](https://github.com/AlexQFMM2/mh-save-edit/releases/tag/runtime-assets-v5) 解压即可开发，无须私有研究输入。Windows 应用包已内置这些运行文件。P2G 原生表与身份独立维护，不套用前三作的 Dex／存档编号。
 
 数据库除了各作原生数据外，还包含统一的道具、装饰品、武器和防具 `catalog_*` 表。
 武器目录保留存档身份、Dex 节点、派生边、属性、斩味阶段、材料、类型专项数据和
@@ -8,7 +10,7 @@ GU/XX 版本覆盖；MH4G 发掘武器不会写入公共武器目录。
 MHGU/XX 本地库还包含按武器类型组织的动作值、六风格、变体、顺序 Hit 和远程专项表；
 真实动作数据及来源审计仍属于私有生成产物。
 `data/manifests/` 在本地保存构建来源 hash、条目数和映射审计。SQLite、manifest
-与图标都是被 `.gitignore` 排除的私有生成产物；公开仓库只保留构建器和 schema。
+与图标均被 `.gitignore` 排除；已授权的运行文件通过独立 Release 分发，manifest 和研究输入保持私有。公开 Git 只保留构建器和 schema。
 权威本地副本归档在 `../research/generated/mh-save-edit/catalog/`。
 
 从固定研究快照重新生成武器数据：

@@ -1,8 +1,8 @@
 import { z } from 'zod'
 import { logicalLoadoutSchema } from '../loadout/schemas'
 
-const gameId = z.enum(['mh3g', 'mh4g', 'mhgu'])
-const formatId = z.enum(['mh3g-3ds-citra', 'mh3u-wiiu-cemu', 'mh4g-3ds-citra', 'mhgu-switch-yuzu', 'mhxx-3ds-citra'])
+const gameId = z.enum(['mh3g', 'mh4g', 'mhgu', 'mhp2g'])
+const formatId = z.enum(['mhp2g-psp-ppsspp', 'mh3g-3ds-citra', 'mh3u-wiiu-cemu', 'mh4g-3ds-citra', 'mhgu-switch-yuzu', 'mhxx-3ds-citra'])
 const sessionIdentity = z.object({ sessionId: z.string().uuid(), revision: z.number().int().positive() }).strict()
 const boxDomain = z.enum(['items', 'hunter-equipment', 'palico-equipment'])
 
@@ -45,6 +45,6 @@ export const saveTransferSchema = sessionIdentity.extend({ domain: boxDomain, fo
 export const saveBoxWriteTargetSchema = sessionIdentity.extend({ domain: boxDomain }).strict()
 export const saveImportApplySchema = sessionIdentity.extend({ token: z.string().uuid(), replaceAll: z.boolean().optional() }).strict()
 export const saveCatalogItemSchema = sessionIdentity.extend({ gameId, saveId: z.number().int().min(1).max(0xffff), count: z.number().int().min(1).max(0xffff), targetSlot: z.number().int().min(0).max(2299).optional() }).strict()
-export const saveCatalogEquipmentSchema = sessionIdentity.extend({ gameId, domain: z.enum(['hunter-equipment', 'palico-equipment']), saveType: z.number().int().min(1).max(255), saveId: z.number().int().min(0).max(0xffff), level: z.number().int().min(0).max(31).optional(), appearanceId: z.number().int().min(0).max(0xffff).optional(), targetSlot: z.number().int().min(0).max(1999).optional() }).strict()
+export const saveCatalogEquipmentSchema = sessionIdentity.extend({ gameId, domain: z.enum(['hunter-equipment', 'palico-equipment']), saveType: z.number().int().min(0).max(255), saveId: z.number().int().min(0).max(0xffff), level: z.number().int().min(0).max(31).optional(), appearanceId: z.number().int().min(0).max(0xffff).optional(), targetSlot: z.number().int().min(0).max(1999).optional() }).strict()
 export const saveLoadoutWriteSchema = sessionIdentity.extend({ loadout: logicalLoadoutSchema }).strict()
 export const saveLoadoutPreviewSchema = saveLoadoutWriteSchema

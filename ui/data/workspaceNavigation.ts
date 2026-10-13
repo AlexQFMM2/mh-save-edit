@@ -99,7 +99,7 @@ const saveEditSections: SaveEditSection[] = [
   { id: 'palico', label: '猎猫', description: '修改猎猫资料、装备与技能。' },
 ]
 
-export function getSaveEditSections(gameId: GameId): SaveEditSection[] {
+export function getSaveEditSections(gameId: WorkspaceGameId): SaveEditSection[] {
   return saveEditSections.filter((section) => section.id !== 'palico' || gameId === 'mhgu')
 }
 

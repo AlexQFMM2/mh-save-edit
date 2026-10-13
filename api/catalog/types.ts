@@ -24,7 +24,7 @@ export type ArmorSetSort = 'source' | 'name' | 'rarity' | 'slots' | 'baseDefense
 export type ItemSourceKind = 'combination' | 'monster' | 'location' | 'quest' | 'exchange' | 'shop'
 export type ItemUsageKind = 'weapon' | 'armor' | 'decoration' | 'palico-weapon' | 'palico-armor' | 'kinsect'
 export type ItemRelationTarget = LegacyItemIdentity & { nameCn: string; nameEn: string }
-export type WeaponRelationTarget = WeaponIdentity & { typeId: number; nameCn: string; nameEn: string }
+export type WeaponRelationTarget = { gameId: CatalogGameId; weaponKey: string } & { typeId: number; nameCn: string; nameEn: string }
 export type ArmorRelationTarget = ArmorIdentity & { part: ArmorPartId; nameCn: string; nameEn: string }
 export type MonsterRelationTarget = MonsterIdentity & { nameCn: string; nameEn: string; iconPath: string | null }
 export type QuestRelationTarget = QuestIdentity & { nameCn: string; nameEn: string }
@@ -388,6 +388,7 @@ export type MonsterCatalogFacets = {
 }
 
 export type ArmorSkill = {
+  nameJp?: string
   skillId: number
   nameCn: string
   nameEn: string
@@ -462,7 +463,7 @@ export type ArmorSetFilters = Omit<ArmorCatalogFilters, 'part' | 'sort'> & { sor
 export type ArmorCatalogFacets = {
   rarities: number[]
   slots: number[]
-  skills: Pick<ArmorSkill, 'skillId' | 'nameCn' | 'nameEn'>[]
+  skills: Pick<ArmorSkill, 'skillId' | 'nameCn' | 'nameEn' | 'nameJp'>[]
 }
 
 export type SkillActivationLink = { activationKey: string; skillId?: number; nameCn: string; nameEn: string; direction: 'positive' | 'negative' | 'special' }
@@ -501,7 +502,7 @@ export type ItemDetail = ItemSummary & {
   relations: ItemRelation[]
 }
 
-export type CatalogItemDetail = ItemDetail | (P2gItemIdentity & Omit<ItemDetail, keyof LegacyItemIdentity>)
+export type CatalogItemDetail = ItemDetail | (P2gItemIdentity & Omit<ItemDetail, keyof LegacyItemIdentity> & { weaponRecipes?: import('./p2gWeaponTypes').P2gWeaponRecipe[]; armorRecipes?: import('./p2gArmorTypes').P2gArmorRecipe[] })
 
 export type ItemCatalogFilters = {
   gameId: CatalogGameId

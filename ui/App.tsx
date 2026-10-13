@@ -25,7 +25,7 @@ const PalicoEquipmentCatalogPage=lazy(async()=>({default:(await import('./pages/
 function Feature({item}:{item:typeof workspaceNavigation[number]['items'][number]}){
   const {game}=useOutletContext<ShellOutletContext>()
   if(item.supportedGames && !item.supportedGames.includes(game.id))return <Navigate to={`/game/${game.id}/overview`} replace/>
-  if(!hasRuntimeWorkspace(game) && item.id!=='items' && item.id!=='monsters' && item.id!=='quests' && item.id!=='skills' && item.id!=='decorations')return <WorkspaceFeaturePage pageId={item.id}/>
+  if(!hasRuntimeWorkspace(game) && item.id!=='items' && item.id!=='monsters' && item.id!=='quests' && item.id!=='skills' && item.id!=='decorations' && item.id!=='weapons' && item.id!=='armor' && item.id!=='loadout')return <WorkspaceFeaturePage pageId={item.id}/>
   if(item.id==='save-editor')return <SaveEditorPage/>
   if(item.id==='items')return <ItemCatalogPage/>
   if(item.id==='decorations')return <DecorationCatalogPage/>
