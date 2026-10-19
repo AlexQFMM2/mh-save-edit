@@ -1,0 +1,6 @@
+# Optional private/offline drafting environment; never an application dependency.
+ctranslate2==4.6.2
+sentencepiece==0.2.1
+numpy==2.5.4
+PyYAML==6.0.3
+setuptools==84.0.0
