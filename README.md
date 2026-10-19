@@ -2,7 +2,7 @@
 
 基于 React + Electron + TypeScript 的离线 Monster Hunter 图鉴、配装器与存档编辑器，当前维护 MHP2G、MH3G、MH4G、MHGU/XX 四套内容资料。
 
-**当前应用版本：[v0.1.12](https://github.com/AlexQFMM2/mh-save-edit/releases/tag/v0.1.12)**。本版接入 P2G 七类图鉴、六槽手动／自动配装及 PPSSPP 存档编辑，内置运行资源 v5 和四作道具译名词典，详见[更新说明](docs/releases/v0.1.12.md)。
+**当前应用版本：[v0.1.13](https://github.com/AlexQFMM2/mh-save-edit/releases/tag/v0.1.13)**。本版修复 MH4G 发掘武器异常属性的最大值选项与「1000 实际变成 1170」的错误映射，保留 P2G 七类图鉴、六槽手动／自动配装及 PPSSPP 存档编辑，内置运行资源 v5 和四作道具译名词典，详见[更新说明](docs/releases/v0.1.13.md)。
 
 **维护与交接说明更新于 2026-10-13。** 已有三作以 bug 修复和社区贡献为主。P2G 已接入七类图鉴、六槽手动／自动配装及 PPSSPP 存档编辑；应用侧检查与剩余游戏内验收见[P2G 整体验收](docs/mhp2g-acceptance.md)。P2G 已纳入本版应用与公开运行资源 v5；PPSSPP 游戏内保存往返仍待实际测试。跨作品统一业务数据表及整体数据重构计划已放弃，扩展按游戏独立推进。P2G 按“图鉴优先、游戏补丁最后”的方向接入，原文与译名的共用输入及未完成事项见 [P2G 图鉴与中文资料](docs/mhp2g-localization.md)。当前新增独立的[道具译名词典](docs/item-terminology.md)：有明确日文对应的名称采用 GU 官方简中，保留各作译名供搜索；各作编号、数值、关系与存档格式仍独立维护。
 
