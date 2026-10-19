@@ -1,4 +1,5 @@
 import type { LoadoutRelicLookup } from '../../../api/loadout/types'
+import { getMh4gRelicStatusMaximum, isMh4gRelicLegacyStatusOverflow } from '../../../api/loadout/mh4gRelicStatus'
 import type { SearchableSelectOption } from '../SearchableSelect/SearchableSelect'
 import { getRelicSharpnessProfile } from '../RelicSharpnessBar/RelicSharpnessBar'
 
@@ -69,8 +70,10 @@ function displayName(domain: string, variant: string, code: number, nameCn: stri
 }
 
 export function relicLookupOptions(lookups: LoadoutRelicLookup[], domain: string, saveType: number, variant: string, value: number): SearchableSelectOption[] {
+  const maximum = domain === 'status_value' ? getMh4gRelicStatusMaximum(saveType) : null
   const matched = lookups
     .filter(item => item.kind === 'equipment_lookup' && text(item.payload.domain) === domain && number(item.payload.save_type) === saveType && text(item.payload.variant) === variant)
+    .filter(item => !maximum || number(item.payload.code) <= 0x11)
     .sort((left, right) => number(left.payload.code) - number(right.payload.code))
   const values = matched.map((item, ordinal) => {
     const code = number(item.payload.code)
@@ -82,7 +85,15 @@ export function relicLookupOptions(lookups: LoadoutRelicLookup[], domain: string
       : []
     const option: SearchableSelectOption = { value: String(code), label: sharpness?.label ?? displayName(domain, variant, code, nameCn, ordinal), keywords: [nameCn, nameEn, String(code), ...sharpnessKeywords] }
     return { option, sortKey: numericSortKey(domain, variant, code, nameCn) }
-  }).sort((left, right) => compareKeys(left.sortKey, right.sortKey)).map(item => item.option)
-  if (!values.some(option => option.value === String(value))) values.unshift({ value: String(value), label: `当前参数未识别（原值 ${value}，保持原样）` })
-  return values
+  })
+  if (maximum) values.push({
+    option: { value: String(maximum.code), label: `${maximum.displayValue}（扩展最大值）`, keywords: [String(maximum.displayValue), String(maximum.code), '最大', '扩展', 'maximum', 'extended'] },
+    sortKey: [maximum.displayValue, maximum.code],
+  })
+  const options = values.sort((left, right) => compareKeys(left.sortKey, right.sortKey)).map(item => item.option)
+  if (!options.some(option => option.value === String(value))) options.unshift({
+    value: String(value),
+    label: maximum && isMh4gRelicLegacyStatusOverflow(saveType, value) ? '1170（当前超限值）' : `当前参数未识别（原值 ${value}，保持原样）`,
+  })
+  return options
 }

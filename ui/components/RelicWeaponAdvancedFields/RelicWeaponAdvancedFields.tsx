@@ -1,5 +1,6 @@
 import type { LoadoutDecoration, LoadoutInstanceState, LoadoutRelicLookup } from '../../../api/loadout/types'
 import { patchRelicByte } from '../../../api/loadout/relic'
+import { getMh4gRelicStatusMaximum, isMh4gRelicLegacyStatusOverflow } from '../../../api/loadout/mh4gRelicStatus'
 import { readRelicField, relicWeaponFields } from '../../../api/loadout/relicFields'
 import { RelicDecorationRecordFields } from '../RelicDecorationRecordFields/RelicDecorationRecordFields'
 import { RelicLookupSelect } from '../RelicLookupSelect/RelicLookupSelect'
@@ -22,10 +23,18 @@ export function RelicWeaponAdvancedFields({ instance, weaponTypeId, saveType, lo
   return <div className="relic-weapon-advanced-fields">
     <fieldset className="relic-weapon-advanced-fields__group">
       <legend className="relic-weapon-advanced-fields__legend">武器发掘参数</legend>
-      {relicWeaponFields(weaponTypeId, instance.recordHex).map(field => <div className="relic-weapon-advanced-fields__field" key={field.offset}>
-        <span className="relic-weapon-advanced-fields__label">{field.label}</span>
-        <RelicLookupSelect lookups={lookups} domain={field.domain} saveType={saveType} variant={field.variant} value={readRelicField(instance.recordHex, field)} ariaLabel={field.label} onChange={next => onChange(patchRelicByte(instance, field.offset, next << (field.shift ?? 0), field.mask))} />
-      </div>)}
+      {relicWeaponFields(weaponTypeId, instance.recordHex).map(field => {
+        const value = readRelicField(instance.recordHex, field)
+        const maximum = field.domain === 'status_value' ? getMh4gRelicStatusMaximum(saveType) : null
+        const legacyOverflow = maximum && isMh4gRelicLegacyStatusOverflow(saveType, value)
+        const note = legacyOverflow ? <>当前实际值为 <span className="relic-weapon-advanced-fields__data">1170</span>，已超限；可改选 <span className="relic-weapon-advanced-fields__data">1000</span>（扩展最大值）。</>
+          : maximum?.code === value ? '扩展值已通过属性超限检查；任务与保存仍需实测。' : null
+        return <div className="relic-weapon-advanced-fields__field" key={field.offset}>
+          <span className="relic-weapon-advanced-fields__label">{field.label}</span>
+          <RelicLookupSelect lookups={lookups} domain={field.domain} saveType={saveType} variant={field.variant} value={value} ariaLabel={field.label} onChange={next => onChange(patchRelicByte(instance, field.offset, next << (field.shift ?? 0), field.mask))} />
+          {note && <p className="relic-weapon-advanced-fields__note relic-weapon-advanced-fields__field-note" role="status">{note}</p>}
+        </div>
+      })}
       <div className="relic-weapon-advanced-fields__checks">
         <label className="relic-weapon-advanced-fields__check"><input className="relic-weapon-advanced-fields__checkbox" type="checkbox" checked={Boolean(byte(0x10) & 1)} onChange={event => onChange(patchRelicByte(instance, 0x10, event.target.checked ? 1 : 0, 1))} /><span>未研磨 / 锈蚀</span></label>
         <label className="relic-weapon-advanced-fields__check"><input className="relic-weapon-advanced-fields__checkbox" type="checkbox" checked={Boolean(byte(0x10) & 2)} onChange={event => onChange(patchRelicByte(instance, 0x10, event.target.checked ? 2 : 0, 2))} /><span>发光</span></label>

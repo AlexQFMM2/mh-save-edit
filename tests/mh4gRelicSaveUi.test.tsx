@@ -56,6 +56,24 @@ function openEditor(cell: SaveEquipmentCell, applyRecord: (record: string) => Pr
 }
 
 describe('MH4G relic save integration', () => {
+  it('applies the weapon-specific status maximum only on confirmation and preserves it after saving', async () => {
+    const state = setup()
+    const raw = syntheticRelicRecord(); raw[5] = 7
+    await state.applyRecord(raw.toString('hex')); state.applyRecord.mockClear()
+    const view = openEditor(state.cell(), state.applyRecord)
+    fireEvent.click(await screen.findByRole('button', { name: '属性 / 异常值' }))
+    fireEvent.click(screen.getByRole('option', { name: '800（扩展最大值）' }))
+    expect(state.applyRecord).not.toHaveBeenCalled()
+    const expected = Buffer.from(raw); expected[4] = 0x43
+    expect(state.cell().recordHex.toLowerCase()).toBe(raw.toString('hex'))
+    fireEvent.click(screen.getByRole('button', { name: '应用字段修改' }))
+    await waitFor(() => expect(state.applyRecord).toHaveBeenCalledWith(expected.toString('hex')))
+    view.unmount(); state.saveAndReopen()
+    expect(new Mh4gSaveAdapter(readFileSync(state.path)).equipment(19).recordHex.toLowerCase()).toBe(expected.toString('hex'))
+    render(<SaveEquipmentEmbeddedDetail gameId="mh4g" cell={state.cell()} />)
+    expect(await screen.findByText('800（扩展最大值）')).toBeTruthy()
+  })
+
   it('recognizes the numeric identity beyond page 1, edits the existing bytes and rehydrates after saving', async () => {
     const state = setup()
     expect(state.cell()).toMatchObject({ nameCn: '合成同名发掘武器', weaponKey: null, relic: { templateKey: 'w:20:10129', weaponTypeId: 10 }, slots: 3, diagnostics: [] })
