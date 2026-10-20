@@ -2,7 +2,7 @@
 
 - Owner：项目维护者 / 下一位实施者
 - Status：进行中
-- Execution：2026-10-20 根据用户另一台电脑的 test.2 失败日志，串行修复启动内存和字体初始化时序，准备 test.3；用户负责游戏操作。
+- Execution：2026-10-20 根据用户另一台电脑的 test.2 失败日志，启动内存和字体时序修复已随 test.3 发布并重新下载核验，等待用户实测；用户负责游戏操作。
 - Created：2026-10-13 / Updated：2026-10-20
 - Repository：`mh-save-edit`；单代理串行执行。
 - 授权与暂停：2026-10-13 用户批准首轮 T-001～T-006；2026-10-14 上午暂停后，下午曾恢复独立环境测试，15:18 再次要求暂停。用户随后明确批准骨刃探针离线开发和交付，要求游戏运行操作由用户完成，agent 准备程序并分析日志，取代此前由 agent 操作模拟器的分工。单代理串行；早期不提交／推送／发布的限制已由下方 2026-10-19 最新发布授权取代。
@@ -18,9 +18,9 @@
 
 本轮实现：任何日志／文件 IO 之前安装完整指纹事务；首次真实字体初始化回调内同步完成文本、字体读取和校验，再做字形预检，返回游戏前完成启用。所有文本消费者在数据完整发布前原样转发，读取失败或递归初始化保持停用，重复初始化不重读数据；回调不持有借用日志指针。新包内置 `memory = 40`；构建器和组包器均按实际 ELF／BSS、游戏占用及 1 MiB 保守启动余量检查，后者不是实测运行峰值。
 
-本地已通过 **30 项 Vitest、6 项组包 Python 测试**，包含生产 C 的 ASan／UBSan、慢加载期间的原样转发、文件损坏／读取失败、递归与重复初始化，以及复现用户真实 ELF 申请大小。两次新构建 B 均为 `known-text-v1-B-18b03adcd93dcbca`，PRX 311,090 字节，ELF 驻留 5,622,888 字节；原 21,586 条引用、文本与 PGF 哈希均与 test.2 相同。32 个交付文件双构建逐字节一致、双组包及标准目录解压／内外校验通过。test.3 ZIP 为 1,658,628 字节，SHA-256 `22a971c400ea21780a1e2a09230ae84e8a3bbf5cd59b45fcd87c8a40b1d6cac7`；源码推送、发布与重新下载核验待完成，**尚无 test.3 游戏实测结果**。
+本地已通过 **30 项 Vitest、6 项组包 Python 测试**，包含生产 C 的 ASan／UBSan、慢加载期间的原样转发、文件损坏／读取失败、递归与重复初始化，以及复现用户真实 ELF 申请大小。两次新构建 B 均为 `known-text-v1-B-18b03adcd93dcbca`，PRX 311,090 字节，ELF 驻留 5,622,888 字节；原 21,586 条引用、文本与 PGF 哈希均与 test.2 相同。32 个交付文件双构建逐字节一致、双组包及标准目录解压／内外校验通过。test.3 ZIP 为 1,658,628 字节，SHA-256 `22a971c400ea21780a1e2a09230ae84e8a3bbf5cd59b45fcd87c8a40b1d6cac7`；**T-008d 离线修复与交付已完成**：源码已提交／推送 `55eeed6cc9c515fe7615b900d6122a44b56f19a3`，[对应 CI](https://github.com/AlexQFMM2/mh-save-edit/actions/runs/39426320844) 全部成功；[test.3](https://github.com/AlexQFMM2/mh-save-edit/releases/tag/mhp2g-zh-v0.1.0-test.3) 于 2026-10-20 20:57（北京时间）发布为非草稿 Pre-release，tag 固定该修复提交。重新下载的 ZIP 与外部 SHA 均与本地逐字节一致，9 文件白名单及内部校验通过。**尚无 test.3 游戏实测结果**；后续交接文档提交不移动 tag。
 
-私有证据与新构建根：`.runtime-assets/p2g-chinese-batch-v1/regression-20261020/`；原版段表元数据为 `boot-elf-memory-result-01.json`，所有真实产物继续忽略，不进入 Git。原版只读查询仅对用户确认授权的 `172.16.10.13` 固定 BOOT 头／段表执行，未操作模拟器或写宿主文件；故障通用 helper 继续禁用。本轮查询确认应用 Latest 已为 v0.1.13，新插件仍作为独立 Pre-release；test.1／test.2 保留，T-008a-3e、3f 与 G1 仍待验收；下方发行前检查点保留历史。
+私有证据与新构建根：`.runtime-assets/p2g-chinese-batch-v1/regression-20261020/`；构建／组包／公开下载证据分别为 `build-validation-01.json`、`release-validation-01.json`、`public-release-validation-01.json`，诊断为 `diagnostic-checkpoint-02.json`，下载与解压为 `release-download-01/` 和 `installation-smoke-01/`。原版段表元数据为 `boot-elf-memory-result-01.json`，所有真实产物继续忽略，不进入 Git。原版只读查询仅对用户确认授权的 `172.16.10.13` 固定 BOOT 头／段表执行，未操作模拟器或写宿主文件；故障通用 helper 继续禁用。本轮查询确认应用 Latest 已为 v0.1.13，新插件仍作为独立 Pre-release；test.1／test.2 保留，T-008a-3e、3f 与 G1 仍待验收；下方发行前检查点保留历史。
 
 ## 2026-10-19 test.2 公开发行
 

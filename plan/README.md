@@ -1,6 +1,6 @@
 # 计划与归档索引
 
-2026-10-20 最新：[P2G 中文补丁](mhp2g-chinese-patch/README.md#2026-10-20-test2-启动故障与-test3-修复) 正在处理 test.2 实测启动故障。已确认默认内存不足及 `font_init_missed`，40 MiB 声明、早挂接／初始化同步校验已实现，30 项代码和 6 项组包测试通过，双构建完成，正在准备 test.3。执行串行，用户操作游戏；原版输入不变，G1 保持待验收。
+2026-10-20 最新：[P2G 中文补丁](mhp2g-chinese-patch/README.md#2026-10-20-test2-启动故障与-test3-修复) 已完成 test.2 实测启动故障的离线修复与新版交付。已确认默认内存不足及 `font_init_missed`，40 MiB 声明、早挂接／初始化同步校验已实现，30 项代码和 6 项组包测试通过，32 文件双构建／双组包和解压通过，test.3 已公开并重新下载校验，源码 `55eeed6` CI 成功。执行串行，用户操作游戏；原版输入不变，G1 保持待验收。
 
 2026-10-19 最新发行授权：[P2G 中文补丁](mhp2g-chinese-patch/README.md#2026-10-19-test2-公开发行) 源码已提交推送（`1007e9c`，CI 成功），[test.2 Pre-release](https://github.com/AlexQFMM2/mh-save-edit/releases/tag/mhp2g-zh-v0.1.0-test.2) 已发布并重新下载核验通过；用户之后自行测试。旧 test.1 和应用 Latest v0.1.12 保留，未知来源与 G1 仍未验收。下方本地包及早期暂停摘要为历史检查点。
 
