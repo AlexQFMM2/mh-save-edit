@@ -1,9 +1,13 @@
 const result=(status,reason,extra={})=>({status,reason,...extra,runtimeAccepted:false,displayAccepted:false})
 export function analyzePilotRows(rows,manifest) {
-  if (!['start','config_ok','installed'].every((event,i)=>rows[i]?.event===event))
+  const config=rows.findIndex(r=>r.event==='config_ok'),installed=rows.findIndex(r=>r.event==='installed')
+  if (rows[0]?.event!=='start' || config<1 || installed<1 ||
+      rows.filter(r=>r.event==='config_ok' || r.event==='installed').length!==2 ||
+      !(installed===1 || (config===1 && installed===2)))
     return result('incomplete','小样包加载或挂接记录不完整')
   const metrics=rows.filter(r=>r.event==='font_metrics').at(-1)
   if (!metrics || metrics.ready!=='1') return result('incomplete','未取得字体初始化和完整字形预检成功证据')
+  if (rows.indexOf(metrics)<Math.max(config,installed)) return result('failed','字体成功记录早于加载或挂接记录')
   if (metrics.active!==String(manifest.probe.mode)) return result('failed','字体选择模式与包不符')
   const integer=(value)=>/^\d+$/.test(value??'') && Number(value)<=0xffffffff
   if (!['width','height','ascender','pool_peak'].every(k=>integer(metrics[k])) || Number(metrics.pool_peak)>32768)

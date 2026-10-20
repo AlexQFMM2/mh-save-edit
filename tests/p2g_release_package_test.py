@@ -2,6 +2,7 @@
 
 import importlib.util
 import json
+import struct
 from pathlib import Path
 import tempfile
 import unittest
@@ -14,6 +15,15 @@ package = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(package)
 
 
+def synthetic_elf(resident_bytes):
+    data = bytearray(84)
+    data[:6] = b"\x7fELF\x01\x01"
+    struct.pack_into("<I", data, 28, 52)
+    struct.pack_into("<HH", data, 42, 32, 1)
+    struct.pack_into("<8I", data, 52, 1, 84, 0, 0, 0, resident_bytes, 6, 16)
+    return bytes(data)
+
+
 class ReleasePackageTests(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
@@ -23,9 +33,9 @@ class ReleasePackageTests(unittest.TestCase):
         plugin = self.stage / package.PLUGIN_ROOT
         plugin.mkdir(parents=True)
         data = {name: b"Synthetic test file\n" for name in package.RUNTIME_FILES}
-        data["mhp2g_zh_cn.prx"] = b"\x7fELF\x01\x01" + b"Synthetic ELF stub"
+        data["mhp2g_zh_cn.prx"] = synthetic_elf(5622424)
         data["texts.bin"] = b"PZT2Synthetic text stub"
-        data["plugin.ini"] = b"[options]\ntype = prx\nfilename = mhp2g_zh_cn.prx\nversion = 1\n[games]\nULJM05500 = true\n"
+        data["plugin.ini"] = b"[options]\ntype = prx\nfilename = mhp2g_zh_cn.prx\nversion = 1\nmemory = 40\n[games]\nULJM05500 = true\n"
         self.manifest = {"schema": "p2g-pilot-build-v1", "probe": {"pilot": True, "mode": 1, "buildId": "known-text-v1-B-0123456789abcdef"},
                          "files": {name: {"bytes": len(raw), "sha256": package.digest(raw)} for name, raw in data.items()}}
         for name, raw in data.items():
@@ -62,6 +72,29 @@ class ReleasePackageTests(unittest.TestCase):
             self.build("tampered")
         self.assertFalse((self.root / "extra").exists())
         self.assertFalse((self.root / "tampered").exists())
+
+    def test_refuses_missing_ram_declaration_even_when_build_hashes_match(self):
+        p = self.stage / package.PLUGIN_ROOT / 'plugin.ini'
+        data = p.read_bytes().replace(b'memory = 40\n', b'')
+        p.write_bytes(data)
+        self.manifest['files']['plugin.ini'] = {'bytes': len(data), 'sha256': package.digest(data)}
+        self.write_manifest()
+        with self.assertRaisesRegex(ValueError, 'memory = 40'):
+            self.build('missing-memory')
+        self.assertFalse((self.root / 'missing-memory').exists())
+
+    def test_checks_real_bss_reservation_before_output(self):
+        with self.assertRaisesRegex(ValueError, 'Insufficient declared'):
+            package.check_memory(synthetic_elf(5622424), 32)
+        package.check_memory(synthetic_elf(5622424), 40)
+        p = self.stage / package.PLUGIN_ROOT / 'mhp2g_zh_cn.prx'
+        data = synthetic_elf(8 * 1024 * 1024 + 1)
+        p.write_bytes(data)
+        self.manifest['files'][p.name] = {'bytes': len(data), 'sha256': package.digest(data)}
+        self.write_manifest()
+        with self.assertRaisesRegex(ValueError, 'offline resident-memory budget'):
+            self.build('oversized')
+        self.assertFalse((self.root / 'oversized').exists())
 
     def test_coverage_comes_from_this_build(self):
         self.manifest["coverage"] = {"authoredUnits": 123, "untranslatedUnits": 0,

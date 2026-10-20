@@ -22,7 +22,7 @@ reference, image and unresolved-coverage evidence without modifying this pilot.
 
 The subsequent 2026-10-16 user request explicitly authorizes a standalone public
 test Release of this runtime plugin. `package-release.py <private-stage-B>
-<new-private-output> --version mhp2g-zh-v0.1.0-test.2` verifies the six-file build
+<new-private-output> --version mhp2g-zh-v0.1.0-test.3` verifies the six-file build
 manifest and emits a deterministic ZIP with the standard memory-stick directory,
 installation/testing instructions and checksums. The private source manifest,
 research evidence, logs and local switch scripts are excluded. The Release is a
@@ -63,11 +63,25 @@ quest-envelope analysis and quest-list analysis. It reuses
 the pilot builder but emits the separate PZT2 format (32,768 entries / 4 MiB
 maximum) and batch PRX. PZT1 retains its original 128-entry / 128 KiB limits.
 The build sets the C row arrays to the actual record count. `build-memory.mjs`
-checks the loaded ELF address span including BSS against an offline 8 MiB budget;
-this does not establish available memory in a running game.
+checks the loaded ELF address span including BSS against an offline 8 MiB budget
+and the supported game's PT_LOAD reservation. The shipped `plugin.ini` requests
+40 MiB of emulated RAM. The builder and packager reject a module that would not
+fit after the game plus a conservative 1 MiB startup allowance. This allowance
+is not a measured runtime peak; user-run memory/stability checks remain required.
 Binary lookup avoids a linear scan for each core query; bounded per-key logging
 and aggregate counters keep large catalogs from flooding the log. A normal log
 size cap stops batch logging without disabling healthy translations.
+
+The test.3 startup fix installs the checked hooks before any log/file IO can
+yield to the game. The first hooked font-info call synchronously loads and
+validates the text and font files, then preflights the font before returning to
+the game's glyph-cache initialization. Partial data is never visible to text
+consumers. Load errors and recursive initialization leave translation disabled;
+there is no timer-based late font activation. Logging observes completed state
+without retaining a borrowed log context in the hooks. The analyzer accepts the
+old startup order and the new early-install order, including a slow load with
+intermediate empty summaries. ASan/UBSan synthetic startup tests exercise these
+boundaries, corruption, read failures and repeated initialization.
 
 Core text uses the existing checked getter. The common resource lookup installs
 scene, tutorial, training and quest getters only after their complete 16-word

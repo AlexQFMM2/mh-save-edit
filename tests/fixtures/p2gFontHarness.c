@@ -9,6 +9,7 @@ static unsigned int last_info, last_image;
 int pilot_read(const char *name,unsigned char *out,size_t size,uint32_t crc) {
     (void)name;(void)crc;memset(out,0,size);return 1;
 }
+int pilot_prepare_data(void) { return pilot_font_read(); }
 void *sceFontNewLib(SceFontLibData *data,int *error) {
     assert(data->maxFonts==1);*error=0;
     if(fault==1){*error=-1;return NULL;}
@@ -47,7 +48,7 @@ int sceFontGetCharGlyphImage(void *font,unsigned short code,SceFontImageBuffer *
     return 0;
 }
 int main(int argc,char **argv) {
-    assert(argc==2);fault=atoi(argv[1]);assert(pilot_font_read());
+    assert(argc==2);fault=atoi(argv[1]);
     SceFontCharacterInfo c;SceFontInfo info;
     assert(!pilot_char_info((void *)1,65,&c));assert(last_info==1 && c.width==7);
     int result=pilot_font_info((void *)1,&info);

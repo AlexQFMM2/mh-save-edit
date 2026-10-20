@@ -1,5 +1,6 @@
 #include "pilot_font.h"
 #include "pilot_io.h"
+#include "pilot_hook.h"
 #include "probe_core.h"
 #include "pilot_profile.h"
 #include <string.h>
@@ -55,17 +56,24 @@ static int preflight(const SceFontInfo *info) {
 }
 int pilot_font_info(void *font, SceFontInfo *info) {
     int result=sceFontGetFontInfo(font,info);
-    ++pilot_font_state.initialized;
-    if (result) { font_fail(9,result); return result; }
+    if (pilot_font_state.preparing) { font_fail(13,0); return result; }
+    pilot_font_state.preparing=1;
+    if (result) { font_fail(9,result); goto done; }
     pilot_font_state.original_width=info->maxWidth; pilot_font_state.original_height=info->maxHeight;
     pilot_font_state.original_ascender=info->maxFixed.top;
     /* This call precedes initializeGlyphIndex/cacheCommonGlyphs. Never enable
        a font on a late timer: the game cache is keyed only by codepoint. */
     pilot_font_state.ready=0;
-    if (!pilot_font_state.error && preflight(info)) {
+    /* Hold this initialization call until package IO and validation finish,
+       before the game builds its codepoint-only glyph cache. */
+    if (!pilot_font_state.error && !pilot_prepare_data()) font_fail(12,0);
+    if (!pilot_font_state.error && preflight(info) && !pilot_font_state.error) {
         original=font; pilot_font_state.ready=1;
         pilot_font_state.active=PILOT_MODE;
     }
+done:
+    pilot_font_state.preparing=0;
+    ++pilot_font_state.initialized;
     return result;
 }
 static void *select_font(void *font, unsigned short code) {

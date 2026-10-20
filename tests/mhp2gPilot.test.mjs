@@ -67,6 +67,9 @@ describe('P2G pilot text package',()=>{
       'text_summary key=15:1:1 selected=3 replaced=3','font_summary info=1 image=1 pool_used=4096 pool_peak=8192 pool_failures=0']
     const log=events.map((event,i)=>`P2GPROBE/1 seq=${i+1} build=test run=x mode=1 target=0:0 event=${event}\n`).join('')
     expect(analyzeProbeLog(log,manifest)).toMatchObject({status:'passed',displayAccepted:false,runtimeAccepted:false})
+    const earlyEvents=[events[0],events[2],'font_summary info=0 image=0 pool_used=0 pool_peak=0 pool_failures=0',events[1],...events.slice(3)]
+    const earlyLog=earlyEvents.map((event,i)=>`P2GPROBE/1 seq=${i+1} build=test run=x mode=1 target=0:0 event=${event}\n`).join('')
+    expect(analyzeProbeLog(earlyLog,manifest)).toMatchObject({status:'passed',displayAccepted:false,runtimeAccepted:false})
     for(const invalid of [log.replace('ready=1','ready=0'),log.replace('image=1','image=0')])expect(analyzeProbeLog(invalid,manifest).status).toBe('incomplete')
     for(const invalid of [log.replace('pool_failures=0','pool_failures=1'),log.replace('key=15:1:1','key=15:1:2'),log.replace('replaced=3','replaced=4')])expect(analyzeProbeLog(invalid,manifest).status).toBe('failed')
   })
@@ -78,12 +81,23 @@ describe('P2G pilot text package',()=>{
       fs.writeFileSync(path.join(dir,'pspkernel.h'),'int sceKernelDelayThread(unsigned int);\nvoid sceKernelDcacheWritebackRange(const void *,unsigned int);\nvoid sceKernelIcacheInvalidateRange(const void *,unsigned int);\n')
       fs.writeFileSync(path.join(dir,'pspintrman.h'),'unsigned int sceKernelCpuSuspendIntr(void);\nvoid sceKernelCpuResumeIntr(unsigned int);\n')
       const sites=['QUERY','TALK','INFO','CHAR','IMAGE','IMAGE2'].map((key,i)=>`#define PILOT_${key}_ADDRESS (0x08801000u+${i*16}u)\n#define PILOT_${key}_WORDS {${i+1},${i+2}}\n`).join('')
-      fs.writeFileSync(path.join(dir,'pilot_profile.h'),sites+'#define PILOT_MODE 1\n#define PILOT_TEXT_BYTES 32\n#define PILOT_TEXT_CRC 0\n#define PILOT_CORE_BASE 0x08810000u\n#define PILOT_RESOURCE_MANAGER 0x08802000u\n#define PILOT_RESOURCE_MANAGER_BYTES 1024u\n#define PILOT_FIND_RESOURCE 0x08802100u\n#define PILOT_FIND_WORDS {1,2,3,4}\n#define PILOT_DIALOGUE_BYTES 1024u\n#define PILOT_DIALOGUE_HEADER {1,2,3,4}\n')
+      const packet=encodeTextPackage([row({translated:'A'})]),packetPath=path.join(dir,'texts.bin'),bitmap=Buffer.alloc(1024)
+      fs.writeFileSync(packetPath,packet)
+      for(const i of [0,1,32,33])bitmap[i]=255
+      fs.writeFileSync(path.join(dir,'pilot_profile.h'),sites+`#define PILOT_MODE 1\n#define PILOT_TEXT_BYTES ${packet.length}\n#define PILOT_TEXT_CRC 0\n#define PILOT_PGF_BYTES 8\n#define PILOT_PGF_CRC 0\n#define PILOT_GLYPHS {{65,2,2,0,2,128,${crc32(bitmap)}u}}\n#define PILOT_CORE_BASE 0x08810000u\n#define PILOT_RESOURCE_MANAGER 0x08802000u\n#define PILOT_RESOURCE_MANAGER_BYTES 1024u\n#define PILOT_FIND_RESOURCE 0x08802100u\n#define PILOT_FIND_WORDS {1,2,3,4}\n#define PILOT_DIALOGUE_BYTES 1024u\n#define PILOT_DIALOGUE_HEADER {1,2,3,4}\n`)
       const built=spawnSync('cc',['-std=c11','-Wall','-Wextra','-Werror','-Wno-int-to-pointer-cast','-g','-fsanitize=address,undefined','-fno-pie','-no-pie',`-I${dir}`,`-I${source}`,
         'tests/fixtures/p2gPilotHookHarness.c',path.join(source,'pilot_core.c'),path.join(source,'probe_core.c'),path.join(source,'probe_log.c'),'-o',exe],{encoding:'utf8'})
       expect(built.status,built.stderr).toBe(0)
       const test=spawnSync(exe,[],{encoding:'utf8',env:{...process.env,ASAN_OPTIONS:'detect_leaks=0',UBSAN_OPTIONS:'halt_on_error=1'}})
       expect(test.status,test.stdout+test.stderr).toBe(0)
+      const startup=path.join(dir,'startup')
+      const startupBuilt=spawnSync('cc',['-std=c11','-Wall','-Wextra','-Werror','-Wno-int-to-pointer-cast','-g','-fsanitize=address,undefined','-fno-pie','-no-pie',`-I${dir}`,`-I${source}`,
+        'tests/fixtures/p2gStartupHarness.c',path.join(source,'pilot_core.c'),path.join(source,'probe_core.c'),path.join(source,'probe_log.c'),'-o',startup],{encoding:'utf8'})
+      expect(startupBuilt.status,startupBuilt.stderr).toBe(0)
+      for(const fault of [0,1,2,3,4,5]) {
+        const result=spawnSync(startup,[String(fault),packetPath],{encoding:'utf8',env:{...process.env,ASAN_OPTIONS:'detect_leaks=0',UBSAN_OPTIONS:'halt_on_error=1'}})
+        expect(result.status,`startup fault=${fault}\n${result.stdout}${result.stderr}`).toBe(0)
+      }
     } finally {fs.rmSync(dir,{recursive:true,force:true})}
   })
 })

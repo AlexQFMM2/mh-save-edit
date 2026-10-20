@@ -11,6 +11,7 @@ import hashlib
 import json
 from pathlib import Path
 import re
+import struct
 import zipfile
 
 
@@ -34,6 +35,27 @@ def require(condition, message):
 def read_plain(path):
     require(not path.is_symlink() and path.is_file(), f"Expected a plain file: {path.name}")
     return path.read_bytes()
+
+
+def check_memory(data, memory_mb):
+    # Same supported BOOT reservation as build-memory.mjs. Leave 1 MiB for
+    # startup allocations; runtime logs are still required for acceptance.
+    require(len(data) >= 52 and data.startswith(b"\x7fELF\x01\x01"), "Expected ELF32 little-endian PRX")
+    at = struct.unpack_from("<I", data, 28)[0]
+    stride, count = struct.unpack_from("<HH", data, 42)
+    require(stride >= 32 and at + stride * count <= len(data), "Invalid ELF program headers")
+    segments = []
+    for i in range(count):
+        kind, offset, address, _, file_bytes, memory_bytes, _, _ = struct.unpack_from("<8I", data, at + i * stride)
+        if kind == 1:
+            require(file_bytes <= memory_bytes and offset + file_bytes <= len(data), "Invalid loadable ELF segment")
+            segments.append((address, address + memory_bytes))
+    require(bool(segments), "No loadable ELF segments")
+    resident = max(end for _, end in segments) - min(start for start, _ in segments)
+    loader = (resident + 255) // 256 * 256
+    available = 0x08000000 + memory_mb * 1024 * 1024 - 0x09D60400
+    require(resident <= 8 * 1024 * 1024, "Module exceeds the offline resident-memory budget")
+    require(loader + 1024 * 1024 <= available, "Insufficient declared plugin memory after the game reservation")
 
 
 def package_release(stage, output, version):
@@ -63,8 +85,8 @@ def package_release(stage, output, version):
     ini.optionxform = str
     ini.read_string(entries[PLUGIN_ROOT + "plugin.ini"].decode("utf-8-sig"))
     require(dict(ini["games"]) == {"ULJM05500": "true"}, "Unexpected game scope")
-    require(dict(ini["options"]) == {"type": "prx", "filename": "mhp2g_zh_cn.prx", "version": "1"}, "Unexpected plugin configuration")
-    require(entries[PLUGIN_ROOT + "mhp2g_zh_cn.prx"].startswith(b"\x7fELF\x01\x01"), "Expected ELF32 little-endian PRX")
+    require(dict(ini["options"]) == {"type": "prx", "filename": "mhp2g_zh_cn.prx", "version": "1", "memory": "40"}, "Expected plugin configuration with memory = 40")
+    check_memory(entries[PLUGIN_ROOT + "mhp2g_zh_cn.prx"], int(ini["options"]["memory"]))
     require(entries[PLUGIN_ROOT + "texts.bin"].startswith(b"PZT2"), "Expected batch text format")
     for target, source in [("README.zh-CN.txt", "mhp2g-chinese-patch-install.md"), ("TESTING.zh-CN.txt", "mhp2g-chinese-patch-testing.md")]:
         text = read_plain(DOC_ROOT / source).decode("utf-8")

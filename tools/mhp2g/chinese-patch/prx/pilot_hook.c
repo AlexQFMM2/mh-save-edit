@@ -13,6 +13,8 @@
 
 static unsigned char text_bytes[PILOT_TEXT_BYTES];
 static PilotText text;
+enum { DATA_PENDING, DATA_LOADING, DATA_READY, DATA_FAILED };
+static volatile unsigned int data_state, installed;
 #ifndef BATCH
 static const uint32_t dialogue_header[34]=PILOT_DIALOGUE_HEADER;
 #endif
@@ -46,6 +48,7 @@ static int ram(const void *p, size_t size) {
     return at>=0x08800000u && at<=0x0a000000u && size<=0x0a000000u-at;
 }
 static const char *choose(const PilotRow *row, const char *result) {
+    if (data_state!=DATA_READY) return result;
     unsigned int i=(unsigned int)(row-text.rows);
     if (selected[i]!=UINT32_MAX) ++selected[i];
 #ifdef BATCH
@@ -77,6 +80,7 @@ static uint32_t resource_member(const unsigned char *base) {
     return 0;
 }
 static const PilotRow *offset_row(uint32_t member, uint32_t offset) {
+    if (data_state!=DATA_READY) return NULL;
     uint32_t lo=0,hi=sizeof(offset_order)/sizeof(offset_order[0]);
     while (lo<hi) {
         uint32_t mid=lo+(hi-lo)/2;
@@ -90,6 +94,7 @@ static const PilotRow *offset_row(uint32_t member, uint32_t offset) {
     return NULL;
 }
 static const char *overlay_text(uint32_t member, const char *result, unsigned int table, unsigned int index) {
+    if (data_state!=DATA_READY) return result;
     const PilotRow *row=pilot_find(&text,member,table,index&0xffffu);
     if (row) {
         void *manager=*(void * volatile *)PILOT_RESOURCE_MANAGER;
@@ -110,12 +115,13 @@ static const char *training_hook(void *object, unsigned int table, unsigned int 
     return overlay_text(4758,((Query)training_trampoline)(object,table,index),table,index);
 }
 static const char *quest_result(const unsigned char *base, const char *result, unsigned int field) {
-    if (!base) return result;
+    if (data_state!=DATA_READY || !base) return result;
     const PilotRow *row=pilot_quest_source(&text,quest_order,PILOT_QUEST_COUNT,base,result,field);
     return row?replace(row,base,result):result;
 }
 static const char *quest_main_hook(void *object, unsigned int field) {
     const char *result=((QuestQuery)quest_main_trampoline)(object,field);
+    if (data_state!=DATA_READY) return result;
     const PilotRow *copied=pilot_quest_copy(quest_copies,result,field);
     if (copied) return choose(copied,result);
     if (!ram(object,92)) return result;
@@ -135,11 +141,13 @@ static const char *quest_training_hook(void *object, const unsigned char *base, 
 }
 static const char *quest_copy_hook(void *object, unsigned int field) {
     const char *result=((QuestQuery)quest_copy_trampoline)(object,field);
+    if (data_state!=DATA_READY) return result;
     const PilotRow *row=pilot_quest_copy(quest_copies,result,field);
     return row?choose(row,result):result;
 }
 static char *quest_capture_field(char *destination, const char *source, uint32_t field) {
-    const PilotRow *row=pilot_quest_source(&text,quest_order,PILOT_QUEST_COUNT,NULL,source,field);
+    const PilotRow *row=data_state==DATA_READY?
+        pilot_quest_source(&text,quest_order,PILOT_QUEST_COUNT,NULL,source,field):NULL;
     char *result=((char *(*)(char *,const char *))PILOT_STRING_COPY)(destination,source);
     /* Capture identity only. The original copy never receives translated text. */
     pilot_quest_capture(quest_copies,row,destination);
@@ -158,11 +166,12 @@ static unsigned char *resource_hook(void *object, unsigned int tag) {
 #endif
 static const char *query_hook(void *object, unsigned int table, unsigned int index) {
     const char *result=((Query)query_trampoline)(object,table,index);
+    if (data_state!=DATA_READY) return result;
     const PilotRow *row=pilot_find(&text,15,table,index&0xffffu);
     return row?replace(row,(const unsigned char *)PILOT_CORE_BASE,result):result;
 }
 static int talk_hook(void *self, const char *message, unsigned int progress, unsigned int mode, unsigned int extra) {
-    if (mode!=3 && mode!=4 && message) {
+    if (data_state==DATA_READY && mode!=3 && mode!=4 && message) {
         void *manager=*(void * volatile *)PILOT_RESOURCE_MANAGER;
         if (ram(manager,PILOT_RESOURCE_MANAGER_BYTES)) {
             const unsigned char *base=
@@ -286,24 +295,43 @@ static int install(void) {
         if (p->entry) site[1]=0;
         cache((void *)site,8);
     }
+    installed=1;
     sceKernelCpuResumeIntr(state);
     return 1;
 }
-void pilot_run(ProbeLog *log) {
+int pilot_install(void) {
+    if (!installed) installed=install();
+    return installed;
+}
+void pilot_disable(void) { disabled=1; }
+int pilot_prepare_data(void) {
+    if (data_state==DATA_READY) return 1;
+    /* A recursive/concurrent initialization must not publish partial rows. */
+    if (data_state!=DATA_PENDING || !installed) { data_state=DATA_FAILED; return 0; }
+    data_state=DATA_LOADING;
     if (!pilot_read("texts.bin",text_bytes,sizeof(text_bytes),PILOT_TEXT_CRC) ||
-        !pilot_parse(&text,text_bytes,sizeof(text_bytes)) || !pilot_font_read()) {
-        probe_event(log,"config_error","no_patches=1"); return;
+        data_state!=DATA_LOADING ||
+        !pilot_parse(&text,text_bytes,sizeof(text_bytes)) || !pilot_font_read() || data_state!=DATA_LOADING) {
+        data_state=DATA_FAILED; return 0;
     }
-    if (!probe_event(log,"config_ok","package=pilot")) return;
-    if (!install()) { probe_event(log,"version_mismatch","no_patches=1"); return; }
+    data_state=DATA_READY;
+    return 1;
+}
+void pilot_run(ProbeLog *log) {
+    if (!installed) { probe_event(log,"version_mismatch","no_patches=1"); return; }
     if (!probe_event(log,"installed","font_gate=initialization")) { disabled=1; return; }
 #ifndef BATCH
     uint32_t previous_selected[PILOT_MAX_ROWS]={0}, previous_replaced[PILOT_MAX_ROWS]={0};
 #endif
-    uint32_t previous_init=0, previous_error=0, previous_rejected=0;
+    uint32_t previous_init=0, previous_error=0, previous_rejected=0, config_logged=0;
     for (uint32_t tick=0;;++tick) {
         sceKernelDelayThread(5000000);
         char fields[240];
+        if (!config_logged && (data_state==DATA_READY || data_state==DATA_FAILED)) {
+            int ok=data_state==DATA_READY;
+            probe_event(log,ok?"config_ok":"config_error",ok?"package=pilot":"replacement_disabled=1");
+            config_logged=1;
+        }
         if (pilot_font_state.initialized!=previous_init) {
             snprintf(fields,sizeof(fields),"width=%lu height=%lu ascender=%ld ready=%lu active=%lu pool_peak=%lu",
                 (unsigned long)pilot_font_state.original_width,(unsigned long)pilot_font_state.original_height,
@@ -311,7 +339,8 @@ void pilot_run(ProbeLog *log) {
                 (unsigned long)pilot_font_state.active,(unsigned long)pilot_font_state.pool.peak);
             probe_event(log,"font_metrics",fields); previous_init=pilot_font_state.initialized;
         }
-        if (tick==11 && !previous_init) probe_event(log,"font_init_missed","replacement_disabled=1");
+        if (tick==11 && !previous_init && !pilot_font_state.preparing)
+            probe_event(log,"font_init_missed","replacement_disabled=1");
         if (pilot_font_state.error!=previous_error) {
             snprintf(fields,sizeof(fields),"stage=%lu code=%lu replacement_disabled=1",
                 (unsigned long)pilot_font_state.error,(unsigned long)pilot_font_state.error_code);
@@ -319,7 +348,7 @@ void pilot_run(ProbeLog *log) {
         }
         if (rejected!=previous_rejected) { probe_event(log,"original_mismatch","replacement_disabled=1"); previous_rejected=rejected; }
 #ifdef BATCH
-        if (first_hits<64) for (uint32_t i=0;i<text.count && first_hits<64;++i) {
+        if (data_state==DATA_READY && first_hits<64) for (uint32_t i=0;i<text.count && first_hits<64;++i) {
             if (!selected[i] || (selected[i]&0x80000000u)) continue;
             snprintf(fields,sizeof(fields),"key=%lu:%lu:%lu selected=%lu replaced=%lu",
                 (unsigned long)text.rows[i].member,(unsigned long)text.rows[i].table,
@@ -332,7 +361,7 @@ void pilot_run(ProbeLog *log) {
             probe_event(log,"batch_summary",fields);
         }
 #else
-        for (uint32_t i=0;i<text.count;++i) {
+        for (uint32_t i=0;data_state==DATA_READY && i<text.count;++i) {
             uint32_t a=selected[i],b=replaced[i];
             if (a==previous_selected[i] && b==previous_replaced[i]) continue;
             snprintf(fields,sizeof(fields),"key=%lu:%lu:%lu selected=%lu replaced=%lu",

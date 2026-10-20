@@ -76,8 +76,15 @@ int main(void) {
     }
 #endif
     unsigned char *base=(unsigned char *)PILOT_CORE_BASE;
+    assert(choose(NULL,(const char *)base)==(const char *)base);
+#ifdef BATCH
+    assert(!offset_row(5369,0));
+    assert(overlay_text(4757,(const char *)base,0,0)==(const char *)base);
+    assert(quest_result(base,(const char *)base,0)==(const char *)base);
+#endif
     uint32_t *words=(uint32_t *)base;words[0]=23;words[1]=8;words[3]=100;words[26]=800;
     memcpy(base+900,"ORIGINAL",9);
+    data_state=DATA_READY;
     text.count=1;text.rows[0]=(PilotRow){.member=15,.table=1,.index=1,.offset=900,.resource_size=1024,
         .original="ORIGINAL",.translated="REPLACEMENT",.original_size=8,.translated_size=11};
     assert(replace(&text.rows[0],base,(char *)base+900)==(char *)base+900);

@@ -38,12 +38,21 @@ static int rotate_log(void) {
 }
 int main(int argc, char *argv[]) {
     (void)argc; (void)argv;
+#ifdef PILOT
+    /* File IO can yield to the game. Install before even rotating the log. */
+    pilot_install();
+#endif
     char run[24];
     snprintf(run, sizeof(run), "%016llX", (unsigned long long)sceKernelGetSystemTimeWide());
     ProbeLog log = { .write=write_line, .build=PROBE_BUILD_ID, .run=run,
         .mode=PROBE_MODE, .table=PROBE_TABLE, .index=PROBE_INDEX };
     if (!rotate_log()) {
+#ifdef PILOT
+        pilot_disable();
+        sceKernelPrintf("P2GPROBE event=log_write_failed replacement_disabled=1\n");
+#else
         sceKernelPrintf("P2GPROBE event=log_write_failed no_patches=1\n");
+#endif
     } else if (probe_event(&log, "start", "format=1")) {
 #ifdef PILOT
         pilot_run(&log);
@@ -51,6 +60,9 @@ int main(int argc, char *argv[]) {
         equipment_probe(&log);
 #endif
     }
+#ifdef PILOT
+    if (log.failed) pilot_disable();
+#endif
     if (log.failed) sceKernelPrintf("P2GPROBE event=log_write_failed replacement_disabled=1\n");
     sceKernelExitDeleteThread(0);
     return 0;

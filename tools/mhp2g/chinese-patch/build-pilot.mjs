@@ -10,7 +10,7 @@ import { crc32 } from './equipment-evidence.mjs'
 import { pilotEvidence, pilotHeader } from './pilot-evidence.mjs'
 import { prepareBatch } from './prepare-batch.mjs'
 import { batchHeader } from './batch-evidence.mjs'
-import { elfMemory } from './build-memory.mjs'
+import { elfMemory, pluginMemoryMb } from './build-memory.mjs'
 
 const source = path.dirname(fileURLToPath(import.meta.url))
 const read = file => JSON.parse(fs.readFileSync(file))
@@ -75,6 +75,7 @@ function instructions(builds, batchCounts) {
 export function buildPilot(options) {
   const {toolchain,nativeDirectory,localizationDirectory,reviewFile,evidenceDirectory,fontFile}=options
   const output=path.resolve(options.output)
+  const requestedMemoryMb=pluginMemoryMb(fs.readFileSync(path.join(source,'prx/plugin.ini'),'utf8'))
   assert(!fs.existsSync(output),'Use a new output directory')
   fs.mkdirSync(path.dirname(output),{recursive:true})
   const temporary=fs.mkdtempSync(path.join(path.dirname(output),'.p2g-pilot-'))
@@ -114,7 +115,7 @@ export function buildPilot(options) {
       fs.writeFileSync(path.join(build,'build.log'),run('make',['-C',build,'PILOT=1',...(options.batch?['BATCH=1',`BATCH_ROWS=${rows.length}`]:[])],env))
       const sections=run('psp-size',['-A',path.join(build,'mhp2g_zh_cn.elf')],env)
       fs.writeFileSync(path.join(build,'memory-sections.txt'),sections)
-      const memory=elfMemory(fs.readFileSync(path.join(build,'mhp2g_zh_cn.elf')))
+      const memory=elfMemory(fs.readFileSync(path.join(build,'mhp2g_zh_cn.elf')),requestedMemoryMb)
       for (const name of ['mhp2g_zh_cn.prx','plugin.ini']) fs.copyFileSync(path.join(build,name),path.join(plugin,name))
       fs.writeFileSync(path.join(plugin,'texts.bin'),textBytes);fs.writeFileSync(path.join(plugin,'zh-cn.pgf'),pgfBytes)
       fs.copyFileSync(path.join(fontDir,'OFL.txt'),path.join(plugin,'OFL.txt'))
