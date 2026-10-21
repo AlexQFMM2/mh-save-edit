@@ -23,6 +23,7 @@ export class P2gDecorationCatalogRepository {
         skills:e.skills.map(s=>({...s,nameEn:'',activeSkillNameCn:null,activeSkillNameEn:null})),
         materials:e.recipes.flatMap((recipe,index)=>recipe.materials.map(m=>({...m.item,nameEn:'',quantity:m.quantity,recipeIndex:index+1})))}
       const search=[{text:`${r.name_cn} ${r.name_jp}`,reason:`命中：装饰品·${r.name_cn}`}]
+      for(const alias of e.nameAliases??[])search.push({text:alias,reason:`命中：装饰品旧名·${alias}`})
       for(const s of e.skills){const n=names.get(s.skillId)!;search.push({text:`${s.nameCn} ${n.nameJp}`,reason:`命中：技能·${s.nameCn}`});for(const a of n.activations)search.push({text:`${a.nameCn} ${a.nameJp}`,reason:`命中：发动技能·${a.nameCn}`})}
       for(const m of detail.materials)search.push({text:`${m.nameCn} ${m.nameJp??''}`,reason:`命中：制作材料·${m.nameCn}`})
       return {detail,search:search.map(s=>({...s,text:normalizeCatalogSearch(s.text)}))}

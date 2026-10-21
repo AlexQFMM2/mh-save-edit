@@ -2,7 +2,9 @@
 
 基于 React + Electron + TypeScript 的离线 Monster Hunter 图鉴、配装器与存档编辑器，当前维护 MHP2G、MH3G、MH4G、MHGU/XX 四套内容资料。
 
-**当前应用版本：[v0.1.13](https://github.com/AlexQFMM2/mh-save-edit/releases/tag/v0.1.13)**。本版修复 MH4G 发掘武器异常属性的最大值选项与「1000 实际变成 1170」的错误映射，保留 P2G 七类图鉴、六槽手动／自动配装及 PPSSPP 存档编辑，内置运行资源 v5 和四作道具译名词典，详见[更新说明](docs/releases/v0.1.13.md)。
+**当前应用版本：[v0.1.14](https://github.com/AlexQFMM2/mh-save-edit/releases/tag/v0.1.14)**。本版复核全部 168 颗 P2G 装饰品，更新 50 个显示名并保留旧名搜索，内置运行资源 v6 和配套词典，详见[更新说明](docs/releases/v0.1.14.md)。
+
+**PPSSPP 中文插件：[test.4](https://github.com/AlexQFMM2/mh-save-edit/releases/tag/mhp2g-zh-v0.1.0-test.4)**。与图鉴同步装饰品译名及相关教程／对白，单独安装到 PPSSPP 记忆棒目录；用于日文原版 MHP2G。安装方法与测试范围见该 Release。
 
 **维护与交接说明更新于 2026-10-13。** 已有三作以 bug 修复和社区贡献为主。P2G 已接入七类图鉴、六槽手动／自动配装及 PPSSPP 存档编辑；应用侧检查与剩余游戏内验收见[P2G 整体验收](docs/mhp2g-acceptance.md)。P2G 已纳入本版应用与公开运行资源 v5；PPSSPP 游戏内保存往返仍待实际测试。跨作品统一业务数据表及整体数据重构计划已放弃，扩展按游戏独立推进。P2G 按“图鉴优先、游戏补丁最后”的方向接入，原文与译名的共用输入及未完成事项见 [P2G 图鉴与中文资料](docs/mhp2g-localization.md)。当前新增独立的[道具译名词典](docs/item-terminology.md)：有明确日文对应的名称采用 GU 官方简中，保留各作译名供搜索；各作编号、数值、关系与存档格式仍独立维护。
 
@@ -53,7 +55,7 @@
 
 ### 从源码运行
 
-需要 **Node.js 22、pnpm 11**。在项目根目录下载[运行资产 v5](https://github.com/AlexQFMM2/mh-save-edit/releases/tag/runtime-assets-v5)，按原目录结构解压。该包无需密码，包含：
+需要 **Node.js 22、pnpm 11**。在项目根目录下载[运行资产 v6](https://github.com/AlexQFMM2/mh-save-edit/releases/tag/runtime-assets-v6)，按原目录结构解压。该包无需密码，包含：
 
 ```text
 data/mh3g.sqlite
@@ -104,7 +106,7 @@ P2G 复用工作区和共享图鉴组件，各领域使用独立查询仓库与 
 
 怪物模块另含 84 条原生怪物记录、742 行肉质、4,377 条掉落和 601 条出没记录；全部怪物有原生图标。道具与怪物可双向打开详情抽屉，关联搜索显示命中原因。未确认的部位、状态和数量保持未知，任务原名保留日文。
 
-P2G 资料库、存档格式参数及词典已包含在公开运行资产 v5 和 Windows 包中，无须自行构建。需要从私有研究输入重建时，持有已核对的 r9、日版文本和译名快照后，先按 [中文资料构建说明](docs/mhp2g-localization.md#构建与验收) 生成译名输入，再运行：
+P2G 资料库、存档格式参数及词典已包含在公开运行资产 v6 和 Windows 包中，无须自行构建。需要从私有研究输入重建时，持有已核对的 r9、日版文本和译名快照后，先按 [中文资料构建说明](docs/mhp2g-localization.md#构建与验收) 生成译名输入，再运行：
 
 ```bash
 pnpm data:build:p2g-items --source /path/to/pilot-r9/mhp2g-pilot.sqlite --output /path/to/new-output --localization /path/to/localization/localization.json

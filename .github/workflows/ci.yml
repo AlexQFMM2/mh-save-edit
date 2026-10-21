@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 env:
-  RUNTIME_ASSETS_SHA256: 98a96b72d90e7df5dde59389c7a8650de85660546c446fd2e05c441538f4740b
+  RUNTIME_ASSETS_SHA256: f71ed1586fdec78d794b6d3575a6b92d9608cdffab8c14070437e7d499d3db51
 
 jobs:
   check:
@@ -32,12 +32,12 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           mkdir -p .runtime-assets
-          gh release download runtime-assets-v5 \
+          gh release download runtime-assets-v6 \
             --repo AlexQFMM2/mh-save-edit \
-            --pattern mh-save-edit-runtime-assets-v5.zip \
+            --pattern mh-save-edit-runtime-assets-v6.zip \
             --dir .runtime-assets
-          echo "$RUNTIME_ASSETS_SHA256  .runtime-assets/mh-save-edit-runtime-assets-v5.zip" | sha256sum --check
-          unzip -q -o .runtime-assets/mh-save-edit-runtime-assets-v5.zip
+          echo "$RUNTIME_ASSETS_SHA256  .runtime-assets/mh-save-edit-runtime-assets-v6.zip" | sha256sum --check
+          unzip -q -o .runtime-assets/mh-save-edit-runtime-assets-v6.zip
           node tools/repair_runtime_catalog.mjs
           for database in mh3g.sqlite mh4g.sqlite mhgu.sqlite mhp2g.sqlite item-terminology.sqlite; do
             test "$(head -c 15 "data/$database")" = "SQLite format 3"
@@ -93,14 +93,14 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           New-Item -ItemType Directory -Path .runtime-assets -Force | Out-Null
-          gh release download runtime-assets-v5 `
+          gh release download runtime-assets-v6 `
             --repo AlexQFMM2/mh-save-edit `
-            --pattern mh-save-edit-runtime-assets-v5.zip `
+            --pattern mh-save-edit-runtime-assets-v6.zip `
             --dir .runtime-assets
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          $archiveHash = (Get-FileHash .runtime-assets/mh-save-edit-runtime-assets-v5.zip -Algorithm SHA256).Hash.ToLowerInvariant()
+          $archiveHash = (Get-FileHash .runtime-assets/mh-save-edit-runtime-assets-v6.zip -Algorithm SHA256).Hash.ToLowerInvariant()
           if ($archiveHash -ne $env:RUNTIME_ASSETS_SHA256) { throw 'Runtime archive identity mismatch' }
-          & 7z x .runtime-assets/mh-save-edit-runtime-assets-v5.zip `
+          & 7z x .runtime-assets/mh-save-edit-runtime-assets-v6.zip `
             "-o$PWD" `
             -y
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

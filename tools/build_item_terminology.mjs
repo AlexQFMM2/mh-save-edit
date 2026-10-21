@@ -76,7 +76,14 @@ export function buildItemTerminology({ inputDir, researchDir, outputDir, p2gJapa
           repairs[gameId] = repairItemJapanese(db, names)
           for (const row of names) dexAliases.set(Number(row.Itm_ID), [row.Itm_Name_0, row.Itm_Name_1, row.Itm_Name_2])
         }
-        catalogs.push({ gameId, rows: catalogIdentityRows(db, gameId), dexAliases })
+        const itemAliases = new Map()
+        if (gameId === 'mhp2g' && db.prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name='p2g_skill_equipment'").get()) {
+          for (const row of db.prepare("SELECT detail_json FROM p2g_skill_equipment WHERE kind='decoration' AND is_placeholder=0").all()) {
+            const e = JSON.parse(row.detail_json)
+            if (e.nameAliases?.length) itemAliases.set(e.itemId, e.nameAliases)
+          }
+        }
+        catalogs.push({ gameId, rows: catalogIdentityRows(db, gameId), dexAliases, itemAliases })
         if (db.pragma('integrity_check', { simple: true }) !== 'ok') throw new Error(`Invalid catalog: ${gameId}`)
       } finally { db.close() }
     }

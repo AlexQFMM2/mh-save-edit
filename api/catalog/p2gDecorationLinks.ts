@@ -7,9 +7,10 @@ export function decorationItemMatches(db: Database.Database, query?: string): Ma
   const matches=new Map<number,string>()
   if(!query?.trim()||!hasP2gDecorations(db))return matches
   const q=normalizeCatalogSearch(query)
-  const rows=db.prepare(`SELECT r.item_id,i.name_cn,i.name_jp FROM p2g_decoration_materials m
-    JOIN catalog_item_relations r ON r.id=m.relation_id JOIN catalog_items i ON i.item_id=m.decoration_item_id ORDER BY i.item_id,m.relation_id`).all() as {item_id:number;name_cn:string;name_jp:string}[]
-  for(const r of rows)if(normalizeCatalogSearch(`${r.name_cn} ${r.name_jp}`).includes(q)&&!matches.has(r.item_id))matches.set(r.item_id,r.name_cn)
+  const rows=db.prepare(`SELECT r.item_id,i.name_cn,i.name_jp,json_extract(e.detail_json,'$.nameAliases') AS aliases FROM p2g_decoration_materials m
+    JOIN catalog_item_relations r ON r.id=m.relation_id JOIN catalog_items i ON i.item_id=m.decoration_item_id
+    JOIN p2g_decorations d ON d.item_id=i.item_id JOIN p2g_skill_equipment e ON e.equipment_key=d.equipment_key ORDER BY i.item_id,m.relation_id`).all() as {item_id:number;name_cn:string;name_jp:string;aliases:string|null}[]
+  for(const r of rows)if(normalizeCatalogSearch([r.name_cn,r.name_jp,...JSON.parse(r.aliases??'[]')].join(' ')).includes(q)&&!matches.has(r.item_id))matches.set(r.item_id,r.name_cn)
   return matches
 }
 export function decorationUsageTargets(db: Database.Database): Map<number,{gameId:'mhp2g';itemId:number;nameCn:string}> {

@@ -35,7 +35,7 @@ export function createItemDictionary(db, guTerms, catalogs) {
         byJapanese.set(key, [...(byJapanese.get(key) ?? []), term])
       }
     }
-    for (const { gameId, rows, dexAliases = new Map() } of catalogs) {
+    for (const { gameId, rows, dexAliases = new Map(), itemAliases = new Map() } of catalogs) {
       meta.run(`catalog:${gameId}`, identityFingerprint(rows))
       stats[gameId] = { matched: 0, missingJapanese: 0, absentFromGu: 0, ambiguous: 0 }
       for (const row of rows.filter(row => !row.is_placeholder)) {
@@ -52,6 +52,7 @@ export function createItemDictionary(db, guTerms, catalogs) {
         insertMember.run(gameId, row.id, id, row.original_name ?? row.name_cn, ja, memberStatus)
         alias(id, row.name_cn, gameId, row.name_source ?? '本作原译名')
         alias(id, row.original_name, gameId, '旧汉化搜索别名（非定名依据）')
+        for (const name of itemAliases.get(row.id) ?? []) alias(id, name, gameId, '项目旧译名搜索别名（非定名依据）')
         alias(id, row.name_en, gameId, '本作英文名')
         alias(id, ja, gameId, gameId === 'mhp2g' ? 'P2G 日文资料对照' : 'Dex 日文')
         for (const name of dexAliases.get(row.dex_id) ?? []) alias(id, name, gameId, 'Dex 译名')

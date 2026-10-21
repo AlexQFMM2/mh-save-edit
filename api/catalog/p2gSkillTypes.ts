@@ -8,6 +8,7 @@ export type P2gSkillEquipmentSummary = P2gSkillEquipmentIdentity & {
 }
 export type P2gSkillEquipmentDetail = Omit<P2gSkillEquipmentSummary, 'points'> & {
   itemId: number | null
+  nameAliases?: string[]
   skills: { skillId: number; nameCn: string; nameJp: string; points: number }[]
   recipes: { recipeKey: string; materials: { item: ItemIdentity & { nameCn: string; nameJp: string }; quantity: number }[] }[]
 }
