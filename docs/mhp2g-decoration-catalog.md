@@ -1,5 +1,7 @@
 # P2G 装饰品图鉴
 
+2026-10-21：下方复核成果已随[应用 v0.1.14](https://github.com/AlexQFMM2/mh-save-edit/releases/tag/v0.1.14)、[运行资源 v6](https://github.com/AlexQFMM2/mh-save-edit/releases/tag/runtime-assets-v6) 和[中文插件 test.4](https://github.com/AlexQFMM2/mh-save-edit/releases/tag/mhp2g-zh-v0.1.0-test.4) 公开发行，源码 `4e2ef14` 和三个 tag 均已推送，Actions 成功。三套发行附件重新下载核验通过，Windows 成品的全部 168 颗图鉴／词典新名、旧名搜索代码和 2,400 个图标哈希均已确认。应用包内置资源 v6，插件另外整包更新；新译名实际游戏显示仍待用户验收。下方“尚未提交／发布”保留为 10 月 20 日本地交付检查点；发行证据见[最新交接](../plan/mhp2g-chinese-patch/README.md#2026-10-21-图鉴与插件发行)。
+
 ## 2026-10-20 全量译名复核
 
 用户要求统一同技能、同孔数的易理解用词，已对全部 **168** 颗核对原版身份、孔数与完整正负技能点。77 颗有唯一 GU 对应，其中 37 颗调整根名；91 颗无完整对应而保留本作根名（26 颗缺少单项技能对应、65 颗点数或负技能不同）。83 组技能树用词对照含 5 组逐项说明的日文异名，只提供珠名语义依据，不覆盖本作机制。77 颗采用的 GU 用词全部回查到冻结官方简中证据。

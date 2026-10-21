@@ -2,8 +2,8 @@
 
 - Owner：项目维护者 / 下一位实施者
 - Status：进行中
-- Execution：2026-10-20 test.3 启动修复已发布，等待实测；随后按用户要求完成全部装饰品译名复核、图鉴本地安装与 test.4 本地测试包，尚未推送／发布；用户负责游戏操作。
-- Created：2026-10-13 / Updated：2026-10-20
+- Execution：2026-10-21 图鉴 v0.1.14、运行资源 v6 和插件 test.4 已公开发布并重新下载核验，全部装饰品译名已同步；实际游戏显示、未知资源及 G1 仍待验收，用户负责游戏操作。
+- Created：2026-10-13 / Updated：2026-10-21
 - Repository：`mh-save-edit`；单代理串行执行。
 - 授权与暂停：2026-10-13 用户批准首轮 T-001～T-006；2026-10-14 上午暂停后，下午曾恢复独立环境测试，15:18 再次要求暂停。用户随后明确批准骨刃探针离线开发和交付，要求游戏运行操作由用户完成，agent 准备程序并分析日志，取代此前由 agent 操作模拟器的分工。单代理串行；早期不提交／推送／发布的限制已由下方 2026-10-19 最新发布授权取代。
 
@@ -11,7 +11,19 @@
 
 用户明确要求“发布 GitHub，图鉴和插件都要更新”，新增 **T-008f**，单代理串行。发行范围为图鉴应用 v0.1.14、独立公开运行资源 v6，以及插件 test.4。插件复用 T-008e 冻结 ZIP，图鉴配套新库与词典进入运行资源和应用包；Git 仅提交源码、合成测试和发行文档。先固定资源包哈希并发布，再让 GitHub Actions 从该资源构建 Windows 应用；完成后下载三个发行的附件核验。旧版本保留，新名的实际游戏验收不因发行自动完成。
 
-当前为发行准备：本地验收见下节，发布证据另存已忽略 `.runtime-assets/release-v0.1.14/`；具体完成状态在本节追加。`docs/mhp2g-acceptance.md` 既有本地修改继续保留，不纳入本次提交。
+**T-008f 已完成**：源码提交 `4e2ef14ca0a3e9e5d7b4a1d7fc6d2119c7590eb4` 已推送 `main`，三个发行 tag 均固定该提交。应用 [v0.1.14](https://github.com/AlexQFMM2/mh-save-edit/releases/tag/v0.1.14) 于北京时间 2026-10-21 09:51 发布为正式版且为 Latest；[运行资源 v6](https://github.com/AlexQFMM2/mh-save-edit/releases/tag/runtime-assets-v6) 和[插件 test.4](https://github.com/AlexQFMM2/mh-save-edit/releases/tag/mhp2g-zh-v0.1.0-test.4) 均为非草稿 Pre-release，不抢占 Latest。三个发行各只有运行归档和外部 SHA 两项附件，旧版保留，后续交接提交不移动 tag。
+
+本地 29 项发行相关回归、类型检查与运行资料审计通过；[主分支 CI](https://github.com/AlexQFMM2/mh-save-edit/actions/runs/39529303936) 及[应用发行 CI](https://github.com/AlexQFMM2/mh-save-edit/actions/runs/39529303338) 全部成功，包含完整公开环境测试、构建、编译后搜索验证、Windows 原生 SQLite 加载与打包检查。三个发行均已从 GitHub 重新下载：资源／插件与冻结本地文件逐字节一致并通过白名单；Windows 包的六项运行文件与正式迁移后的资源快照逐字节一致，全部 168 颗装饰品在图鉴和词典中的新名逐项匹配，应用版本、旧名搜索代码及 2,400 个内嵌图标哈希通过。
+
+| 发行附件 | 大小（字节） | SHA-256 |
+| --- | ---: | --- |
+| `mh-save-editor-v0.1.14-windows-x64.tar.gz` | 163,786,397 | `03cae33c879badf14a3c5f9bc59899aa6b33c4d75cbb1825b044271ed4c18419` |
+| `mh-save-edit-runtime-assets-v6.zip` | 33,943,844 | `f71ed1586fdec78d794b6d3575a6b92d9608cdffab8c14070437e7d499d3db51` |
+| `mhp2g-zh-v0.1.0-test.4-ppsspp.zip` | 1,659,026 | `1d8eb82c155ab15115903a85b0c1090a6f6c7d660874bb492cd94b51d243ccef` |
+
+应用包已内置资源 v6，用户完整解压新目录运行即可，无须另外下载资源。插件需退出 PPSSPP 后整包更新到实际 Memory Stick，再冷启动日文原版；新 B 为 `known-text-v1-B-8654b877bffb88d2`，沿用 40 MiB 与早挂接修复。**本次发行未操作模拟器，也未完成新译名游戏实测或 G1。**
+
+发布证据均在已忽略 `.runtime-assets/release-v0.1.14/`：`runtime-plugin-download-verification.json`、`plugin-download-verification.json`、`windows-download-verification.json`、`windows-asar-verification.json`、`release-ci.json`、`main-ci.json` 及下载／最小抽取目录；真实运行文件和研究输入不进入 Git。`docs/mhp2g-acceptance.md` 与 `docs/mhp2g-localization.md` 既有未纳入发行的本地修改继续保留。下方 10 月 20 日“尚未提交／发布”为当时冻结检查点。
 
 ## 2026-10-20 全部装饰品译名复核
 
