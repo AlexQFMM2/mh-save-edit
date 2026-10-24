@@ -1,4 +1,5 @@
 import type Database from 'better-sqlite3'
+import { modernMonsterText } from './monsterNaming.mjs'
 import type { GameId } from '../core/loadout'
 import { MonsterCatalogRepository } from './monsterRepository'
 import type {
@@ -14,7 +15,7 @@ const nullableInt = (value: unknown): number | null => value == null ? null : Nu
 const bool = (value: unknown): boolean => value === 1 || value === true || value === '1'
 
 export function normalizeCatalogSearch(value: string): string {
-  return value.trim().replace(/^狩技\s*[：:]\s*/u, '')
+  return modernMonsterText(value).trim().replace(/^狩技\s*[：:]\s*/u, '')
     .replace(/Ⅲ/gu, '3').replace(/Ⅱ/gu, '2').replace(/Ⅰ/gu, '1')
     .replace(/\bIII\b/giu, '3').replace(/\bII\b/giu, '2').replace(/\bI\b/giu, '1')
     .normalize('NFKC').toLocaleLowerCase('en-US').replace(/[\s\p{P}\p{S}]+/gu, '')

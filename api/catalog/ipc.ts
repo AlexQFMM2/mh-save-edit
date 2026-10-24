@@ -1,3 +1,6 @@
+import { P3DecorationCatalogRepository } from './p3DecorationRepository'
+import { decorationCatalogGameIdSchema } from './schemas'
+import { P3ItemCatalogRepository } from './p3ItemRepository'
 import { P2gArmorCatalogRepository } from './p2gArmorRepository'
 import { P2gDecorationCatalogRepository } from './p2gDecorationRepository'
 import { P2gWeaponCatalogRepository } from './p2gWeaponRepository'
@@ -23,7 +26,7 @@ import { SkillCatalogRepository } from './skillRepository'
 import { MonsterCatalogRepository } from './monsterRepository'
 import { HunterArtCatalogRepository, QuestCatalogRepository } from './questRepository'
 import { PalicoCatalogRepository } from './palicoRepository'
-import { armorCatalogFiltersSchema, armorIdentitySchema, armorSetFiltersSchema, decorationCatalogFiltersSchema, decorationIdentitySchema, gameIdSchema, catalogGameIdSchema, hunterArtCatalogFiltersSchema, hunterArtIdentitySchema, itemCatalogFiltersSchema, itemIdentitySchema, monsterCatalogFiltersSchema, monsterIdentitySchema, palicoArmorFiltersSchema, palicoEquipmentIdentitySchema, palicoSkillFiltersSchema, palicoSkillIdentitySchema, palicoSupportMoveFiltersSchema, palicoSupportMoveIdentitySchema, palicoTypeIdentitySchema, palicoWeaponFiltersSchema, questCatalogFiltersSchema, questIdentitySchema, skillCatalogFiltersSchema, skillIdentitySchema, weaponCatalogFiltersSchema, weaponIdentitySchema, weaponMotionFiltersSchema, weaponTreeRequestSchema } from './schemas'
+import { armorCatalogFiltersSchema, armorIdentitySchema, armorSetFiltersSchema, decorationCatalogFiltersSchema, decorationIdentitySchema, gameIdSchema, catalogGameIdSchema, itemCatalogGameIdSchema, hunterArtCatalogFiltersSchema, hunterArtIdentitySchema, itemCatalogFiltersSchema, itemIdentitySchema, monsterCatalogFiltersSchema, monsterIdentitySchema, palicoArmorFiltersSchema, palicoEquipmentIdentitySchema, palicoSkillFiltersSchema, palicoSkillIdentitySchema, palicoSupportMoveFiltersSchema, palicoSupportMoveIdentitySchema, palicoTypeIdentitySchema, palicoWeaponFiltersSchema, questCatalogFiltersSchema, questIdentitySchema, skillCatalogFiltersSchema, skillIdentitySchema, weaponCatalogFiltersSchema, weaponIdentitySchema, weaponMotionFiltersSchema, weaponTreeRequestSchema } from './schemas'
 import { catalogChannels } from './channels'
 export { catalogChannels }
 
@@ -80,6 +83,19 @@ export function registerCatalogIpc(dataDir: string): () => void {
     catch (error) { db.close(); throw error }
   }
 
+  let p3: { db: DatabaseType.Database; repository: P3ItemCatalogRepository; decorations?: P3DecorationCatalogRepository } | undefined
+  const p3Items = () => {
+    if (p3) return p3.repository
+    const file = join(dataDir, 'mhp3.sqlite')
+    if (!existsSync(file)) throw new Error('P3 道具资料库尚未安装，请安装本地 P3 道具资料与配套译名词典。')
+    const nativeBinding = process.env.MH_SAVE_EDIT_SQLITE_BINDING
+    const db = new Database(file, { readonly: true, fileMustExist: true, ...(nativeBinding ? { nativeBinding } : {}) })
+    try { p3 = { db, repository: new P3ItemCatalogRepository(db, itemTerms()) }; return p3.repository }
+    catch (error) { db.close(); throw error }
+  }
+
+  const p3Decorations = () => { p3Items(); return p3!.decorations ??= new P3DecorationCatalogRepository(p3!.db, p3!.repository) }
+
   const p2gDecorations = () => { p2gItems(); return p2g!.decorations ??= new P2gDecorationCatalogRepository(p2g!.db) }
   const p2gArmors = () => { p2gItems(); return p2g!.armors ??= new P2gArmorCatalogRepository(p2g!.db) }
   const p2gWeapons = () => { p2gItems(); return p2g!.weapons ??= new P2gWeaponCatalogRepository(p2g!.db) }
@@ -97,27 +113,27 @@ export function registerCatalogIpc(dataDir: string): () => void {
   })
   ipcMain.handle(catalogChannels.searchItems, (_event, payload: unknown) => {
     const filters = itemCatalogFiltersSchema.parse(payload)
-    return filters.gameId === 'mhp2g' ? p2gItems().searchItems(filters) : repositoryEntry(filters.gameId).repository.searchItems({ ...filters, gameId: filters.gameId })
+    return filters.gameId === 'mhp3' ? p3Items().searchItems(filters) : filters.gameId === 'mhp2g' ? p2gItems().searchItems(filters) : repositoryEntry(filters.gameId).repository.searchItems({ ...filters, gameId: filters.gameId })
   })
   ipcMain.handle(catalogChannels.getItem, (_event, payload: unknown) => {
     const identity = itemIdentitySchema.parse(payload)
-    return identity.gameId === 'mhp2g' ? p2gItems().getItem(identity) : repositoryEntry(identity.gameId).repository.getItem(identity)
+    return identity.gameId === 'mhp3' ? p3Items().getItem(identity) : identity.gameId === 'mhp2g' ? p2gItems().getItem(identity) : repositoryEntry(identity.gameId).repository.getItem(identity)
   })
   ipcMain.handle(catalogChannels.getItemFacets, (_event, payload: unknown) => {
-    const gameId = catalogGameIdSchema.parse(payload)
-    return gameId === 'mhp2g' ? p2gItems().getItemFacets() : repositoryEntry(gameId).repository.getItemFacets(gameId)
+    const gameId = itemCatalogGameIdSchema.parse(payload)
+    return gameId === 'mhp3' ? p3Items().getItemFacets() : gameId === 'mhp2g' ? p2gItems().getItemFacets() : repositoryEntry(gameId).repository.getItemFacets(gameId)
   })
   ipcMain.handle(catalogChannels.searchDecorations, (_event, payload: unknown) => {
     const filters = decorationCatalogFiltersSchema.parse(payload)
-    return filters.gameId === 'mhp2g' ? p2gDecorations().searchDecorations(filters) : repositoryEntry(filters.gameId).decorations.searchDecorations({ ...filters, gameId: filters.gameId })
+    return filters.gameId === 'mhp3' ? p3Decorations().searchDecorations(filters) : filters.gameId === 'mhp2g' ? p2gDecorations().searchDecorations(filters) : repositoryEntry(filters.gameId).decorations.searchDecorations({ ...filters, gameId: filters.gameId })
   })
   ipcMain.handle(catalogChannels.getDecoration, (_event, payload: unknown) => {
     const identity = decorationIdentitySchema.parse(payload)
-    return identity.gameId === 'mhp2g' ? p2gDecorations().getDecoration(identity) : repositoryEntry(identity.gameId).decorations.getDecoration(identity)
+    return identity.gameId === 'mhp3' ? p3Decorations().getDecoration(identity) : identity.gameId === 'mhp2g' ? p2gDecorations().getDecoration(identity) : repositoryEntry(identity.gameId).decorations.getDecoration(identity)
   })
   ipcMain.handle(catalogChannels.getDecorationFacets, (_event, payload: unknown) => {
-    const gameId = catalogGameIdSchema.parse(payload)
-    return gameId === 'mhp2g' ? p2gDecorations().getDecorationFacets() : repositoryEntry(gameId).decorations.getDecorationFacets(gameId)
+    const gameId = decorationCatalogGameIdSchema.parse(payload)
+    return gameId === 'mhp3' ? p3Decorations().getDecorationFacets() : gameId === 'mhp2g' ? p2gDecorations().getDecorationFacets() : repositoryEntry(gameId).decorations.getDecorationFacets(gameId)
   })
   ipcMain.handle(catalogChannels.searchWeapons, (_event, payload: unknown) => {
     const filters = weaponCatalogFiltersSchema.parse(payload)
@@ -225,6 +241,7 @@ export function registerCatalogIpc(dataDir: string): () => void {
 
   return () => {
     dictionary?.db.close(); dictionary = undefined
+    p3?.db.close(); p3 = undefined
     p2g?.db.close(); p2g = undefined
     for (const channel of Object.values(catalogChannels)) ipcMain.removeHandler(channel)
     for (const value of repositories.values()) value.db.close()

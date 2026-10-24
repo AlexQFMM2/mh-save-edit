@@ -1,4 +1,5 @@
 import { hasP2gArmors, P2gArmorCatalogRepository } from './p2gArmorRepository'
+import { modernMonsterText } from './monsterNaming.mjs'
 import type { P2gArmorSummary } from './p2gArmorTypes'
 import { hasP2gDecorations } from './p2gDecorationLinks'
 import type Database from 'better-sqlite3'
@@ -8,7 +9,7 @@ import type { P2gSkillEquipmentDetail, P2gSkillEquipmentSummary } from './p2gSki
 type StoredActivation = { activationKey: string; nativeTextOrdinal: number; nameCn: string; nameJp: string; threshold: number; direction: 'positive'|'negative'; descriptionCn: string; descriptionJp: string; components: (SkillActivationLink & { nameJp: string; skillId: number })[] }
 type StoredSkill = { skillId: number; nameCn: string; nameJp: string; nameSource: string; sourceUrl: string; activations: StoredActivation[]; specialRule: {descriptionCn:string;descriptionJp:string}|null }
 type StoredEquipment = Omit<P2gSkillEquipmentDetail, 'gameId'|'skills'|'recipes'> & { isPlaceholder: boolean; skills: { skillId:number;points:number }[]; recipes:{recipeKey:string;materials:{itemId:number;quantity:number}[]}[] }
-const normalize = (value: string) => value.normalize('NFKC').toLocaleLowerCase().replace(/\s+/g, '')
+const normalize = (value: string) => modernMonsterText(value).normalize('NFKC').toLocaleLowerCase().replace(/\s+/g, '')
 const matchLabel: Record<string,string> = {name:'技能系',activation:'发动技能',effect:'效果说明',component:'复合技能',armor:'相关防具',decoration:'相关装饰品'}
 export const hasP2gSkills = (db: Database.Database) => Boolean(db.prepare("SELECT 1 FROM meta WHERE key='skill_schema' AND value='mhp2g-skills-v1'").get())
 

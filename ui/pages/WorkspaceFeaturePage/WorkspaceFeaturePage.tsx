@@ -30,7 +30,14 @@ export function WorkspaceFeaturePage({ pageId }: WorkspaceFeaturePageProps) {
   const [params] = useSearchParams()
 
   const baseContent = featureContent[pageId]
-  const content = game.id === 'mhp2g' ? {
+  const content = game.id === 'mhp3' ? {
+    title: baseContent.title,
+    description: pageId === 'save-editor'
+      ? 'P3 的 PPSSPP 存档读取与修改功能待接入。'
+      : pageId === 'loadout'
+        ? 'P3 配装器待接入，将支持武器、防具、护石与装饰品组合。'
+        : `P3 ${baseContent.title}待接入，资料完善后将在这里开放浏览。`,
+  } : game.id === 'mhp2g' ? {
     title: baseContent.title,
     description: pageId === 'loadout'
       ? 'P2G 配装器待接入，将支持武器、防具和装饰品组合；本作没有护石。'

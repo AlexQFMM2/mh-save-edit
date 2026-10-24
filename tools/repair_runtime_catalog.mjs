@@ -6,6 +6,7 @@ import Database from 'better-sqlite3'
 import { repairRuntimeArmorSkills } from './runtime/repairArmorSkills.mjs'
 import { repairMh4gCharms } from './runtime/repairMh4gCharms.mjs'
 import { repairMh4gArmorIdentities } from './runtime/mh4gArmorIdentities.mjs'
+import { repairRuntimeMonsterNames } from './runtime/monsterNames.mjs'
 
 function repairMh3gDecorations() {
 const root = path.resolve(import.meta.dirname, '..')
@@ -98,3 +99,4 @@ if (fs.existsSync(mh4gPath)) {
     console.log('MH4G armor save identities prepared', repairMh4gArmorIdentities(db))
   } finally { db.close() }
 }
+repairRuntimeMonsterNames(path.resolve(import.meta.dirname, '..', 'data'))

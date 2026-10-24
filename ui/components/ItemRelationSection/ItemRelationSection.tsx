@@ -1,3 +1,4 @@
+import { ItemSkillTags } from '../ItemSkillTags/ItemSkillTags'
 import { itemNumber } from '../../../api/catalog/itemIdentity'
 import { useId, useMemo, useState } from 'react'
 import { ChevronDown } from 'lucide-react'
@@ -84,15 +85,16 @@ export function ItemRelationSection({ title, relations, onSelectItem, onSelectCa
                       <button
                         className="item-relation-section__link" key={`${itemNumber(target)}-${target.nameCn}`}
                         type="button"
-                        onClick={() => { if (onSelectCatalogItem) onSelectCatalogItem(target); else if (target.gameId !== 'mhp2g') onSelectItem(target.saveId) }}
+                        onClick={() => { if (target.gameId === 'mhp3' && target.p3Decoration && onSelectDecoration) onSelectDecoration(target.itemId); else if (onSelectCatalogItem) onSelectCatalogItem(target); else if (target.gameId !== 'mhp2g' && target.gameId !== 'mhp3') onSelectItem(target.saveId) }}
                       >
-                        {target.nameCn}
+                        {target.nameCn}<ItemSkillTags decoration={target.p3Decoration} />
                       </button>
                     ))}
                   </span>
                 )}
               </span>
               <small className="item-relation-section__values">
+                {['基础成功率','产量','售价','价格类型','轮换','解锁条件','材料数量','说明'].filter(key => relation.metadata[key]).map(key => <span className="item-relation-section__evidence" key={key}>{key}：{relation.metadata[key]}</span>)}
                 {relation.quantity != null ? `× ${relation.quantity}` : ''}
                 {relation.probability != null ? ` · ${relation.probability}%` : relation.metadata.evidence ? ' · 概率未知' : ''}
                 {relation.metadata.probabilitySource && ` · ${relation.metadata.probabilitySource}`}

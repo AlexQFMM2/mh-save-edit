@@ -18,6 +18,7 @@ export function ItemDetailDrawer(props: Props) {
   const navigate = useNavigate()
   const [item, setItem] = useState<CatalogItemDetail | null>(null)
   const [loading, setLoading] = useState(false)
+  const [retry, setRetry] = useState(0)
   const [error, setError] = useState<string>()
   useEffect(() => {
     if (!identity) return
@@ -27,10 +28,10 @@ export function ItemDetailDrawer(props: Props) {
     if (!api) { setError('图鉴 API 尚未连接，请在 Electron 应用中打开。'); setLoading(false); return () => { active = false } }
     void api.getItem(itemIdentity(identity.gameId, itemNumber(identity))).then((result) => { if (active) setItem(result) }).catch((cause) => { if (active) setError(cause instanceof Error ? cause.message : '道具详情读取失败') }).finally(() => { if (active) setLoading(false) })
     return () => { active = false }
-  }, [gameId, id])
+  }, [gameId, id, retry])
   if (!identity) return null
   const go = (path: string) => { onClose(); navigate(path) }
-  const content = <div className="item-detail-drawer"><DetailDrawer title="关联道具" onClose={onClose}><ItemDetailPanel item={item} loading={loading} error={error} allowCatalogWrite={false}
+  const content = <div className="item-detail-drawer"><DetailDrawer title="关联道具" onClose={onClose}><ItemDetailPanel item={item} loading={loading} error={error} onRetry={() => setRetry(n => n+1)} allowCatalogWrite={false}
     onSelectCatalogItem={(target) => go(`/game/${target.gameId}/catalog/items?target=${itemNumber(target)}&item=${itemNumber(target)}`)}
     onSelectPending={(target) => {
       const paths = { weapon: 'weapons', armor: 'armor', decoration: 'decorations', monster: 'monsters', quest: 'quests' }
@@ -44,5 +45,5 @@ export function ItemDetailDrawer(props: Props) {
     onSelectQuest={(quest) => go(`/game/${gameId}/catalog/quests?target=${encodeURIComponent(quest.questKey)}&quest=${encodeURIComponent(quest.questKey)}`)}
     onSelectPalicoEquipment={(equipment) => go(`/game/mhgu/catalog/palico/equipment?view=${equipment.kind === 'weapon' ? 'weapon' : 'armor'}&target=${equipment.equipmentId}&equipment=${equipment.equipmentId}`)}
   /></DetailDrawer></div>
-  return gameId === 'mhp2g' ? createPortal(content, document.body) : content
+  return (gameId === 'mhp2g' || gameId === 'mhp3') ? createPortal(content, document.body) : content
 }

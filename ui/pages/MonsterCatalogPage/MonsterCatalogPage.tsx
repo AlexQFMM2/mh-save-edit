@@ -6,12 +6,12 @@ import { MonsterDetailPanel } from '../../components/MonsterDetailPanel/MonsterD
 import { MonsterSearchList } from '../../components/MonsterSearchList/MonsterSearchList'
 import { P2gMonsterQuestDrawer } from '../../components/P2gMonsterQuestDrawer/P2gMonsterQuestDrawer'
 import { QuestDetailDrawer } from '../../components/QuestDetailDrawer/QuestDetailDrawer'
-import type { ShellOutletContext } from '../../components/WorkspaceContent/WorkspaceContent'
+import type { WorkspaceOutletContext } from '../../components/WorkspaceContent/WorkspaceContent'
 import './MonsterCatalogPage.css'
 
 const tabs: MonsterCatalogTab[] = ['weakness', 'ailments', 'drops', 'quests']
 export function MonsterCatalogPage() {
-  const { game } = useOutletContext<ShellOutletContext>()
+  const { game } = useOutletContext<WorkspaceOutletContext>()
   const [params, setParams] = useSearchParams()
   const query = params.get('q') ?? ''
   const [queryInput, setQueryInput] = useState(query)

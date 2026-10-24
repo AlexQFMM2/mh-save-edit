@@ -16,7 +16,7 @@ export function GameVersionCard({ game, selected, onSelect, onPreviewChange }: G
 
   return (
     <motion.button
-      className={`game-version-card${selected ? ' game-version-card--selected' : ''}`}
+      className={`game-version-card${selected ? ' game-version-card--selected' : ''}${game.posterFit === 'contain' ? ' game-version-card--contain-poster' : ''}`}
       type="button"
       aria-pressed={selected}
       aria-label={`选择 ${game.title}`}
@@ -40,7 +40,7 @@ export function GameVersionCard({ game, selected, onSelect, onPreviewChange }: G
       <span className="game-version-card__copy">
         <span className="game-version-card__title">{game.title}</span>
         <span className="game-version-card__subtitle">{game.subtitle}</span>
-        {!hasRuntimeWorkspace(game) && <span className="game-version-card__status">道具图鉴 · 接入中</span>}
+        {!hasRuntimeWorkspace(game) && <span className="game-version-card__status">{game.id === 'mhp3' ? '道具／装饰品已接入' : '功能待接入'}</span>}
       </span>
     </motion.button>
   )

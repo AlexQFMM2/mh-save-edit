@@ -100,6 +100,6 @@ export class P2gItemCatalogRepository {
     return { rarities:distinct('rarity'), maxStacks:distinct('max_stack'), relations:(this.db.prepare('SELECT DISTINCT source_kind,usage_kind FROM catalog_item_relations ORDER BY source_kind').all() as Row[]).map(r=>({sourceKind:String(r.source_kind),usageKind:r.usage_kind as string|null})) }
   }
 }
-function summary(row: Row): CatalogItemSummary {
+function summary(row: Row): Extract<CatalogItemSummary, { gameId: 'mhp2g' }> {
   return {gameId:'mhp2g',itemId:row.item_id,dexId:null,nameCn:row.name_cn,nameEn:'',rarity:row.rarity,maxStack:row.max_stack,iconPath:row.icon_path || null,isPlaceholder:Boolean(row.is_placeholder)}
 }

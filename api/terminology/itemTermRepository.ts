@@ -1,5 +1,5 @@
 import type Database from 'better-sqlite3'
-import type { CatalogGameId, CatalogItemDetail, ItemIdentity } from '../catalog/types'
+import type { ItemCatalogGameId, CatalogItemDetail, ItemIdentity } from '../catalog/types'
 import { catalogIdentityRows, identityFingerprint, normalizeTerm } from './catalogIdentity.mjs'
 import type { ItemTerm, ItemTermFilters, ItemTermLabel, ItemTermPage } from './types'
 
@@ -13,13 +13,13 @@ export class ItemTermRepository {
       this.members.set(`${row.game_id}:${row.item_id}`, row)
     }
   }
-  bindCatalog(db: Database.Database, gameId: CatalogGameId) {
+  bindCatalog(db: Database.Database, gameId: ItemCatalogGameId) {
     const expected = this.db.prepare('SELECT value FROM meta WHERE key=?').get(`catalog:${gameId}`) as { value: string } | undefined
     if (expected?.value !== identityFingerprint(catalogIdentityRows(db, gameId))) throw new Error(`${gameId} 道具资料与译名词典不匹配，请重新生成配套资料。`)
     db.function('item_display_name', { deterministic: true }, (game, id, original) => this.name(String(game), Number(id), String(original)))
   }
   name(gameId: string, id: number, original: string) { return this.members.get(`${gameId}:${id}`)?.preferred_name ?? original }
-  matchItems(gameId: CatalogGameId, query?: string): Map<number, string> {
+  matchItems(gameId: ItemCatalogGameId, query?: string): Map<number, string> {
     const normalized = normalizeTerm(query)
     if (!normalized) return new Map()
     const rows = this.db.prepare(`SELECT m.item_id,a.name FROM aliases a JOIN members m ON m.term_id=a.term_id
@@ -29,10 +29,10 @@ export class ItemTermRepository {
     return matches
   }
   project<T extends ItemIdentity & { nameCn: string }>(item: T, query?: string, matchedAlias?: string): T & { terminology?: ItemTermLabel } {
-    const member = this.members.get(`${item.gameId}:${item.gameId === 'mhp2g' ? item.itemId : item.saveId}`)
+    const member = this.members.get(`${item.gameId}:${(item.gameId === 'mhp2g' || item.gameId === 'mhp3') ? item.itemId : item.saveId}`)
     if (!member) return item
     const alias = query && matchedAlias && !normalizeTerm(member.preferred_name).includes(normalizeTerm(query)) ? matchedAlias : undefined
-    return Object.assign({}, item, { nameCn: member.preferred_name, terminology: { termId: member.term_id, originalName: member.original_name, source: member.source, status: member.status, ...(alias ? { matchedAlias: alias } : {}) } })
+    return Object.assign({}, item, { nameCn: item.gameId === 'mhp3' ? item.nameCn : member.preferred_name, terminology: { termId: member.term_id, originalName: member.original_name, source: member.source, status: member.status, ...(alias ? { matchedAlias: alias } : {}) } })
   }
   detail<T extends CatalogItemDetail>(item: T): T {
     return { ...this.project(item), relations: item.relations.map(relation => {

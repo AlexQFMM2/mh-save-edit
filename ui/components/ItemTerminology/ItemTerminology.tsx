@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import type { CatalogGameId } from '../../../api/catalog/types'
+import type { ItemCatalogGameId } from '../../../api/catalog/types'
 import type { ItemTermPage } from '../../../api/terminology/types'
 import { SearchableSelect } from '../SearchableSelect/SearchableSelect'
 import { WorkspaceDrawer } from '../WorkspaceDrawer/WorkspaceDrawer'
@@ -8,13 +8,14 @@ import './ItemTerminology.css'
 
 const gameOptions = [
   { value: '', label: '全部游戏', keywords: ['all'] },
+  { value: 'mhp3', label: 'P3', keywords: ['MHP3', 'Portable 3rd', '怪物猎人携带版3'] },
   { value: 'mhp2g', label: 'P2G', keywords: ['怪物猎人携带版2G', 'Portable 2nd G'] },
   { value: 'mh3g', label: '3G', keywords: ['MH3G', '3U', 'Tri Ultimate'] },
   { value: 'mh4g', label: '4G', keywords: ['MH4G', '4U', 'Ultimate'] },
   { value: 'mhgu', label: 'GU', keywords: ['MHGU', 'XX', 'Generations Ultimate'] },
 ]
 
-export function ItemTerminology({ currentGame, onClose }: { currentGame?: CatalogGameId; onClose(): void }) {
+export function ItemTerminology({ currentGame, onClose }: { currentGame?: ItemCatalogGameId; onClose(): void }) {
   const [query, setQuery] = useState(''), [gameId, setGameId] = useState(currentGame ?? '')
   const [page, setPage] = useState(1), [retry, setRetry] = useState(0)
   const [result, setResult] = useState<ItemTermPage>(), [error, setError] = useState(''), [loading, setLoading] = useState(true)
@@ -22,7 +23,7 @@ export function ItemTerminology({ currentGame, onClose }: { currentGame?: Catalo
     let active = true
     setLoading(true); setError('')
     const timer = setTimeout(() => {
-      Promise.resolve().then(() => window.mhSaveEditor.catalog.searchItemTerms({ query, gameId: gameId ? gameId as CatalogGameId : undefined, page, pageSize: 30 }))
+      Promise.resolve().then(() => window.mhSaveEditor.catalog.searchItemTerms({ query, gameId: gameId ? gameId as ItemCatalogGameId : undefined, page, pageSize: 30 }))
         .then(value => { if (active) setResult(value) })
         .catch(reason => { if (active) { setError(reason instanceof Error ? reason.message : '词典读取失败'); setResult(undefined) } })
         .finally(() => { if (active) setLoading(false) })

@@ -4,3 +4,5 @@
 .item-list__rows { min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
 .item-list__state { display: grid; min-height: var(--global-state-min-height); place-items: center; padding: var(--global-state-padding); color: var(--global-state-color); line-height: var(--global-state-line-height); text-align: center; }
 .item-list__state--error { color: var(--global-state-error-color); }
+
+.item-list__retry { padding:var(--global-spacing-2); border:var(--global-border-width) solid var(--global-theme-color-border); border-radius:var(--global-radius-sm); background:var(--global-theme-color-surface-inset); color:var(--global-theme-color-text-primary); font-size:var(--global-typography-font-size-small); cursor:pointer; }

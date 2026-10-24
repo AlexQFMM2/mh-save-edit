@@ -2,7 +2,7 @@
 
 Only cropped PNGs and the minimum mapping/provenance leave that machine.
 BOOT addresses were traced through the native item draw path; see the generated
-manifest and docs/mhp2g-item-icons.md. No original executable or atlas is emitted.
+manifest and docs/mhp2g/item-icons.md. No original executable or atlas is emitted.
 """
 import base64
 import hashlib

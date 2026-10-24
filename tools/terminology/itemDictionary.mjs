@@ -1,4 +1,5 @@
 import { normalizeTerm, identityFingerprint } from '../../api/terminology/catalogIdentity.mjs'
+import { modernMonsterText } from '../../api/catalog/monsterNaming.mjs'
 
 // Width variants of Latin letters/digits do not change an item's identity.
 // Preserve level prefixes, circled numbers, punctuation and all kana/kanji.
@@ -26,9 +27,13 @@ export function createItemDictionary(db, guTerms, catalogs) {
     meta.run('schema', 'item-terminology-v1')
     for (const term of guTerms) {
       if (term.kind !== 'item' || !term.zhHans) continue
-      // Only source-verified official Chinese is eligible as the preferred name.
+      // Require verified official input. An explicit project display policy has
+      // its own provenance; it does not relabel derived names as official text.
       if (term.chineseSource !== 'gu_official') throw new Error(`Unverified GU Chinese: ${term.id}`)
-      insertTerm.run(term.id, 'item', term.ja ?? '', term.zhHans, 'GU 官方简中')
+      const preferred = modernMonsterText(term.zhHans)
+      const source = preferred === term.zhHans ? 'GU 官方简中' : '项目译名：按用户确认的崛起怪物名称统一相关称呼'
+      insertTerm.run(term.id, 'item', term.ja ?? '', preferred, source)
+      if (preferred !== term.zhHans) alias(term.id, preferred, 'mhgu', source)
       for (const [name, source] of [[term.zhHans, 'GU 官方简中'], [term.zhHant, 'GU 官方繁中'], [term.en, 'GU 英文'], [term.ja, 'GU 日文对照']]) alias(term.id, name, 'mhgu', source)
       if (term.ja?.trim()) {
         const key = japaneseKey(term.ja)
@@ -41,20 +46,23 @@ export function createItemDictionary(db, guTerms, catalogs) {
       for (const row of rows.filter(row => !row.is_placeholder)) {
         const ja = row.name_jp.trim(), matches = ja ? byJapanese.get(japaneseKey(ja)) ?? [] : []
         const status = !ja ? 'missing-japanese' : matches.length === 1 ? 'matched' : matches.length > 1 ? 'ambiguous-japanese' : 'not-in-gu'
-        const id = status === 'matched' ? matches[0].id : `local:${gameId}:item:${row.id}`
+        const useGu = status === 'matched' && (gameId !== 'mhp3' || modernMonsterText(row.name_cn) === modernMonsterText(matches[0].zhHans))
+        const id = useGu ? matches[0].id : `local:${gameId}:item:${row.id}`
         stats[gameId][status === 'matched' ? 'matched' : status === 'missing-japanese' ? 'missingJapanese' : status === 'not-in-gu' ? 'absentFromGu' : 'ambiguous']++
-        if (status !== 'matched') {
-          insertTerm.run(id, 'item', ja, row.name_cn, row.name_source ?? '保留本作原译名')
+        if (!useGu) {
+          const preferred = modernMonsterText(row.name_cn)
+          insertTerm.run(id, 'item', ja, preferred, preferred === row.name_cn ? row.name_source ?? '保留本作原译名' : '项目译名：按用户确认的崛起怪物名称统一相关称呼')
+          if (preferred !== row.name_cn) alias(id, preferred, gameId, '项目当前显示名')
           reviews.push({ gameId, itemId: row.id, status })
         }
-        if (status === 'matched' && row.name_status && row.name_cn !== matches[0].zhHans) throw new Error(`P2G catalog/dictionary translation conflict at ${row.id}`)
-        const memberStatus = row.name_status === 'pending' ? 'translation-pending' : row.name_status === 'reviewed' ? 'project-reviewed' : row.name_status === 'official' && status !== 'matched' ? 'official-wording' : status
+        if (gameId !== 'mhp3' && status === 'matched' && row.name_status && modernMonsterText(row.name_cn) !== modernMonsterText(matches[0].zhHans)) throw new Error(`P2G catalog/dictionary translation conflict at ${row.id}`)
+        const memberStatus = gameId === 'mhp3' ? 'project-reviewed' : row.name_status === 'pending' ? 'translation-pending' : row.name_status === 'reviewed' ? 'project-reviewed' : row.name_status === 'official' && status !== 'matched' ? 'official-wording' : status
         insertMember.run(gameId, row.id, id, row.original_name ?? row.name_cn, ja, memberStatus)
         alias(id, row.name_cn, gameId, row.name_source ?? '本作原译名')
         alias(id, row.original_name, gameId, '旧汉化搜索别名（非定名依据）')
         for (const name of itemAliases.get(row.id) ?? []) alias(id, name, gameId, '项目旧译名搜索别名（非定名依据）')
         alias(id, row.name_en, gameId, '本作英文名')
-        alias(id, ja, gameId, gameId === 'mhp2g' ? 'P2G 日文资料对照' : 'Dex 日文')
+        alias(id, ja, gameId, gameId === 'mhp3' ? 'P3 原生日文' : gameId === 'mhp2g' ? 'P2G 日文资料对照' : 'Dex 日文')
         for (const name of dexAliases.get(row.dex_id) ?? []) alias(id, name, gameId, 'Dex 译名')
       }
     }

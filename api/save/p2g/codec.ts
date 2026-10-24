@@ -25,7 +25,7 @@ export function cmac(data: Buffer, key: Buffer): Buffer {
   return aes(key, prepared).subarray(-16)
 }
 
-/** Independently expressed mode-5 PSP + native P2G pipeline; provenance in docs/mhp2g-save-editor.md. */
+/** Independently expressed mode-5 PSP + native P2G pipeline; provenance in docs/mhp2g/save-editor.md. */
 export class P2gCodec {
   constructor(readonly profile: P2gProfile) {}
   fileMac(bin: Buffer): Buffer { return aes(this.profile.macKey, xor(xor(cmac(bin, this.profile.macKey), this.profile.hashKey), this.profile.gameKey)) }

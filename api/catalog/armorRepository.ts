@@ -1,4 +1,5 @@
 import type Database from 'better-sqlite3'
+import { monsterNameQuery } from './monsterNaming.mjs'
 import type { GameId } from '../core/loadout'
 import type {
   ArmorCatalogFacets, ArmorCatalogFilters, ArmorDetail, ArmorIdentity, ArmorMaterial,
@@ -23,7 +24,7 @@ export class ArmorCatalogRepository {
     if (filters.targetDexId != null) { where.push('a.dex_id=?'); values.push(filters.targetDexId) }
     if (!filters.includePlaceholders) where.push('a.is_placeholder=0')
     if (filters.targetDexId == null) {
-      const query = filters.query?.trim()
+      const query = monsterNameQuery(filters.query)?.trim()
       if (query) {
         const numeric = /^0x[0-9a-f]+$/i.test(query) ? Number.parseInt(query.slice(2), 16) : /^\d+$/.test(query) ? Number(query) : null
         const parts = ['a.name_cn LIKE ?', 'a.name_en LIKE ?', 'a.name_jp LIKE ?']
@@ -59,7 +60,7 @@ export class ArmorCatalogRepository {
     if (!filters.includePlaceholders) memberConditions.push('a.is_placeholder=0')
     if (filters.targetDexId != null) { memberConditions.push('a.dex_id=?'); values.push(filters.targetDexId) }
     if (filters.targetDexId == null) {
-      const query = filters.query?.trim()
+      const query = monsterNameQuery(filters.query)?.trim()
       if (query) {
         const numeric = /^0x[0-9a-f]+$/i.test(query) ? Number.parseInt(query.slice(2), 16) : /^\d+$/.test(query) ? Number(query) : null
         const parts = ['s.blademaster_name_cn LIKE ?', 's.gunner_name_cn LIKE ?', 'a.name_cn LIKE ?', 'a.name_en LIKE ?', 'a.name_jp LIKE ?']

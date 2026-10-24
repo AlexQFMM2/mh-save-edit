@@ -12,6 +12,13 @@ beforeEach(() => {
   Object.defineProperty(window, 'mhSaveEditor', { configurable: true, value: { catalog: { searchItemTerms: search } } })
 })
 afterEach(cleanup)
+it('opens the dictionary filtered to the supported P3 item domain', async () => {
+  const user = userEvent.setup()
+  render(<CommonHeader currentGame={gameVersions.find(game => game.id === 'mhp3')} />)
+  await user.click(screen.getByRole('button', { name: '译名词典' }))
+  await screen.findByRole('heading', { name: '示例首选名' })
+  expect(search).toHaveBeenLastCalledWith(expect.objectContaining({ gameId: 'mhp3', page: 1 }))
+})
 it('opens globally, shows provenance, searches/paginates, and restores focus on Escape', async () => {
   const user = userEvent.setup()
   render(<CommonHeader currentGame={gameVersions.find(game => game.id === 'mhp2g')} />)

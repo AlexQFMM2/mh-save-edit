@@ -1,4 +1,5 @@
 import type Database from 'better-sqlite3'
+import { monsterNameQuery } from './monsterNaming.mjs'
 import type { GameId } from '../core/loadout'
 import type {
   MonsterAilment, MonsterCatalogFacets, MonsterCatalogFilters, MonsterDetail, MonsterDrop,
@@ -22,12 +23,13 @@ export class MonsterCatalogRepository {
       values.push(filters.targetMonsterId)
     } else {
       if (!filters.includePlaceholders) where.push('is_placeholder=0')
-      const query = filters.query?.trim()
+      const query = monsterNameQuery(filters.query)?.trim()
       if (query) {
         const numeric = /^0x[0-9a-f]+$/i.test(query) ? Number.parseInt(query.slice(2), 16) : /^\d+$/.test(query) ? Number(query) : null
         const clauses = ['name_cn LIKE ?', 'name_en LIKE ?', 'name_jp LIKE ?']
         const like = `%${query}%`
         values.push(like, like, like)
+        if (filters.gameId === 'mh4g' && query === '电龙') clauses.push("(name_en='Khezu' AND name_jp='フルフル')")
         if (numeric != null) { clauses.push('monster_id=?'); values.push(numeric) }
         where.push(`(${clauses.join(' OR ')})`)
       }

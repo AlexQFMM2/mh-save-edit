@@ -12,7 +12,7 @@ raw `Get-Content` strings, file objects or provider objects into deep
 SCP when original bytes matter. A local SSH timeout does not bound the remote
 process lifetime; complex queries require remote time/memory limits and an exit
 check before retrying. Incident details and evidence locations are in the
-[plan handoff](../../../plan/mhp2g-chinese-patch/README.md#2026-10-16-windows-故障排查与远程查询限制).
+[plan handoff](../../../plan/archive/2026-10-24/mhp2g-chinese-patch/README.md#2026-10-16-windows-故障排查与远程查询限制).
 
 Read-only comprehensive resource analysis lives in
 [`analysis/`](analysis/README.md). It maintains separate directory, text,
@@ -29,7 +29,7 @@ research evidence, logs and local switch scripts are excluded. The Release is a
 prerelease and does not claim completed translation or runtime acceptance. Run
 `python3 -m unittest discover -s tests -p p2g_release_package_test.py -v` to check
 packaging with synthetic data only. Installation and test templates live in
-`docs/mhp2g-chinese-patch-install.md` and `docs/mhp2g-chinese-patch-testing.md`.
+`docs/mhp2g/chinese-patch-install.md` and `docs/mhp2g/chinese-patch-testing.md`.
 
 The 2026-10-16 user request authorizes an early trial of detected, translatable
 text before complete resource/G1 acceptance. This does not pass either gate.
@@ -196,4 +196,4 @@ only. Real packets and validation reports stay in the ignored private directory.
 Windows switching reuses the original bone kit's backup, lock and log archive.
 Only one plugin directory is active. Old bone A/B packet format and build entry
 remain supported. See the generated Chinese instructions and the current
-[handoff](../../../plan/mhp2g-chinese-patch/README.md).
+[handoff](../../../plan/archive/2026-10-24/mhp2g-chinese-patch/README.md).

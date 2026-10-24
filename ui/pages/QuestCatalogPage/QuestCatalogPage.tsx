@@ -9,14 +9,14 @@ import { QuestCatalogToolbar } from '../../components/QuestCatalogToolbar/QuestC
 import { QuestDetailDrawer } from '../../components/QuestDetailDrawer/QuestDetailDrawer'
 import { QuestDetailPanel } from '../../components/QuestDetailPanel/QuestDetailPanel'
 import { QuestList } from '../../components/QuestList/QuestList'
-import type { ShellOutletContext } from '../../components/WorkspaceContent/WorkspaceContent'
+import type { WorkspaceOutletContext } from '../../components/WorkspaceContent/WorkspaceContent'
 import './QuestCatalogPage.css'
 
 const tabs: QuestDetailTab[] = ['info', 'rewards', 'unlocks']
 const emptyFacets: QuestCatalogFacets = { systems: [], levels: [], ranks: [], questTypes: [], locations: [], availabilities: [] }
 
 export function QuestCatalogPage() {
-  const { game } = useOutletContext<ShellOutletContext>()
+  const { game } = useOutletContext<WorkspaceOutletContext>()
   const [params, setParams] = useSearchParams()
   const query = params.get('q') ?? ''
   const target = params.get('target') ?? undefined

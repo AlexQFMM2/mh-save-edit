@@ -74,6 +74,7 @@ describe('workspace navigation', () => {
 
   it('accepts only configured game ids', () => {
     expect(isGameId('mhp2g')).toBe(true)
+    expect(isGameId('mhp3')).toBe(true)
     expect(isGameId('mh3g')).toBe(true)
     expect(isGameId('mh4g')).toBe(true)
     expect(isGameId('mhgu')).toBe(true)

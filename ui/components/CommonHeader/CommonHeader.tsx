@@ -1,7 +1,7 @@
 import { BookOpen, Shield } from 'lucide-react'
 import { useState } from 'react'
 import { ItemTerminology } from '../ItemTerminology/ItemTerminology'
-import type { GameVersionDefinition } from '../../data/gameVersions'
+import { hasRuntimeWorkspace, type GameVersionDefinition } from '../../data/gameVersions'
 import './CommonHeader.css'
 
 type CommonHeaderProps = {
@@ -28,7 +28,7 @@ export function CommonHeader({ currentGame, saveStatus = '暂未选择存档' }:
         {currentGame ? <span className="common-header__status-detail">{saveStatus}</span> : null}
       </div>
       </div>
-      {dictionaryOpen && <ItemTerminology currentGame={currentGame?.id} onClose={() => setDictionaryOpen(false)} />}
+      {dictionaryOpen && <ItemTerminology currentGame={currentGame && (hasRuntimeWorkspace(currentGame) || currentGame.id === 'mhp3') ? currentGame.id : undefined} onClose={() => setDictionaryOpen(false)} />}
     </header>
   )
 }

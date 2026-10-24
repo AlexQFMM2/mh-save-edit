@@ -4,7 +4,7 @@ import { DetailDrawer } from '../../components/DetailDrawer/DetailDrawer'
 import { CatalogPendingDetail } from '../../components/CatalogPendingDetail/CatalogPendingDetail'
 import { useEffect, useMemo, useState } from 'react'
 import { useOutletContext, useSearchParams } from 'react-router-dom'
-import type { CatalogItemDetail, CatalogItemSummary, ItemIdentity, ItemRelation } from '../../../api/catalog/types'
+import type { ItemCatalogFacets, ItemCatalogFilters, CatalogItemDetail, CatalogItemSummary, ItemIdentity, ItemRelation } from '../../../api/catalog/types'
 import { ItemCatalogToolbar } from '../../components/ItemCatalogToolbar/ItemCatalogToolbar'
 import { ItemDetailPanel } from '../../components/ItemDetailPanel/ItemDetailPanel'
 import { ItemFilterBar } from '../../components/ItemFilterBar/ItemFilterBar'
@@ -17,21 +17,24 @@ import { ArmorDetailDrawer } from '../../components/ArmorDetailDrawer/ArmorDetai
 import { MonsterDetailDrawer } from '../../components/MonsterDetailDrawer/MonsterDetailDrawer'
 import { QuestDetailDrawer } from '../../components/QuestDetailDrawer/QuestDetailDrawer'
 import { PalicoEquipmentDetailDrawer } from '../../components/PalicoEquipmentDetailDrawer/PalicoEquipmentDetailDrawer'
-import type { ShellOutletContext } from '../../components/WorkspaceContent/WorkspaceContent'
+import type { ItemCatalogOutletContext } from '../../components/WorkspaceContent/WorkspaceContent'
 import './ItemCatalogPage.css'
 
 type Sort = 'itemId' | 'saveId' | 'name' | 'rarity'
 const parseNumber = (value: string | null) => value == null || value === '' ? undefined : Number(value)
 
 export function ItemCatalogPage() {
-  const { game } = useOutletContext<ShellOutletContext>()
+  const { game } = useOutletContext<ItemCatalogOutletContext>()
   const [, setParams] = useSearchParams()
   const [params] = useSearchParams()
   const [queryInput, setQueryInput] = useState(params.get('q') ?? '')
   const query = params.get('q') ?? ''
-  const sort = (params.get('sort') as Sort | null) ?? (game.id === 'mhp2g' ? 'itemId' : 'saveId')
+  const sort = (params.get('sort') as Sort | null) ?? ((game.id === 'mhp2g' || game.id === 'mhp3') ? 'itemId' : 'saveId')
   const rarity = parseNumber(params.get('rarity'))
   const maxStack = parseNumber(params.get('stack'))
+  const category = params.get('category') as ItemCatalogFilters['category'] ?? undefined
+  const quantityKind = params.get('quantity') as ItemCatalogFilters['quantityKind'] ?? undefined
+  const [retry, setRetry] = useState(0)
   const source = params.get('source') ?? undefined
   const usage = params.get('usage') ?? undefined
   const includePlaceholders = params.get('debug') === '1'
@@ -40,7 +43,7 @@ export function ItemCatalogPage() {
   const targetSaveId = parseNumber(params.get('target'))
   const [items, setItems] = useState<CatalogItemSummary[]>([])
   const [detail, setDetail] = useState<CatalogItemDetail | null>(null)
-  const [facets, setFacets] = useState<{ rarities: number[]; maxStacks: number[]; relations: { sourceKind: string; usageKind: string | null }[] }>({ rarities: [], maxStacks: [], relations: [] })
+  const [facets, setFacets] = useState<ItemCatalogFacets>({ rarities: [], maxStacks: [], relations: [] })
   const [resultMeta, setResultMeta] = useState({ total: 0, pageSize: 100, hasNext: false })
   const [loading, setLoading] = useState(true)
   const [detailLoading, setDetailLoading] = useState(false)
@@ -78,7 +81,7 @@ export function ItemCatalogPage() {
       try {
         const api = window.mhSaveEditor?.catalog
         if (!api) throw new Error('图鉴 API 尚未连接，请在 Electron 应用中打开。')
-        const result = await api.searchItems({ gameId: game.id, ...(game.id === 'mhp2g' ? { targetItemId: targetSaveId } : { targetSaveId }), query, rarity, maxStack, sourceKinds: source ? [source as never] : undefined, usageKinds: usage ? [usage as never] : undefined, includePlaceholders, sort, page, pageSize: 100 })
+        const result = await api.searchItems({ gameId: game.id, ...((game.id === 'mhp2g' || game.id === 'mhp3') ? { targetItemId: targetSaveId } : { targetSaveId }), query, rarity, maxStack, category, quantityKind, sourceKinds: source ? [source as never] : undefined, usageKinds: usage ? [usage as never] : undefined, includePlaceholders, sort, page, pageSize: 100 })
         if (!active) return
         setItems(result.items)
         setResultMeta({ total: result.total, pageSize: result.pageSize, hasNext: result.hasNext })
@@ -86,14 +89,14 @@ export function ItemCatalogPage() {
       } catch (cause) { if (active) setError(cause instanceof Error ? cause.message : '道具查询失败') } finally { if (active) setLoading(false) }
     }
     void load(); return () => { active = false }
-  }, [game.id, targetSaveId, query, rarity, maxStack, source, usage, includePlaceholders, sort, page])
+  }, [game.id, targetSaveId, query, rarity, maxStack, category, quantityKind, source, usage, includePlaceholders, sort, page, retry])
   useEffect(() => {
     let active = true
     const api = window.mhSaveEditor?.catalog
     if (!api) return () => { active = false }
-    void api.getItemFacets(game.id).then((result) => { if (active) setFacets(result) }).catch(() => undefined)
+    void api.getItemFacets(game.id).then((result) => { if (active) setFacets(result) }).catch(cause => { if (active) setError(cause instanceof Error ? cause.message : '筛选资料读取失败') })
     return () => { active = false }
-  }, [game.id])
+  }, [game.id, retry])
   useEffect(() => {
     if (selectedId == null) { setDetail(null); return }
     let active = true
@@ -102,19 +105,20 @@ export function ItemCatalogPage() {
     if (!api) { setDetailError('图鉴 API 尚未连接，请在 Electron 应用中打开。'); setDetailLoading(false); return () => { active = false } }
     void api.getItem(itemIdentity(game.id, selectedId)).then((result) => { if (active) setDetail(result) }).catch((cause) => { if (active) setDetailError(cause instanceof Error ? cause.message : '详情读取失败') }).finally(() => { if (active) setDetailLoading(false) })
     return () => { active = false }
-  }, [game.id, selectedId])
+  }, [game.id, selectedId, retry])
 
   const selectedVisible = useMemo(() => items.some((item) => itemNumber(item) === selectedId), [items, selectedId])
   const availableSources = useMemo(() => [...new Set(facets.relations.filter((value) => !value.usageKind).map((value) => value.sourceKind))], [facets])
   const availableUsages = useMemo(() => [...new Set(facets.relations.map((value) => value.usageKind).filter((value): value is string => Boolean(value)))], [facets])
   return <div className="item-catalog-page">
-    <ItemCatalogToolbar nativeIdentity={game.id === 'mhp2g'} query={queryInput} sort={sort} onQueryChange={setQueryInput} onSortChange={(value) => updateParams({ target: undefined, sort: value, page: undefined, item: undefined })} />
-    <ItemFilterBar rarities={facets.rarities} maxStacks={facets.maxStacks} availableSources={availableSources} availableUsages={availableUsages} rarity={rarity} maxStack={maxStack} source={source} usage={usage} includePlaceholders={includePlaceholders} onChange={(key, value) => updateParams({ target: undefined, [key]: value, page: undefined, item: undefined })} onReset={resetCatalog} />
+    <ItemCatalogToolbar nativeIdentity={(game.id === 'mhp2g' || game.id === 'mhp3')} query={queryInput} sort={sort} onQueryChange={setQueryInput} onSortChange={(value) => updateParams({ target: undefined, sort: value, page: undefined, item: undefined })} />
+    <ItemFilterBar categories={facets.categories} quantityKinds={facets.quantityKinds} category={category} quantityKind={quantityKind} rarities={facets.rarities} maxStacks={facets.maxStacks} availableSources={availableSources} availableUsages={availableUsages} rarity={rarity} maxStack={maxStack} source={source} usage={usage} includePlaceholders={includePlaceholders} onChange={(key, value) => updateParams({ target: undefined, [key]: value, page: undefined, item: undefined })} onReset={resetCatalog} />
     <div className="item-catalog-page__layout">
-      <section className="item-catalog-page__list" aria-label="道具列表"><ItemList items={items} selectedId={selectedVisible ? selectedId : undefined} loading={loading} error={error} onSelect={(id) => updateParams({ item: id })} /><ItemPagination page={page} pageSize={resultMeta.pageSize} total={resultMeta.total} hasNext={resultMeta.hasNext} onPageChange={(value) => updateParams({ page: value, item: undefined })} /></section>
-      <ItemDetailPanel item={detail} loading={detailLoading} error={detailError} onSelectCatalogItem={(identity) => { closeRelationDrawers(); setItemDrawerIdentity(identity) }} onSelectPending={(target) => { closeRelationDrawers(); setPendingTarget(target) }} onSelectDecoration={(saveId) => { closeRelationDrawers(); setDecorationDrawerId(saveId) }} onSelectWeapon={(weapon) => { closeRelationDrawers(); setWeaponDrawerKey(weapon.weaponKey) }} onSelectP2gArmor={armor=>{closeRelationDrawers();setP2gArmorKey(armor.armorKey)}} onSelectArmor={(armor) => { closeRelationDrawers(); setArmorDrawerId(armor.dexId) }} onSelectMonster={(monster) => { closeRelationDrawers(); setMonsterDrawerId(monster.monsterId) }} onSelectQuest={(quest) => { closeRelationDrawers(); setQuestDrawerKey(quest.questKey) }} onSelectPalicoEquipment={(equipment) => { closeRelationDrawers(); setPalicoDrawer({ kind: equipment.kind, id: equipment.equipmentId }) }} />
+      <section className="item-catalog-page__list" aria-label="道具列表"><ItemList items={items} selectedId={selectedVisible ? selectedId : undefined} loading={loading} error={error} onRetry={() => setRetry(n => n+1)} onSelect={(id) => updateParams({ item: id })} /><ItemPagination page={page} pageSize={resultMeta.pageSize} total={resultMeta.total} hasNext={resultMeta.hasNext} onPageChange={(value) => updateParams({ page: value, item: undefined })} /></section>
+      <ItemDetailPanel item={detail} loading={detailLoading} error={detailError} onRetry={() => setRetry(n => n+1)} onSelectCatalogItem={(identity) => { closeRelationDrawers(); setItemDrawerIdentity(identity) }} onSelectPending={(target) => { closeRelationDrawers(); setPendingTarget(target) }} onSelectDecoration={(saveId) => { closeRelationDrawers(); setDecorationDrawerId(saveId) }} onSelectWeapon={(weapon) => { closeRelationDrawers(); setWeaponDrawerKey(weapon.weaponKey) }} onSelectP2gArmor={armor=>{closeRelationDrawers();setP2gArmorKey(armor.armorKey)}} onSelectArmor={(armor) => { closeRelationDrawers(); setArmorDrawerId(armor.dexId) }} onSelectMonster={(monster) => { closeRelationDrawers(); setMonsterDrawerId(monster.monsterId) }} onSelectQuest={(quest) => { closeRelationDrawers(); setQuestDrawerKey(quest.questKey) }} onSelectPalicoEquipment={(equipment) => { closeRelationDrawers(); setPalicoDrawer({ kind: equipment.kind, id: equipment.equipmentId }) }} />
     </div>
     <DecorationDetailDrawer identity={decorationDrawerId==null?null:decorationIdentity(game.id,decorationDrawerId)} onClose={() => setDecorationDrawerId(null)} />
+    {game.id !== 'mhp3' && <>
     <WeaponDetailDrawer gameId={game.id} weaponKey={weaponDrawerKey} onClose={() => setWeaponDrawerKey(null)} />
     <ArmorDetailDrawer identity={p2gArmorKey?{gameId:'mhp2g',armorKey:p2gArmorKey}:null} onClose={()=>setP2gArmorKey(null)}/>
     {game.id !== 'mhp2g' && <>
@@ -122,6 +126,7 @@ export function ItemCatalogPage() {
     </>}
     <QuestDetailDrawer gameId={game.id} questKey={questDrawerKey} onClose={() => setQuestDrawerKey(null)} />
     <MonsterDetailDrawer gameId={game.id} monsterId={monsterDrawerId} onClose={() => setMonsterDrawerId(null)} />
+    </>}
     <ItemDetailDrawer identity={itemDrawerIdentity} onClose={() => setItemDrawerIdentity(null)} />
     {pendingTarget && <DetailDrawer title="关联资料" onClose={() => setPendingTarget(null)}><CatalogPendingDetail target={pendingTarget} /></DetailDrawer>}
     <PalicoEquipmentDetailDrawer kind={palicoDrawer?.kind ?? 'weapon'} equipmentId={palicoDrawer?.id ?? null} onClose={() => setPalicoDrawer(null)} />

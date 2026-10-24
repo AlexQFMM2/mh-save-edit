@@ -4,36 +4,44 @@ import { p2gWeaponFiltersSchema, p2gWeaponIdentitySchema, p2gWeaponTreeRequestSc
 
 export const gameIdSchema = z.enum(['mh3g', 'mh4g', 'mhgu'])
 export const catalogGameIdSchema = z.enum(['mh3g', 'mh4g', 'mhgu', 'mhp2g'])
+export const itemCatalogGameIdSchema = z.enum(['mh3g', 'mh4g', 'mhgu', 'mhp2g', 'mhp3'])
+export const decorationCatalogGameIdSchema = z.enum(['mh3g', 'mh4g', 'mhgu', 'mhp2g', 'mhp3'])
 export const itemTermFiltersSchema = z.object({
   query: z.string().trim().max(120).optional(),
-  gameId: catalogGameIdSchema.optional(),
+  gameId: itemCatalogGameIdSchema.optional(),
   page: z.number().int().min(1).max(100000).optional(),
   pageSize: z.number().int().min(1).max(100).optional(),
 }).strict()
 const legacyItemIdentitySchema = z.object({ gameId: gameIdSchema, saveId: z.number().int().min(0).max(65535) }).strict()
-export const itemIdentitySchema = z.union([legacyItemIdentitySchema, z.object({gameId:z.literal('mhp2g'),itemId:z.number().int().min(0).max(65535)}).strict()])
+export const itemIdentitySchema = z.union([legacyItemIdentitySchema, z.object({gameId:z.literal('mhp2g'),itemId:z.number().int().min(0).max(65535)}).strict(), z.object({gameId:z.literal('mhp3'),itemId:z.number().int().min(0).max(978)}).strict()])
 export const itemCatalogFiltersSchema = z.object({
-  gameId: catalogGameIdSchema,
+  gameId: itemCatalogGameIdSchema,
+  category: z.enum(['general','ammo','coating','decoration']).optional(),
+  quantityKind: z.enum(['count','infinite','reusable-cooldown','internal']).optional(),
   targetSaveId: z.number().int().min(0).max(65535).optional(),
   targetItemId: z.number().int().min(0).max(65535).optional(),
   query: z.string().trim().max(120).optional(),
   rarity: z.number().int().min(0).max(20).optional(),
   maxStack: z.number().int().min(0).max(9999).optional(),
   sourceKinds: z.array(z.enum(['combination', 'monster', 'location', 'quest', 'exchange', 'shop'])).max(6).optional(),
-  usageKinds: z.array(z.enum(['weapon', 'armor', 'decoration', 'palico-weapon', 'palico-armor', 'kinsect'])).max(6).optional(),
+  usageKinds: z.array(z.enum(['combination', 'weapon', 'armor', 'decoration', 'palico-weapon', 'palico-armor', 'kinsect'])).max(7).optional(),
   includePlaceholders: z.boolean().optional(),
   sort: z.enum(['saveId', 'itemId', 'name', 'rarity']).optional(),
   page: z.number().int().min(1).max(100000).optional(),
   pageSize: z.number().int().min(1).max(100).optional(),
 }).strict().superRefine((value, context) => {
-  if ((value.gameId === 'mhp2g' && value.targetSaveId != null) || (value.gameId !== 'mhp2g' && value.targetItemId != null)) context.addIssue({ code: z.ZodIssueCode.custom, message: '道具身份与游戏不匹配' })
+  const native = value.gameId === 'mhp2g' || value.gameId === 'mhp3'
+  if ((native && value.targetSaveId != null) || (!native && value.targetItemId != null)) context.addIssue({ code: z.ZodIssueCode.custom, message: '道具身份与游戏不匹配' })
+  if (value.gameId === 'mhp3' && (value.targetItemId ?? 0) > 978) context.addIssue({ code: z.ZodIssueCode.custom, message: 'P3 道具编号超出范围' })
+  if (value.gameId !== 'mhp3' && (value.category != null || value.quantityKind != null || value.usageKinds?.includes('combination'))) context.addIssue({ code: z.ZodIssueCode.custom, message: '该筛选只适用于 P3 道具' })
 })
 export const decorationIdentitySchema = z.union([
   z.object({ gameId: gameIdSchema, saveId: z.number().int().min(0).max(65535) }).strict(),
   z.object({ gameId: z.literal('mhp2g'), itemId: z.number().int().min(0).max(65535) }).strict(),
+  z.object({ gameId: z.literal('mhp3'), itemId: z.number().int().min(0).max(978) }).strict(),
 ])
 export const decorationCatalogFiltersSchema = z.object({
-  gameId: catalogGameIdSchema,
+  gameId: decorationCatalogGameIdSchema,
   targetSaveId: z.number().int().min(0).max(65535).optional(),
   targetItemId: z.number().int().min(0).max(65535).optional(),
   query: z.string().trim().max(120).optional(),
@@ -44,7 +52,9 @@ export const decorationCatalogFiltersSchema = z.object({
   page: z.number().int().min(1).max(100000).optional(),
   pageSize: z.number().int().min(1).max(100).optional(),
 }).strict().superRefine((value, context) => {
-  if ((value.gameId === 'mhp2g' && value.targetSaveId != null) || (value.gameId !== 'mhp2g' && value.targetItemId != null)) context.addIssue({ code: z.ZodIssueCode.custom, message: '装饰品身份与游戏不匹配' })
+  const native = value.gameId === 'mhp2g' || value.gameId === 'mhp3'
+  if ((native && value.targetSaveId != null) || (!native && value.targetItemId != null)) context.addIssue({ code: z.ZodIssueCode.custom, message: '装饰品身份与游戏不匹配' })
+  if (value.gameId === 'mhp3' && (value.targetItemId ?? 0) > 978) context.addIssue({ code: z.ZodIssueCode.custom, message: 'P3 道具编号超出范围' })
 })
 
 export const weaponKeySchema = z.string().trim().min(3).max(40).regex(/^\d+:\d+(?::\d+)?$/)

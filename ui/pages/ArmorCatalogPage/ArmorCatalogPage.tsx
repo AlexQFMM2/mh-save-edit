@@ -11,7 +11,7 @@ import { ArmorSetMatrix } from '../../components/ArmorSetMatrix/ArmorSetMatrix'
 import { ItemDetailDrawer } from '../../components/ItemDetailDrawer/ItemDetailDrawer'
 import { SkillDetailDrawer } from '../../components/SkillDetailDrawer/SkillDetailDrawer'
 import { ItemPagination } from '../../components/ItemPagination/ItemPagination'
-import type { ShellOutletContext } from '../../components/WorkspaceContent/WorkspaceContent'
+import type { WorkspaceOutletContext } from '../../components/WorkspaceContent/WorkspaceContent'
 import './ArmorCatalogPage.css'
 
 const emptyFacets:ArmorCatalogFacets={rarities:[],slots:[],skills:[]}
@@ -21,7 +21,7 @@ const listSorts=['dexId','name','rarity','slots','baseDefense','maxDefense','fir
 const setSorts=['source','name','rarity','slots','baseDefense','maxDefense','skillPoints']
 
 export function ArmorCatalogPage(){
-  const{game}=useOutletContext<ShellOutletContext>();const[params,setParams]=useSearchParams();const[queryInput,setQueryInput]=useState(params.get('q')??'');const query=params.get('q')??''
+  const{game}=useOutletContext<WorkspaceOutletContext>();const[params,setParams]=useSearchParams();const[queryInput,setQueryInput]=useState(params.get('q')??'');const query=params.get('q')??''
   const view:ArmorViewMode=params.get('view')==='list'?'list':'set';const part=enumParam<ArmorPartId>(params.get('part'),['head','chest','arms','waist','legs']);const combat=enumParam<ArmorCombatType>(params.get('combat'),['both','blademaster','gunner']);const gender=enumParam<ArmorGender>(params.get('gender'),['both','male','female'])
   const rarity=numberParam(params.get('rarity'));const slots=numberParam(params.get('slots'));const skillId=numberParam(params.get('skill'));const page=numberParam(params.get('page'))||1;const selectedDexId=parseArmorKey(params.get('armor')??params.get('equipment'),game.id);const targetDexId=parseArmorKey(params.get('target')??params.get('equipment'),game.id);const includePlaceholders=params.get('debug')==='1';const direction:SortDirection=params.get('direction')==='desc'?'desc':'asc'
   const rawSort=params.get('sort')??'';const sort:ArmorSort|ArmorSetSort=view==='set'?(setSorts.includes(rawSort)&& (rawSort!=='skillPoints'||skillId!=null)?rawSort:'source') as ArmorSetSort:(listSorts.includes(rawSort)&& (rawSort!=='skillPoints'||skillId!=null)?rawSort:'dexId') as ArmorSort

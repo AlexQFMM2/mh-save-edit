@@ -20,7 +20,7 @@ RUNTIME_FILES = {
     "plugin.ini", "texts.bin", "zh-cn.pgf",
 }
 PLUGIN_ROOT = "PSP/PLUGINS/mhp2g_zh_cn/"
-DOC_ROOT = Path(__file__).resolve().parents[3] / "docs"
+DOC_ROOT = Path(__file__).resolve().parents[3] / "docs" / "mhp2g"
 
 
 def digest(data):
@@ -88,7 +88,7 @@ def package_release(stage, output, version):
     require(dict(ini["options"]) == {"type": "prx", "filename": "mhp2g_zh_cn.prx", "version": "1", "memory": "40"}, "Expected plugin configuration with memory = 40")
     check_memory(entries[PLUGIN_ROOT + "mhp2g_zh_cn.prx"], int(ini["options"]["memory"]))
     require(entries[PLUGIN_ROOT + "texts.bin"].startswith(b"PZT2"), "Expected batch text format")
-    for target, source in [("README.zh-CN.txt", "mhp2g-chinese-patch-install.md"), ("TESTING.zh-CN.txt", "mhp2g-chinese-patch-testing.md")]:
+    for target, source in [("README.zh-CN.txt", "chinese-patch-install.md"), ("TESTING.zh-CN.txt", "chinese-patch-testing.md")]:
         text = read_plain(DOC_ROOT / source).decode("utf-8")
         coverage = manifest.get("coverage")
         if coverage is not None:

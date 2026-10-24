@@ -13,9 +13,9 @@ export function WorkspacePlaceholder({ game, title, description }: WorkspacePlac
     <article className="workspace-placeholder" aria-label={`${game.title} ${title}`}>
       <div className="workspace-placeholder__empty">
         <span className="workspace-placeholder__icon" aria-hidden="true"><Construction size={26} /></span>
-        <h1>{title}</h1>
-        <p>{description}</p>
-        <span className="workspace-placeholder__hint">功能开发中</span>
+        <h1 className="workspace-placeholder__title">{title}</h1>
+        <p className="workspace-placeholder__description">{description}</p>
+        <span className="workspace-placeholder__hint">功能待接入</span>
       </div>
     </article>
   )

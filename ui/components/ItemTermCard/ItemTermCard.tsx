@@ -2,7 +2,7 @@ import type { ItemTerm } from '../../../api/terminology/types'
 import { itemTranslationSourceLabel } from '../../utils/itemTerminologyPresentation'
 import './ItemTermCard.css'
 
-const gameNames = { mhp2g: 'P2G', mh3g: '3G', mh4g: '4G', mhgu: 'GU' }
+const gameNames = { mhp3: 'P3', mhp2g: 'P2G', mh3g: '3G', mh4g: '4G', mhgu: 'GU' }
 const statusNames: Record<string, string> = { 'missing-japanese': '暂无日文名，保留原译名', 'not-in-gu': '未找到 GU 对应词条，保留原译名', 'ambiguous-japanese': '日文同名有歧义，保留原译名', 'translation-pending': '采用日文原名', 'official-wording': '采用 GU 官方珠名，省略孔位后缀；孔位和技能点以 P2G 为准' }
 export function ItemTermCard({ term }: { term: ItemTerm }) {
   const variants = [...new Set(term.aliases.map(alias => alias.name))].filter(name => name !== term.name && name !== term.nameJp)

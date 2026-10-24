@@ -1,0 +1,2 @@
+.item-skill-tags { display:flex; flex-wrap:wrap; gap:var(--global-spacing-1); font-size:var(--global-typography-font-size-caption); line-height:var(--global-typography-line-height-normal); color:var(--global-theme-color-data); }
+.item-skill-tags__tag { padding:0 var(--global-spacing-1); border:var(--global-border-width) solid var(--global-theme-color-border-subtle); border-radius:var(--global-radius-sm); white-space:normal; }

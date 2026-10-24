@@ -1,0 +1,7 @@
+.p3-decoration-info { display:grid; gap:var(--global-spacing-3); min-width:0; }
+.p3-decoration-info__source,.p3-decoration-info__note { margin:0; color:var(--global-theme-color-text-secondary); font-size:var(--global-typography-font-size-small); line-height:var(--global-typography-line-height-normal); overflow-wrap:anywhere; }
+.p3-decoration-info__description { margin:0; color:var(--global-theme-color-text-secondary); font-size:var(--global-typography-font-size-body); line-height:var(--global-typography-line-height-normal); white-space:pre-line; overflow-wrap:anywhere; }
+.p3-decoration-info__toggle { cursor:pointer; color:var(--global-theme-color-text-secondary); font-size:var(--global-typography-font-size-small); }
+.p3-decoration-info__fields { display:flex; gap:var(--global-spacing-2); margin:0; font-size:var(--global-typography-font-size-small); }
+.p3-decoration-info__label { color:var(--global-theme-color-text-secondary); }
+.p3-decoration-info__value { color:var(--global-theme-color-data); margin:0; }

@@ -1,6 +1,7 @@
 import type { GameId } from '../../api/core/loadout'
 
-export type WorkspaceGameId = GameId | 'mhp2g'
+type RuntimeGameId = GameId | 'mhp2g'
+export type WorkspaceGameId = RuntimeGameId | 'mhp3'
 export type PlatformId = 'citra' | 'cemu' | 'yuzu' | 'ppsspp'
 
 export type GameVersionDefinition = {
@@ -9,15 +10,16 @@ export type GameVersionDefinition = {
   subtitle: string
   posterPath: string
   posterAlt: string
+  posterFit?: 'cover' | 'contain'
   backgroundPath: string
   platforms: PlatformId[]
 }
 
-export type RuntimeGameVersionDefinition = GameVersionDefinition
+export type RuntimeGameVersionDefinition = GameVersionDefinition & { id: RuntimeGameId }
 
-// All installed games share the catalog, loadout and save workspace.
+// Full workspace support excludes P3; its item route is enabled independently in App.
 export function hasRuntimeWorkspace(game: GameVersionDefinition): game is RuntimeGameVersionDefinition {
-  return Boolean(game.id)
+  return game.id !== 'mhp3'
 }
 
 export const gameVersions: GameVersionDefinition[] = [
@@ -28,6 +30,16 @@ export const gameVersions: GameVersionDefinition[] = [
     posterPath: 'home/p2g-post.png',
     posterAlt: 'Monster Hunter Portable 2nd G 标题海报',
     backgroundPath: 'home/p2g-bg.webp',
+    platforms: ['ppsspp'],
+  },
+  {
+    id: 'mhp3',
+    title: 'Monster Hunter Portable 3rd',
+    subtitle: 'MHP3 · PSP',
+    posterPath: 'home/p3-post.png',
+    posterAlt: 'Monster Hunter Portable 3rd 标题海报',
+    posterFit: 'contain',
+    backgroundPath: 'home/p3-bg.webp',
     platforms: ['ppsspp'],
   },
   {

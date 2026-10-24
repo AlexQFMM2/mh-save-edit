@@ -16,7 +16,7 @@ import { LoadoutLegalitySummary } from '../../components/LoadoutLegalitySummary/
 import { LoadoutSaveWriteDrawer } from '../../components/LoadoutSaveWriteDrawer/LoadoutSaveWriteDrawer'
 import { LoadoutSkillMatrix } from '../../components/LoadoutSkillMatrix/LoadoutSkillMatrix'
 import { LoadoutToolbar } from '../../components/LoadoutToolbar/LoadoutToolbar'
-import type { ShellOutletContext } from '../../components/WorkspaceContent/WorkspaceContent'
+import type { WorkspaceOutletContext } from '../../components/WorkspaceContent/WorkspaceContent'
 import type { SaveLoadoutWritePreview } from '../../../api/save/types'
 import { useSaveSession } from '../../components/SaveSessionProvider/SaveSessionProvider'
 import './LoadoutBuilderPage.css'
@@ -27,7 +27,7 @@ const cycleLock = (lock: LoadoutLock): LoadoutLock => lock === 'unlocked' ? 'equ
 
 export function LoadoutBuilderPage() {
   const navigate = useNavigate()
-  const { game } = useOutletContext<ShellOutletContext>()
+  const { game } = useOutletContext<WorkspaceOutletContext>()
   const saveSession = useSaveSession()
   const [snapshot, setSnapshot] = useState<LoadoutCalculationSnapshot>()
   const [facets, setFacets] = useState<LoadoutFacets>()

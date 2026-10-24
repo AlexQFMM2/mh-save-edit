@@ -1,3 +1,4 @@
+import type { DecorationCatalogGameId } from '../api/catalog/types'
 import type { LoadoutGame } from '../api/loadout/types'
 import type { P2gSkillEquipmentIdentity, P2gSkillEquipmentDetail } from '../api/catalog/p2gSkillTypes'
 import type { CatalogGameId, CatalogItemSummary, CatalogItemDetail } from '../api/catalog/types'
@@ -17,10 +18,10 @@ declare global {
         searchItems(filters: ItemCatalogFilters): Promise<PageResult<CatalogItemSummary>>
         getItem(identity: {gameId: GameId; saveId: number}): Promise<ItemDetail | null>
         getItem(identity: ItemIdentity): Promise<CatalogItemDetail | null>
-        getItemFacets(gameId: CatalogGameId): Promise<{ rarities: number[]; maxStacks: number[]; relations: { sourceKind: string; usageKind: string | null }[] }>
+        getItemFacets(gameId: import('../api/catalog/types').ItemCatalogGameId): Promise<import('../api/catalog/types').ItemCatalogFacets>
         searchDecorations(filters: DecorationCatalogFilters): Promise<PageResult<DecorationSummary>>
         getDecoration(identity: DecorationIdentity): Promise<DecorationDetail | null>
-        getDecorationFacets(gameId: CatalogGameId): Promise<DecorationCatalogFacets>
+        getDecorationFacets(gameId: DecorationCatalogGameId): Promise<DecorationCatalogFacets>
         searchWeapons(filters: import('../api/catalog/p2gWeaponTypes').P2gWeaponFilters): Promise<import('../api/catalog/p2gWeaponTypes').P2gWeaponPage>
         searchWeapons(filters: WeaponCatalogFilters): Promise<PageResult<WeaponSummary>>
         getWeapon(identity: import('../api/catalog/p2gWeaponTypes').P2gWeaponIdentity): Promise<import('../api/catalog/p2gWeaponTypes').P2gWeaponDetail | null>

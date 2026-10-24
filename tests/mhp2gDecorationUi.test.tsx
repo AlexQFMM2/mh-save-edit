@@ -65,6 +65,6 @@ describe('P2G decoration interface and relation navigation',()=>{
   })
   it('shows missing-data errors without reporting an empty successful catalog',async()=>{
     api({searchDecorations:vi.fn().mockRejectedValue(new Error('P2G 装饰品资料尚未安装')),getDecorationFacets:vi.fn().mockRejectedValue(new Error('missing'))});page('/decorations')
-    expect(await screen.findByRole('alert')).toHaveProperty('textContent','P2G 装饰品资料尚未安装');expect(screen.queryByText('没有符合条件的装饰品。')).toBeNull()
+    expect((await screen.findByRole('alert')).textContent).toContain('P2G 装饰品资料尚未安装');expect(screen.getByRole('button',{name:'重试'})).toBeTruthy();expect(screen.queryByText('没有符合条件的装饰品。')).toBeNull()
   })
 })

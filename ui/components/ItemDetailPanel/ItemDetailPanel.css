@@ -6,3 +6,5 @@
 .item-detail-panel__original-toggle { color: var(--global-theme-color-text-secondary); font-size: var(--global-typography-font-size-small); cursor: pointer; overflow-wrap: anywhere; }
 
 .item-detail-panel__decoration-link{border:0;background:transparent;padding:var(--global-spacing-2) 0;color:var(--global-theme-color-text-primary);font-size:var(--global-typography-font-size-small);text-align:left;text-decoration:underline;cursor:pointer}
+
+.item-detail-panel__retry { padding:var(--global-spacing-2); border:var(--global-border-width) solid var(--global-theme-color-border); border-radius:var(--global-radius-sm); background:var(--global-theme-color-surface-inset); color:var(--global-theme-color-text-primary); font-size:var(--global-typography-font-size-small); cursor:pointer; }

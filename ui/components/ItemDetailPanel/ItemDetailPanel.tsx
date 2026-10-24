@@ -1,3 +1,5 @@
+import { P3ItemDetails } from '../P3ItemDetails/P3ItemDetails'
+import { p3QuantityLabel } from '../../utils/p3ItemPresentation'
 import { P2gArmorRecipeList } from '../P2gArmorRecipeList/P2gArmorRecipeList'
 import type { P2gArmorLink } from '../../../api/catalog/p2gArmorTypes'
 import { itemNumber } from '../../../api/catalog/itemIdentity'
@@ -11,7 +13,7 @@ import { CatalogWriteControl } from '../CatalogWriteControl/CatalogWriteControl'
 import { DetailActionBar } from '../DetailActionBar/DetailActionBar'
 import './ItemDetailPanel.css'
 
-type ItemDetailPanelProps = { onSelectP2gArmor?: (armor:P2gArmorLink)=>void; item: CatalogItemDetail | null; loading: boolean; error?: string; allowCatalogWrite?: boolean; onSelectItem?: (saveId: number) => void; onSelectCatalogItem?: (identity: ItemIdentity) => void; onSelectPending?: (target: NonNullable<ItemRelation['pendingTarget']>) => void; onSelectDecoration?: (saveId: number) => void; onSelectWeapon?: (weapon: WeaponRelationTarget) => void; onSelectArmor?: (armor: ArmorRelationTarget) => void; onSelectMonster?: (monster: MonsterRelationTarget) => void; onSelectQuest?: (quest: QuestRelationTarget) => void; onSelectPalicoEquipment?: (equipment: PalicoEquipmentRelationTarget) => void }
+type ItemDetailPanelProps = { onSelectP2gArmor?: (armor:P2gArmorLink)=>void; item: CatalogItemDetail | null; loading: boolean; error?: string; allowCatalogWrite?: boolean; onRetry?: () => void; onSelectItem?: (saveId: number) => void; onSelectCatalogItem?: (identity: ItemIdentity) => void; onSelectPending?: (target: NonNullable<ItemRelation['pendingTarget']>) => void; onSelectDecoration?: (saveId: number) => void; onSelectWeapon?: (weapon: WeaponRelationTarget) => void; onSelectArmor?: (armor: ArmorRelationTarget) => void; onSelectMonster?: (monster: MonsterRelationTarget) => void; onSelectQuest?: (quest: QuestRelationTarget) => void; onSelectPalicoEquipment?: (equipment: PalicoEquipmentRelationTarget) => void }
 const sections = [
   ['combination','调合'], ['shop','商店购买'], ['monster','怪物获取'], ['location','地图采集'], ['quest','任务奖励'], ['exchange','山菜爷'],
   ['weapon','武器用途'], ['armor','防具用途'], ['decoration','装饰珠用途'], ['palico-weapon','猫武器用途'], ['palico-armor','猫防具用途'], ['kinsect','猎虫用途'],
@@ -19,30 +21,32 @@ const sections = [
 // P2G color commands stay in the source for the later patch, not in readable text.
 const p2gDescription = (text: string) => text.replace(/~C[0-9A-F]{2}/g, '')
 
-export function ItemDetailPanel({ item, loading, error, allowCatalogWrite = true, onSelectItem, onSelectCatalogItem, onSelectPending, onSelectDecoration, onSelectWeapon, onSelectP2gArmor, onSelectArmor, onSelectMonster, onSelectQuest, onSelectPalicoEquipment }: ItemDetailPanelProps) {
+export function ItemDetailPanel({ item, loading, error, allowCatalogWrite = true, onRetry, onSelectItem, onSelectCatalogItem, onSelectPending, onSelectDecoration, onSelectWeapon, onSelectP2gArmor, onSelectArmor, onSelectMonster, onSelectQuest, onSelectPalicoEquipment }: ItemDetailPanelProps) {
   const [params, setParams] = useSearchParams()
   const selectRelatedItem = (saveId: number) => { if (onSelectItem) { onSelectItem(saveId); return }; const next = new URLSearchParams(params); next.set('item', String(saveId)); setParams(next) }
   if (loading) return <aside className="item-detail-panel item-detail-panel--state" aria-live="polite">正在读取详细资料…</aside>
-  if (error) return <aside className="item-detail-panel item-detail-panel--state" role="alert">{error}</aside>
+  if (error) return <aside className="item-detail-panel item-detail-panel--state" role="alert">{error}{onRetry && <button type="button" className="item-detail-panel__retry" onClick={onRetry}>重试</button>}</aside>
   if (!item) return <aside className="item-detail-panel item-detail-panel--state">从左侧选择一个道具查看详情。</aside>
   const grouped = new Map<string, ItemRelation[]>(); for (const relation of item.relations) grouped.set(relation.sourceKind, [...(grouped.get(relation.sourceKind) ?? []), relation])
   return <aside className="item-detail-panel" aria-label={`${item.nameCn}详情`}>
     <div className="item-detail-panel__scroll">
-      <header className="item-detail-panel__header"><CatalogIcon path={item.iconPath} name={item.nameCn} size="large" /><div><small>{item.gameId === 'mhp2g' ? `道具编号 ${item.itemId}` : `道具 #${item.saveId} · 0x${item.hexId ?? item.saveId.toString(16).padStart(4,'0')}`}</small><h2>{item.nameCn}</h2><p>{item.nameEn || (item.gameId === 'mhp2g' ? '英文名：未知' : '')}</p>{item.nameJp && <p>{item.nameJp}</p>}</div></header>
+      <header className="item-detail-panel__header"><CatalogIcon path={item.iconPath} name={item.nameCn} size="large" /><div><small>{(item.gameId === 'mhp2g' || item.gameId === 'mhp3') ? `道具编号 ${item.itemId}` : `道具 #${item.saveId} · 0x${item.hexId ?? item.saveId.toString(16).padStart(4,'0')}`}</small><h2>{item.nameCn}</h2><p>{item.nameEn || (item.gameId === 'mhp2g' ? '英文名：未知' : '')}</p>{item.nameJp && <p>{item.nameJp}</p>}</div></header>
       {item.terminology && item.terminology.originalName !== item.nameCn && <p className="item-detail-panel__translation">原译名：{item.terminology.originalName} · 当前采用：{itemTranslationSourceLabel(item.terminology.source)}</p>}
       {item.localization && (!item.terminology || item.terminology.originalName === item.nameCn) && <p className="item-detail-panel__translation">名称来源：{itemTranslationSourceLabel(item.localization.nameSource)}</p>}
       {item.localization?.descriptionPending && <p className="item-detail-panel__translation">日文说明</p>}
-      {item.description && <p className="item-detail-panel__description">{item.gameId === 'mhp2g' ? p2gDescription(item.description) : item.description}</p>}
-      {item.gameId === 'mhp2g' && item.localization?.descriptionJp && !item.localization.descriptionPending && <details className="item-detail-panel__original" key={item.itemId}>
+      {item.description && <p className="item-detail-panel__description">{(item.gameId === 'mhp2g' || item.gameId === 'mhp3') ? p2gDescription(item.description) : item.description}</p>}
+      {(item.gameId === 'mhp2g' || item.gameId === 'mhp3') && item.localization?.descriptionJp && !item.localization.descriptionPending && <details className="item-detail-panel__original" key={item.itemId}>
         <summary className="item-detail-panel__original-toggle">查看日文说明</summary>
         <p className="item-detail-panel__description" lang="ja">{p2gDescription(item.localization.descriptionJp)}</p>
       </details>}
-      <dl className="item-detail-panel__stats"><div><dt>稀有度</dt><dd>{item.rarity ?? '—'}</dd></div><div><dt>持有上限</dt><dd>{item.maxStack ?? '—'}</dd></div><div><dt>买入</dt><dd>{item.buyPrice == null ? '—' : `${item.buyPrice} z`}</dd></div><div><dt>卖出</dt><dd>{item.sellPrice == null ? '—' : `${item.sellPrice} z`}</dd></div></dl>
+      <dl className="item-detail-panel__stats"><div><dt>稀有度</dt><dd>{item.rarity ?? '—'}</dd></div><div><dt>{item.gameId === 'mhp3' ? '携带数量' : '持有上限'}</dt><dd>{item.gameId === 'mhp3' ? p3QuantityLabel(item.p3.quantityKind,item.maxStack) : item.maxStack ?? '—'}</dd></div><div><dt>{item.gameId === 'mhp3' ? '买入价格' : '买入'}</dt><dd>{item.gameId === 'mhp3' ? '见商店信息' : item.buyPrice == null ? '—' : `${item.buyPrice} z`}</dd></div><div><dt>卖出</dt><dd>{item.sellPrice == null ? '—' : `${item.sellPrice} z`}</dd></div></dl>
+      {item.gameId === 'mhp3' && <P3ItemDetails item={item} onSelectItem={onSelectCatalogItem} />}
+      {item.gameId==='mhp3'&&item.p3.decoration&&onSelectDecoration&&<button type="button" className="item-detail-panel__decoration-link" onClick={()=>onSelectDecoration(item.itemId)}>查看装饰品详情与技能</button>}
       {item.decoration&&onSelectDecoration&&<button type="button" className="item-detail-panel__decoration-link" onClick={()=>onSelectDecoration(item.decoration!.itemId)}>查看装饰品详情与技能</button>}
       {item.gameId === 'mhp2g' && item.weaponRecipes && <P2gWeaponRecipeList recipes={item.weaponRecipes} showOutputs onSelectItem={onSelectCatalogItem} onSelectWeapon={onSelectWeapon} />}
       {item.gameId==='mhp2g'&&item.armorRecipes&&<P2gArmorRecipeList recipes={item.armorRecipes} showOutputs onSelectItem={onSelectCatalogItem?id=>onSelectCatalogItem({gameId:'mhp2g',itemId:id}):undefined} onSelectArmor={onSelectP2gArmor}/>}
       <div className="item-detail-panel__relations">{sections.map(([kind,title]) => <ItemRelationSection key={`${itemNumber(item)}-${kind}`} title={title} relations={grouped.get(kind) ?? []} onSelectItem={selectRelatedItem} onSelectCatalogItem={onSelectCatalogItem} onSelectPending={onSelectPending} onSelectDecoration={onSelectDecoration} onSelectWeapon={onSelectWeapon} onSelectArmor={onSelectArmor} onSelectMonster={onSelectMonster} onSelectQuest={onSelectQuest} onSelectPalicoEquipment={onSelectPalicoEquipment} />)}</div>
     </div>
-    {allowCatalogWrite && <DetailActionBar className="item-detail-panel__actions"><CatalogWriteControl gameId={item.gameId} kind="item" saveId={item.gameId === 'mhp2g' ? item.itemId : item.saveId} maxCount={item.maxStack} /></DetailActionBar>}
+    {allowCatalogWrite && item.gameId !== 'mhp3' && <DetailActionBar className="item-detail-panel__actions"><CatalogWriteControl gameId={item.gameId} kind="item" saveId={item.gameId === 'mhp2g' ? item.itemId : item.saveId} maxCount={item.maxStack} /></DetailActionBar>}
   </aside>
 }

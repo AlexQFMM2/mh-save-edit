@@ -1,4 +1,5 @@
 import type Database from 'better-sqlite3'
+import { monsterNameQuery } from './monsterNaming.mjs'
 import type {
   PageResult, PalicoArmorDetail, PalicoArmorFilters, PalicoArmorSummary,
   PalicoCatalogFacets, PalicoMaterial, PalicoSkillDetail, PalicoSkillFilters, PalicoSkillSummary, PalicoSupportMoveDetail,
@@ -16,7 +17,7 @@ function page<T>(items: T[], current: number, pageSize: number, total: number): 
 }
 function queryWhere(query: string | undefined, idColumn: string, values: unknown[], columns: string[]) {
   if (!query?.trim()) return ''
-  const input = query.trim(); const like = `%${input}%`; const numeric = /^0x[\da-f]+$/i.test(input) ? Number.parseInt(input.slice(2), 16) : Number(input)
+  const input = monsterNameQuery(query).trim(); const like = `%${input}%`; const numeric = /^0x[\da-f]+$/i.test(input) ? Number.parseInt(input.slice(2), 16) : Number(input)
   values.push(...columns.map(() => like), Number.isInteger(numeric) ? numeric : -1)
   return ` AND (${columns.map(column => `${column} LIKE ?`).join(' OR ')} OR ${idColumn}=?)`
 }

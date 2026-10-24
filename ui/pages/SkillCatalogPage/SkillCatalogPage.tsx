@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useOutletContext, useSearchParams } from 'react-router-dom'
 import type { SkillCatalogFilters, SkillCatalogTab, SkillDetail, SkillSummary } from '../../../api/catalog/types'
-import type { ShellOutletContext } from '../../components/WorkspaceContent/WorkspaceContent'
+import type { WorkspaceOutletContext } from '../../components/WorkspaceContent/WorkspaceContent'
 import { ArmorDetailDrawer } from '../../components/ArmorDetailDrawer/ArmorDetailDrawer'
 import { DecorationDetailDrawer } from '../../components/DecorationDetailDrawer/DecorationDetailDrawer'
 import { SkillDetailDrawer } from '../../components/SkillDetailDrawer/SkillDetailDrawer'
@@ -14,7 +14,7 @@ import './SkillCatalogPage.css'
 type Drawer = {kind:'armor'|'decoration'|'skill';id:number}|null
 const tabs: SkillCatalogTab[] = ['armor', 'decoration', 'talisman']
 export function SkillCatalogPage() {
-  const {game}=useOutletContext<ShellOutletContext>(),[params,setParams]=useSearchParams(),isP2g=game.id==='mhp2g'
+  const {game}=useOutletContext<WorkspaceOutletContext>(),[params,setParams]=useSearchParams(),isP2g=game.id==='mhp2g'
   const query=params.get('q')??'',[queryInput,setQueryInput]=useState(query),skillId=numberParam(params.get('skill')),targetSkillId=numberParam(params.get('target'))
   const requestedTab=params.get('tab') as SkillCatalogTab,tab=tabs.includes(requestedTab)&&(!isP2g||requestedTab!=='talisman')?requestedTab:'armor'
   const direction=['positive','negative','special'].includes(params.get('direction')??'')?params.get('direction') as SkillCatalogFilters['direction']:undefined

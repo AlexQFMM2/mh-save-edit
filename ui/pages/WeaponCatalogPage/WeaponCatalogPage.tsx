@@ -15,7 +15,7 @@ import { WeaponMotionTable } from '../../components/WeaponMotionTable/WeaponMoti
 import { WeaponMotionToolbar } from '../../components/WeaponMotionToolbar/WeaponMotionToolbar'
 import { WeaponTreeCanvas } from '../../components/WeaponTreeCanvas/WeaponTreeCanvas'
 import { WeaponTreeTypePrompt } from '../../components/WeaponTreeTypePrompt/WeaponTreeTypePrompt'
-import type { ShellOutletContext } from '../../components/WorkspaceContent/WorkspaceContent'
+import type { WorkspaceOutletContext } from '../../components/WorkspaceContent/WorkspaceContent'
 import { weaponMatchesFilters } from '../../utils/weaponCatalog'
 import './WeaponCatalogPage.css'
 
@@ -25,7 +25,7 @@ const weaponStyles = new Set<WeaponStyleId>(['guild','striker','aerial','adept',
 function numberParam(value: string | null): number | undefined { if (!value) return undefined; const parsed = Number(value); return Number.isInteger(parsed) && parsed >= 0 ? parsed : undefined }
 
 export function WeaponCatalogPage() {
-  const { game } = useOutletContext<ShellOutletContext>()
+  const { game } = useOutletContext<WorkspaceOutletContext>()
   const [params, setParams] = useSearchParams()
   const [queryInput, setQueryInput] = useState(params.get('q') ?? '')
   const query = params.get('q') ?? ''
@@ -169,7 +169,7 @@ export function WeaponCatalogPage() {
   return <div className="weapon-catalog-page">
     <WeaponCatalogToolbar nativeIdentity={nativeIdentity} query={queryInput} sort={sort} direction={direction} sharpnessStage={sharpnessStage} sharpnessStages={facets.sharpnessStages} view={view} showMotion={game.id==='mhgu'} total={view === 'tree' && tree ? tree.nodes.filter((node) => !node.isCrossType && weaponMatchesFilters(node, treeFilters)).length : meta.total} onQueryChange={setQueryInput} onChange={(key, value) => update({ target: undefined, [key]: value, page: undefined })} />
     <WeaponFilterBar nativeIdentity={nativeIdentity} facets={facets} typeId={typeId} attributeId={attributeId} includeHiddenAttributes={includeHiddenAttributes} rarity={rarity} slots={slots} directlyProducible={directlyProducible} finalOnly={finalOnly} includePlaceholders={includePlaceholders} onChange={changeFilter} onReset={resetCatalog} />
-    <div className="weapon-catalog-page__layout"><div className="weapon-catalog-page__browser">{main}</div><div className="weapon-catalog-page__detail-slot"><WeaponDetailPanel gameId={game.id} weapon={detail} loading={detailLoading} error={detailError} sharpnessStage={sharpnessStage} showRelations={nativeIdentity} onSelectCatalogItem={identity => openItem(identity.gameId === 'mhp2g' ? identity.itemId : identity.saveId)} onSelectWeapon={w => openWeapon(w.weaponKey)} /></div></div>
+    <div className="weapon-catalog-page__layout"><div className="weapon-catalog-page__browser">{main}</div><div className="weapon-catalog-page__detail-slot"><WeaponDetailPanel gameId={game.id} weapon={detail} loading={detailLoading} error={detailError} sharpnessStage={sharpnessStage} showRelations={nativeIdentity} onSelectCatalogItem={identity => { if (identity.gameId !== 'mhp3' && identity.gameId === game.id) openItem(identity.gameId === 'mhp2g' ? identity.itemId : identity.saveId) }} onSelectWeapon={w => openWeapon(w.weaponKey)} /></div></div>
     <WeaponDetailDrawer gameId={game.id} weaponKey={drawerWeaponKey} onClose={() => setDrawerWeaponKey(null)} />
     <ItemDetailDrawer identity={drawerItemId == null ? null : itemIdentity(game.id, drawerItemId)} onClose={() => setDrawerItemId(null)} />
   </div>

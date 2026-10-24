@@ -1,4 +1,5 @@
 import type Database from 'better-sqlite3'
+import { monsterNameQuery } from './monsterNaming.mjs'
 import { FINAL_WEAPON_SQL, readFinalWeaponKeys } from './finalWeapons'
 import type { GameId } from '../core/loadout'
 import type {
@@ -105,7 +106,7 @@ export class WeaponCatalogRepository {
     }
     if (!filters.includePlaceholders) where.push('w.is_placeholder = 0')
     if (!exactTarget) {
-      const query = filters.query?.trim()
+      const query = monsterNameQuery(filters.query)?.trim()
       if (query) {
         const numeric = /^0x[0-9a-f]+$/i.test(query) ? Number.parseInt(query.slice(2), 16) : /^\d+$/.test(query) ? Number(query) : null
         const queryParts = ['w.name_cn LIKE ?', 'w.name_en LIKE ?', 'w.name_jp LIKE ?']

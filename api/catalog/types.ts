@@ -1,14 +1,18 @@
+import type { P3ItemIdentity, P3ItemInfo, P3ItemDetailInfo, P3ItemCategory, P3QuantityKind, P3ItemDecoration } from './p3ItemTypes'
 import type { P2gSkillData } from './p2gSkillTypes'
 import type { GameId } from '../core/loadout'
 import type { ItemTermLabel } from '../terminology/types'
 
 export type CatalogGameId = GameId | 'mhp2g'
+export type ItemCatalogGameId = CatalogGameId | 'mhp3'
+export type DecorationCatalogGameId = CatalogGameId | 'mhp3'
 export type LegacyItemIdentity = { gameId: GameId; saveId: number; itemId?: never }
 export type P2gItemIdentity = { gameId: 'mhp2g'; itemId: number; saveId?: never }
-export type ItemIdentity = LegacyItemIdentity | P2gItemIdentity
+export type ItemIdentity = LegacyItemIdentity | P2gItemIdentity | P3ItemIdentity
 export type LegacyDecorationIdentity = { gameId: GameId; saveId: number; itemId?: never }
 export type P2gDecorationIdentity = { gameId: 'mhp2g'; itemId: number; saveId?: never }
-export type DecorationIdentity = LegacyDecorationIdentity | P2gDecorationIdentity
+export type P3DecorationIdentity = P3ItemIdentity
+export type DecorationIdentity = LegacyDecorationIdentity | P2gDecorationIdentity | P3DecorationIdentity
 export type WeaponIdentity = { gameId: GameId; weaponKey: string }
 export type ArmorIdentity = { gameId: GameId; dexId: number }
 export type SkillIdentity = { gameId: CatalogGameId; skillId: number }
@@ -22,7 +26,7 @@ export type ArmorViewMode = 'list' | 'set'
 export type ArmorSort = 'dexId' | 'name' | 'rarity' | 'slots' | 'baseDefense' | 'maxDefense' | 'fireRes' | 'waterRes' | 'thunderRes' | 'iceRes' | 'dragonRes' | 'skillPoints'
 export type ArmorSetSort = 'source' | 'name' | 'rarity' | 'slots' | 'baseDefense' | 'maxDefense' | 'skillPoints'
 export type ItemSourceKind = 'combination' | 'monster' | 'location' | 'quest' | 'exchange' | 'shop'
-export type ItemUsageKind = 'weapon' | 'armor' | 'decoration' | 'palico-weapon' | 'palico-armor' | 'kinsect'
+export type ItemUsageKind = 'combination' | 'weapon' | 'armor' | 'decoration' | 'palico-weapon' | 'palico-armor' | 'kinsect'
 export type ItemRelationTarget = LegacyItemIdentity & { nameCn: string; nameEn: string }
 export type WeaponRelationTarget = { gameId: CatalogGameId; weaponKey: string } & { typeId: number; nameCn: string; nameEn: string }
 export type ArmorRelationTarget = ArmorIdentity & { part: ArmorPartId; nameCn: string; nameEn: string }
@@ -56,6 +60,7 @@ export type DecorationSummary = DecorationIdentity & {
 }
 
 export type DecorationDetail = DecorationSummary & {
+  p3?: { rarity: number | null; sellPrice: number | null; nameSource: string; description: string; descriptionJp: string }
   p2g?: { rarity: number | null; buyPrice: number | null; sellPrice: number | null; craftingCost: null; unlockCondition: null; nameSource: string }
   dexIds: number[]
   skills: DecorationSkill[]
@@ -64,7 +69,7 @@ export type DecorationDetail = DecorationSummary & {
 }
 
 export type DecorationCatalogFilters = {
-  gameId: CatalogGameId
+  gameId: DecorationCatalogGameId
   targetSaveId?: number
   targetItemId?: number
   query?: string
@@ -93,7 +98,8 @@ export type ItemSummary = LegacyItemIdentity & {
   isPlaceholder: boolean
 }
 
-export type CatalogItemSummary = ItemSummary | (P2gItemIdentity & Omit<ItemSummary, keyof LegacyItemIdentity>)
+export type P3ItemSummary = P3ItemIdentity & Omit<ItemSummary, keyof LegacyItemIdentity> & { nameJp: string; p3: P3ItemInfo }
+export type CatalogItemSummary = ItemSummary | (P2gItemIdentity & Omit<ItemSummary, keyof LegacyItemIdentity>) | P3ItemSummary
 
 export type ItemRelation = {
   id: number
@@ -105,7 +111,7 @@ export type ItemRelation = {
   probability: number | null
   rank: number | null
   metadata: Record<string, string>
-  relatedItems: (ItemIdentity & { nameCn: string; nameEn: string })[]
+  relatedItems: (ItemIdentity & { nameCn: string; nameEn: string; p3Decoration?: P3ItemDecoration })[]
   relatedDecoration?: (P2gDecorationIdentity & { nameCn: string }) | null
   pendingTarget?: { kind: 'weapon' | 'armor' | 'decoration' | 'monster' | 'quest'; name: string } | null
   relatedWeapon?: WeaponRelationTarget | null
@@ -502,10 +508,15 @@ export type ItemDetail = ItemSummary & {
   relations: ItemRelation[]
 }
 
-export type CatalogItemDetail = ItemDetail | (P2gItemIdentity & Omit<ItemDetail, keyof LegacyItemIdentity> & { weaponRecipes?: import('./p2gWeaponTypes').P2gWeaponRecipe[]; armorRecipes?: import('./p2gArmorTypes').P2gArmorRecipe[] })
+export type P3ItemDetail = P3ItemIdentity & Omit<ItemDetail, keyof LegacyItemIdentity> & { p3: P3ItemDetailInfo }
+export type CatalogItemDetail = P3ItemDetail | ItemDetail | (P2gItemIdentity & Omit<ItemDetail, keyof LegacyItemIdentity> & { weaponRecipes?: import('./p2gWeaponTypes').P2gWeaponRecipe[]; armorRecipes?: import('./p2gArmorTypes').P2gArmorRecipe[] })
+
+export type ItemCatalogFacets = { rarities: number[]; maxStacks: number[]; relations: { sourceKind: string; usageKind: string | null }[]; categories?: P3ItemCategory[]; quantityKinds?: P3QuantityKind[] }
 
 export type ItemCatalogFilters = {
-  gameId: CatalogGameId
+  gameId: ItemCatalogGameId
+  category?: P3ItemCategory
+  quantityKind?: P3QuantityKind
   targetSaveId?: number
   targetItemId?: number
   query?: string

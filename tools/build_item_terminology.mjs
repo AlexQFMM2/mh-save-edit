@@ -52,7 +52,7 @@ export function buildItemTerminology({ inputDir, researchDir, outputDir, p2gJapa
   const catalogs = [], inputs = [], repairs = {}
   const dexPaths = { mhgu: 'mhgu/dex/mhxx-dex', mh4g: 'mh4g/dex/mh4g-dex', mh3g: 'mh3u/dex/mh3g-dex' }
   try {
-    for (const gameId of ['mhgu', 'mh4g', 'mh3g', 'mhp2g']) {
+    for (const gameId of ['mhgu', 'mh4g', 'mh3g', 'mhp2g', ...(fs.existsSync(path.join(inputDir, 'mhp3.sqlite')) ? ['mhp3'] : [])]) {
       const input = path.join(inputDir, `${gameId}.sqlite`), output = path.join(outputDir, `${gameId}.sqlite`)
       inputs.push({ path: input, sha256: hash(input) })
       // VACUUM INTO captures a consistent committed SQLite snapshot, including WAL.
@@ -83,6 +83,7 @@ export function buildItemTerminology({ inputDir, researchDir, outputDir, p2gJapa
             if (e.nameAliases?.length) itemAliases.set(e.itemId, e.nameAliases)
           }
         }
+        if (gameId === 'mhp3') for (const row of db.prepare('SELECT item_id,aliases_json FROM catalog_items').all()) itemAliases.set(row.item_id, JSON.parse(row.aliases_json))
         catalogs.push({ gameId, rows: catalogIdentityRows(db, gameId), dexAliases, itemAliases })
         if (db.pragma('integrity_check', { simple: true }) !== 'ok') throw new Error(`Invalid catalog: ${gameId}`)
       } finally { db.close() }
