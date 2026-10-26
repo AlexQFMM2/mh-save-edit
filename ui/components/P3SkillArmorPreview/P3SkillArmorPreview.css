@@ -1,0 +1,13 @@
+.p3-skill-armor-preview { --p3-skill-armor-preview-component-padding: var(--global-spacing-5); height: 100%; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: var(--p3-skill-armor-preview-component-padding); color: var(--global-theme-color-text-primary); background: var(--global-theme-color-surface-deep); }
+.p3-skill-armor-preview__header { display: flex; align-items: center; gap: var(--global-spacing-3); margin-top: var(--global-spacing-3); }
+.p3-skill-armor-preview__title { margin: 0; font-size: var(--global-typography-font-size-title); color: var(--global-theme-color-text-primary); }
+.p3-skill-armor-preview__subtitle { font-size: var(--global-typography-font-size-body); margin: var(--global-spacing-4) 0 var(--global-spacing-2); }
+.p3-skill-armor-preview__note { font-size: var(--global-typography-font-size-small); color: var(--global-theme-color-text-secondary); line-height: var(--global-typography-line-height-relaxed); }
+.p3-skill-armor-preview__data { color: var(--global-theme-color-data); font-size: var(--global-typography-font-size-small); }
+.p3-skill-armor-preview__slots, .p3-skill-armor-preview__row { display: flex; align-items: center; gap: var(--global-spacing-3); }
+.p3-skill-armor-preview__row { justify-content: space-between; padding: var(--global-spacing-2) 0; border-bottom: var(--global-border-width) solid var(--global-theme-color-border-subtle); }
+.p3-skill-armor-preview__link { display: inline-flex; align-items: center; flex-wrap: wrap; gap: var(--global-spacing-2); padding: var(--global-spacing-2); background: var(--global-theme-color-surface-inset); border: var(--global-border-width) solid var(--global-theme-color-border); border-radius: var(--global-radius-md); color: var(--global-theme-color-data); font: inherit; font-size: var(--global-typography-font-size-small); cursor: pointer; }
+.p3-skill-armor-preview__link:hover { background: var(--global-theme-color-surface-row-hover); }
+.p3-skill-armor-preview__link:focus-visible { outline: 2px solid var(--global-theme-color-focus-ring); outline-offset: 2px; }
+.p3-skill-armor-preview__secondary { color: var(--global-theme-color-text-muted); font-size: var(--global-typography-font-size-caption); }
+.p3-skill-armor-preview__drawer { color: var(--global-theme-color-text-primary); }

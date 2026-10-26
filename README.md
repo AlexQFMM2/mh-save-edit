@@ -8,7 +8,7 @@
 
 **维护与交接说明更新于 2026-10-24。** P2G 七类图鉴、六槽手动／自动配装及 PPSSPP 存档编辑已交付，用户修改实测已通过；本次又确认中文插件的任务、保存重开、停用／恢复实测通过，见[P2G 验收记录](plan/archive/2026-10-24/mhp2g-records/acceptance.md)。五份 P2G 计划已按交付范围[归档](plan/archive/2026-10-24/README.md)，未知资源覆盖等限制仍明确保留。公开应用／运行资源／插件为 v0.1.14／v6／test.4；奇怪龙命名修订源码纳入本次提交，test.5 运行包仍为本地成果，尚未新增发布，详见[P2G 中文资料](docs/mhp2g/localization.md)。
 
-P3 已接入 **PPSSPP 工作区与本地道具、装饰品图鉴**：中文名称／说明、搜索筛选、调合、已确认商店、原生图标，以及独立装饰品的技能点、孔位筛选和制作材料。其他图鉴、配装、存档修改及插件仍待专项；本次仅向 GitHub 提交源码，不生成 Release。接手先读 [P3 装饰品交接](plan/mhp3-decoration-catalog/handoff.md)及[道具交接](plan/mhp3-item-catalog/handoff.md)、[构建与使用](docs/mhp3/item-catalog.md)及[后续核查](plan/mhp3-investigation/handoff.md)。既有作品按具体问题维护；跨作品统一业务数据重构仍不恢复。[道具译名词典](docs/item-terminology.md)共享有依据的用词，各作编号、数值、关系与存档格式独立维护。
+P3 已接入 **PPSSPP 工作区与本地道具、装饰品、技能图鉴**。技能页包含 100 个系统、209 条发动、胴系复制，以及珠、防具最小预览和护石来源关联。完整装备图鉴、配装、存档修改及插件仍待专项；本轮本地实现与安装已验收，并按用户授权交付 GitHub 源码；不创建版本标签或 Release。接手先读 [P3 技能交接](plan/mhp3-skill-catalog/handoff.md)、[技能使用与构建](docs/mhp3/skill-catalog.md)及[原生研究边界](plan/mhp3-investigation/handoff.md)。既有作品按具体问题维护；跨作品统一业务数据重构仍不恢复。[道具译名词典](docs/item-terminology.md)共享有依据的用词，各作编号、数值、关系与存档格式独立维护。
 
 本文集中记录运行方法、真实代码入口、已遇到的难点及新作品接入方法，方便接手者从一个具体问题开始。
 
@@ -213,7 +213,7 @@ Dex 的技能系编号不一定等于原生编号；GU/XX 已遇到过这类错�
 
 ## 新作品如何接入
 
-P2G 已接入七类图鉴、配装与存档编辑，详见 [P2G 支持范围](#p2g-支持范围)。P3 已接入本地道具与装饰品图鉴，其他功能按需继续核查，见 [P3 道具交接](plan/mhp3-item-catalog/handoff.md)和[研究边界](plan/mhp3-investigation/handoff.md)。G、2dos、世界、崛起、荒野尚未接入或排期。以下是贡献者可以选择的接入路径，不是恢复一轮跨作品重构的任务清单。
+P2G 已接入七类图鉴、配装与存档编辑，详见 [P2G 支持范围](#p2g-支持范围)。P3 已接入本地道具、装饰品与技能图鉴，其他功能按需继续核查，见 [P3 技能交接](plan/mhp3-skill-catalog/handoff.md)和[研究边界](plan/mhp3-investigation/handoff.md)。G、2dos、世界、崛起、荒野尚未接入或排期。以下是贡献者可以选择的接入路径，不是恢复一轮跨作品重构的任务清单。
 
 ### 先选一作、一个版本、一个闭环
 

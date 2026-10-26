@@ -1,15 +1,20 @@
 # 计划与归档索引
 
-更新日期：2026-10-24。责任归属：项目维护者。适用仓库：`mh-save-edit`。
+更新日期：2026-10-26。责任归属：项目维护者。适用仓库：`mh-save-edit`。
 
-当前接手入口为 [P3 装饰品交接](mhp3-decoration-catalog/handoff.md)。用户已认可[道具首版](mhp3-item-catalog/handoff.md)，独立装饰品也已接入本地应用；其他图鉴、存档修改、配装和插件仍待后续专项，本次按用户要求提交 GitHub 源码，不生成 Release。[原生研究交接](mhp3-investigation/handoff.md)保留细分标志、完整来源及游戏验收边界；此前[道具专项核查](archive/2026-10-24/mhp3-item-investigation/handoff.md)已归档。
+当前接手入口为 [P3 技能交接](mhp3-skill-catalog/handoff.md)。道具、独立装饰品和技能页已接入本地应用；技能包含最小防具关联预览，完整装备图鉴、配装、存档修改和插件仍待后续专题。本轮单代理串行；用户追加授权提交并推送源码，不创建标签或 Release。[原生研究交接](mhp3-investigation/handoff.md)保留完整来源、取得条件及游戏验收边界。
+
+2026-10-26：[技能接入前核查](mhp3-investigation/skill-preflight.md)的冻结契约已用于实现和本地安装；25 件耳饰取得方式、特殊赠品精确触发条件和随机护石组合合法性仍未确认，留待对应专题。
 
 交接与阶段记录统一由本目录管理：当前专题交接与计划放在一起，旧记录归入日期目录。P2G 接入前核查、阶段交接及验收已集中到[阶段记录索引](archive/2026-10-24/mhp2g-records/README.md)；长期使用和开发参考另见 [docs](../docs/README.md)。
+
+当前技能实施记录见 [P3 技能图鉴](mhp3-skill-catalog/README.md)，验收及恢复位置以交接为准。
 
 ## 当前计划
 
 | 计划 | 状态 | 负责人 | 更新日期 | 入口 |
 | --- | --- | --- | --- | --- |
+| P3 技能图鉴 | 已完成（本地验收与源码交付，未发行） | 当前实施者 | 2026-10-26 | [实施](mhp3-skill-catalog/README.md) |
 | P3 道具专项本轮核查 | 已归档（静态证据与缺口，非完整道具验收） | 项目维护者 / 当前实施者 | 2026-10-24 | [交接](archive/2026-10-24/mhp3-item-investigation/handoff.md) |
 | P3 独立装饰品图鉴 | 已完成（本地验收，源码交付） | 当前实施者 | 2026-10-24 | [实施](mhp3-decoration-catalog/README.md) |
 | P3 道具图鉴首版 | 已完成（本地交付，未发行） | 当前实施者 | 2026-10-24 | [实施](mhp3-item-catalog/README.md) |

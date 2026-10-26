@@ -4,6 +4,8 @@ import { p2gWeaponFiltersSchema, p2gWeaponIdentitySchema, p2gWeaponTreeRequestSc
 
 export const gameIdSchema = z.enum(['mh3g', 'mh4g', 'mhgu'])
 export const catalogGameIdSchema = z.enum(['mh3g', 'mh4g', 'mhgu', 'mhp2g'])
+export const skillCatalogGameIdSchema = z.enum(['mh3g', 'mh4g', 'mhgu', 'mhp2g', 'mhp3'])
+export const p3SkillArmorIdentitySchema = z.object({gameId:z.literal('mhp3'),armorKey:z.string().regex(/^mhp3:armor:[0-4]:[1-9][0-9]{0,2}$/)}).strict()
 export const itemCatalogGameIdSchema = z.enum(['mh3g', 'mh4g', 'mhgu', 'mhp2g', 'mhp3'])
 export const decorationCatalogGameIdSchema = z.enum(['mh3g', 'mh4g', 'mhgu', 'mhp2g', 'mhp3'])
 export const itemTermFiltersSchema = z.object({
@@ -107,9 +109,9 @@ export const weaponMotionFiltersSchema = z.object({
 }).strict()
 
 const legacyArmorIdentitySchema = z.object({ gameId: gameIdSchema, dexId: z.number().int().min(1).max(65535) }).strict()
-export const skillIdentitySchema = z.object({ gameId: catalogGameIdSchema, skillId: z.number().int().min(0).max(65535) }).strict()
+export const skillIdentitySchema = z.object({ gameId: skillCatalogGameIdSchema, skillId: z.number().int().min(0).max(65535) }).strict()
 export const skillCatalogFiltersSchema = z.object({
-  gameId: catalogGameIdSchema,
+  gameId: skillCatalogGameIdSchema,
   targetSkillId: z.number().int().min(0).max(65535).optional(),
   query: z.string().trim().max(120).optional(),
   direction: z.enum(['positive','negative','special']).optional(),

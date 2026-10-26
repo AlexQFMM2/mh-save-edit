@@ -159,8 +159,18 @@ describe('P3 workspace shell', () => {
     expect(openSave).not.toHaveBeenCalled()
   })
 
+  it('opens the P3 skill route without enabling equipment, loadout or save services', async () => {
+    window.history.replaceState(null, '', '/#/game/mhp3/catalog/skills')
+    render(<App />)
+    await screen.findByText('没有符合条件的技能。')
+    expect(searchSkills).toHaveBeenCalledWith(expect.objectContaining({gameId:'mhp3'}))
+    expect(searchWeapons).not.toHaveBeenCalled()
+    expect(loadoutAccess).not.toHaveBeenCalled()
+    expect(openSave).not.toHaveBeenCalled()
+  })
+
   it.each([
-    ['catalog/skills', '技能图鉴'], ['catalog/weapons', '武器图鉴'],
+    ['catalog/weapons', '武器图鉴'],
     ['catalog/armor', '防具图鉴'], ['catalog/monsters', '怪物图鉴'],
     ['catalog/quests', '任务图鉴'], ['edit', '存档修改'], ['edit/loadout', '配装器'],
   ])('keeps direct P3 %s links away from existing game services', async (path, title) => {

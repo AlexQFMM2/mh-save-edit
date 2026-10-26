@@ -1,0 +1,6 @@
+.p3-skill-charm-sources { display: grid; gap: var(--global-spacing-3); }
+.p3-skill-charm-sources__title { margin: var(--global-spacing-2) 0; color: var(--global-theme-color-text-primary); font-size: var(--global-typography-font-size-body); }
+.p3-skill-charm-sources__row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--global-spacing-2); padding: var(--global-spacing-3); border-bottom: var(--global-border-width) solid var(--global-theme-color-border-subtle); font-size: var(--global-typography-font-size-small); }
+.p3-skill-charm-sources__data { color: var(--global-theme-color-data); white-space: nowrap; }
+.p3-skill-charm-sources__note { margin: var(--global-spacing-2) 0; color: var(--global-theme-color-text-secondary); font-size: var(--global-typography-font-size-small); line-height: var(--global-typography-line-height-relaxed); }
+.p3-skill-charm-sources__gift { padding: var(--global-spacing-2); background: var(--global-theme-color-surface-inset); border-radius: var(--global-radius-md); }

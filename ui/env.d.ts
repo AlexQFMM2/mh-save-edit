@@ -1,3 +1,5 @@
+import type { P3SkillArmorIdentity, P3SkillArmorDetail } from '../api/catalog/p3SkillTypes'
+import type { SkillCatalogGameId } from '../api/catalog/types'
 import type { DecorationCatalogGameId } from '../api/catalog/types'
 import type { LoadoutGame } from '../api/loadout/types'
 import type { P2gSkillEquipmentIdentity, P2gSkillEquipmentDetail } from '../api/catalog/p2gSkillTypes'
@@ -39,10 +41,11 @@ declare global {
         getArmor(identity: import('../api/catalog/p2gArmorTypes').P2gArmorIdentity): Promise<import('../api/catalog/p2gArmorTypes').P2gArmorDetail | null>
         getArmor(identity: ArmorIdentity): Promise<ArmorDetail | null>
         getArmorFacets(gameId: CatalogGameId): Promise<ArmorCatalogFacets>
+        getP3SkillArmor(identity: P3SkillArmorIdentity): Promise<P3SkillArmorDetail | null>
         getP2gSkillEquipment(identity: P2gSkillEquipmentIdentity): Promise<P2gSkillEquipmentDetail | null>
         getSkill(identity: SkillIdentity): Promise<SkillDetail | null>
         searchSkills(filters: SkillCatalogFilters): Promise<PageResult<SkillSummary>>
-        getSkillFacets(gameId: CatalogGameId): Promise<SkillCatalogFacets>
+        getSkillFacets(gameId: SkillCatalogGameId): Promise<SkillCatalogFacets>
         searchMonsters(filters: MonsterCatalogFilters): Promise<MonsterSummary[]>
         getMonster(identity: MonsterIdentity): Promise<MonsterDetail | null>
         getMonsterFacets(gameId: CatalogGameId): Promise<MonsterCatalogFacets>

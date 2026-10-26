@@ -27,7 +27,7 @@ export function DecorationDetailDrawer(props:Props) {
     <DecorationDetailPanel item={item} loading={loading} error={error} onRetry={()=>setRetry(n=>n+1)} allowCatalogWrite={false}
       onSelectMaterial={material=>go(`/game/${material.gameId}/catalog/items?target=${itemNumber(material)}&item=${itemNumber(material)}`)}
       onSelectItem={target=>go(`/game/${target.gameId}/catalog/items?target=${itemNumber(target)}&item=${itemNumber(target)}`)}
-      onSelectSkill={skillId=>go(gameId==='mhp3'?`/game/mhp3/catalog/decorations?skill=${skillId}&sort=skillPoints`:`/game/${gameId}/catalog/skills?target=${skillId}&skill=${skillId}`)}/>
+      onSelectSkill={skillId=>go(`/game/${gameId}/catalog/skills?target=${skillId}&skill=${skillId}`)}/>
   </DetailDrawer></div>
   return (gameId==='mhp2g'||gameId==='mhp3')?createPortal(content,document.body):content
 }

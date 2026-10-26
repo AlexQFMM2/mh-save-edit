@@ -1,6 +1,6 @@
 # P3 道具图鉴
 
-P3 的 PPSSPP 工作区通过“资料 → 道具”打开只读图鉴。道具资料使用独立的 `data/mhp3.sqlite`，图标位于 `ui/public/assets/catalog/icons/`。默认显示 977 条，空槽和“不装瓶”内部占位可用“显示占位条目”查看。独立[装饰品图鉴](decoration-catalog.md)复用此库，其他图鉴、配装和存档编辑仍未开放。
+P3 的 PPSSPP 工作区通过“资料 → 道具”打开只读图鉴。道具资料使用独立的 `data/mhp3.sqlite`，图标位于 `ui/public/assets/catalog/icons/`。默认显示 977 条，空槽和“不装瓶”内部占位可用“显示占位条目”查看。独立[装饰品图鉴](decoration-catalog.md)复用此库，[技能图鉴](skill-catalog.md)在库副本中追加资料；其他图鉴、配装和存档编辑仍未开放。
 
 ## 数据契约
 

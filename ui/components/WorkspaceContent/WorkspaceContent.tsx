@@ -9,6 +9,7 @@ export type ShellOutletContext = {
 // Feature routes in App validate runtime support before rendering catalog/edit pages.
 export type WorkspaceOutletContext = { game: RuntimeGameVersionDefinition }
 export type DecorationCatalogOutletContext = { game: GameVersionDefinition & { id: import('../../../api/catalog/types').DecorationCatalogGameId } }
+export type SkillCatalogOutletContext = { game: GameVersionDefinition & { id: import('../../../api/catalog/types').SkillCatalogGameId } }
 export type ItemCatalogOutletContext = { game: GameVersionDefinition & { id: import('../../../api/catalog/types').ItemCatalogGameId } }
 
 type WorkspaceContentProps = {

@@ -1,4 +1,3 @@
-import { P3DecorationSkillDrawer } from '../../components/P3DecorationSkillDrawer/P3DecorationSkillDrawer'
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useOutletContext, useSearchParams } from 'react-router-dom'
 import type { DecorationCatalogFacets, DecorationCatalogFilters, DecorationDetail, DecorationSummary, ItemIdentity } from '../../../api/catalog/types'
@@ -71,6 +70,6 @@ export function DecorationCatalogPage() {
       <DecorationList items={items} selectedId={items.some(i=>decorationNumber(i)===selectedId)?selectedId:undefined} loading={loading} error={error??facetsError} onRetry={retryLoad} onSelect={id=>update({item:id})}/>
       <ItemPagination ariaLabel="装饰品列表分页" page={page} pageSize={meta.pageSize} total={meta.total} hasNext={meta.hasNext} onPageChange={value=>update({page:value,item:undefined})}/>
     </section><DecorationDetailPanel item={detail} loading={detailLoading} error={detailError} onRetry={retryLoad} onSelectMaterial={openItem} onSelectItem={openItem} onSelectSkill={id=>setDrawer({kind:'skill',id})}/></div>
-    <ItemDetailDrawer identity={drawer?.kind==='item'?drawer.identity:null} onClose={closeDrawer}/>{game.id==='mhp3'?<P3DecorationSkillDrawer skill={drawer?.kind==='skill'?detail?.skills.find(s=>s.skillId===drawer.id)??null:null} onClose={closeDrawer}/>:<SkillDetailDrawer gameId={game.id} skillId={drawer?.kind==='skill'?drawer.id:null} onClose={closeDrawer}/>}
+    <ItemDetailDrawer identity={drawer?.kind==='item'?drawer.identity:null} onClose={closeDrawer}/><SkillDetailDrawer gameId={game.id} skillId={drawer?.kind==='skill'?drawer.id:null} onClose={closeDrawer}/>
   </div>
 }

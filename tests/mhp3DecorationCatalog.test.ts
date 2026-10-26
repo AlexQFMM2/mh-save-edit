@@ -46,12 +46,12 @@ describe('P3 decoration projection', () => {
     expect(repo.getDecorationFacets()).toMatchObject({ slots: [1], skills: expect.arrayContaining([expect.objectContaining({ skillId: 2, nameJp: 'テスト負', nameEn: 'Negative' })]) })
   })
 
-  it('rejects cross-game/save identities while leaving the full skill service closed', () => {
+  it('rejects cross-game/save identities while allowing the independent skill service', () => {
     for (const identity of [{ gameId: 'mhp3', saveId: 825 }, { gameId: 'mhp3', itemId: 825, saveId: 825 }, { gameId: 'mhp3', itemId: 979 }, { gameId: 'mhgu', itemId: 825 }])
       expect(decorationIdentitySchema.safeParse(identity).success).toBe(false)
     expect(() => repo.searchDecorations({ gameId: 'mhp2g' })).toThrow(/身份/)
     expect(decorationCatalogFiltersSchema.safeParse({ gameId: 'mhp3', targetSaveId: 825 }).success).toBe(false)
     expect(decorationCatalogFiltersSchema.safeParse({ gameId: 'mhp3', targetItemId: 979 }).success).toBe(false)
-    expect(skillCatalogFiltersSchema.safeParse({ gameId: 'mhp3' }).success).toBe(false)
+    expect(skillCatalogFiltersSchema.safeParse({ gameId: 'mhp3' }).success).toBe(true)
   })
 })

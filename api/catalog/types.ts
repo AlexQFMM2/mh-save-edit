@@ -1,11 +1,13 @@
 import type { P3ItemIdentity, P3ItemInfo, P3ItemDetailInfo, P3ItemCategory, P3QuantityKind, P3ItemDecoration } from './p3ItemTypes'
 import type { P2gSkillData } from './p2gSkillTypes'
+import type { P3SkillData, P3SkillArmorRelation } from './p3SkillTypes'
 import type { GameId } from '../core/loadout'
 import type { ItemTermLabel } from '../terminology/types'
 
 export type CatalogGameId = GameId | 'mhp2g'
 export type ItemCatalogGameId = CatalogGameId | 'mhp3'
 export type DecorationCatalogGameId = CatalogGameId | 'mhp3'
+export type SkillCatalogGameId = CatalogGameId | 'mhp3'
 export type LegacyItemIdentity = { gameId: GameId; saveId: number; itemId?: never }
 export type P2gItemIdentity = { gameId: 'mhp2g'; itemId: number; saveId?: never }
 export type ItemIdentity = LegacyItemIdentity | P2gItemIdentity | P3ItemIdentity
@@ -15,7 +17,7 @@ export type P3DecorationIdentity = P3ItemIdentity
 export type DecorationIdentity = LegacyDecorationIdentity | P2gDecorationIdentity | P3DecorationIdentity
 export type WeaponIdentity = { gameId: GameId; weaponKey: string }
 export type ArmorIdentity = { gameId: GameId; dexId: number }
-export type SkillIdentity = { gameId: CatalogGameId; skillId: number }
+export type SkillIdentity = { gameId: SkillCatalogGameId; skillId: number }
 export type MonsterIdentity = { gameId: CatalogGameId; monsterId: number }
 export type QuestIdentity = { gameId: CatalogGameId; questKey: string }
 export type HunterArtIdentity = { gameId: 'mhgu'; hunterArtId: number }
@@ -473,13 +475,22 @@ export type ArmorCatalogFacets = {
 }
 
 export type SkillActivationLink = { activationKey: string; skillId?: number; nameCn: string; nameEn: string; direction: 'positive' | 'negative' | 'special' }
-export type SkillActivation = { activationKey: string; dexActivationId: number | null; threshold: number; direction: 'positive' | 'negative' | 'special'; nameCn: string; nameEn: string; nameJp: string; descriptionCn: string; descriptionEn: string; descriptionJp: string; wikiDetail?: { descriptionCn: string; sourceUrl: string; sourceVersion: string; reviewNote: string }; components: SkillActivationLink[] }
-export type SkillDecorationRelation = LegacyDecorationIdentity & { nameCn: string; nameEn: string; points: number; slots: number; iconPath: string | null }
-export type SkillArmorRelation = ArmorIdentity & { nameCn: string; nameEn: string; points: number; slots: number; part: ArmorPartId; iconPath: string | null }
+export type SkillActivation = {
+  activationKey: string; dexActivationId: number | null; nativeActivationId?: number
+  threshold: number; direction: 'positive' | 'negative' | 'special'
+  nameCn: string; nameEn: string; nameJp: string
+  descriptionCn: string; descriptionEn: string; descriptionJp: string
+  wikiDetail?: { descriptionCn: string; sourceUrl: string; sourceVersion: string; reviewNote: string }
+  components: SkillActivationLink[]; componentsStatus?: 'unreviewed'
+}
+export type SkillDecorationRelation = (LegacyDecorationIdentity | P3DecorationIdentity) & { nameCn: string; nameEn: string; nameJp?: string; points: number; slots: number; iconPath: string | null }
+export type SkillArmorRelation = (ArmorIdentity & { nameCn: string; nameEn: string; points: number; slots: number; part: ArmorPartId; iconPath: string | null }) | P3SkillArmorRelation
 export type SkillTalismanRelation = { rangeKey: string; skillId: number; skillNameCn: string; talismanId: number; talismanNameCn: string; talismanNameEn: string; position: 'A' | 'B'; slotCount: number | null; minPoints: number; maxPoints: number; maxSlots: number | null; rangeStatus: 'exact' | 'rule' | 'unknown'; source: string }
 export type SkillCatalogTab = 'armor' | 'decoration' | 'talisman'
 export type SkillDetail = SkillIdentity & {
   p2g?: P2gSkillData
+  p3?: P3SkillData
+  specialRule?: { descriptionCn: string; descriptionJp: string } | null
   nameCn: string
   nameEn: string
   nameJp: string
@@ -493,7 +504,7 @@ export type SkillDetail = SkillIdentity & {
   talismans: SkillTalismanRelation[]
 }
 export type SkillSummary = SkillIdentity & { match?: string; nameCn: string; nameEn: string; nameJp: string; activationCount: number; positiveActivationCount: number; negativeActivationCount: number; specialActivationCount: number; armorCount: number; decorationCount: number; talismanCount: number; isPlaceholder: boolean }
-export type SkillCatalogFilters = { gameId: CatalogGameId; targetSkillId?: number; query?: string; direction?: 'positive' | 'negative' | 'special'; source?: 'armor' | 'decoration' | 'talisman' | 'all'; includePlaceholders?: boolean; sort?: 'skillId' | 'name' | 'activationCount'; page?: number; pageSize?: number }
+export type SkillCatalogFilters = { gameId: SkillCatalogGameId; targetSkillId?: number; query?: string; direction?: 'positive' | 'negative' | 'special'; source?: 'armor' | 'decoration' | 'talisman' | 'all'; includePlaceholders?: boolean; sort?: 'skillId' | 'name' | 'activationCount'; page?: number; pageSize?: number }
 export type SkillCatalogFacets = { directions: ('positive' | 'negative' | 'special')[]; sources: ('armor' | 'decoration' | 'talisman')[] }
 
 export type ItemDetail = ItemSummary & {

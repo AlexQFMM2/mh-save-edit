@@ -26,6 +26,7 @@ function Feature({item}:{item:typeof workspaceNavigation[number]['items'][number
   const {game}=useOutletContext<ShellOutletContext>()
   if(item.supportedGames && !item.supportedGames.includes(game.id))return <Navigate to={`/game/${game.id}/overview`} replace/>
   if(game.id==='mhp3' && item.id==='items')return <ItemCatalogPage/>
+  if(game.id==='mhp3' && item.id==='skills')return <SkillCatalogPage/>
   if(game.id==='mhp3' && item.id==='decorations')return <DecorationCatalogPage/>
   if(!hasRuntimeWorkspace(game))return <WorkspaceFeaturePage pageId={item.id}/>
   if(item.id==='save-editor')return <SaveEditorPage/>

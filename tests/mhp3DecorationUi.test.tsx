@@ -6,7 +6,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { DecorationCatalogPage } from '../ui/pages/DecorationCatalogPage/DecorationCatalogPage'
 import { ItemCatalogPage } from '../ui/pages/ItemCatalogPage/ItemCatalogPage'
 import { gameVersions } from '../ui/data/gameVersions'
-import { p3ItemFixture } from './fixtures/p3ItemCatalog'
+import { p3SkillFixture as p3ItemFixture } from './fixtures/p3SkillCatalog'
+import { P3SkillCatalogRepository } from '../api/catalog/p3SkillRepository'
 import { P3ItemCatalogRepository } from '../api/catalog/p3ItemRepository'
 import { P3DecorationCatalogRepository } from '../api/catalog/p3DecorationRepository'
 
@@ -16,6 +17,8 @@ beforeEach(() => {
   db = p3ItemFixture()
   const items = new P3ItemCatalogRepository(db), decorations = new P3DecorationCatalogRepository(db, items)
   for (const fn of Object.values(api)) fn.mockReset()
+  const skills = new P3SkillCatalogRepository(db, decorations)
+  api.getSkill.mockImplementation(async p => skills.getSkill(p.skillId))
   api.searchDecorations.mockImplementation(async p => decorations.searchDecorations(p))
   api.getDecoration.mockImplementation(async p => decorations.getDecoration(p))
   api.getDecorationFacets.mockImplementation(async () => decorations.getDecorationFacets())
@@ -58,17 +61,17 @@ describe('P3 independent decoration UI', () => {
     expect(screen.getByTestId('location').textContent).toContain('/catalog/decorations?target=826')
   })
 
-  it('opens a limited skill relationship drawer and closes it before applying the skill filter', async () => {
+  it('opens full skill details and closes before locating a related jewel', async () => {
     const user = userEvent.setup(); mount(); await screen.findByText('道具编号 #825')
     await user.click(screen.getByRole('button', { name: '负向技能' }))
     const dialog = await screen.findByRole('dialog', { name: '关联技能' })
-    await within(dialog).findByText(/发动阈值与完整效果尚未收录/)
-    await within(dialog).findByRole('button', { name: /同名珠.*负技能：负向技能 -1/ })
-    expect(screen.getAllByRole('dialog')).toHaveLength(1); expect(api.getSkill).not.toHaveBeenCalled()
-    await user.click(within(dialog).getByRole('button', { name: '在装饰品图鉴筛选此技能' }))
+    await within(dialog).findByText('独立测试说明2')
+    expect(screen.getAllByRole('dialog')).toHaveLength(1)
+    expect(api.getSkill).toHaveBeenCalledWith({gameId:'mhp3',skillId:2})
+    await user.click(within(dialog).getByRole('tab',{name:/相关装饰品/}))
+    await user.click(within(dialog).getByRole('button',{name:/同名珠/}))
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
-    await waitFor(() => expect(api.searchDecorations).toHaveBeenLastCalledWith(expect.objectContaining({ gameId: 'mhp3', skillId: 2, sort: 'skillPoints' })))
-    expect(screen.getByTestId('location').textContent).toContain('skill=2')
+    expect(screen.getByTestId('location').textContent).toContain('/catalog/decorations?target=825&item=825')
   })
 
   it('opens decoration details from the item page, then closes before locating a material', async () => {

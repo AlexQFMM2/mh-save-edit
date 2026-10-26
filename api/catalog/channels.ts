@@ -16,6 +16,7 @@ export const catalogChannels = {
   searchArmorSets: 'catalog:search-armor-sets',
   getArmor: 'catalog:get-armor',
   getArmorFacets: 'catalog:get-armor-facets',
+  getP3SkillArmor: 'catalog:get-p3-skill-armor',
   getSkill: 'catalog:get-skill',
   getP2gSkillEquipment: 'catalog:get-p2g-skill-equipment',
   searchSkills: 'catalog:search-skills',

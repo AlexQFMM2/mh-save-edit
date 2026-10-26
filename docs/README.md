@@ -1,12 +1,13 @@
 # 使用说明与技术参考
 
-`docs` 保存长期使用的操作说明、数据契约、构建方法和版本说明。计划、交接、接入前核查及阶段验收统一放在 [plan](../plan/README.md)；当前接手入口为 [P3 装饰品交接](../plan/mhp3-decoration-catalog/handoff.md)，P2G 历史记录见[归档索引](../plan/archive/2026-10-24/mhp2g-records/README.md)。
+`docs` 保存长期使用的操作说明、数据契约、构建方法和版本说明。计划、交接、接入前核查及阶段验收统一放在 [plan](../plan/README.md)；当前接手入口为 [P3 技能交接](../plan/mhp3-skill-catalog/handoff.md)，P2G 历史记录见[归档索引](../plan/archive/2026-10-24/mhp2g-records/README.md)。
 
 ## 按用途阅读
 
 | 用途 | 入口 |
 | --- | --- |
 | P2G 插件安装、测试、图鉴、配装与存档说明 | [P2G 文档](mhp2g/README.md) |
+| P3 技能、发动效果、最小防具与护石来源 | [P3 技能图鉴](mhp3/skill-catalog.md) |
 | P3 装饰品、技能点与材料关联 | [P3 装饰品图鉴](mhp3/decoration-catalog.md) |
 | P3 道具使用、数据契约与离线构建 | [P3 道具图鉴](mhp3/item-catalog.md) |
 | 道具译名、旧称搜索与词典构建 | [道具译名词典](item-terminology.md) |

@@ -1,3 +1,5 @@
+import type { P3SkillArmorIdentity, P3SkillArmorDetail } from '../api/catalog/p3SkillTypes'
+import type { SkillCatalogGameId } from '../api/catalog/types'
 import type { DecorationCatalogGameId } from '../api/catalog/types'
 import type { LoadoutGame } from '../api/loadout/types'
 import type { P2gArmorFilters, P2gArmorSetFilters, P2gArmorIdentity } from '../api/catalog/p2gArmorTypes'
@@ -34,10 +36,11 @@ contextBridge.exposeInMainWorld('mhSaveEditor', {
     searchArmorSets: (filters: ArmorSetFilters | P2gArmorSetFilters) => ipcRenderer.invoke(catalogChannels.searchArmorSets, filters),
     getArmor: (identity: ArmorIdentity | P2gArmorIdentity) => ipcRenderer.invoke(catalogChannels.getArmor, identity),
     getArmorFacets: (gameId: CatalogGameId) => ipcRenderer.invoke(catalogChannels.getArmorFacets, gameId),
+    getP3SkillArmor: (identity: P3SkillArmorIdentity): Promise<P3SkillArmorDetail | null> => ipcRenderer.invoke(catalogChannels.getP3SkillArmor, identity),
     getP2gSkillEquipment: (identity: P2gSkillEquipmentIdentity): Promise<P2gSkillEquipmentDetail | null> => ipcRenderer.invoke(catalogChannels.getP2gSkillEquipment, identity),
     getSkill: (identity: SkillIdentity) => ipcRenderer.invoke(catalogChannels.getSkill, identity),
     searchSkills: (filters: SkillCatalogFilters) => ipcRenderer.invoke(catalogChannels.searchSkills, filters),
-    getSkillFacets: (gameId: CatalogGameId) => ipcRenderer.invoke(catalogChannels.getSkillFacets, gameId),
+    getSkillFacets: (gameId: SkillCatalogGameId) => ipcRenderer.invoke(catalogChannels.getSkillFacets, gameId),
     searchMonsters: (filters: MonsterCatalogFilters) => ipcRenderer.invoke(catalogChannels.searchMonsters, filters),
     getMonster: (identity: MonsterIdentity) => ipcRenderer.invoke(catalogChannels.getMonster, identity),
     getMonsterFacets: (gameId: CatalogGameId) => ipcRenderer.invoke(catalogChannels.getMonsterFacets, gameId),
