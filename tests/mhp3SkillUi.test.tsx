@@ -80,6 +80,6 @@ describe('P3 skills and one-level associations',()=>{
   })
   it('exposes a retry for full skill drawers and handles unknown deep-link armor identities',async()=>{
     const user=userEvent.setup();api.getSkill.mockRejectedValueOnce(new Error('技能暂不可用'));mount('/game/mhp3/catalog/decorations?item=825');await user.click(await screen.findByRole('button',{name:'负向技能'}));const dialog=await screen.findByRole('dialog');await within(dialog).findByText('技能暂不可用');await user.click(within(dialog).getByRole('button',{name:'重试详情'}));await within(dialog).findByText('独立测试说明2')
-    cleanup();mount('/game/mhp3/catalog/skills?skill=2&equipment=mhp3%3Aarmor%3A4%3A999');await screen.findByText('未找到对应防具资料。');expect(screen.queryByRole('dialog')).toBeNull()
+    cleanup();mount('/game/mhp3/catalog/skills?skill=2&equipment=mhp3%3Aarmor%3A4%3A255');await screen.findByText('未找到对应防具资料。');expect(screen.queryByRole('dialog')).toBeNull()
   })
 })

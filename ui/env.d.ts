@@ -34,13 +34,16 @@ declare global {
         getWeaponTree(gameId: GameId, weaponTypeId: number): Promise<WeaponTreeResult>
         searchWeaponMotions(filters: WeaponMotionFilters): Promise<WeaponMotionCatalogResult>
         getWeaponMotionFacets(gameId: GameId): Promise<WeaponMotionFacets>
+        searchArmors(filters: import('../api/catalog/p3ArmorTypes').P3ArmorFilters): Promise<PageResult<import('../api/catalog/p3ArmorTypes').P3ArmorSummary>>
         searchArmors(filters: import('../api/catalog/p2gArmorTypes').P2gArmorFilters): Promise<PageResult<import('../api/catalog/p2gArmorTypes').P2gArmorSummary>>
         searchArmors(filters: ArmorCatalogFilters): Promise<PageResult<ArmorSummary>>
+        searchArmorSets(filters: import('../api/catalog/p3ArmorTypes').P3ArmorSetFilters): Promise<PageResult<import('../api/catalog/p3ArmorTypes').P3ArmorSetSummary>>
         searchArmorSets(filters: import('../api/catalog/p2gArmorTypes').P2gArmorSetFilters): Promise<PageResult<import('../api/catalog/p2gArmorTypes').P2gArmorSetSummary>>
         searchArmorSets(filters: ArmorSetFilters): Promise<PageResult<ArmorSetSummary>>
+        getArmor(identity: import('../api/catalog/p3ArmorTypes').P3ArmorIdentity): Promise<import('../api/catalog/p3ArmorTypes').P3ArmorDetail | null>
         getArmor(identity: import('../api/catalog/p2gArmorTypes').P2gArmorIdentity): Promise<import('../api/catalog/p2gArmorTypes').P2gArmorDetail | null>
         getArmor(identity: ArmorIdentity): Promise<ArmorDetail | null>
-        getArmorFacets(gameId: CatalogGameId): Promise<ArmorCatalogFacets>
+        getArmorFacets(gameId: import('../api/catalog/types').ArmorCatalogGameId): Promise<ArmorCatalogFacets>
         getP3SkillArmor(identity: P3SkillArmorIdentity): Promise<P3SkillArmorDetail | null>
         getP2gSkillEquipment(identity: P2gSkillEquipmentIdentity): Promise<P2gSkillEquipmentDetail | null>
         getSkill(identity: SkillIdentity): Promise<SkillDetail | null>

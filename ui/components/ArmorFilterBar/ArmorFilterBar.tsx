@@ -3,7 +3,7 @@ import { CatalogResetButton } from '../CatalogResetButton/CatalogResetButton'
 import { SearchableSelect } from '../SearchableSelect/SearchableSelect'
 import './ArmorFilterBar.css'
 
-type Props = { showPlaceholders?: boolean; facets: ArmorCatalogFacets; showPart?: boolean; part?: ArmorPartId; combat?: ArmorCombatType; gender?: ArmorGender; rarity?: number; slots?: number; skillId?: number; includePlaceholders: boolean; onChange: (key: string, value?: string) => void; onReset: () => void }
+type Props = { error?: string; onRetry?: () => void; scope?: import('../../../api/catalog/p3ArmorTypes').P3ArmorScope; showPlaceholders?: boolean; facets: ArmorCatalogFacets; showPart?: boolean; part?: ArmorPartId; combat?: ArmorCombatType; gender?: ArmorGender; rarity?: number; slots?: number; skillId?: number; includePlaceholders: boolean; onChange: (key: string, value?: string) => void; onReset: () => void }
 export function ArmorFilterBar(props: Props) {
   return <div className="armor-filter-bar">
     {props.showPart!==false&&<label className="armor-filter-bar__field"><span>部位</span><SearchableSelect ariaLabel="筛选防具部位" value={props.part??''} options={[{value:'',label:'全部'},{value:'head',label:'头'},{value:'chest',label:'胸'},{value:'arms',label:'手'},{value:'waist',label:'腰'},{value:'legs',label:'腿'}]} onChange={(value)=>props.onChange('part',value||undefined)}/></label>}
@@ -13,6 +13,8 @@ export function ArmorFilterBar(props: Props) {
     <label className="armor-filter-bar__field"><span>孔位</span><SearchableSelect ariaLabel="筛选防具孔位" value={String(props.slots??'')} options={[{value:'',label:'全部'},...props.facets.slots.map(v=>({value:String(v),label:`${v} 孔`}))]} onChange={(value)=>props.onChange('slots',value||undefined)}/></label>
     <label className="armor-filter-bar__field armor-filter-bar__skill"><span>技能</span><SearchableSelect ariaLabel="按技能筛选防具" value={String(props.skillId??'')} options={[{value:'',label:'全部技能'},...props.facets.skills.map(v=>({value:String(v.skillId),label:v.nameCn,keywords:[v.nameCn,v.nameEn,v.nameJp??'']}))]} onChange={(value)=>props.onChange('skill',value||undefined)}/></label>
     {props.showPlaceholders!==false&&<label className="armor-filter-bar__field armor-filter-bar__debug"><input className="armor-filter-bar__checkbox" type="checkbox" checked={props.includePlaceholders} onChange={e=>props.onChange('debug',e.target.checked?'1':undefined)}/>占位</label>}
+    {props.scope&&<label className="armor-filter-bar__field"><span>收录</span><SearchableSelect ariaLabel="筛选防具收录范围" value={props.scope} options={[{value:'obtainable',label:'正常可获取'},{value:'unknown',label:'取得未确认'},{value:'special',label:'特殊用途'},{value:'all',label:'全部已收录'}]} onChange={value=>props.onChange('scope',value)}/></label>}
+    {props.error&&<span className="armor-filter-bar__error" role="alert">{props.error}<button className="armor-filter-bar__retry" type="button" onClick={props.onRetry}>重试筛选</button></span>}
     <CatalogResetButton onReset={props.onReset}/>
   </div>
 }

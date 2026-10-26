@@ -1,6 +1,6 @@
 # 计划目录
 
-更新日期：2026-10-26。各计划 README 的 Status 为准；本目录只作导航。负责人均为项目维护者／对应实施者，执行方式为单代理串行。当前交接见 [P3 技能](../mhp3-skill-catalog/handoff.md)，前序见[装饰品](../mhp3-decoration-catalog/handoff.md)与[道具图鉴](../mhp3-item-catalog/handoff.md)，研究边界见 [P3 研究](../mhp3-investigation/handoff.md)，历史总览见 [计划索引](../README.md)。
+更新日期：2026-10-26。各计划 README 的 Status 为准；本目录只作导航。负责人均为项目维护者／对应实施者，执行方式为单代理串行。当前交接见 [P3 防具](../mhp3-armor-catalog/handoff.md)，前序见[技能](../mhp3-skill-catalog/handoff.md)、[装饰品](../mhp3-decoration-catalog/handoff.md)与[道具图鉴](../mhp3-item-catalog/handoff.md)，研究边界见 [P3 研究](../mhp3-investigation/handoff.md)，历史总览见 [计划索引](../README.md)。
 
 阶段材料入口：[P2G 交接／核查／验收记录](../archive/2026-10-24/mhp2g-records/README.md)。使用说明与长期开发参考见[文档目录](../../docs/README.md)。
 
@@ -22,6 +22,7 @@
 
 | 计划 | 负责人 | 完成日期 | 入口 |
 | --- | --- | --- | --- |
+| P3 防具（本地安装与源码交付，未发行） | 当前实施者 | 2026-10-26 | [交接与验收](../mhp3-armor-catalog/handoff.md) |
 | P3 技能（本地验收与源码交付，未发行） | 当前实施者 | 2026-10-26 | [交接与验收](../mhp3-skill-catalog/handoff.md) |
 | P3 独立装饰品（本地交付，未发行） | 当前实施者 | 2026-10-24 | [交接与验收](../mhp3-decoration-catalog/handoff.md) |
 | P3 道具图鉴首版（本地交付，未发行） | 当前实施者 | 2026-10-24 | [交接与验收](../mhp3-item-catalog/handoff.md) |

@@ -10,5 +10,6 @@ export type P3ItemLink = P3ItemIdentity & { nameCn: string; nameEn: string; name
 export type P3ItemRecipe = { index: number; output: P3ItemLink; materials: (P3ItemLink & { quantity: number })[] }
 export type P3ItemDetailInfo = P3ItemInfo & {
   recipes: P3ItemRecipe[]
+  armorRecipes?: import('./p3ArmorTypes').P3ArmorRecipe[]
   coverage: Partial<Record<ItemRelation['sourceKind'], 'complete' | 'partial' | 'not-collected'>>
 }

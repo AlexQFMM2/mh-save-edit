@@ -7,6 +7,7 @@ import type { ItemTermLabel } from '../terminology/types'
 export type CatalogGameId = GameId | 'mhp2g'
 export type ItemCatalogGameId = CatalogGameId | 'mhp3'
 export type DecorationCatalogGameId = CatalogGameId | 'mhp3'
+export type ArmorCatalogGameId = CatalogGameId | 'mhp3'
 export type SkillCatalogGameId = CatalogGameId | 'mhp3'
 export type LegacyItemIdentity = { gameId: GameId; saveId: number; itemId?: never }
 export type P2gItemIdentity = { gameId: 'mhp2g'; itemId: number; saveId?: never }
@@ -396,6 +397,7 @@ export type MonsterCatalogFacets = {
 }
 
 export type ArmorSkill = {
+  kind?: 'signed-points' | 'torso-copy-marker'
   nameJp?: string
   skillId: number
   nameCn: string

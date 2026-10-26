@@ -39,6 +39,7 @@ export function ItemDetailDrawer(props: Props) {
     }}
     onSelectDecoration={(saveId) => go(`/game/${gameId}/catalog/decorations?target=${saveId}&item=${saveId}`)}
     onSelectWeapon={(weapon) => go(`/game/${gameId}/catalog/weapons?target=${encodeURIComponent(weapon.weaponKey)}&type=${weapon.typeId}&weapon=${encodeURIComponent(weapon.weaponKey)}`)}
+    onSelectP3Armor={armor=>go(`/game/mhp3/catalog/armor?target=${encodeURIComponent(armor.armorKey)}&armor=${encodeURIComponent(armor.armorKey)}`)}
     onSelectP2gArmor={armor=>go(`/game/mhp2g/catalog/armor?target=${encodeURIComponent(armor.armorKey)}&armor=${encodeURIComponent(armor.armorKey)}`)}
     onSelectArmor={(armor) => go(`/game/${gameId}/catalog/armor?target=${armor.dexId}&armor=${armor.dexId}`)}
     onSelectMonster={(monster) => go(`/game/${gameId}/catalog/monsters?target=${monster.monsterId}&monster=${monster.monsterId}`)}

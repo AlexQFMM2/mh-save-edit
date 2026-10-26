@@ -99,6 +99,8 @@ def build(base_file, native_dir, review_file, icon_probe, output, terminology_di
             raise ValueError('Expected the P3 item catalog')
         baseline = table_fingerprints(base)
         original_meta = dict(base.execute('SELECT key,value FROM meta'))
+        if original_meta.get('armor_schema'):
+            raise ValueError('Full armor library present: rebuild skills from the pre-armor baseline, then rebuild the reviewed armor extension; refusing to downgrade armor facts')
         jewel_terms = {s['id']: s for (raw,) in base.execute('SELECT decoration_json FROM catalog_items WHERE decoration_json IS NOT NULL') for s in json.loads(raw)['skills']}
         for id, term in jewel_terms.items():
             if any(systems[id][k] != term[k] for k in ('nameCn', 'nameEn')) or systems[id]['nameRawJp'] != term['nameJp']:

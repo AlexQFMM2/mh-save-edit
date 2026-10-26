@@ -1,3 +1,4 @@
+import { hasP3Armors, P3ArmorCatalogRepository } from './p3ArmorRepository'
 import type Database from 'better-sqlite3'
 import type { ItemTermRepository } from '../terminology/itemTermRepository'
 import { normalizeTerm } from '../terminology/catalogIdentity.mjs'
@@ -14,6 +15,7 @@ export class P3ItemCatalogRepository {
   private readonly combinations: Combination[]
   private readonly recipes: P3ItemRecipe[]
   private readonly shops: Row[]
+  private readonly armors?: P3ArmorCatalogRepository
 
   constructor(private readonly db: Database.Database, private readonly terminology?: ItemTermRepository) {
     const meta = db.prepare("SELECT value FROM meta WHERE key='catalog_schema'").get() as Row | undefined
@@ -27,6 +29,7 @@ export class P3ItemCatalogRepository {
       materials: (db.prepare('SELECT * FROM p3_forge_materials WHERE recipe_index=? ORDER BY position').all(row.recipe_index) as Row[]).map(material => ({ ...this.link(material.item_id), quantity: material.quantity })),
     }))
     this.shops = db.prepare('SELECT * FROM p3_shops ORDER BY list_key,item_id').all() as Row[]
+    this.armors = hasP3Armors(db) ? new P3ArmorCatalogRepository(db) : undefined
     terminology?.bindCatalog(db, 'mhp3')
   }
 
@@ -61,10 +64,11 @@ export class P3ItemCatalogRepository {
         }
       }
     }
+    for (const [id, reason] of this.armors?.getMaterialItemMatches(filters.query) ?? []) if (!direct.has(id)) reasons.set(id, reason)
     const hasSource = (id: number, kind: string) => kind === 'combination' ? this.combinations.some(r => r.output_id === id)
       : kind === 'shop' ? this.shops.some(r => r.item_id === id) : false
     const hasUsage = (id: number, kind: string) => kind === 'combination' ? this.combinations.some(r => r.first_id === id || r.other_id === id)
-      : kind === 'decoration' ? this.recipes.some(r => r.materials.some(m => m.itemId === id)) : false
+      : kind === 'decoration' ? this.recipes.some(r => r.materials.some(m => m.itemId === id)) : kind === 'armor' ? Boolean(this.armors?.getItemArmorUsages(id).length) : false
     const rows = [...this.items.values()].filter(row =>
       (filters.includePlaceholders || !row.is_placeholder) && (filters.targetItemId == null || filters.targetItemId === row.item_id)
       && (!query || direct.has(row.item_id) || reasons.has(row.item_id))
@@ -101,13 +105,13 @@ export class P3ItemCatalogRepository {
     return { ...this.summary(row), nameJp: row.name_jp, description: row.description, buyPrice: null, sellPrice: row.sell_price,
       hexId: null, mappingStatus: row.mapping_status, relations,
       localization: { nameSource: row.name_source, namePending: false, descriptionSource: row.description_source, descriptionPending: false, descriptionJp: row.description_jp },
-      p3: { ...this.summary(row).p3, recipes: this.recipes.filter(r => r.output.itemId === identity.itemId),
-        coverage: { combination: 'complete', decoration: 'complete', shop: 'partial', monster: 'not-collected', location: 'not-collected', quest: 'not-collected', exchange: 'not-collected', weapon: 'not-collected', armor: 'not-collected', 'palico-weapon': 'not-collected', 'palico-armor': 'not-collected', kinsect: 'not-collected' } } }
+      p3: { ...this.summary(row).p3, armorRecipes: this.armors?.getItemArmorUsages(identity.itemId), recipes: this.recipes.filter(r => r.output.itemId === identity.itemId),
+        coverage: { combination: 'complete', decoration: 'complete', shop: 'partial', monster: 'not-collected', location: 'not-collected', quest: 'not-collected', exchange: 'not-collected', weapon: 'not-collected', armor: this.armors ? 'complete' : 'not-collected', 'palico-weapon': 'not-collected', 'palico-armor': 'not-collected', kinsect: 'not-collected' } } }
   }
   getItemFacets(): ItemCatalogFacets {
     const rows = [...this.items.values()].filter(row => !row.is_placeholder)
     const numbers = (column: string) => [...new Set<number>(rows.map(r => r[column]).filter(v => v != null))].sort((a,b) => a-b)
     return { rarities: numbers('rarity'), maxStacks: numbers('max_stack'), categories: ['general','ammo','coating','decoration'], quantityKinds: ['count','infinite','reusable-cooldown','internal'],
-      relations: [{ sourceKind: 'combination', usageKind: null }, { sourceKind: 'shop', usageKind: null }, { sourceKind: 'combination', usageKind: 'combination' }, { sourceKind: 'decoration', usageKind: 'decoration' }] }
+      relations: [...(this.armors ? [{sourceKind: 'armor' as const, usageKind: 'armor' as const}] : []), { sourceKind: 'combination', usageKind: null }, { sourceKind: 'shop', usageKind: null }, { sourceKind: 'combination', usageKind: 'combination' }, { sourceKind: 'decoration', usageKind: 'decoration' }] }
   }
 }

@@ -1,3 +1,5 @@
+import type { ArmorCatalogGameId } from '../api/catalog/types'
+import type { P3ArmorFilters, P3ArmorSetFilters, P3ArmorIdentity } from '../api/catalog/p3ArmorTypes'
 import type { P3SkillArmorIdentity, P3SkillArmorDetail } from '../api/catalog/p3SkillTypes'
 import type { SkillCatalogGameId } from '../api/catalog/types'
 import type { DecorationCatalogGameId } from '../api/catalog/types'
@@ -32,10 +34,10 @@ contextBridge.exposeInMainWorld('mhSaveEditor', {
     getWeaponTree: (gameId: CatalogGameId, weaponTypeId: number) => ipcRenderer.invoke(catalogChannels.getWeaponTree, { gameId, weaponTypeId }),
     searchWeaponMotions: (filters: WeaponMotionFilters) => ipcRenderer.invoke(catalogChannels.searchWeaponMotions, filters),
     getWeaponMotionFacets: (gameId: GameId) => ipcRenderer.invoke(catalogChannels.getWeaponMotionFacets, gameId),
-    searchArmors: (filters: ArmorCatalogFilters | P2gArmorFilters) => ipcRenderer.invoke(catalogChannels.searchArmors, filters),
-    searchArmorSets: (filters: ArmorSetFilters | P2gArmorSetFilters) => ipcRenderer.invoke(catalogChannels.searchArmorSets, filters),
-    getArmor: (identity: ArmorIdentity | P2gArmorIdentity) => ipcRenderer.invoke(catalogChannels.getArmor, identity),
-    getArmorFacets: (gameId: CatalogGameId) => ipcRenderer.invoke(catalogChannels.getArmorFacets, gameId),
+    searchArmors: (filters: ArmorCatalogFilters | P2gArmorFilters | P3ArmorFilters) => ipcRenderer.invoke(catalogChannels.searchArmors, filters),
+    searchArmorSets: (filters: ArmorSetFilters | P2gArmorSetFilters | P3ArmorSetFilters) => ipcRenderer.invoke(catalogChannels.searchArmorSets, filters),
+    getArmor: (identity: ArmorIdentity | P2gArmorIdentity | P3ArmorIdentity) => ipcRenderer.invoke(catalogChannels.getArmor, identity),
+    getArmorFacets: (gameId: ArmorCatalogGameId) => ipcRenderer.invoke(catalogChannels.getArmorFacets, gameId),
     getP3SkillArmor: (identity: P3SkillArmorIdentity): Promise<P3SkillArmorDetail | null> => ipcRenderer.invoke(catalogChannels.getP3SkillArmor, identity),
     getP2gSkillEquipment: (identity: P2gSkillEquipmentIdentity): Promise<P2gSkillEquipmentDetail | null> => ipcRenderer.invoke(catalogChannels.getP2gSkillEquipment, identity),
     getSkill: (identity: SkillIdentity) => ipcRenderer.invoke(catalogChannels.getSkill, identity),

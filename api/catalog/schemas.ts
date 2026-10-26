@@ -1,3 +1,4 @@
+import { p3ArmorIdentitySchema, p3ArmorFiltersSchema, p3ArmorSetFiltersSchema } from './p3ArmorSchemas'
 import { p2gArmorIdentitySchema, p2gArmorFiltersSchema, p2gArmorSetFiltersSchema } from './p2gArmorSchemas'
 import { z } from 'zod'
 import { p2gWeaponFiltersSchema, p2gWeaponIdentitySchema, p2gWeaponTreeRequestSchema } from './p2gWeaponSchemas'
@@ -5,7 +6,8 @@ import { p2gWeaponFiltersSchema, p2gWeaponIdentitySchema, p2gWeaponTreeRequestSc
 export const gameIdSchema = z.enum(['mh3g', 'mh4g', 'mhgu'])
 export const catalogGameIdSchema = z.enum(['mh3g', 'mh4g', 'mhgu', 'mhp2g'])
 export const skillCatalogGameIdSchema = z.enum(['mh3g', 'mh4g', 'mhgu', 'mhp2g', 'mhp3'])
-export const p3SkillArmorIdentitySchema = z.object({gameId:z.literal('mhp3'),armorKey:z.string().regex(/^mhp3:armor:[0-4]:[1-9][0-9]{0,2}$/)}).strict()
+export const p3SkillArmorIdentitySchema = p3ArmorIdentitySchema
+export const armorCatalogGameIdSchema = z.enum(['mh3g', 'mh4g', 'mhgu', 'mhp2g', 'mhp3'])
 export const itemCatalogGameIdSchema = z.enum(['mh3g', 'mh4g', 'mhgu', 'mhp2g', 'mhp3'])
 export const decorationCatalogGameIdSchema = z.enum(['mh3g', 'mh4g', 'mhgu', 'mhp2g', 'mhp3'])
 export const itemTermFiltersSchema = z.object({
@@ -199,6 +201,6 @@ export const palicoArmorFiltersSchema=z.object({gameId:mhguSchema,targetEquipmen
 
 export const p2gSkillEquipmentIdentitySchema = z.object({gameId:z.literal("mhp2g"),equipmentKey:z.string().max(64).regex(/^(?:item:\d+|armor_(?:head|chest|arms|waist|legs):\d+)$/)}).strict()
 
-export const armorIdentitySchema = z.union([legacyArmorIdentitySchema, p2gArmorIdentitySchema])
-export const armorCatalogFiltersSchema = z.union([legacyArmorCatalogFiltersSchema, p2gArmorFiltersSchema])
-export const armorSetFiltersSchema = z.union([legacyArmorSetFiltersSchema, p2gArmorSetFiltersSchema])
+export const armorIdentitySchema = z.union([legacyArmorIdentitySchema, p2gArmorIdentitySchema, p3ArmorIdentitySchema])
+export const armorCatalogFiltersSchema = z.union([legacyArmorCatalogFiltersSchema, p2gArmorFiltersSchema, p3ArmorFiltersSchema])
+export const armorSetFiltersSchema = z.union([legacyArmorSetFiltersSchema, p2gArmorSetFiltersSchema, p3ArmorSetFiltersSchema])

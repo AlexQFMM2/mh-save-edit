@@ -1,3 +1,4 @@
+import { hasP3Armors } from './p3ArmorRepository'
 import type Database from 'better-sqlite3'
 import type { P3DecorationCatalogRepository } from './p3DecorationRepository'
 import type { P3SkillArmorDetail, P3SkillArmorRelation, P3SkillCharmSource, P3SkillPoint } from './p3SkillTypes'
@@ -54,7 +55,7 @@ export class P3SkillCatalogRepository {
       const sources = charms.filter(c => c.skillId === s.skillId)
       for (const c of sources) add(`${c.label} ${c.nameJp} ${c.sourceKind === 'special-gift' ? '特殊赠送' : '随机候选'}`, `相关护石·${c.label}`)
       this.details.set(s.skillId, { ...s, gameId: 'mhp3', armors, decorations: linkedJewels, talismans: [], components: [],
-        p3: { charmSources: sources, source: 'P3 日版原生说明；中文按本作原文整理。' } })
+        p3: { armorCatalog: hasP3Armors(db) ? 'full' : 'preview', charmSources: sources, source: 'P3 日版原生说明；中文按本作原文整理。' } })
       this.hits.set(s.skillId, hits)
     }
   }

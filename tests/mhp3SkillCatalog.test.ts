@@ -23,7 +23,7 @@ describe('P3 native skill read model',()=>{
     expect(repo.getSkill(1)).toMatchObject({activations:[],specialRule:{descriptionCn:'测试复制含胴部装饰品'}})
     expect(repo.getArmor('mhp3:armor:4:2')?.skills[0]).toMatchObject({kind:'torso-copy-marker',nameCn:'复制测试'})
     expect(()=>db.prepare('INSERT INTO p3_armor_skill_points VALUES(?,?,?,?)').run('mhp3:armor:4:2',3,0,'signed-points')).toThrow()
-    expect(repo.getArmor('mhp3:armor:0:999')).toBeNull();expect(repo.getSkill(999)).toBeNull()
+    expect(()=>repo.getArmor('mhp3:armor:0:999')).toThrow();expect(repo.getSkill(999)).toBeNull()
   })
   it('searches multilingual names, explanations, aliases and related names with reasons',()=>{
     const {repo}=fixture()
@@ -35,10 +35,10 @@ describe('P3 native skill read model',()=>{
     expect(repo.searchSkills({gameId:'mhp3',page:2,pageSize:2})).toMatchObject({total:3,hasNext:false,items:[{skillId:3}]})
     expect(repo.getSkill(2)?.p3?.charmSources.map(s=>s.sourceKind)).toEqual(['random-pool','special-gift']);expect(repo.getSkill(2)?.talismans).toEqual([])
   })
-  it('keeps the broader armor catalog closed and rejects identity contamination',()=>{
+  it('supports the armor domain identity and rejects identity contamination',()=>{
     expect(skillIdentitySchema.parse({gameId:'mhp3',skillId:1})).toBeTruthy()
     for(const value of [{gameId:'mhp3',armorKey:'mhp3:armor:5:1'},{gameId:'mhp2g',armorKey:'mhp3:armor:4:1'},{gameId:'mhp3',armorKey:'mhp3:armor:4:1',dexId:1}])expect(p3SkillArmorIdentitySchema.safeParse(value).success).toBe(false)
-    expect(armorIdentitySchema.safeParse({gameId:'mhp3',armorKey:'mhp3:armor:4:1'}).success).toBe(false)
+    expect(armorIdentitySchema.safeParse({gameId:'mhp3',armorKey:'mhp3:armor:4:1'}).success).toBe(true)
     expect(()=>fixture().repo.searchSkills({gameId:'mhgu'})).toThrow(/不匹配/)
   })
   it('dispatches P3 skill and minimal armor IPC lazily and keeps other catalog scopes closed',()=>{

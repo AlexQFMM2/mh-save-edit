@@ -2,7 +2,7 @@ import { decorationIdentity } from '../../../api/catalog/decorationIdentity'
 import { P3SkillArmorPreview } from '../../components/P3SkillArmorPreview/P3SkillArmorPreview'
 import type { DecorationIdentity } from '../../../api/catalog/types'
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { useOutletContext, useSearchParams } from 'react-router-dom'
+import { useNavigate, useOutletContext, useSearchParams } from 'react-router-dom'
 import type { SkillCatalogFilters, SkillCatalogTab, SkillDetail, SkillSummary } from '../../../api/catalog/types'
 import type { SkillCatalogOutletContext } from '../../components/WorkspaceContent/WorkspaceContent'
 import { ArmorDetailDrawer } from '../../components/ArmorDetailDrawer/ArmorDetailDrawer'
@@ -17,6 +17,7 @@ import './SkillCatalogPage.css'
 type Drawer = {kind:'armor'|'skill';id:number}|{kind:'decoration';identity:DecorationIdentity}|{kind:'p3-armor';armorKey:string}|null
 const tabs: SkillCatalogTab[] = ['armor', 'decoration', 'talisman']
 export function SkillCatalogPage() {
+  const navigate=useNavigate()
   const {game}=useOutletContext<SkillCatalogOutletContext>(),[params,setParams]=useSearchParams(),isP2g=game.id==='mhp2g',isP3=game.id==='mhp3'
   const query=params.get('q')??'',[queryInput,setQueryInput]=useState(query),skillId=numberParam(params.get('skill')),targetSkillId=numberParam(params.get('target'))
   const requestedTab=params.get('tab') as SkillCatalogTab,tab=tabs.includes(requestedTab)&&(!isP2g||requestedTab!=='talisman')?requestedTab:'armor'
@@ -56,14 +57,16 @@ export function SkillCatalogPage() {
     void api.getSkill({gameId:game.id,skillId}).then(value=>{if(active)setDetail(value)}).catch(cause=>{if(active)setDetailError(cause instanceof Error?cause.message:'技能详情读取失败')}).finally(()=>{if(active)setDetailLoading(false)})
     return()=>{active=false}
   },[game.id,skillId,retry])
+  const fullArmor = detail?.p3?.armorCatalog === 'full'
+  useEffect(()=>{if(isP3&&equipmentKey&&fullArmor)navigate(`/game/mhp3/catalog/armor?target=${encodeURIComponent(equipmentKey)}&armor=${encodeURIComponent(equipmentKey)}${skillId==null?'':`&fromSkill=${skillId}`}`,{replace:true})},[isP3,equipmentKey,fullArmor,skillId,navigate])
   const selected=items.some(item=>item.skillId===skillId)?skillId:undefined
   const openSkill=(id:number)=>setDrawer({kind:'skill',id})
   const listScrollKey=`skills:${game.id}:${targetSkillId}:${query}:${direction}:${source}:${sort}:${page}:${includePlaceholders}`
   return <div className="skill-catalog-page"><SkillCatalogToolbar query={queryInput} direction={direction} source={source} sort={sort} includePlaceholders={includePlaceholders} includeTalismans={!isP2g} onQueryChange={setQueryInput} onChange={(key,value)=>{setDrawer(null);update({[key]:value,target:undefined,skill:undefined,page:undefined,equipment:undefined})}} onReset={reset}/>
-    <div className="skill-catalog-page__layout"><SkillSearchList items={items} selectedId={selected} loading={loading} error={error} onRetry={retryLoad} scrollKey={listScrollKey} page={page} pageSize={meta.pageSize} total={meta.total} hasNext={meta.hasNext} onSelect={id=>update({skill:id,equipment:undefined})} onPageChange={next=>update({page:next,skill:undefined})}/>{isP3&&equipmentKey?<P3SkillArmorPreview mode="inline" armorKey={equipmentKey} onClose={closeEquipment} onSelectSkill={openSkill}/>:<SkillDetailPanel skill={detail} loading={detailLoading} error={detailError} onRetry={retryLoad} emptyMessage={skillId!=null?'未找到对应技能资料。':undefined} scrollKey={`detail:${game.id}:${skillId}:${tab}`} tab={tab} onTabChange={value=>update({tab:value})} onSelectDecoration={value=>setDrawer({kind:'decoration',identity:decorationIdentity(value.gameId,value.gameId==='mhp3'?value.itemId:value.saveId)})} onSelectArmor={value=>setDrawer(value.gameId==='mhp3'?{kind:'p3-armor',armorKey:value.armorKey}:{kind:'armor',id:value.dexId})} onSelectSkill={openSkill} onSelectP2gEquipment={value=>{setDrawer(null);update({equipment:value.equipmentKey})}}/>}</div>
+    <div className="skill-catalog-page__layout"><SkillSearchList items={items} selectedId={selected} loading={loading} error={error} onRetry={retryLoad} scrollKey={listScrollKey} page={page} pageSize={meta.pageSize} total={meta.total} hasNext={meta.hasNext} onSelect={id=>update({skill:id,equipment:undefined})} onPageChange={next=>update({page:next,skill:undefined})}/>{isP3&&equipmentKey&&detail?.p3&&!fullArmor?<P3SkillArmorPreview mode="inline" armorKey={equipmentKey} onClose={closeEquipment} onSelectSkill={openSkill}/>:<SkillDetailPanel skill={detail} loading={detailLoading} error={detailError} onRetry={retryLoad} emptyMessage={skillId!=null?'未找到对应技能资料。':undefined} scrollKey={`detail:${game.id}:${skillId}:${tab}`} tab={tab} onTabChange={value=>update({tab:value})} onSelectDecoration={value=>setDrawer({kind:'decoration',identity:decorationIdentity(value.gameId,value.gameId==='mhp3'?value.itemId:value.saveId)})} onSelectArmor={value=>setDrawer(value.gameId==='mhp3'?{kind:'p3-armor',armorKey:value.armorKey}:{kind:'armor',id:value.dexId})} onSelectSkill={openSkill} onSelectP2gEquipment={value=>{setDrawer(null);update({equipment:value.equipmentKey})}}/>}</div>
     <DecorationDetailDrawer identity={drawer?.kind==='decoration'?drawer.identity:null} onClose={closeDrawer}/>
     {game.id!=='mhp2g'&&game.id!=='mhp3'&&<ArmorDetailDrawer gameId={game.id} armorDexId={drawer?.kind==='armor'?drawer.id:null} onClose={closeDrawer}/>}
-    <P3SkillArmorPreview mode="drawer" armorKey={drawer?.kind==='p3-armor'?drawer.armorKey:null} onClose={closeDrawer} onSelectSkill={id=>{closeDrawer();update({target:id,skill:id,equipment:undefined})}}/>
+    {fullArmor?<ArmorDetailDrawer identity={drawer?.kind==='p3-armor'?{gameId:'mhp3',armorKey:drawer.armorKey}:null} onClose={closeDrawer}/>:<P3SkillArmorPreview mode="drawer" armorKey={drawer?.kind==='p3-armor'?drawer.armorKey:null} onClose={closeDrawer} onSelectSkill={id=>{closeDrawer();update({target:id,skill:id,equipment:undefined})}}/>}
     <SkillDetailDrawer gameId={game.id} skillId={drawer?.kind==='skill'?drawer.id:null} onClose={closeDrawer}/><P2gSkillEquipmentDrawer equipmentKey={isP2g?equipmentKey:null} onClose={closeEquipment}/>
   </div>
 }

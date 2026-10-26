@@ -28,3 +28,5 @@
 
 .armor-detail-panel--embedded { height: auto; display: block; overflow: visible; background: transparent; }
 .armor-detail-panel__scroll--embedded { overflow: visible; padding: 0; }
+
+.armor-detail-panel__retry { padding: var(--global-spacing-2) var(--global-spacing-3); color: var(--global-theme-color-text-primary); background: var(--global-theme-color-surface); border: var(--global-border-width) solid var(--global-theme-color-border); border-radius: var(--global-radius-md); font-size: var(--global-typography-font-size-body); cursor: pointer; }

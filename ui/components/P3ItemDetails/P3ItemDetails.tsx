@@ -22,7 +22,8 @@ export function P3ItemDetails({ item, onSelectItem }: { item: P3ItemDetail; onSe
     <details className="p3-item-details__coverage">
       <summary className="p3-item-details__coverage-toggle">资料收录范围</summary>
       <p className="p3-item-details__note">调合表、装饰品制作材料已收录。{!combination && '已确认不涉及本作调合表。'}{!usage && '已确认不用于本作装饰品制作。'}</p>
-      <p className="p3-item-details__note">商店仅展示已确认的商品与价格；未列出不代表没有出售。解锁条件、采集、掉落、任务奖励、交换及其他装备用途尚未收录。</p>
+      {item.p3.coverage.armor==='complete'&&<p className="p3-item-details__note">防具制作材料已收录。{!item.p3.armorRecipes?.length&&'已确认不用于本作防具制作表。'}</p>}
+      <p className="p3-item-details__note">商店仅展示已确认的商品与价格；未列出不代表没有出售。解锁条件、采集、掉落、任务奖励、交换及{item.p3.coverage.armor==='complete'?'武器等其他装备用途':'其他装备用途'}尚未收录。</p>
     </details>
   </section>
 }

@@ -10,6 +10,7 @@ export type ShellOutletContext = {
 export type WorkspaceOutletContext = { game: RuntimeGameVersionDefinition }
 export type DecorationCatalogOutletContext = { game: GameVersionDefinition & { id: import('../../../api/catalog/types').DecorationCatalogGameId } }
 export type SkillCatalogOutletContext = { game: GameVersionDefinition & { id: import('../../../api/catalog/types').SkillCatalogGameId } }
+export type ArmorCatalogOutletContext = { game: GameVersionDefinition & { id: import('../../../api/catalog/types').ArmorCatalogGameId } }
 export type ItemCatalogOutletContext = { game: GameVersionDefinition & { id: import('../../../api/catalog/types').ItemCatalogGameId } }
 
 type WorkspaceContentProps = {
