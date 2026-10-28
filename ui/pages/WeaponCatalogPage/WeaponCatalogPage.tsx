@@ -1,3 +1,4 @@
+import type { P3WeaponScope } from '../../../api/catalog/p3WeaponTypes'
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useOutletContext, useSearchParams } from 'react-router-dom'
 import type { SharpnessStage, SortDirection, WeaponAttributeFilter,  WeaponMotionCatalogResult, WeaponMotionCategory, WeaponMotionFacets, WeaponMotionSort, WeaponSort, WeaponStyleId,  WeaponViewMode } from '../../../api/catalog/types'
@@ -15,7 +16,7 @@ import { WeaponMotionTable } from '../../components/WeaponMotionTable/WeaponMoti
 import { WeaponMotionToolbar } from '../../components/WeaponMotionToolbar/WeaponMotionToolbar'
 import { WeaponTreeCanvas } from '../../components/WeaponTreeCanvas/WeaponTreeCanvas'
 import { WeaponTreeTypePrompt } from '../../components/WeaponTreeTypePrompt/WeaponTreeTypePrompt'
-import type { WorkspaceOutletContext } from '../../components/WorkspaceContent/WorkspaceContent'
+import type { WeaponCatalogOutletContext } from '../../components/WorkspaceContent/WorkspaceContent'
 import { weaponMatchesFilters } from '../../utils/weaponCatalog'
 import './WeaponCatalogPage.css'
 
@@ -25,7 +26,7 @@ const weaponStyles = new Set<WeaponStyleId>(['guild','striker','aerial','adept',
 function numberParam(value: string | null): number | undefined { if (!value) return undefined; const parsed = Number(value); return Number.isInteger(parsed) && parsed >= 0 ? parsed : undefined }
 
 export function WeaponCatalogPage() {
-  const { game } = useOutletContext<WorkspaceOutletContext>()
+  const { game } = useOutletContext<WeaponCatalogOutletContext>()
   const [params, setParams] = useSearchParams()
   const [queryInput, setQueryInput] = useState(params.get('q') ?? '')
   const query = params.get('q') ?? ''
@@ -38,7 +39,9 @@ export function WeaponCatalogPage() {
   const directlyProducible = params.get('producible') === '1'
   const finalOnly = params.get('final') === '1'
   const includePlaceholders = params.get('debug') === '1'
-  const nativeIdentity = game.id === 'mhp2g'
+  const nativeIdentity = game.id === 'mhp2g' || game.id === 'mhp3'
+  const scope = (['special', 'unknown', 'all'].includes(params.get('scope') ?? '') ? params.get('scope') : 'obtainable') as P3WeaponScope
+  const [retry, setRetry] = useState(0)
   const sort = ([nativeIdentity ? 'nativeId' : 'saveId', 'name', 'rarity', 'attack', 'slots', 'sharpness', 'affinity'].includes(params.get('sort') ?? '') ? params.get('sort') : nativeIdentity ? 'nativeId' : 'saveId') as WeaponSort | 'nativeId'
   const direction = (params.get('direction') === 'desc' ? 'desc' : 'asc') as SortDirection
   const sharpnessStage = (['handicraft1', 'handicraft2'].includes(params.get('sharpness') ?? '') ? params.get('sharpness') : 'base') as SharpnessStage
@@ -89,7 +92,7 @@ export function WeaponCatalogPage() {
   useEffect(()=>setMotionQueryInput(motionQuery),[motionQuery])
   useEffect(()=>{if(view!=='motion'||motionQueryInput===motionQuery)return;const timer=window.setTimeout(()=>update({mq:motionQueryInput||undefined,move:undefined}),280);return()=>window.clearTimeout(timer)},[view,motionQueryInput,motionQuery,update])
   useEffect(()=>{if(requestedView==='motion'&&game.id!=='mhgu')update({view:'tree'})},[requestedView,game.id,update])
-  useEffect(() => { let active = true; const api = window.mhSaveEditor?.catalog; if (!api) return; setFacetsError(undefined); void getCatalogWeaponFacets(game.id).then((value) => { if (active) setFacets(value) }).catch(cause => { if (active) setFacetsError(cause instanceof Error ? cause.message : '武器筛选资料读取失败') }); return () => { active = false } }, [game.id])
+  useEffect(() => { let active = true; const api = window.mhSaveEditor?.catalog; if (!api) return; setFacetsError(undefined); void getCatalogWeaponFacets(game.id).then((value) => { if (active) setFacets(value) }).catch(cause => { if (active) setFacetsError(cause instanceof Error ? cause.message : '武器筛选资料读取失败') }); return () => { active = false } }, [game.id, retry])
   useEffect(()=>{if(view!=='motion')return;let active=true;const api=window.mhSaveEditor?.catalog;if(!api)return;void api.getWeaponMotionFacets('mhgu').then(value=>{if(active)setMotionFacets(value)}).catch(()=>undefined);return()=>{active=false}},[view])
   useEffect(()=>{
     if(view!=='motion')return
@@ -107,9 +110,9 @@ export function WeaponCatalogPage() {
     let active = true; setLoading(true); setError(undefined)
     const api = window.mhSaveEditor?.catalog
     if (!api) { setError('图鉴 API 尚未连接，请在 Electron 应用中打开。'); setLoading(false); return }
-    const filters = { targetWeaponKey, query, weaponTypeId: typeId, attributeId, includeHiddenAttributes, rarity, slots, directlyProducible: directlyProducible || undefined, finalOnly, includePlaceholders, sort, direction, sharpnessStage, page: nativeIdentity && view === 'tree' ? 1 : page, pageSize: 100 }
+    const filters = { scope: game.id === 'mhp3' ? scope : undefined, targetWeaponKey, query, weaponTypeId: typeId, attributeId, includeHiddenAttributes, rarity, slots, directlyProducible: directlyProducible || undefined, finalOnly, includePlaceholders, sort, direction, sharpnessStage, page: nativeIdentity && view === 'tree' ? 1 : page, pageSize: 100 }
     void searchCatalogWeapons(game.id, filters).then(async (result) => {
-      if (game.id === 'mhp2g' && view === 'tree' && query) {
+      if (nativeIdentity && view === 'tree' && query) {
         const matching = [...result.items]
         for (let nextPage = 2; nextPage <= Math.ceil(result.total / result.pageSize); nextPage++) {
           if (!active) return
@@ -119,7 +122,7 @@ export function WeaponCatalogPage() {
       } else if (active) setQueryWeaponKeys(undefined)
       if (!active) return; setItems(result.items); setMeta({ total: result.total, pageSize: result.pageSize, hasNext: result.hasNext }); const selection = selectionRef.current; if (!selection.selectedKey && result.items[0]) selection.update({ weapon: result.items[0].weaponKey }) }).catch((cause) => { if (active) setError(cause instanceof Error ? cause.message : '武器查询失败') }).finally(() => { if (active) setLoading(false) })
     return () => { active = false }
-  }, [game.id, targetWeaponKey, query, typeId, attributeId, includeHiddenAttributes, rarity, slots, directlyProducible, finalOnly, includePlaceholders, sort, direction, sharpnessStage, page, view])
+  }, [game.id, targetWeaponKey, query, typeId, attributeId, includeHiddenAttributes, rarity, slots, directlyProducible, finalOnly, includePlaceholders, sort, direction, sharpnessStage, page, view, scope, retry])
   useEffect(() => {
     if (view !== 'tree' || typeId == null) { setTree(null); return }
     let active = true; setTreeLoading(true); setTreeError(undefined)
@@ -127,7 +130,7 @@ export function WeaponCatalogPage() {
     if (!api) { setTreeError('图鉴 API 尚未连接，请在 Electron 应用中打开。'); setTreeLoading(false); return }
     void getCatalogWeaponTree(game.id, typeId).then((value) => { if (!active) return; setTree(value); const selection = selectionRef.current; if (!selection.selectedKey && value.nodes[0]) selection.update({ weapon: value.nodes[0].weaponKey }) }).catch((cause) => { if (active) setTreeError(cause instanceof Error ? cause.message : '派生图读取失败') }).finally(() => { if (active) setTreeLoading(false) })
     return () => { active = false }
-  }, [view, game.id, typeId])
+  }, [view, game.id, typeId, retry])
   useEffect(() => {
     if (view==='motion'||!selectedKey) { if(view!=='motion') { setDetail(null); setDetailLoading(false); setDetailError(undefined) }; return }
     const request = ++detailRequest.current
@@ -136,12 +139,12 @@ export function WeaponCatalogPage() {
     if (!api) { setDetailError('图鉴 API 尚未连接，请在 Electron 应用中打开。'); setDetailLoading(false); return }
     void getCatalogWeapon(game.id, selectedKey).then((value) => { if (request === detailRequest.current) { setDetail(value); if (!value) setDetailError('找不到这把武器，请检查图鉴编号。') } }).catch((cause) => { if (request === detailRequest.current) { setDetail(null); setDetailError(cause instanceof Error ? cause.message : '详情读取失败') } }).finally(() => { if (request === detailRequest.current) setDetailLoading(false) })
     return () => { detailRequest.current++ }
-  }, [game.id, selectedKey, view])
+  }, [game.id, selectedKey, view, retry])
 
   const displayTree = useMemo(() => tree && ({ ...tree, nodes: tree.nodes.map(w => ({ ...w, matchReason: query ? queryMatchReasons.get(w.weaponKey) : undefined })) }), [tree, query, queryMatchReasons])
   const selectedType = facets.weaponTypes.find((type) => type.typeId === typeId)
   const selectedVisible = items.some((item) => item.weaponKey === selectedKey)
-  const treeFilters = useMemo(() => ({ query, queryWeaponKeys, attributeId, includeHiddenAttributes, rarity, slots, directlyProducible, finalOnly }), [query, queryWeaponKeys, attributeId, includeHiddenAttributes, rarity, slots, directlyProducible, finalOnly])
+  const treeFilters = useMemo(() => ({ scope: game.id === 'mhp3' ? scope : undefined, query, queryWeaponKeys, attributeId, includeHiddenAttributes, rarity, slots, directlyProducible, finalOnly }), [game.id, scope, query, queryWeaponKeys, attributeId, includeHiddenAttributes, rarity, slots, directlyProducible, finalOnly])
   const selectWeapon = (weaponKey: string) => {
     const node = tree?.nodes.find(w => w.weaponKey === weaponKey)
     if (node?.isCrossType) update({ target: weaponKey, type: node.typeId, weapon: weaponKey, page: undefined })
@@ -150,10 +153,10 @@ export function WeaponCatalogPage() {
   const openItem = (id: number) => { setDrawerWeaponKey(null); setDrawerItemId(id) }
   const openWeapon = (weaponKey: string) => { setDrawerItemId(null); setDrawerWeaponKey(weaponKey) }
   const changeFilter = (key: string, value?: string) => update({ target: undefined, [key]: value, page: undefined, weapon: undefined })
-  const main = facetsError ? <div className="weapon-catalog-page__state" role="alert">{facetsError}</div> : view === 'tree'
+  const main = facetsError || (view === 'tree' && error) ? <div className="weapon-catalog-page__state" role="alert">{facetsError || error}</div> : view === 'tree'
     ? typeId == null
       ? <WeaponTreeTypePrompt types={facets.weaponTypes} onSelect={(value) => update({ type: value, weapon: undefined, page: undefined })} />
-      : treeLoading && !tree
+      : treeLoading && (!tree || tree.weaponTypeId !== typeId)
         ? <div className="weapon-catalog-page__state" role="status">正在构建派生画布…</div>
         : treeError
           ? <div className="weapon-catalog-page__state weapon-catalog-page__state--error" role="alert">{treeError}</div>
@@ -166,10 +169,11 @@ export function WeaponCatalogPage() {
     <HunterArtDetailDrawer gameId="mhgu" hunterArtId={drawerHunterArtId} onClose={()=>setDrawerHunterArtId(null)}/>
   </div>
 
-  return <div className="weapon-catalog-page">
+  return <div className={`weapon-catalog-page${error || treeError || facetsError || detailError ? ' weapon-catalog-page--retry' : ''}`}>
     <WeaponCatalogToolbar nativeIdentity={nativeIdentity} query={queryInput} sort={sort} direction={direction} sharpnessStage={sharpnessStage} sharpnessStages={facets.sharpnessStages} view={view} showMotion={game.id==='mhgu'} total={view === 'tree' && tree ? tree.nodes.filter((node) => !node.isCrossType && weaponMatchesFilters(node, treeFilters)).length : meta.total} onQueryChange={setQueryInput} onChange={(key, value) => update({ target: undefined, [key]: value, page: undefined })} />
-    <WeaponFilterBar nativeIdentity={nativeIdentity} facets={facets} typeId={typeId} attributeId={attributeId} includeHiddenAttributes={includeHiddenAttributes} rarity={rarity} slots={slots} directlyProducible={directlyProducible} finalOnly={finalOnly} includePlaceholders={includePlaceholders} onChange={changeFilter} onReset={resetCatalog} />
-    <div className="weapon-catalog-page__layout"><div className="weapon-catalog-page__browser">{main}</div><div className="weapon-catalog-page__detail-slot"><WeaponDetailPanel gameId={game.id} weapon={detail} loading={detailLoading} error={detailError} sharpnessStage={sharpnessStage} showRelations={nativeIdentity} onSelectCatalogItem={identity => { if (identity.gameId !== 'mhp3' && identity.gameId === game.id) openItem(identity.gameId === 'mhp2g' ? identity.itemId : identity.saveId) }} onSelectWeapon={w => openWeapon(w.weaponKey)} /></div></div>
+    <WeaponFilterBar scope={game.id === 'mhp3' ? scope : undefined} nativeIdentity={nativeIdentity} facets={facets} typeId={typeId} attributeId={attributeId} includeHiddenAttributes={includeHiddenAttributes} rarity={rarity} slots={slots} directlyProducible={directlyProducible} finalOnly={finalOnly} includePlaceholders={includePlaceholders} onChange={changeFilter} onReset={resetCatalog} />
+    {(error || treeError || facetsError || detailError) && <button type="button" className="weapon-catalog-page__retry" onClick={() => setRetry(n => n+1)}>重新读取武器资料</button>}
+    <div className="weapon-catalog-page__layout"><div className="weapon-catalog-page__browser">{main}</div><div className="weapon-catalog-page__detail-slot"><WeaponDetailPanel key={detail?.weaponKey ?? 'empty'} gameId={game.id} weapon={detail} loading={detailLoading} error={detailError} sharpnessStage={sharpnessStage} showRelations={nativeIdentity} onSelectCatalogItem={identity => { if (identity.gameId === game.id) openItem(identity.gameId === 'mhp2g' || identity.gameId === 'mhp3' ? identity.itemId : identity.saveId) }} onSelectWeapon={w => openWeapon(w.weaponKey)} /></div></div>
     <WeaponDetailDrawer gameId={game.id} weaponKey={drawerWeaponKey} onClose={() => setDrawerWeaponKey(null)} />
     <ItemDetailDrawer identity={drawerItemId == null ? null : itemIdentity(game.id, drawerItemId)} onClose={() => setDrawerItemId(null)} />
   </div>

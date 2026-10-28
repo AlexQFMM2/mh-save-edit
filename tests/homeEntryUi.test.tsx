@@ -169,6 +169,15 @@ describe('P3 workspace shell', () => {
     expect(openSave).not.toHaveBeenCalled()
   })
 
+  it('opens P3 weapons through the domain API without save or loadout access', async () => {
+    window.history.replaceState(null, '', '/#/game/mhp3/catalog/weapons?view=list')
+    render(<App />)
+    await waitFor(() => expect(searchWeapons).toHaveBeenCalledWith(expect.objectContaining({gameId:'mhp3'})))
+    expect(document.querySelector('.weapon-catalog-page')).toBeTruthy()
+    expect(loadoutAccess).not.toHaveBeenCalled()
+    expect(openSave).not.toHaveBeenCalled()
+  })
+
   it('opens P3 armor through its domain API without save or loadout access', async () => {
     window.history.replaceState(null, '', '/#/game/mhp3/catalog/armor')
     render(<App />)
@@ -180,7 +189,6 @@ describe('P3 workspace shell', () => {
   })
 
   it.each([
-    ['catalog/weapons', '武器图鉴'],
     ['catalog/monsters', '怪物图鉴'],
     ['catalog/quests', '任务图鉴'], ['edit', '存档修改'], ['edit/loadout', '配装器'],
   ])('keeps direct P3 %s links away from existing game services', async (path, title) => {

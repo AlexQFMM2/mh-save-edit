@@ -60,7 +60,7 @@ export function SaveEquipmentEmbeddedDetail({ gameId, cell }: { gameId: GameId; 
     {gameId === 'mhgu' && !cell.empty && cell.kind === 'armor' && (cell.appearanceId ?? 0) > 0 && <ArmorAppearanceComparison cell={cell} />}
     {gameId === 'mh4g' && cell.relic && <RelicEquipmentDetail cell={cell} />}
     {detail?.kind === 'weapon' && detail.value.gameId === 'mhp2g' && <section className="save-equipment-embedded-detail__catalog"><WeaponDetailPanel gameId="mhp2g" weapon={detail.value} loading={false} layout="embedded" sharpnessStage="base" allowCatalogWrite={false} /></section>}
-    {detail?.kind === 'weapon' && detail.value.gameId !== 'mhp2g' && gameId !== 'mhp2g' && <section className="save-equipment-embedded-detail__catalog"><WeaponCoreStats weapon={detail.value} compact /><WeaponTypeDetail gameId={gameId} weapon={detail.value} sharpnessStage="base" />{detail.value.specialSummary.length > 0 && <p>{detail.value.specialSummary.join(' · ')}</p>}</section>}
+    {detail?.kind === 'weapon' && !('nativeDetail' in detail.value) && gameId !== 'mhp2g' && <section className="save-equipment-embedded-detail__catalog"><WeaponCoreStats weapon={detail.value} compact /><WeaponTypeDetail gameId={gameId} weapon={detail.value} sharpnessStage="base" />{detail.value.specialSummary.length > 0 && <p>{detail.value.specialSummary.join(' · ')}</p>}</section>}
     {detail?.kind === 'armor' && <section className="save-equipment-embedded-detail__catalog save-equipment-embedded-detail__armor-catalog"><ArmorDetailPanel armor={detail.value} loading={false} allowCatalogWrite={false} /></section>}
     {detail?.kind === 'palico-weapon' && <PalicoWeaponStats value={detail.value} />}
     {detail?.kind === 'palico-armor' && <PalicoArmorStats value={detail.value} />}

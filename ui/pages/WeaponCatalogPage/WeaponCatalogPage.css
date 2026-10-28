@@ -2,3 +2,7 @@
 .weapon-catalog-page--motion{grid-template-rows:auto minmax(0,1fr)}.weapon-catalog-page__motion-browser{min-width:0;min-height:0;overflow:hidden;border:var(--global-border-width) solid var(--global-theme-color-border);border-radius:var(--global-radius-lg);background:var(--global-theme-color-surface-inset)}
 
 .weapon-catalog-page__detail-slot{min-width:0;min-height:0}
+
+.weapon-catalog-page__retry{justify-self:start;border:var(--global-border-width) solid var(--global-theme-color-border-subtle);border-radius:var(--global-radius-md);padding:var(--global-spacing-2) var(--global-spacing-3);background:var(--global-theme-color-surface-deep);color:var(--global-theme-color-text-primary);font-size:var(--global-typography-font-size-small);cursor:pointer}
+
+.weapon-catalog-page--retry{grid-template-rows:auto auto auto minmax(0,1fr)}

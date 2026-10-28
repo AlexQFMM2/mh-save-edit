@@ -1,3 +1,5 @@
+import { P3WeaponRecipeList } from '../P3WeaponRecipeList/P3WeaponRecipeList'
+import type { P3WeaponLink } from '../../../api/catalog/p3WeaponTypes'
 import type { P3ArmorLink } from '../../../api/catalog/p3ArmorTypes'
 import { P3ItemDetails } from '../P3ItemDetails/P3ItemDetails'
 import { p3QuantityLabel } from '../../utils/p3ItemPresentation'
@@ -14,7 +16,7 @@ import { CatalogWriteControl } from '../CatalogWriteControl/CatalogWriteControl'
 import { DetailActionBar } from '../DetailActionBar/DetailActionBar'
 import './ItemDetailPanel.css'
 
-type ItemDetailPanelProps = { onSelectP3Armor?: (armor:P3ArmorLink)=>void; onSelectP2gArmor?: (armor:P2gArmorLink)=>void; item: CatalogItemDetail | null; loading: boolean; error?: string; allowCatalogWrite?: boolean; onRetry?: () => void; onSelectItem?: (saveId: number) => void; onSelectCatalogItem?: (identity: ItemIdentity) => void; onSelectPending?: (target: NonNullable<ItemRelation['pendingTarget']>) => void; onSelectDecoration?: (saveId: number) => void; onSelectWeapon?: (weapon: WeaponRelationTarget) => void; onSelectArmor?: (armor: ArmorRelationTarget) => void; onSelectMonster?: (monster: MonsterRelationTarget) => void; onSelectQuest?: (quest: QuestRelationTarget) => void; onSelectPalicoEquipment?: (equipment: PalicoEquipmentRelationTarget) => void }
+type ItemDetailPanelProps = { onSelectP3Armor?: (armor:P3ArmorLink)=>void; onSelectP2gArmor?: (armor:P2gArmorLink)=>void; item: CatalogItemDetail | null; loading: boolean; error?: string; allowCatalogWrite?: boolean; onRetry?: () => void; onSelectItem?: (saveId: number) => void; onSelectCatalogItem?: (identity: ItemIdentity) => void; onSelectPending?: (target: NonNullable<ItemRelation['pendingTarget']>) => void; onSelectDecoration?: (saveId: number) => void; onSelectWeapon?: (weapon: WeaponRelationTarget | P3WeaponLink) => void; onSelectArmor?: (armor: ArmorRelationTarget) => void; onSelectMonster?: (monster: MonsterRelationTarget) => void; onSelectQuest?: (quest: QuestRelationTarget) => void; onSelectPalicoEquipment?: (equipment: PalicoEquipmentRelationTarget) => void }
 const sections = [
   ['combination','调合'], ['shop','商店购买'], ['monster','怪物获取'], ['location','地图采集'], ['quest','任务奖励'], ['exchange','山菜爷'],
   ['weapon','武器用途'], ['armor','防具用途'], ['decoration','装饰珠用途'], ['palico-weapon','猫武器用途'], ['palico-armor','猫防具用途'], ['kinsect','猎虫用途'],
@@ -44,6 +46,7 @@ export function ItemDetailPanel({ item, loading, error, allowCatalogWrite = true
       {item.gameId === 'mhp3' && <P3ItemDetails item={item} onSelectItem={onSelectCatalogItem} />}
       {item.gameId==='mhp3'&&item.p3.decoration&&onSelectDecoration&&<button type="button" className="item-detail-panel__decoration-link" onClick={()=>onSelectDecoration(item.itemId)}>查看装饰品详情与技能</button>}
       {item.decoration&&onSelectDecoration&&<button type="button" className="item-detail-panel__decoration-link" onClick={()=>onSelectDecoration(item.decoration!.itemId)}>查看装饰品详情与技能</button>}
+      {item.gameId === 'mhp3' && <P3WeaponRecipeList recipes={item.p3.weaponRecipes ?? []} usages={item.p3.weaponUsages} showOutputs onSelectItem={onSelectCatalogItem} onSelectWeapon={onSelectWeapon}/>}
       {item.gameId === 'mhp2g' && item.weaponRecipes && <P2gWeaponRecipeList recipes={item.weaponRecipes} showOutputs onSelectItem={onSelectCatalogItem} onSelectWeapon={onSelectWeapon} />}
       {item.gameId==='mhp2g'&&item.armorRecipes&&<P2gArmorRecipeList recipes={item.armorRecipes} showOutputs onSelectItem={onSelectCatalogItem?id=>onSelectCatalogItem({gameId:'mhp2g',itemId:id}):undefined} onSelectArmor={onSelectP2gArmor}/>}
       {item.gameId==='mhp3'&&item.p3.armorRecipes&&<P2gArmorRecipeList recipes={item.p3.armorRecipes} showOutputs onSelectItem={onSelectCatalogItem?id=>onSelectCatalogItem({gameId:'mhp3',itemId:id}):undefined} onSelectArmor={onSelectP3Armor}/>}

@@ -1,6 +1,6 @@
 import { Flag } from 'lucide-react'
 import { Handle, Position, type Node, type NodeProps } from '@xyflow/react'
-import type { CatalogGameId } from '../../../api/catalog/types'
+import type { WeaponCatalogGameId } from '../../../api/catalog/types'
 import type { CatalogWeaponSummary } from '../../utils/catalogWeapon'
 import type { SharpnessStage } from '../../../api/catalog/types'
 import { CatalogIcon } from '../CatalogIcon/CatalogIcon'
@@ -10,7 +10,7 @@ import { WeaponProductionBadge } from '../WeaponProductionBadge/WeaponProduction
 import { WeaponSharpnessComparison } from '../WeaponSharpnessComparison/WeaponSharpnessComparison'
 import './WeaponTreeNode.css'
 
-export type WeaponTreeNodeData = Record<string, unknown> & { gameId: CatalogGameId; weapon: CatalogWeaponSummary; sharpnessStage: SharpnessStage; matched: boolean; contextual: boolean; selectedKey?: string; onSelect: (weaponKey: string) => void; onNavigate: (weaponKey: string, direction: 'left' | 'right' | 'up' | 'down') => void }
+export type WeaponTreeNodeData = Record<string, unknown> & { gameId: WeaponCatalogGameId; weapon: CatalogWeaponSummary; sharpnessStage: SharpnessStage; matched: boolean; contextual: boolean; selectedKey?: string; onSelect: (weaponKey: string) => void; onNavigate: (weaponKey: string, direction: 'left' | 'right' | 'up' | 'down') => void }
 export type WeaponFlowNode = Node<WeaponTreeNodeData, 'weapon'>
 
 export function WeaponTreeNodeView({ data }: NodeProps<WeaponFlowNode>) {

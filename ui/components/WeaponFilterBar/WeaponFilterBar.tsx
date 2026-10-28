@@ -4,7 +4,7 @@ import { CatalogResetButton } from '../CatalogResetButton/CatalogResetButton'
 import { SearchableSelect } from '../SearchableSelect/SearchableSelect'
 import './WeaponFilterBar.css'
 
-type Props = { nativeIdentity?: boolean; facets: CatalogWeaponFacets; typeId?: number; attributeId?: WeaponAttributeFilter; includeHiddenAttributes: boolean; rarity?: number; slots?: number; directlyProducible: boolean; finalOnly: boolean; includePlaceholders: boolean; onChange: (key: string, value?: string) => void; onReset: () => void }
+type Props = { scope?: import('../../../api/catalog/p3WeaponTypes').P3WeaponScope; nativeIdentity?: boolean; facets: CatalogWeaponFacets; typeId?: number; attributeId?: WeaponAttributeFilter; includeHiddenAttributes: boolean; rarity?: number; slots?: number; directlyProducible: boolean; finalOnly: boolean; includePlaceholders: boolean; onChange: (key: string, value?: string) => void; onReset: () => void }
 
 export function WeaponFilterBar(props: Props) {
   return <div className="weapon-filter-bar" aria-label="武器筛选器">
@@ -16,6 +16,7 @@ export function WeaponFilterBar(props: Props) {
     <label className="weapon-filter-bar__check"><input type="checkbox" checked={props.directlyProducible} onChange={(event) => props.onChange('producible', event.target.checked ? '1' : undefined)} /><span>可直接生产</span></label>
     {!props.nativeIdentity && <label className="weapon-filter-bar__check"><input type="checkbox" checked={props.includePlaceholders} onChange={(event) => props.onChange('debug', event.target.checked ? '1' : undefined)} /><span>占位条目</span></label>}
     <label className="weapon-filter-bar__check"><input type="checkbox" checked={props.finalOnly} onChange={event => props.onChange('final', event.target.checked ? '1' : undefined)} /><span>只看无法再强化</span></label>
+    {props.scope && <label><span>目录范围</span><SearchableSelect ariaLabel="筛选武器目录范围" value={props.scope} options={[{value:'obtainable',label:'正常目录'},{value:'special',label:'特殊用途'},{value:'unknown',label:'取得未确认'},{value:'all',label:'全部'}]} onChange={value=>props.onChange('scope',value)}/></label>}
     <CatalogResetButton onReset={props.onReset} />
   </div>
 }

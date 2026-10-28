@@ -1,3 +1,5 @@
+import type { WeaponCatalogGameId } from '../api/catalog/types'
+import type { P3WeaponIdentity, P3WeaponFilters } from '../api/catalog/p3WeaponTypes'
 import type { ArmorCatalogGameId } from '../api/catalog/types'
 import type { P3ArmorFilters, P3ArmorSetFilters, P3ArmorIdentity } from '../api/catalog/p3ArmorTypes'
 import type { P3SkillArmorIdentity, P3SkillArmorDetail } from '../api/catalog/p3SkillTypes'
@@ -28,10 +30,10 @@ contextBridge.exposeInMainWorld('mhSaveEditor', {
     searchDecorations: (filters: DecorationCatalogFilters) => ipcRenderer.invoke(catalogChannels.searchDecorations, filters),
     getDecoration: (identity: DecorationIdentity) => ipcRenderer.invoke(catalogChannels.getDecoration, identity),
     getDecorationFacets: (gameId: DecorationCatalogGameId) => ipcRenderer.invoke(catalogChannels.getDecorationFacets, gameId),
-    searchWeapons: (filters: WeaponCatalogFilters | P2gWeaponFilters) => ipcRenderer.invoke(catalogChannels.searchWeapons, filters),
-    getWeapon: (identity: WeaponIdentity | P2gWeaponIdentity) => ipcRenderer.invoke(catalogChannels.getWeapon, identity),
-    getWeaponFacets: (gameId: CatalogGameId) => ipcRenderer.invoke(catalogChannels.getWeaponFacets, gameId),
-    getWeaponTree: (gameId: CatalogGameId, weaponTypeId: number) => ipcRenderer.invoke(catalogChannels.getWeaponTree, { gameId, weaponTypeId }),
+    searchWeapons: (filters: WeaponCatalogFilters | P2gWeaponFilters | P3WeaponFilters) => ipcRenderer.invoke(catalogChannels.searchWeapons, filters),
+    getWeapon: (identity: WeaponIdentity | P2gWeaponIdentity | P3WeaponIdentity) => ipcRenderer.invoke(catalogChannels.getWeapon, identity),
+    getWeaponFacets: (gameId: WeaponCatalogGameId) => ipcRenderer.invoke(catalogChannels.getWeaponFacets, gameId),
+    getWeaponTree: (gameId: WeaponCatalogGameId, weaponTypeId: number) => ipcRenderer.invoke(catalogChannels.getWeaponTree, { gameId, weaponTypeId }),
     searchWeaponMotions: (filters: WeaponMotionFilters) => ipcRenderer.invoke(catalogChannels.searchWeaponMotions, filters),
     getWeaponMotionFacets: (gameId: GameId) => ipcRenderer.invoke(catalogChannels.getWeaponMotionFacets, gameId),
     searchArmors: (filters: ArmorCatalogFilters | P2gArmorFilters | P3ArmorFilters) => ipcRenderer.invoke(catalogChannels.searchArmors, filters),

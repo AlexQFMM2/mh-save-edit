@@ -1,3 +1,4 @@
+import { p3WeaponFiltersSchema, p3WeaponIdentitySchema, p3WeaponTreeRequestSchema } from './p3WeaponSchemas'
 import { p3ArmorIdentitySchema, p3ArmorFiltersSchema, p3ArmorSetFiltersSchema } from './p3ArmorSchemas'
 import { p2gArmorIdentitySchema, p2gArmorFiltersSchema, p2gArmorSetFiltersSchema } from './p2gArmorSchemas'
 import { z } from 'zod'
@@ -5,6 +6,7 @@ import { p2gWeaponFiltersSchema, p2gWeaponIdentitySchema, p2gWeaponTreeRequestSc
 
 export const gameIdSchema = z.enum(['mh3g', 'mh4g', 'mhgu'])
 export const catalogGameIdSchema = z.enum(['mh3g', 'mh4g', 'mhgu', 'mhp2g'])
+export const weaponCatalogGameIdSchema = z.enum(['mh3g', 'mh4g', 'mhgu', 'mhp2g', 'mhp3'])
 export const skillCatalogGameIdSchema = z.enum(['mh3g', 'mh4g', 'mhgu', 'mhp2g', 'mhp3'])
 export const p3SkillArmorIdentitySchema = p3ArmorIdentitySchema
 export const armorCatalogGameIdSchema = z.enum(['mh3g', 'mh4g', 'mhgu', 'mhp2g', 'mhp3'])
@@ -96,9 +98,9 @@ const legacyWeaponCatalogFiltersSchema = z.object({
     context.addIssue({ code: z.ZodIssueCode.custom, path: ['sharpnessStage'], message: '当前游戏不支持匠+2' })
   }
 })
-export const weaponIdentitySchema = z.union([legacyWeaponIdentitySchema, p2gWeaponIdentitySchema])
-export const weaponCatalogFiltersSchema = z.union([legacyWeaponCatalogFiltersSchema, p2gWeaponFiltersSchema])
-export const weaponTreeRequestSchema = z.union([z.object({ gameId: gameIdSchema, weaponTypeId: z.number().int().min(1).max(14) }).strict(), p2gWeaponTreeRequestSchema])
+export const weaponIdentitySchema = z.union([legacyWeaponIdentitySchema, p2gWeaponIdentitySchema, p3WeaponIdentitySchema])
+export const weaponCatalogFiltersSchema = z.union([legacyWeaponCatalogFiltersSchema, p2gWeaponFiltersSchema, p3WeaponFiltersSchema])
+export const weaponTreeRequestSchema = z.union([z.object({ gameId: gameIdSchema, weaponTypeId: z.number().int().min(1).max(14) }).strict(), p2gWeaponTreeRequestSchema, p3WeaponTreeRequestSchema])
 const weaponStyleSchema = z.enum(['guild','striker','aerial','adept','alchemy','valor'])
 export const weaponMotionFiltersSchema = z.object({
   gameId: z.literal('mhgu'),

@@ -120,8 +120,8 @@ export function ItemCatalogPage() {
     </div>
     <DecorationDetailDrawer identity={decorationDrawerId==null?null:decorationIdentity(game.id,decorationDrawerId)} onClose={() => setDecorationDrawerId(null)} />
     <ArmorDetailDrawer identity={p3ArmorKey?{gameId:'mhp3',armorKey:p3ArmorKey}:null} onClose={()=>setP3ArmorKey(null)}/>
-    {game.id !== 'mhp3' && <>
     <WeaponDetailDrawer gameId={game.id} weaponKey={weaponDrawerKey} onClose={() => setWeaponDrawerKey(null)} />
+    {game.id !== 'mhp3' && <>
     <ArmorDetailDrawer identity={p2gArmorKey?{gameId:'mhp2g',armorKey:p2gArmorKey}:null} onClose={()=>setP2gArmorKey(null)}/>
     {game.id !== 'mhp2g' && <>
     <ArmorDetailDrawer gameId={game.id} armorDexId={armorDrawerId} onClose={() => setArmorDrawerId(null)} />

@@ -1,0 +1,10 @@
+.p3-hunting-horn-detail__notes{display:flex;flex-wrap:wrap;gap:var(--global-spacing-2)}
+.p3-hunting-horn-detail__note{font-size:var(--global-typography-font-size-small)}
+.p3-hunting-horn-detail__note--white{color:var(--global-horn-note-color-white)}.p3-hunting-horn-detail__note--purple{color:var(--global-horn-note-color-purple)}.p3-hunting-horn-detail__note--red{color:var(--global-horn-note-color-red)}.p3-hunting-horn-detail__note--blue{color:var(--global-horn-note-color-blue)}.p3-hunting-horn-detail__note--green{color:var(--global-horn-note-color-green)}.p3-hunting-horn-detail__note--cyan{color:var(--global-horn-note-color-cyan)}.p3-hunting-horn-detail__note--yellow{color:var(--global-horn-note-color-white)58f}.p3-hunting-horn-detail__note--orange{color:var(--global-horn-note-color-orange)}
+.p3-hunting-horn-detail__toggle,.p3-hunting-horn-detail__check{margin-top:var(--global-spacing-3);font-size:var(--global-typography-font-size-small);color:var(--global-theme-color-text-primary);cursor:pointer}
+.p3-hunting-horn-detail__check{display:flex;align-items:center;gap:var(--global-spacing-2)}
+.p3-hunting-horn-detail__songs{list-style:none;margin:0;padding:0;display:grid;gap:var(--global-spacing-3)}
+.p3-hunting-horn-detail__song{display:grid;gap:var(--global-spacing-2);padding:var(--global-spacing-3);border:var(--global-border-width) solid var(--global-theme-color-border-subtle);border-radius:var(--global-radius-md);font-size:var(--global-typography-font-size-small);color:var(--global-theme-color-text-primary)}
+.p3-hunting-horn-detail__hint{margin:var(--global-spacing-2) 0;color:var(--global-theme-color-text-muted);font-size:var(--global-typography-font-size-small);line-height:var(--global-typography-line-height-normal)}
+.p3-hunting-horn-detail__timing{color:var(--global-theme-color-text-secondary)}.p3-hunting-horn-detail__timing span{color:var(--global-theme-color-data)}
+.p3-hunting-horn-detail__toggle:focus-visible{outline:2px solid var(--global-theme-color-accent);outline-offset:2px}

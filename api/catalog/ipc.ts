@@ -1,3 +1,5 @@
+import { P3WeaponCatalogRepository } from './p3WeaponRepository'
+import { weaponCatalogGameIdSchema } from './schemas'
 import { P3ArmorCatalogRepository } from './p3ArmorRepository'
 import { armorCatalogGameIdSchema } from './schemas'
 import { P3SkillCatalogRepository } from './p3SkillRepository'
@@ -86,7 +88,7 @@ export function registerCatalogIpc(dataDir: string): () => void {
     catch (error) { db.close(); throw error }
   }
 
-  let p3: { db: DatabaseType.Database; repository: P3ItemCatalogRepository; decorations?: P3DecorationCatalogRepository; skills?: P3SkillCatalogRepository; armors?: P3ArmorCatalogRepository } | undefined
+  let p3: { db: DatabaseType.Database; repository: P3ItemCatalogRepository; decorations?: P3DecorationCatalogRepository; skills?: P3SkillCatalogRepository; armors?: P3ArmorCatalogRepository; weapons?: P3WeaponCatalogRepository } | undefined
   const p3Items = () => {
     if (p3) return p3.repository
     const file = join(dataDir, 'mhp3.sqlite')
@@ -103,6 +105,7 @@ export function registerCatalogIpc(dataDir: string): () => void {
   const p2gArmors = () => { p2gItems(); return p2g!.armors ??= new P2gArmorCatalogRepository(p2g!.db) }
   const p2gWeapons = () => { p2gItems(); return p2g!.weapons ??= new P2gWeaponCatalogRepository(p2g!.db) }
 
+  const p3Weapons = () => { p3Items(); return p3!.weapons ??= new P3WeaponCatalogRepository(p3!.db) }
   const p3Armors = () => { p3Items(); return p3!.armors ??= new P3ArmorCatalogRepository(p3!.db) }
   const p3Skills = () => { const decorations = p3Decorations(); return p3!.skills ??= new P3SkillCatalogRepository(p3!.db, decorations) }
   const p2gSkills = () => { p2gItems(); return p2g!.skills ??= new P2gSkillCatalogRepository(p2g!.db) }
@@ -142,19 +145,19 @@ export function registerCatalogIpc(dataDir: string): () => void {
   })
   ipcMain.handle(catalogChannels.searchWeapons, (_event, payload: unknown) => {
     const filters = weaponCatalogFiltersSchema.parse(payload)
-    return filters.gameId === 'mhp2g' ? p2gWeapons().searchWeapons(filters) : repositoryEntry(filters.gameId).weapons.searchWeapons(filters)
+    return filters.gameId === 'mhp3' ? p3Weapons().searchWeapons(filters) : filters.gameId === 'mhp2g' ? p2gWeapons().searchWeapons(filters) : repositoryEntry(filters.gameId).weapons.searchWeapons(filters)
   })
   ipcMain.handle(catalogChannels.getWeapon, (_event, payload: unknown) => {
     const identity = weaponIdentitySchema.parse(payload)
-    return identity.gameId === 'mhp2g' ? p2gWeapons().getWeapon(identity) : repositoryEntry(identity.gameId).weapons.getWeapon(identity)
+    return identity.gameId === 'mhp3' ? p3Weapons().getWeapon(identity) : identity.gameId === 'mhp2g' ? p2gWeapons().getWeapon(identity) : repositoryEntry(identity.gameId).weapons.getWeapon(identity)
   })
   ipcMain.handle(catalogChannels.getWeaponFacets, (_event, payload: unknown) => {
-    const gameId = catalogGameIdSchema.parse(payload)
-    return gameId === 'mhp2g' ? p2gWeapons().getWeaponFacets() : repositoryEntry(gameId).weapons.getWeaponFacets(gameId)
+    const gameId = weaponCatalogGameIdSchema.parse(payload)
+    return gameId === 'mhp3' ? p3Weapons().getWeaponFacets() : gameId === 'mhp2g' ? p2gWeapons().getWeaponFacets() : repositoryEntry(gameId).weapons.getWeaponFacets(gameId)
   })
   ipcMain.handle(catalogChannels.getWeaponTree, (_event, payload: unknown) => {
     const request = weaponTreeRequestSchema.parse(payload)
-    return request.gameId === 'mhp2g' ? p2gWeapons().getWeaponTree(request.weaponTypeId) : repositoryEntry(request.gameId).weapons.getWeaponTree(request.gameId, request.weaponTypeId)
+    return request.gameId === 'mhp3' ? p3Weapons().getWeaponTree(request.weaponTypeId) : request.gameId === 'mhp2g' ? p2gWeapons().getWeaponTree(request.weaponTypeId) : repositoryEntry(request.gameId).weapons.getWeaponTree(request.gameId, request.weaponTypeId)
   })
   ipcMain.handle(catalogChannels.searchWeaponMotions, (_event, payload: unknown) => {
     const filters = weaponMotionFiltersSchema.parse(payload)

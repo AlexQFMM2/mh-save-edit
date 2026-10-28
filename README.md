@@ -1,6 +1,6 @@
 # MH Save Editor
 
-基于 React + Electron + TypeScript 的离线 Monster Hunter 图鉴、配装器与存档编辑器，当前维护 MHP2G、MH3G、MH4G、MHGU/XX 四套内容资料，并提供本地 P3 道具与装饰品图鉴。
+基于 React + Electron + TypeScript 的离线 Monster Hunter 图鉴、配装器与存档编辑器，当前维护 MHP2G、MH3G、MH4G、MHGU/XX 四套内容资料，并提供本地 P3 道具、装饰品、技能、防具与武器图鉴。
 
 **当前应用版本：[v0.1.14](https://github.com/AlexQFMM2/mh-save-edit/releases/tag/v0.1.14)**。本版复核全部 168 颗 P2G 装饰品，更新 50 个显示名并保留旧名搜索，内置运行资源 v6 和配套词典，详见[更新说明](docs/releases/v0.1.14.md)。
 
@@ -8,7 +8,7 @@
 
 **维护与交接说明更新于 2026-10-24。** P2G 七类图鉴、六槽手动／自动配装及 PPSSPP 存档编辑已交付，用户修改实测已通过；本次又确认中文插件的任务、保存重开、停用／恢复实测通过，见[P2G 验收记录](plan/archive/2026-10-24/mhp2g-records/acceptance.md)。五份 P2G 计划已按交付范围[归档](plan/archive/2026-10-24/README.md)，未知资源覆盖等限制仍明确保留。公开应用／运行资源／插件为 v0.1.14／v6／test.4；奇怪龙命名修订源码纳入本次提交，test.5 运行包仍为本地成果，尚未新增发布，详见[P2G 中文资料](docs/mhp2g/localization.md)。
 
-P3 已接入 **PPSSPP 工作区与本地道具、装饰品、技能、防具图鉴**。防具保留 1,131 条原生身份，默认显示 1,106 件正常条目，支持套装／单件、属性、制作材料与费用、中文检索及技能／道具双向关联；24 件特殊用途和 1 件取得未确认可单独筛选。武器图鉴、配装、存档修改及插件仍待专项。当前防具成果已本地安装，并按追加授权交付 GitHub 源码；不创建标签或 Release，P3 运行资料仍仅限本地。接手先读 [P3 防具交接](plan/mhp3-armor-catalog/handoff.md)、[防具数据与构建](docs/development/mhp3-armor-catalog.md)，前序见[技能交接](plan/mhp3-skill-catalog/handoff.md)和[原生研究边界](plan/mhp3-investigation/handoff.md)。既有作品按具体问题维护；跨作品统一业务数据重构仍不恢复。[道具译名词典](docs/item-terminology.md)共享有依据的用词，各作编号、数值、关系与存档格式独立维护。
+P3 已接入 **PPSSPP 工作区与本地道具、装饰品、技能、防具、武器图鉴**。防具保留 1,131 条原生身份，默认显示 1,106 件正常条目，支持套装／单件、属性、制作材料与费用、中文检索及技能／道具双向关联；24 件特殊用途和 1 件取得未确认可单独筛选。武器图鉴已本地安装12类、987把武器，支持列表／派生、基础与强化／部件对照、专属详情及材料与弹瓶双向关系；配装、存档修改及插件仍待专项。防具与武器成果已本地安装，并按追加授权交付 GitHub 源码；不创建标签或 Release，P3 运行资料仍仅限本地。下一步为 P3 怪物图鉴，先核查资料与接入阻碍。接手先读 [P3 武器交接](plan/mhp3-weapon-catalog/handoff.md)、[武器数据与构建](docs/development/mhp3-weapon-catalog.md)，防具阶段见[交接](plan/mhp3-armor-catalog/handoff.md)，前序见[技能交接](plan/mhp3-skill-catalog/handoff.md)和[原生研究边界](plan/mhp3-investigation/handoff.md)。既有作品按具体问题维护；跨作品统一业务数据重构仍不恢复。[道具译名词典](docs/item-terminology.md)共享有依据的用词，各作编号、数值、关系与存档格式独立维护。
 
 本文集中记录运行方法、真实代码入口、已遇到的难点及新作品接入方法，方便接手者从一个具体问题开始。
 
@@ -213,7 +213,7 @@ Dex 的技能系编号不一定等于原生编号；GU/XX 已遇到过这类错�
 
 ## 新作品如何接入
 
-P2G 已接入七类图鉴、配装与存档编辑，详见 [P2G 支持范围](#p2g-支持范围)。P3 已接入本地道具、装饰品、技能与防具图鉴，其他功能按需继续核查，见 [P3 防具交接](plan/mhp3-armor-catalog/handoff.md)和[研究边界](plan/mhp3-investigation/handoff.md)。G、2dos、世界、崛起、荒野尚未接入或排期。以下是贡献者可以选择的接入路径，不是恢复一轮跨作品重构的任务清单。
+P2G 已接入七类图鉴、配装与存档编辑，详见 [P2G 支持范围](#p2g-支持范围)。P3 已接入本地道具、装饰品、技能、防具与武器图鉴，其他功能按需继续核查，见 [P3 武器交接](plan/mhp3-weapon-catalog/handoff.md)和[研究边界](plan/mhp3-investigation/handoff.md)。G、2dos、世界、崛起、荒野尚未接入或排期。以下是贡献者可以选择的接入路径，不是恢复一轮跨作品重构的任务清单。
 
 ### 先选一作、一个版本、一个闭环
 

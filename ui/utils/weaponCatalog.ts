@@ -1,4 +1,4 @@
-import type { CatalogGameId } from '../../api/catalog/types'
+import type { WeaponCatalogGameId } from '../../api/catalog/types'
 import type { CatalogWeaponSharpness, CatalogWeaponSummary } from './catalogWeapon'
 import type { SharpnessStage, WeaponCatalogFilters, WeaponSharpnessProfile, WeaponSummary, WeaponTreeEdge, WeaponTreeNode } from '../../api/catalog/types'
 
@@ -17,7 +17,7 @@ export type SharpnessStageView = {
 
 const sharpnessLabels: Record<SharpnessColor, string> = { red: '红', orange: '橙', yellow: '黄', green: '绿', blue: '蓝', white: '白', purple: '紫' }
 
-export function weaponSharpnessStages(profile: CatalogWeaponSharpness, gameId: CatalogGameId): SharpnessStageView[] {
+export function weaponSharpnessStages(profile: CatalogWeaponSharpness, gameId: WeaponCatalogGameId): SharpnessStageView[] {
   const total = sharpnessColors.reduce((sum, color) => sum + profile[color], 0)
   const definitions: { id: SharpnessStage; label: string; shortLabel: string; cutoff: number }[] = [
     { id: 'base', label: '基础', shortLabel: '基', cutoff: profile.baseCutoff },
@@ -38,9 +38,11 @@ export function weaponSharpnessStages(profile: CatalogWeaponSharpness, gameId: C
   })
 }
 
-export function weaponMatchesFilters(weapon: CatalogWeaponSummary, filters: Pick<WeaponCatalogFilters, 'query' | 'attributeId' | 'includeHiddenAttributes' | 'rarity' | 'slots' | 'directlyProducible' | 'finalOnly'> & { queryWeaponKeys?: ReadonlySet<string> }): boolean {
+export function weaponMatchesFilters(weapon: CatalogWeaponSummary, filters: Pick<WeaponCatalogFilters, 'query' | 'attributeId' | 'includeHiddenAttributes' | 'rarity' | 'slots' | 'directlyProducible' | 'finalOnly'> & { queryWeaponKeys?: ReadonlySet<string>; scope?: import('../../api/catalog/p3WeaponTypes').P3WeaponScope }): boolean {
+  if (weapon.gameId === 'mhp3' && filters.scope !== 'all' && weapon.acquisitionStatus !== (filters.scope ?? 'obtainable')) return false
   const query = filters.query?.trim().toLocaleLowerCase()
   if (query) {
+    if (filters.queryWeaponKeys && !filters.queryWeaponKeys.has(weapon.weaponKey)) return false
     const numeric = /^0x[0-9a-f]+$/i.test(query) ? Number.parseInt(query.slice(2), 16) : /^\d+$/.test(query) ? Number(query) : null
     const matchesText = weapon.nameCn.toLocaleLowerCase().includes(query) || weapon.nameEn.toLocaleLowerCase().includes(query) || (weapon.nameJp ?? '').toLocaleLowerCase().includes(query) || weapon.weaponKey.toLocaleLowerCase().includes(query) || (weapon.matchReason ?? '').toLocaleLowerCase().includes(query)
     if (!filters.queryWeaponKeys?.has(weapon.weaponKey) && !matchesText && (numeric == null || (weapon.saveId !== numeric && weapon.dexId !== numeric && weapon.nativeIndex !== numeric))) return false

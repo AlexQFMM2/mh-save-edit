@@ -24,6 +24,10 @@ declare global {
         searchDecorations(filters: DecorationCatalogFilters): Promise<PageResult<DecorationSummary>>
         getDecoration(identity: DecorationIdentity): Promise<DecorationDetail | null>
         getDecorationFacets(gameId: DecorationCatalogGameId): Promise<DecorationCatalogFacets>
+        searchWeapons(filters: import('../api/catalog/p3WeaponTypes').P3WeaponFilters): Promise<import('../api/catalog/p3WeaponTypes').P3WeaponPage>
+        getWeapon(identity: import('../api/catalog/p3WeaponTypes').P3WeaponIdentity): Promise<import('../api/catalog/p3WeaponTypes').P3WeaponDetail | null>
+        getWeaponFacets(gameId: 'mhp3'): Promise<import('../api/catalog/p3WeaponTypes').P3WeaponFacets>
+        getWeaponTree(gameId: 'mhp3', weaponTypeId: number): Promise<import('../api/catalog/p3WeaponTypes').P3WeaponTree>
         searchWeapons(filters: import('../api/catalog/p2gWeaponTypes').P2gWeaponFilters): Promise<import('../api/catalog/p2gWeaponTypes').P2gWeaponPage>
         searchWeapons(filters: WeaponCatalogFilters): Promise<PageResult<WeaponSummary>>
         getWeapon(identity: import('../api/catalog/p2gWeaponTypes').P2gWeaponIdentity): Promise<import('../api/catalog/p2gWeaponTypes').P2gWeaponDetail | null>
