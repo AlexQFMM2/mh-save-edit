@@ -2,7 +2,7 @@
 
 更新日期：2026-11-11。责任归属：项目维护者。适用仓库：`mh-save-edit`。
 
-当前接手入口为 [P3 怪物实施交接](mhp3-monster-catalog/handoff.md)，完整计划已按单代理串行实施并本地安装；研究依据见[原生探查](mhp3-investigation/monster-native-findings.md)，工程接入点见[前置核查](mhp3-investigation/monster-preflight.md)，完整运行库基线与验收见 [P3 武器交接](mhp3-weapon-catalog/handoff.md)。P3 道具、独立装饰品、技能、防具、武器及怪物图鉴已接入本地应用。武器覆盖12类、987条身份，含完整派生、强化对照、专属详情及道具双向关系；按用户追加授权交付 GitHub 源码，不创建标签或 Release，运行资料仍仅限本地。怪物默认 60 条正常目录，另有 5 条扩展，包含 419 行肉质、284 行异常、241 行控制、1,960 条掉落及 598 条出没观察；独立资料来源、条件及未知项保留。怪物源码已保存于 `a4e0b44` 并已纳入 `release` 基线，运行资产仅限本地。配装、存档修改和插件留后续专题。前序见[防具交接](mhp3-armor-catalog/handoff.md)，原生来源和未验证范围见[研究边界](mhp3-investigation/handoff.md)。
+当前接手入口为 [P3 任务图鉴准备交接](../docs/handoffs/mhp3-quest-catalog/codex.md)，活动分支 `feat/mhp3-quest-catalog`；准备核查完成，完整任务功能尚未实施。前序 [P3 怪物实施交接](mhp3-monster-catalog/handoff.md)对应计划已按单代理串行实施并本地安装；研究依据见[原生探查](mhp3-investigation/monster-native-findings.md)，工程接入点见[前置核查](mhp3-investigation/monster-preflight.md)，完整运行库基线与验收见 [P3 武器交接](mhp3-weapon-catalog/handoff.md)。P3 道具、独立装饰品、技能、防具、武器及怪物图鉴已接入本地应用。武器覆盖12类、987条身份，含完整派生、强化对照、专属详情及道具双向关系；按用户追加授权交付 GitHub 源码，不创建标签或 Release，运行资料仍仅限本地。怪物默认 60 条正常目录，另有 5 条扩展，包含 419 行肉质、284 行异常、241 行控制、1,960 条掉落及 598 条出没观察；独立资料来源、条件及未知项保留。怪物源码已保存于 `a4e0b44` 并已纳入 `release` 基线，运行资产仅限本地。配装、存档修改和插件留后续专题。前序见[防具交接](mhp3-armor-catalog/handoff.md)，原生来源和未验证范围见[研究边界](mhp3-investigation/handoff.md)。
 
 2026-11-02 后续：按用户“继续探查”完成 35 次只读探针，区分 75 槽运行对象与 60 条游戏图鉴目录，60 条原生图标通过独立像素比较，奖励端点核对通过。雷狼龙数值对照与状态使用证据仍有待闭合项，不将整张另一组肉质表默认视为超带电实际值。六库哈希不变，详见[深入探查与剩余工作](mhp3-investigation/monster-native-findings.md)。
 
@@ -12,16 +12,17 @@
 
 2026-10-26：技能阶段的最小防具资料经[防具专题](mhp3-armor-catalog/README.md)扩展完成。额外 25 件耳饰中，24 件有 Wiki 训练所专用证据，1 件“迅食耳饰”取得仍未确认；剑圣、增弹耳饰奖励条件已补齐。护石特殊赠品的精确触发及随机组合合法性仍保留技能阶段未知项。
 
-交接与阶段记录统一由本目录管理：当前专题交接与计划放在一起，旧记录归入日期目录。P2G 接入前核查、阶段交接及验收已集中到[阶段记录索引](archive/2026-10-24/mhp2g-records/README.md)；长期使用和开发参考另见 [docs](../docs/README.md)。
+本目录保留既有专题与阶段记录；新专题交接随任务分支存入 `docs/handoffs/`，外部计划和临时测试材料位置见对应交接。旧记录归入日期目录。P2G 接入前核查、阶段交接及验收已集中到[阶段记录索引](archive/2026-10-24/mhp2g-records/README.md)；长期使用和开发参考另见 [docs](../docs/README.md)。
 
 前序技能实施记录见 [P3 技能图鉴](mhp3-skill-catalog/README.md)，验收及恢复位置以交接为准。
 
-2026-11-11：按用户要求整理干净源码基线并确定 `release` 流程，见[基线交接](../docs/handoffs/release-baseline-20261111/codex.md)。既有专题路径与历史验收不迁移；P3 完整任务图鉴尚未启动。
+2026-11-11：按用户要求整理干净源码基线并确定 `release` 流程，见[基线交接](../docs/handoffs/release-baseline-20261111/codex.md)。既有专题路径与历史验收不迁移。随后按用户要求创建 P3 任务功能分支并完成准备核查，任务身份与字段契约仍待后续补齐。
 
 ## 当前计划
 
 | 计划 | 状态 | 负责人 | 更新日期 | 入口 |
 | --- | --- | --- | --- | --- |
+| P3 任务图鉴 | 草稿（续接准备完成，完整实施未开始） | Codex | 2026-11-11 | [准备交接](../docs/handoffs/mhp3-quest-catalog/codex.md) |
 | P3 怪物图鉴 | 已完成（60 正常＋5 扩展，本地安装，源码已提交） | 当前实施者 | 2026-11-02 | [计划](mhp3-monster-catalog/README.md) |
 | P3 武器图鉴 | 已完成（本地安装与源码交付，未发行） | 当前实施者 | 2026-10-28 | [实施](mhp3-weapon-catalog/README.md) |
 | P3 防具图鉴 | 已完成（本地安装与源码交付，未发行） | 当前实施者 | 2026-10-26 | [实施](mhp3-armor-catalog/README.md) |
@@ -32,7 +33,7 @@
 | P3 入口与工作区框架 | 已完成（仅框架） | 项目维护者 / 当前实施者 | 2026-10-24 | [验收](mhp3-workspace/README.md) |
 | P3 原生资源后续核查 | 待执行（余项按需恢复） | 项目维护者 / 后续实施者 | 2026-10-24 | [计划](mhp3-investigation/README.md) |
 
-执行方式为单代理串行，未授权多代理。各计划 README 的 Status 为生命周期依据，完整导航见 [catalog/README.md](catalog/README.md)。
+执行方式为单代理串行，未授权多代理。既有计划沿用原状态记录，新外部计划以 `taskList.md` 为生命周期依据，完整导航见 [catalog/README.md](catalog/README.md)。
 
 ## P2G 归档：2026-10-24
 

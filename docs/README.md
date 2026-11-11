@@ -1,6 +1,6 @@
 # 使用说明与技术参考
 
-`docs` 保存长期使用的操作说明、数据契约、构建方法和版本说明。计划、交接、接入前核查及阶段验收统一放在 [plan](../plan/README.md)；当前接手入口为 [P3 怪物交接](../plan/mhp3-monster-catalog/handoff.md)，P2G 历史记录见[归档索引](../plan/archive/2026-10-24/mhp2g-records/README.md)。
+`docs` 保存长期操作说明、数据契约、构建方法、版本说明与新任务交接。当前接手入口为 [P3 任务图鉴准备](handoffs/mhp3-quest-catalog/codex.md)；前序完成基线见 [P3 怪物交接](../plan/mhp3-monster-catalog/handoff.md)。计划导航见 [plan](../plan/README.md)，P2G 历史记录见[归档索引](../plan/archive/2026-10-24/mhp2g-records/README.md)。
 
 ## 按用途阅读
 
@@ -23,7 +23,7 @@
 
 ## 文档存放约定
 
-- 新交接放在 `plan/<专题>/handoff.md`，与该专题计划放在一起；统一从计划索引导航。
+- 新交接放在 `docs/handoffs/<task-id>/<agent-name>.md`，随任务分支提交；新计划与临时测试材料使用仓库同级的 `../plan/mh-save-edit/<task-id>/` 和 `../test/mh-save-edit/<task-id>/`。既有 `plan/<专题>/` 保留原路径，统一从计划索引导航。
 - 完成后的计划、阶段调查和验收记录放入 `plan/archive/<日期>/`，保留原日期、证据和未确认边界。
 - 技术文档按用途或作品归类；阶段进度与交付日志移入对应计划，技术说明只链接这些记录。
 - 文档迁移同步修正仓库链接和脚本引用；Release 说明保留在 `docs/releases/`，私有研究产物继续留在研究区。
