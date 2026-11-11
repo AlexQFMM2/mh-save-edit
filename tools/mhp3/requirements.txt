@@ -1,0 +1,2 @@
+# HTML parser for the offline monster reference importer and synthetic tests.
+beautifulsoup4==4.14.2

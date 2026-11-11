@@ -2,9 +2,15 @@ name: MH Save Editor CI
 
 on:
   push:
-    branches: [main]
-    tags: ['v*']
+    branches: [release, 'feat/**', 'fix/**', 'hotfix/**']
   pull_request:
+    branches: [release]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing version tag on the selected release commit (for example v0.1.15)'
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -19,6 +25,11 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+      - name: Verify release source before validation
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: node tools/verify_release_source.mjs
       - uses: pnpm/action-setup@v4
         with:
           version: 11
@@ -47,7 +58,14 @@ jobs:
       - run: pnpm data:audit:runtime
       - run: pnpm typecheck
       - name: Test without private manifest snapshots
-        run: pnpm exec vitest run --exclude tests/weaponCatalogData.test.ts --minWorkers=1 --maxWorkers=2
+        run: pnpm exec vitest run --exclude '**/.runtime-assets/**' --exclude tests/weaponCatalogData.test.ts --minWorkers=1 --maxWorkers=2
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Test P3 monster builder with synthetic inputs
+        run: |
+          python -m pip install -r tools/mhp3/requirements.txt
+          python -m unittest tests.test_mhp3_monsters
       - run: pnpm build
       - name: Verify compiled GU runtime search
         env:
@@ -55,9 +73,9 @@ jobs:
         run: pnpm exec vitest run tests/guBuiltWorker.test.ts --minWorkers=1 --maxWorkers=2
 
   package-windows:
-    # Publish only the authorized runtime package, directly to a tagged Release.
-    # Main pushes validate source only; avoid duplicate Windows builds/artifacts.
-    if: startsWith(github.ref, 'refs/tags/v')
+    # Branch pushes and tags never publish. A manual run must select release,
+    # and both jobs verify the exact remote branch, tag and checkout commit.
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/release'
     needs: check
     runs-on: windows-latest
     permissions:
@@ -66,6 +84,10 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+      - name: Verify tested release source before packaging
+        env:
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: node tools/verify_release_source.mjs
       - uses: pnpm/action-setup@v4
         with:
           version: 11
@@ -187,22 +209,25 @@ jobs:
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.tag }}
         run: |
+          node tools/verify_release_source.mjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           $version = (Get-Content package.json -Raw | ConvertFrom-Json).version
-          if ($env:GITHUB_REF_NAME -ne "v$version") { throw 'Tag and application version differ' }
-          $notes = "docs/releases/$($env:GITHUB_REF_NAME).md"
+          if ($env:RELEASE_TAG -ne "v$version") { throw 'Tag and application version differ' }
+          $notes = "docs/releases/$($env:RELEASE_TAG).md"
           if (!(Test-Path $notes -PathType Leaf)) { throw "Missing release notes: $notes" }
-          $archiveName = "mh-save-editor-$($env:GITHUB_REF_NAME)-windows-x64.tar.gz"
+          $archiveName = "mh-save-editor-$($env:RELEASE_TAG)-windows-x64.tar.gz"
           $archive = Join-Path $PWD "release/$archiveName"
           tar -C release/win-unpacked -czf $archive .
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           $hash = (Get-FileHash $archive -Algorithm SHA256).Hash.ToLowerInvariant()
           "$hash  $archiveName" | Set-Content release/SHA256SUMS.txt -Encoding utf8
-          gh release create $env:GITHUB_REF_NAME `
+          gh release create $env:RELEASE_TAG `
             --repo $env:GITHUB_REPOSITORY `
             --verify-tag --draft `
-            --title $env:GITHUB_REF_NAME --notes-file $notes `
+            --title $env:RELEASE_TAG --notes-file $notes `
             $archive release/SHA256SUMS.txt
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          gh release edit $env:GITHUB_REF_NAME --repo $env:GITHUB_REPOSITORY --draft=false --latest
+          gh release edit $env:RELEASE_TAG --repo $env:GITHUB_REPOSITORY --draft=false --latest
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

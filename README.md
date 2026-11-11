@@ -8,9 +8,11 @@
 
 **维护与交接说明更新于 2026-10-24。** P2G 七类图鉴、六槽手动／自动配装及 PPSSPP 存档编辑已交付，用户修改实测已通过；本次又确认中文插件的任务、保存重开、停用／恢复实测通过，见[P2G 验收记录](plan/archive/2026-10-24/mhp2g-records/acceptance.md)。五份 P2G 计划已按交付范围[归档](plan/archive/2026-10-24/README.md)，未知资源覆盖等限制仍明确保留。公开应用／运行资源／插件为 v0.1.14／v6／test.4；奇怪龙命名修订源码纳入本次提交，test.5 运行包仍为本地成果，尚未新增发布，详见[P2G 中文资料](docs/mhp2g/localization.md)。
 
-P3 已接入 **PPSSPP 工作区与本地道具、装饰品、技能、防具、武器、怪物图鉴**。防具保留 1,131 条原生身份，默认显示 1,106 件正常条目，支持套装／单件、属性、制作材料与费用、中文检索及技能／道具双向关联；24 件特殊用途和 1 件取得未确认可单独筛选。武器图鉴已本地安装12类、987把武器，支持列表／派生、基础与强化／部件对照、专属详情及材料与弹瓶双向关系；配装、存档修改及插件仍待专项。防具与武器成果已本地安装，并按追加授权交付 GitHub 源码；不创建标签或 Release，P3 运行资料仍仅限本地。怪物图鉴已本地安装：默认 60 条（40 大型＋20 小型），另有 5 条扩展，提供肉质、异常／控制、1,960 条掉落及 598 条出没观察，支持道具双向关联；无法证实的值保留未知，出没为预览而非完整任务图鉴。本轮怪物源码未提交，P3 运行资产仍仅限本地。接手先读 [P3 怪物交接](plan/mhp3-monster-catalog/handoff.md)、[怪物数据与恢复](docs/development/mhp3-monster-catalog.md)，武器阶段见 [交接](plan/mhp3-weapon-catalog/handoff.md)、[武器数据与构建](docs/development/mhp3-weapon-catalog.md)，防具阶段见[交接](plan/mhp3-armor-catalog/handoff.md)，前序见[技能交接](plan/mhp3-skill-catalog/handoff.md)和[原生研究边界](plan/mhp3-investigation/handoff.md)。既有作品按具体问题维护；跨作品统一业务数据重构仍不恢复。[道具译名词典](docs/item-terminology.md)共享有依据的用词，各作编号、数值、关系与存档格式独立维护。
+P3 已接入 **PPSSPP 工作区与本地道具、装饰品、技能、防具、武器、怪物图鉴**。防具保留 1,131 条原生身份，默认显示 1,106 件正常条目，支持套装／单件、属性、制作材料与费用、中文检索及技能／道具双向关联；24 件特殊用途和 1 件取得未确认可单独筛选。武器图鉴已本地安装12类、987把武器，支持列表／派生、基础与强化／部件对照、专属详情及材料与弹瓶双向关系；配装、存档修改及插件仍待专项。防具与武器成果已本地安装，并按追加授权交付 GitHub 源码；不创建标签或 Release，P3 运行资料仍仅限本地。怪物图鉴已本地安装：默认 60 条（40 大型＋20 小型），另有 5 条扩展，提供肉质、异常／控制、1,960 条掉落及 598 条出没观察，支持道具双向关联；无法证实的值保留未知，出没为预览而非完整任务图鉴。怪物源码已保存于 `a4e0b44`，本次纳入 `release` 基线整理；P3 运行资产仍仅限本地。接手先读 [P3 怪物交接](plan/mhp3-monster-catalog/handoff.md)、[怪物数据与恢复](docs/development/mhp3-monster-catalog.md)，武器阶段见 [交接](plan/mhp3-weapon-catalog/handoff.md)、[武器数据与构建](docs/development/mhp3-weapon-catalog.md)，防具阶段见[交接](plan/mhp3-armor-catalog/handoff.md)，前序见[技能交接](plan/mhp3-skill-catalog/handoff.md)和[原生研究边界](plan/mhp3-investigation/handoff.md)。既有作品按具体问题维护；跨作品统一业务数据重构仍不恢复。[道具译名词典](docs/item-terminology.md)共享有依据的用词，各作编号、数值、关系与存档格式独立维护。
 
 本文集中记录运行方法、真实代码入口、已遇到的难点及新作品接入方法，方便接手者从一个具体问题开始。
+
+Git 开发与发行使用 `release` 作为唯一基线，任务分支完成审查和检查后合入；见 [Git 工作流](docs/development/git-workflow.md)。本次基线整理不改变已发布版本。
 
 文档导航：[使用与技术参考](docs/README.md) · [计划与交接](plan/README.md)。阶段交接、接入前核查和验收记录统一存放在 `plan/`。
 
@@ -86,7 +88,7 @@ pnpm dev
 
 ```bash
 pnpm typecheck
-pnpm exec vitest run --exclude tests/weaponCatalogData.test.ts --minWorkers=1 --maxWorkers=2
+pnpm exec vitest run --exclude '**/.runtime-assets/**' --exclude tests/weaponCatalogData.test.ts --minWorkers=1 --maxWorkers=2
 pnpm build
 ```
 
@@ -270,9 +272,9 @@ Dex 原件、ROM/ISO、完整 RomFS/ExeFS、原始资源容器、CSV、manifest�
 
 ### 发布方式
 
-- `main` 推送和 Pull Request 执行类型检查、公共测试、资料审计、构建及编译后 Worker 检查。Windows 包只在 `v*` 版本标签触发，直接写入 Release，不经公开 Actions artifact 中转。
+- `release`、任务分支推送和目标为 `release` 的 Pull Request 执行检查。分支／标签推送均不发布；Windows 发行须从 `release` 手动触发，核对远端 SHA、匹配版本标签、类型检查、公共测试、资料审计、构建及编译后 Worker，再直接写入 Release。详见 [Git 工作流](docs/development/git-workflow.md)。
 - 改动运行资料时，先备份并验证库、迁移和数据版本。需要新的基础运行包时，用新的 `runtime-assets-vN` 及校验值发布，并同步修改工作流下载位置、哈希和资料清单，不覆盖旧包破坏旧版本复现。现有 workflow 固定从本仓库下载资料；fork 发布自有资料时要同时修改下载仓库。
-- 应用发布前更新 `package.json`、README 版本及 `docs/releases/v<版本>.md`，再推送匹配的版本标签。工作流会验证 Windows 原生 SQLite 模块、可执行文件图标以及包内数据库与已审计输入的一致性，生成 Windows x64 目录压缩包和 `SHA256SUMS.txt`，发布后设为最新版。
+- 应用发布前在任务分支更新 `package.json`、README 版本及 `docs/releases/v<版本>.md`，审查并合入 `release` 后，在已验证提交上推送匹配标签，从 `release` 手动运行 CI 并填写该标签。工作流会验证 Windows 原生 SQLite 模块、可执行文件图标以及包内数据库与已审计输入的一致性，生成 Windows x64 目录压缩包和 `SHA256SUMS.txt`，发布后设为最新版。
 - 本地 Windows 可执行 `pnpm package:win` 构建目录包；公开发行仍需核对上述发布检查、对应格式回读和资料分发范围。
 
 接手工作可以从复现一个 bug、补一个格式样例或独立验证一类数据开始。现有三作不需要先经过统一数据重构，才能继续修复或扩展。

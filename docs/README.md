@@ -6,6 +6,7 @@
 
 | 用途 | 入口 |
 | --- | --- |
+| release 基线、任务分支、审查、交接与发行入口 | [Git 工作流](development/git-workflow.md) |
 | 原版解包、Dex、宿主机只读查询与冻结输入 | [资料读取说明](development/data-sources.md) |
 | P2G 插件安装、测试、图鉴、配装与存档说明 | [P2G 文档](mhp2g/README.md) |
 | P3 怪物、肉质、条件掉落、出没预览及构建恢复 | [P3 怪物图鉴](development/mhp3-monster-catalog.md) |

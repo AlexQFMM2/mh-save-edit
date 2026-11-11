@@ -15,14 +15,20 @@
 ## 当前进度
 
 - 已盘点工作区、远端分支、发布工作流和公开资产边界。
-- 已切换任务分支；原有修改全部保留。
-- 待完成：复核现有成果，调整发布入口，检查并提交流程文档，自审固定提交后建立／合入 `release`，同步并验证干净基线。
+- 已切换任务分支；原有修改全部保留于 `a4e0b44`，共 59 个源码、合成测试及文档文件。
+- 已调整 CI：任务分支与 `release` 检查；取消标签自动发行，仅允许手动选 `release`，校验 checkout／远端 tip／标签／所选 SHA 一致。发布前仍须明确授权。
+- 已补 Git 工作流及 AGENTS 约定，给 CI 增加既有 P3 怪物 Python 合成测试；没有修改 P3 业务实现或资料。
+- 接下来固定并自审流程提交，推送任务分支验证公共 CI，然后建立／合入 `release` 并回读远端设置。
 
 ## 验证与限制
 
-- 本次尚未运行应用测试；历史 P3 Linux Electron 验收见 [怪物交接](../../../plan/mhp3-monster-catalog/handoff.md)。本次不将历史记录称为新一轮 UI 或 Windows 验收。
+- `pnpm typecheck`、`pnpm build`、`pnpm data:audit:runtime` 通过。
+- 公共 Vitest（排除 `.runtime-assets` 与私有 `weaponCatalogData.test.ts`）900 通过、8 条件跳过；新增发行来源测试单独 11 通过。两者不重叠。
+- `python3 -m unittest tests.test_mhp3_monsters`：5 通过；编译后 GU Worker：1 通过、2 条件跳过。跳过不算通过，完整日志在外部工作台。
+- 检查文档文件链接均存在；七个运行文件（六库及 P2G profile）与初始指纹一致。
+- 历史 P3 Linux Electron 验收见 [怪物交接](../../../plan/mhp3-monster-catalog/handoff.md)。本次不将历史记录称为新一轮 UI、Windows 或游戏验收，也未执行实际发行。
 - 当前公开应用仍为 `v0.1.14`，对应 `4e2ef14`；建立新的源码基线不改变已经发布的程序。
-- 当前 CI 仍由 `main` push 验证、`v*` tag 触发发布；本任务将收敛到 `release`，完成前不执行发布。
+- 发行检查器用合成 Git 仓库验证：允许 detached checkout，拒绝非手动／非 release／标签入口、未提交文件、未合入任务提交、远端前移、取数失败和版本不匹配。
 
 ## 恢复
 

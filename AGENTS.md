@@ -4,6 +4,14 @@
 
 接手先读 [项目说明](README.md)、[计划索引](plan/README.md)与当前专题交接；来源、构建和恢复查 [技术文档](docs/README.md)。旧交接是阶段证据，后续记录已解除的阻碍不重复调查，未知项也不能随归档记成完成。
 
+## Git 开发与交付
+
+- `release` 是默认分支及唯一生产发行来源；`main` 保留旧历史，不再开发或发行。新任务从已 fetch、已核实的 `release` 建 `feat/*`、`fix/*` 或 `hotfix/*`，不得直接在 `release` 修改实现。
+- 一个工作目录、一个开发环境、一个活动任务分支，单代理串行。阶段结束先提交源码和交接；未完成工作留在任务分支，不用 stash 长期存放，不 reset/clean 丢弃用户修改。
+- 合入顺序为任务分支 → 固定提交审查／修正 → `check` 通过 → 快进合入 `release` → 核对远端版本。单代理自审须明确标注；源码提交、推送、标签和公开发行仍按各自授权执行。
+- 新任务交接放 `docs/handoffs/<task-id>/<agent-name>.md` 并跟随源码提交。已有 `plan/` 专题保留；新计划／临时测试材料分别放 `../plan/mh-save-edit/<task-id>/`、`../test/mh-save-edit/<task-id>/`，合成回归测试仍留 `tests/`。
+- 分支／标签推送不自动发布；应用发行须从 `release` 手动触发，校验远端分支、所选提交、版本标签、源码及资产。操作与恢复见 [Git 工作流](docs/development/git-workflow.md)。
+
 ## 数据依据：本作解包优先
 
 - **已核对版本与哈希的本作原版解包是最高依据。** 原生表、文本、资源映射及实际读取／判定代码决定本作身份、数值和机制；Dex、Wiki、Athena、旧修改器是独立交叉来源。后作仅可提供经核对的用词，不能补成本作数值或规则。
@@ -91,7 +99,7 @@
 
 ## 文档与私有产物边界
 
-- `plan/<专题>/` 保存 `README.md`、`handoff.md`、`tasks.md`、`taskList.md`；已完成阶段归 `plan/archive/<日期>/`，保留原日期、验收与未知项。`docs/` 保存长期操作、数据契约及构建恢复，发行说明归 `docs/releases/`。
+- 既有 `plan/<专题>/` 保存 `README.md`、`handoff.md`、`tasks.md`、`taskList.md`；已完成阶段归 `plan/archive/<日期>/`，保留原日期、验收与未知项。新任务材料按上面的 Git 约定存放。`docs/` 保存长期操作、数据契约、版本化交接及构建恢复，发行说明归 `docs/releases/`。
 - 进度与长期参考分开，维护 `plan/README.md`、`docs/README.md` 导航；移动文档同步检查 Markdown、锚点、代码注释和组包脚本引用。AGENTS 记录可复用规则，不堆版本进度、临时 IP 或整份审计结果。
 - 公开 Git 仅存源代码、构建器、schema、合成测试、文档及逐项获准的静态资源。研究原件、数据库、原生图标、译文集合、CSV、manifest、crosswalk、审计、截图和存档默认私有，不因能重建而获得发布授权。
 - 生成产物放 `../research/generated/mh-save-edit/`，可按已授权本地任务安装到忽略的 `data/`、图标目录等；不使用反向忽略或强制加入绕过边界。工作区外层散落资料归入对应研究专题，无法确定归属的放 `research/archive/unclassified/`。
