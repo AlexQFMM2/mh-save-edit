@@ -188,8 +188,17 @@ describe('P3 workspace shell', () => {
     expect(openSave).not.toHaveBeenCalled()
   })
 
+  it('opens P3 monsters through the domain API without task, save or loadout access', async () => {
+    window.history.replaceState(null, '', '/#/game/mhp3/catalog/monsters')
+    render(<App />)
+    await screen.findByText('没有符合条件的怪物。')
+    expect(searchMonsters).toHaveBeenCalledWith(expect.objectContaining({ gameId: 'mhp3', scope: 'normal' }))
+    expect(searchQuests).not.toHaveBeenCalled()
+    expect(loadoutAccess).not.toHaveBeenCalled()
+    expect(openSave).not.toHaveBeenCalled()
+  })
+
   it.each([
-    ['catalog/monsters', '怪物图鉴'],
     ['catalog/quests', '任务图鉴'], ['edit', '存档修改'], ['edit/loadout', '配装器'],
   ])('keeps direct P3 %s links away from existing game services', async (path, title) => {
     window.history.replaceState(null, '', `/#/game/mhp3/${path}`)

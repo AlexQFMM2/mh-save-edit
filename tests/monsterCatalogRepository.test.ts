@@ -41,7 +41,7 @@ describe('MonsterCatalogRepository', () => {
     })!
     const detail = repo.getMonster(monster)!
     expect(detail.ailments.some((ailment) => ailment.statusId === 12)).toBe(false)
-    expect(detail.drops.every((drop) => drop.probability >= 0 && drop.probability <= 100 && itemNumber(drop.item) >= 0)).toBe(true)
+    expect(detail.drops.every((drop) => drop.probability != null && drop.probability >= 0 && drop.probability <= 100 && itemNumber(drop.item) >= 0)).toBe(true)
   })
 
   it('preserves null ailment values and invalid trap states', () => {

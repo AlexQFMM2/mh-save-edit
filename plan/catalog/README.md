@@ -1,10 +1,10 @@
 # 计划目录
 
-更新日期：2026-10-28。各计划 README 的 Status 为准；本目录只作导航。负责人均为项目维护者／对应实施者，执行方式为单代理串行。当前交接见 [P3 武器](../mhp3-weapon-catalog/handoff.md)，前序防具见[交接](../mhp3-armor-catalog/handoff.md)，前序见[技能](../mhp3-skill-catalog/handoff.md)、[装饰品](../mhp3-decoration-catalog/handoff.md)与[道具图鉴](../mhp3-item-catalog/handoff.md)，研究边界见 [P3 研究](../mhp3-investigation/handoff.md)，历史总览见 [计划索引](../README.md)。
+更新日期：2026-11-02。各计划 README 的 Status 为准；本目录只作导航。负责人均为项目维护者／对应实施者，执行方式为单代理串行。当前接手见 [P3 怪物实施交接](../mhp3-monster-catalog/handoff.md)，前序基线见 [P3 武器](../mhp3-weapon-catalog/handoff.md)，前序防具见[交接](../mhp3-armor-catalog/handoff.md)，前序见[技能](../mhp3-skill-catalog/handoff.md)、[装饰品](../mhp3-decoration-catalog/handoff.md)与[道具图鉴](../mhp3-item-catalog/handoff.md)，研究边界见 [P3 研究](../mhp3-investigation/handoff.md)，历史总览见 [计划索引](../README.md)。
 
 阶段材料入口：[P2G 交接／核查／验收记录](../archive/2026-10-24/mhp2g-records/README.md)。使用说明与长期开发参考见[文档目录](../../docs/README.md)。
 
-下一步为 P3 怪物图鉴，先核查资料与接入阻碍；尚未建立实施计划，见[武器交接的后续入口](../mhp3-weapon-catalog/handoff.md#下一步)。
+P3 怪物图鉴于 2026-11-02 完成单代理串行实施与本地安装：60 条正常目录＋5 条扩展、肉质／异常／控制、掉落与出没预览、道具双向关联。来源与未知项继续保留；本轮没有提交或公开发行。验收及恢复见[怪物交接](../mhp3-monster-catalog/handoff.md)，前序探查见[研究记录](../mhp3-investigation/monster-native-findings.md)。
 
 ## 待执行
 
@@ -14,7 +14,7 @@
 
 ## 进行中
 
-暂无独立计划。
+暂无进行中的独立计划。
 
 ## 阻塞
 
@@ -24,6 +24,7 @@
 
 | 计划 | 负责人 | 完成日期 | 入口 |
 | --- | --- | --- | --- |
+| P3 怪物（本地安装，未提交／发行） | 当前实施者 | 2026-11-02 | [交接与验收](../mhp3-monster-catalog/handoff.md) |
 | P3 武器（本地安装与源码交付，未发行） | 当前实施者 | 2026-10-28 | [交接与验收](../mhp3-weapon-catalog/handoff.md) |
 | P3 防具（本地安装与源码交付，未发行） | 当前实施者 | 2026-10-26 | [交接与验收](../mhp3-armor-catalog/handoff.md) |
 | P3 技能（本地验收与源码交付，未发行） | 当前实施者 | 2026-10-26 | [交接与验收](../mhp3-skill-catalog/handoff.md) |

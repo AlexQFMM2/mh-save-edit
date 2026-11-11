@@ -8,3 +8,7 @@
 .monster-ailment-table__name { text-align: left; }
 .monster-ailment-table__data { color: var(--global-theme-color-data); }
 .monster-ailment-table__note { white-space: normal; min-width: 200px; text-align: left; color: var(--global-theme-color-text-secondary); }
+.monster-ailment-table__original { white-space: pre-wrap; }
+.monster-ailment-table__timing { color: var(--global-theme-color-data); }
+.monster-ailment-table__note summary { cursor: pointer; color: var(--global-theme-color-accent); }
+.monster-ailment-table__note summary:focus-visible { outline: 2px solid var(--global-theme-color-focus-ring); }

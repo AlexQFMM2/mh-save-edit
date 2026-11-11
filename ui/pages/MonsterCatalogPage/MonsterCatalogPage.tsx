@@ -1,3 +1,5 @@
+import type { P3MonsterScope } from '../../../api/catalog/p3MonsterTypes'
+import { P3MonsterAppearanceDrawer } from '../../components/P3MonsterAppearances/P3MonsterAppearances'
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useOutletContext, useSearchParams } from 'react-router-dom'
 import type { ItemIdentity, MonsterCatalogTab, MonsterDetail, MonsterSummary, QuestAvailability } from '../../../api/catalog/types'
@@ -6,12 +8,12 @@ import { MonsterDetailPanel } from '../../components/MonsterDetailPanel/MonsterD
 import { MonsterSearchList } from '../../components/MonsterSearchList/MonsterSearchList'
 import { P2gMonsterQuestDrawer } from '../../components/P2gMonsterQuestDrawer/P2gMonsterQuestDrawer'
 import { QuestDetailDrawer } from '../../components/QuestDetailDrawer/QuestDetailDrawer'
-import type { WorkspaceOutletContext } from '../../components/WorkspaceContent/WorkspaceContent'
+import type { MonsterCatalogOutletContext } from '../../components/WorkspaceContent/WorkspaceContent'
 import './MonsterCatalogPage.css'
 
 const tabs: MonsterCatalogTab[] = ['weakness', 'ailments', 'drops', 'quests']
 export function MonsterCatalogPage() {
-  const { game } = useOutletContext<WorkspaceOutletContext>()
+  const { game } = useOutletContext<MonsterCatalogOutletContext>()
   const [params, setParams] = useSearchParams()
   const query = params.get('q') ?? ''
   const [queryInput, setQueryInput] = useState(query)
@@ -22,6 +24,10 @@ export function MonsterCatalogPage() {
   const taskAvailability = (['common', 'mhgu', 'mhxx'].includes(params.get('taskAvailability') ?? '') ? params.get('taskAvailability') : 'all') as 'all' | QuestAvailability
   const includePlaceholders = params.get('debug') === '1'
   const questKey = params.get('quest')
+  const scope: P3MonsterScope = params.get('scope')==='all'?'all':params.get('scope')==='extended'?'extended':'normal'
+  const appearance = params.get('appearance')
+  const [listRetry,setListRetry] = useState(0)
+  const [detailRetry,setDetailRetry] = useState(0)
   const [monsters, setMonsters] = useState<MonsterSummary[]>([])
   const [detail, setDetail] = useState<MonsterDetail | null>(null)
   const [loading, setLoading] = useState(true)
@@ -29,14 +35,14 @@ export function MonsterCatalogPage() {
   const [error, setError] = useState<string>()
   const [detailError, setDetailError] = useState<string>()
   const [itemDrawer, setItemDrawer] = useState<ItemIdentity | null>(null)
-  const update = useCallback((changes: Record<string, string | number | undefined>) => setParams(current => {
+  const update = useCallback((changes: Record<string, string | number | undefined>, replace = false) => setParams(current => {
     const next = new URLSearchParams(current)
     for (const [key, value] of Object.entries(changes)) {
       if (value == null || value === '') next.delete(key)
       else next.set(key, String(value))
     }
     return next
-  }), [setParams])
+  }, { replace }), [setParams])
   // List queries depend on filters, while automatic selection reads the latest URL.
   const selectionRef = useRef({ selected, update })
   useLayoutEffect(() => { selectionRef.current = { selected, update } }, [selected, update])
@@ -54,15 +60,15 @@ export function MonsterCatalogPage() {
     setLoading(true); setError(undefined)
     const api = window.mhSaveEditor?.catalog
     if (!api) { setError('图鉴 API 尚未连接，请在 Electron 应用中打开。'); setLoading(false); return }
-    void api.searchMonsters({ gameId: game.id, targetMonsterId: target, query, includePlaceholders }).then(rows => {
+    void api.searchMonsters({ gameId: game.id, targetMonsterId: target, query, includePlaceholders, ...(game.id==='mhp3'?{scope}:{}) }).then(rows => {
       if (!active) return
       setMonsters(rows)
       const selection = selectionRef.current
-      if (selection.selected == null && rows[0]) selection.update({ monster: rows[0].monsterId })
+      if (selection.selected == null && rows[0]) selection.update({ monster: rows[0].monsterId }, true)
     }).catch(cause => { if (active) setError(cause instanceof Error ? cause.message : '怪物列表读取失败') })
       .finally(() => { if (active) setLoading(false) })
     return () => { active = false }
-  }, [game.id, target, query, includePlaceholders])
+  }, [game.id, target, query, includePlaceholders, scope, listRetry])
   useEffect(() => {
     setItemDrawer(null)
     if (selected == null) { setDetail(null); setDetailLoading(false); return }
@@ -76,15 +82,21 @@ export function MonsterCatalogPage() {
       .catch(cause => { if (active) setDetailError(cause instanceof Error ? cause.message : '怪物详情读取失败') })
       .finally(() => { if (active) setDetailLoading(false) })
     return () => { active = false }
-  }, [game.id, selected])
+  }, [game.id, selected, detailRetry])
+  useEffect(() => {
+    if (game.id!=='mhp3'||tab!=='quests'||!appearance||detailLoading) return
+    const row=[...document.querySelectorAll<HTMLElement>('[data-appearance-key]')].find(el=>el.dataset.appearanceKey===appearance)
+    row?.scrollIntoView?.({block:'nearest'});row?.querySelector('button')?.focus()
+  },[game.id,tab,appearance,detailLoading,detail])
   const visible = monsters.some(monster => monster.monsterId === selected)
   const currentDetail = detail?.gameId === game.id && detail.monsterId === selected ? detail : null
   return <div className="monster-catalog-page"><div className="monster-catalog-page__layout">
     <MonsterSearchList monsters={monsters} selectedId={visible ? selected : undefined} query={queryInput}
+      scope={game.id==='mhp3'?scope:undefined} onScopeChange={value=>{closeItem();update({scope:value==='normal'?undefined:value,target:undefined,monster:undefined,quest:undefined})}} onRetry={()=>setListRetry(n=>n+1)}
       loading={loading} error={error} includePlaceholders={includePlaceholders} onQueryChange={setQueryInput}
       onPlaceholderChange={value => update({ debug: value ? '1' : undefined, target: undefined, monster: undefined, quest: undefined })}
       onReset={reset} onSelect={monsterId => update({ monster: monsterId, quest: undefined })} />
-    <MonsterDetailPanel gameId={game.id} monster={detail} loading={detailLoading} error={detailError} tab={tab}
+    <MonsterDetailPanel gameId={game.id} monster={currentDetail} loading={detailLoading} error={detailError} missing={selected!=null&&!detailLoading} onRetry={()=>setDetailRetry(n=>n+1)} tab={tab}
       dropDirection={dropDirection} taskAvailability={taskAvailability} onTabChange={value => update({ tab: value })}
       onDropDirectionChange={value => update({ dropSort: 'probability', dropDirection: value })}
       onTaskAvailabilityChange={value => update({ taskAvailability: value === 'all' ? undefined : value })}
@@ -92,7 +104,7 @@ export function MonsterCatalogPage() {
       onSelectQuest={key => { if (currentDetail) { closeItem(); update({ quest: key }) } }} />
   </div>
     <ItemDetailDrawer identity={itemDrawer} onClose={closeItem} />
-    {game.id === 'mhp2g' && currentDetail?.p2gQuests?.some(q => q.questKey === questKey && !q.linked)
+    {game.id==='mhp3'?<P3MonsterAppearanceDrawer sourceKey={detailLoading?null:questKey} appearance={currentDetail?.p3?.appearances.find(q=>q.sourceKey===questKey)} monster={currentDetail} onClose={closeQuest}/>:game.id === 'mhp2g' && currentDetail?.p2gQuests?.some(q => q.questKey === questKey && !q.linked)
       ? <P2gMonsterQuestDrawer questKey={detailLoading ? null : questKey} quest={currentDetail?.p2gQuests?.find(quest => quest.questKey === questKey)} monster={currentDetail} onClose={closeQuest} />
       : <QuestDetailDrawer gameId={game.id} questKey={questKey} onClose={closeQuest} />}
   </div>

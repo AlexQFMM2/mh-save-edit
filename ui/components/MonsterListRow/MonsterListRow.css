@@ -2,3 +2,5 @@
 
 .monster-list-row__identity { display: grid; min-width: 0; }
 .monster-list-row__match { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--global-typography-font-size-caption); color: var(--global-theme-color-text-secondary); }
+
+.monster-list-row__kind { margin-left: var(--global-spacing-2); color: var(--global-theme-color-text-muted); font-size: var(--global-typography-font-size-caption); font-weight: normal; }

@@ -12,6 +12,7 @@ export type DecorationCatalogOutletContext = { game: GameVersionDefinition & { i
 export type SkillCatalogOutletContext = { game: GameVersionDefinition & { id: import('../../../api/catalog/types').SkillCatalogGameId } }
 export type WeaponCatalogOutletContext = { game: GameVersionDefinition & { id: import('../../../api/catalog/types').WeaponCatalogGameId } }
 export type ArmorCatalogOutletContext = { game: GameVersionDefinition & { id: import('../../../api/catalog/types').ArmorCatalogGameId } }
+export type MonsterCatalogOutletContext = { game: GameVersionDefinition & { id: import('../../../api/catalog/types').MonsterCatalogGameId } }
 export type ItemCatalogOutletContext = { game: GameVersionDefinition & { id: import('../../../api/catalog/types').ItemCatalogGameId } }
 
 type WorkspaceContentProps = {

@@ -127,8 +127,8 @@ export function ItemCatalogPage() {
     <ArmorDetailDrawer gameId={game.id} armorDexId={armorDrawerId} onClose={() => setArmorDrawerId(null)} />
     </>}
     <QuestDetailDrawer gameId={game.id} questKey={questDrawerKey} onClose={() => setQuestDrawerKey(null)} />
-    <MonsterDetailDrawer gameId={game.id} monsterId={monsterDrawerId} onClose={() => setMonsterDrawerId(null)} />
     </>}
+    <MonsterDetailDrawer gameId={game.id} monsterId={monsterDrawerId} onClose={() => setMonsterDrawerId(null)} />
     <ItemDetailDrawer identity={itemDrawerIdentity} onClose={() => setItemDrawerIdentity(null)} />
     {pendingTarget && <DetailDrawer title="关联资料" onClose={() => setPendingTarget(null)}><CatalogPendingDetail target={pendingTarget} /></DetailDrawer>}
     <PalicoEquipmentDetailDrawer kind={palicoDrawer?.kind ?? 'weapon'} equipmentId={palicoDrawer?.id ?? null} onClose={() => setPalicoDrawer(null)} />

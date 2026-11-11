@@ -1,3 +1,4 @@
+import type { MonsterCatalogGameId } from '../api/catalog/types'
 import type { WeaponCatalogGameId } from '../api/catalog/types'
 import type { P3WeaponIdentity, P3WeaponFilters } from '../api/catalog/p3WeaponTypes'
 import type { ArmorCatalogGameId } from '../api/catalog/types'
@@ -47,7 +48,7 @@ contextBridge.exposeInMainWorld('mhSaveEditor', {
     getSkillFacets: (gameId: SkillCatalogGameId) => ipcRenderer.invoke(catalogChannels.getSkillFacets, gameId),
     searchMonsters: (filters: MonsterCatalogFilters) => ipcRenderer.invoke(catalogChannels.searchMonsters, filters),
     getMonster: (identity: MonsterIdentity) => ipcRenderer.invoke(catalogChannels.getMonster, identity),
-    getMonsterFacets: (gameId: CatalogGameId) => ipcRenderer.invoke(catalogChannels.getMonsterFacets, gameId),
+    getMonsterFacets: (gameId: MonsterCatalogGameId) => ipcRenderer.invoke(catalogChannels.getMonsterFacets, gameId),
     getQuest: (identity: QuestIdentity) => ipcRenderer.invoke(catalogChannels.getQuest, identity),
     searchQuests: (filters: QuestCatalogFilters) => ipcRenderer.invoke(catalogChannels.searchQuests, filters),
     getQuestFacets: (gameId: import('../api/catalog/types').CatalogGameId) => ipcRenderer.invoke(catalogChannels.getQuestFacets, gameId),

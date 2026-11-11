@@ -1,3 +1,4 @@
+import type { MonsterCatalogGameId } from '../api/catalog/types'
 import type { P3SkillArmorIdentity, P3SkillArmorDetail } from '../api/catalog/p3SkillTypes'
 import type { SkillCatalogGameId } from '../api/catalog/types'
 import type { DecorationCatalogGameId } from '../api/catalog/types'
@@ -55,7 +56,7 @@ declare global {
         getSkillFacets(gameId: SkillCatalogGameId): Promise<SkillCatalogFacets>
         searchMonsters(filters: MonsterCatalogFilters): Promise<MonsterSummary[]>
         getMonster(identity: MonsterIdentity): Promise<MonsterDetail | null>
-        getMonsterFacets(gameId: CatalogGameId): Promise<MonsterCatalogFacets>
+        getMonsterFacets(gameId: MonsterCatalogGameId): Promise<MonsterCatalogFacets>
         getQuest(identity: QuestIdentity): Promise<QuestDetail | null>
         searchQuests(filters: QuestCatalogFilters): Promise<PageResult<QuestSummary>>
         getQuestFacets(gameId: import('../api/catalog/types').CatalogGameId): Promise<QuestCatalogFacets>

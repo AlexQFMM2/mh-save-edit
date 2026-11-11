@@ -6,6 +6,7 @@ import { p2gWeaponFiltersSchema, p2gWeaponIdentitySchema, p2gWeaponTreeRequestSc
 
 export const gameIdSchema = z.enum(['mh3g', 'mh4g', 'mhgu'])
 export const catalogGameIdSchema = z.enum(['mh3g', 'mh4g', 'mhgu', 'mhp2g'])
+export const monsterCatalogGameIdSchema = z.enum(['mh3g', 'mh4g', 'mhgu', 'mhp2g', 'mhp3'])
 export const weaponCatalogGameIdSchema = z.enum(['mh3g', 'mh4g', 'mhgu', 'mhp2g', 'mhp3'])
 export const skillCatalogGameIdSchema = z.enum(['mh3g', 'mh4g', 'mhgu', 'mhp2g', 'mhp3'])
 export const p3SkillArmorIdentitySchema = p3ArmorIdentitySchema
@@ -125,13 +126,17 @@ export const skillCatalogFiltersSchema = z.object({
   page: z.number().int().min(1).max(100000).optional(),
   pageSize: z.number().int().min(1).max(100).optional(),
 }).strict()
-export const monsterIdentitySchema = z.object({ gameId: catalogGameIdSchema, monsterId: z.number().int().min(1).max(65535) }).strict()
+export const monsterIdentitySchema = z.object({ gameId: monsterCatalogGameIdSchema, monsterId: z.number().int().min(1).max(65535) }).strict().refine(v => v.gameId !== 'mhp3' || v.monsterId < 75, { message: 'P3 原生怪物编号越界', path: ['monsterId'] })
 export const monsterCatalogFiltersSchema = z.object({
-  gameId: catalogGameIdSchema,
+  gameId: monsterCatalogGameIdSchema,
+  scope: z.enum(['normal', 'extended', 'all']).optional(),
   targetMonsterId: z.number().int().min(1).max(65535).optional(),
   query: z.string().trim().max(120).optional(),
   includePlaceholders: z.boolean().optional(),
-}).strict()
+}).strict().superRefine((v, ctx) => {
+  if (v.gameId === 'mhp3' && v.targetMonsterId != null && v.targetMonsterId >= 75) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['targetMonsterId'], message: 'P3 原生怪物编号越界' })
+  if (v.gameId !== 'mhp3' && v.scope != null) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['scope'], message: '目录范围筛选仅适用于 P3' })
+})
 export const questKeySchema = z.string().trim().min(5).max(32).regex(/^(?:dex:\d+|mhgu:q\d{7}|mhp2g:q[1-9]\d{0,5}|wiki:\d+:\d+:\d+)$/)
 const questKeyMatchesGame = (game: string, key: string) => game === 'mhp2g' ? /^(mhp2g:|wiki:)/.test(key) : game === 'mhgu' ? /^(dex:|mhgu:)/.test(key) : key.startsWith('dex:')
 export const questIdentitySchema = z.object({ gameId: catalogGameIdSchema, questKey: questKeySchema }).strict().superRefine((value, context) => {

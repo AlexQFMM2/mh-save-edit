@@ -16,6 +16,7 @@ export class MonsterCatalogRepository {
   constructor(private readonly db: Database.Database) {}
 
   searchMonsters(filters: MonsterCatalogFilters): MonsterSummary[] {
+    if (filters.gameId === 'mhp3' || filters.gameId === 'mhp2g') throw new Error('该作品须使用独立怪物资料服务')
     const where = ['game_id=?']
     const values: unknown[] = [filters.gameId]
     if (filters.targetMonsterId != null) {
@@ -39,6 +40,7 @@ export class MonsterCatalogRepository {
   }
 
   getMonster(identity: MonsterIdentity): MonsterDetail | null {
+    if (identity.gameId === 'mhp3') throw new Error('P3 须使用独立怪物资料服务')
     if (identity.gameId === 'mhp2g') throw new Error('P2G requires its native monster repository')
     const gameId = identity.gameId
     const monster = this.db.prepare('SELECT * FROM catalog_monsters WHERE game_id=? AND monster_id=?').get(identity.gameId, identity.monsterId) as Row | undefined

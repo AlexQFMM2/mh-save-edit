@@ -1,3 +1,4 @@
+import type { P3MonsterData, P3MonsterWeakness, P3MonsterAilment, P3MonsterTrap, P3MonsterDrop, P3MonsterScope } from './p3MonsterTypes'
 import type { P3ItemIdentity, P3ItemInfo, P3ItemDetailInfo, P3ItemCategory, P3QuantityKind, P3ItemDecoration } from './p3ItemTypes'
 import type { P2gSkillData } from './p2gSkillTypes'
 import type { P3SkillData, P3SkillArmorRelation } from './p3SkillTypes'
@@ -5,6 +6,7 @@ import type { GameId } from '../core/loadout'
 import type { ItemTermLabel } from '../terminology/types'
 
 export type CatalogGameId = GameId | 'mhp2g'
+export type MonsterCatalogGameId = CatalogGameId | 'mhp3'
 export type ItemCatalogGameId = CatalogGameId | 'mhp3'
 export type DecorationCatalogGameId = CatalogGameId | 'mhp3'
 export type WeaponCatalogGameId = CatalogGameId | 'mhp3'
@@ -20,7 +22,7 @@ export type DecorationIdentity = LegacyDecorationIdentity | P2gDecorationIdentit
 export type WeaponIdentity = { gameId: GameId; weaponKey: string }
 export type ArmorIdentity = { gameId: GameId; dexId: number }
 export type SkillIdentity = { gameId: SkillCatalogGameId; skillId: number }
-export type MonsterIdentity = { gameId: CatalogGameId; monsterId: number }
+export type MonsterIdentity = { gameId: MonsterCatalogGameId; monsterId: number }
 export type QuestIdentity = { gameId: CatalogGameId; questKey: string }
 export type HunterArtIdentity = { gameId: 'mhgu'; hunterArtId: number }
 export type ArmorPartId = 'head' | 'chest' | 'arms' | 'waist' | 'legs'
@@ -133,12 +135,15 @@ export type QuestRank = 'low' | 'high' | 'g' | 'other'
 export type QuestSearchMatchKind = 'name' | 'id' | 'goal' | 'subGoal' | 'map' | 'monster' | 'reward' | 'supply' | 'hunterArt' | 'special' | 'relatedQuest'
 export type MonsterCatalogTab = 'weakness' | 'ailments' | 'drops' | 'quests'
 export type MonsterCatalogFilters = {
-  gameId: CatalogGameId
+  gameId: MonsterCatalogGameId
+  scope?: P3MonsterScope
   targetMonsterId?: number
   query?: string
   includePlaceholders?: boolean
 }
 export type MonsterSummary = MonsterIdentity & {
+  recordScope?: 'normal' | 'extended'
+  sizeClass?: 'large' | 'small' | 'special'
   matchReason?: string
   nameCn: string
   nameEn: string
@@ -148,6 +153,7 @@ export type MonsterSummary = MonsterIdentity & {
   isPlaceholder: boolean
 }
 export type MonsterWeakness = {
+  p3?: P3MonsterWeakness
   id: number
   partId: number
   partOrder: number
@@ -155,17 +161,18 @@ export type MonsterWeakness = {
   partNameEn: string
   conditionCn: string
   conditionEn: string
-  cut: number
-  impact: number
-  shot: number
-  fire: number
-  water: number
-  thunder: number
-  ice: number
-  dragon: number
-  stun: number
+  cut: number | null
+  impact: number | null
+  shot: number | null
+  fire: number | null
+  water: number | null
+  thunder: number | null
+  ice: number | null
+  dragon: number | null
+  stun: number | null
 }
 export type MonsterAilment = {
+  p3?: P3MonsterAilment
   id: number
   statusId: number
   nameCn: string
@@ -178,6 +185,7 @@ export type MonsterAilment = {
   applicable?: boolean | null
 }
 export type MonsterTrap = {
+  p3?: P3MonsterTrap
   id: number
   trapId: number
   nameCn: string
@@ -189,6 +197,7 @@ export type MonsterTrap = {
   noteJp?: string
 }
 export type MonsterDrop = {
+  p3?: P3MonsterDrop
   id: number
   rankId: number
   rankNameCn: string
@@ -198,7 +207,7 @@ export type MonsterDrop = {
   methodNameEn: string
   item: ItemIdentity & { nameCn: string; nameEn: string }
   quantity: number | null
-  probability: number
+  probability: number | null
 }
 export type QuestMonsterTarget = MonsterRelationTarget & { slot: number; sourceKind: string }
 export type QuestModifier = { markerId: number; nameCn: string; slot: number }
@@ -374,6 +383,7 @@ export type HunterArtCatalogFacets = {
   unlockKinds: HunterArtUnlockKind[]
 }
 export type MonsterDetail = MonsterSummary & {
+  p3?: P3MonsterData
   weakness: MonsterWeakness[]
   ailments: MonsterAilment[]
   traps: MonsterTrap[]
@@ -391,6 +401,7 @@ export type P2gMonsterQuest = {
   fields: { label: string; value: string }[]
 }
 export type MonsterCatalogFacets = {
+  scopeCounts?: { normal: number; extended: number; all: number }
   monsterCount: number
   statusNames: { statusId: number; nameCn: string; nameEn: string }[]
   trapNames: { trapId: number; nameCn: string; nameEn: string }[]

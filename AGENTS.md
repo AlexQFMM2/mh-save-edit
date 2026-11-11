@@ -1,296 +1,104 @@
-# 项目开发规矩
+# 项目开发约定
 
-## 组件化
+本文件记录 Monster Hunter 多作图鉴、配装与存档开发的项目经验。通用组件化、样式职责及 CSS 变量规则由 `maintainable-ui-engineering` 等适用 skill 约束，这里保留本项目的入口、业务规则和数据边界。
 
-- 尽量组件化，避免维护超长的单一文件。
-- 每个页面、每个组件都必须有独立的 `.tsx` 和 `.css` 文件。
-- 小程序页面按原生页面文件拆分，不把业务样式堆进全局样式文件。
-- 页面和组件应保持清晰的职责边界；不要为了少几个文件，把多个页面或多个组件合并到一个文件中。
-- 项目中的下拉选择统一使用 `ui/components/SearchableSelect`，不得新增原生 `<select>`；选项必须能按显示名称和补充关键词搜索，技能等双语数据必须同时提供中英文关键词。
-- 图鉴工具栏和筛选栏中的“字段标签 + 下拉选择器”统一采用水平排列，沿用道具图鉴的紧凑布局；不得在不同图鉴中混用标签置顶的纵向下拉布局。
+接手先读 [项目说明](README.md)、[计划索引](plan/README.md)与当前专题交接；来源、构建和恢复查 [技术文档](docs/README.md)。旧交接是阶段证据，后续记录已解除的阻碍不重复调查，未知项也不能随归档记成完成。
 
-## CSS 职责边界
+## 数据依据：本作解包优先
 
-- 页面 CSS 只负责页面骨架、页面级布局、组件摆放，以及传给组件的尺寸变量。
-- 页面 CSS 不得编写组件内部样式。
-- 组件 CSS 只负责该组件内部布局、尺寸比例、状态样式和滚动区域。
-- 新页面或新组件的主要样式不得继续堆进全局 `styles.css`。
-- 全局样式只允许放真正全局的内容：reset、字体、根布局和基础设计变量。
-- 全项目滚动条外观统一由 `ui/styles.css` 的 `--global-scrollbar-*` 令牌和全局规则负责；组件只声明滚动方向、范围与 `overscroll-behavior`，不得再定义私有滚动条宽度、轨道或滑块颜色。
+- **已核对版本与哈希的本作原版解包是最高依据。** 原生表、文本、资源映射及实际读取／判定代码决定本作身份、数值和机制；Dex、Wiki、Athena、旧修改器是独立交叉来源。后作仅可提供经核对的用词，不能补成本作数值或规则。
+- 原生字段存在不等于已理解其语义。先定位访问器、文本／图标消费者和判定分支，再解释位字段、哨兵、符号与枚举；证据不足时明确保留未知。原生说明没有给出的精确倍率，也不能凭第三方说法写成已验证公式。
+- 冲突按字段记录双方来源、版本与采用理由。已验证的原生语义优先；尚未解析的字段可注明 Dex／第三方来源，不伪装成原生结论。不要求新作必须有 Dex 才能推进。
+- 区分原始槽数、有效记录数、正常可获取数和已验证可写入存档的条目数。表中存在、参考资料缺失、空数组，都不能单独证明可获取、非法或不存在；保留占位与特殊记录，在展示层按证据筛选。
+- 来源覆盖需区分“资料尚未收录”“已核查没有”“数据加载失败”。例如基础买价不证明商店出售，护石候选池不证明任意双技能／点数／孔位组合合法，调合基础成功率不代表模拟全部加成。
+- 名称、数值、关系端点、图标达到当前功能要求后再接 UI；未完成的关联领域可以提供有证据的最小预览，明确覆盖范围，不借用其他作品数据凑完整。
 
-## CSS 变量命名
+## 如何读取解包与识别原生表
 
-- CSS 变量必须带所属前缀，前缀来自页面名或组件名，避免页面和组件之间互相污染。
-- CSS 变量格式必须为：
+- 宿主机通过本地 `ssh_admin --list`、`ssh_admin --connect` 读取当前登记入口，**不写死旧 IP**。先读已有专题契约／探针及冻结快照，再做有针对性的只读补查。
+- P2G 日版根为 `D:\MH\unpack\mhp2gjp`，P3 为 `D:\MH\unpack\mhp3jp`；GU 完整 RomFS 为 `D:\MH\unpack\mhgu\romfs`。其他作品、Dex 入口、UTF-8 PowerShell／SCP 示例见 [资料读取说明](docs/development/data-sources.md)。本地 `research` 子集不能代表宿主机完整解包。
+- 查询限定根目录、文件类型、关键词和返回数量。默认只读；宿主机导出、重新解包、落盘转换及文件修改须有对应授权，已授权范围内不重复确认。原始容器、大型二进制和完整图集留在宿主机，只返回当前任务所需的小表、元数据、哈希和获准的图片派生物。
+- 拆表先核对容器成员、起始位置、记录长度／步长、数量／终止条件、字节序、指针基址、字段有无符号及引用方式。**不得仅凭行号、文件顺序、名称相似或相邻字段推断身份和语义。** 原生索引只有经访问器验证后才可作为身份的一部分。
+- 文本表、对象主表、技能系、发动效果、图标及材料关系分别建立绑定。文本槽数不等于对象数；共用文本不合并物件。同一对象跨表时使用已验证的本作键，跨来源另存显式 crosswalk。
+- 解析器复用前在本作样本验证。已遇到的差异：P3 道具记录 20 字节、P2G 24 字节；P3 图标使用调色板 bank、P2G 使用乘色。资源相似或同属系列不能证明布局、枚举、图标算法或存档格式可复用。
+- 图标追踪实际选择函数、纹理坐标、调色板和透明度，再生成内容哈希 PNG；用独立解码／像素比对及可行的游戏对照验证，不用相似图片替代。
+- 探针保存版本、路径、哈希、实际脚本、结果和错误记录；连接失败或解码失败不写成资源不存在。固定输入归入私有 `../research/<作品>/<专题>/`，构建只读冻结输入，应用和 CI 不连接宿主机。
 
-  ```text
-  --<组件或页面名字>-<组件或页面类型>-<具体变量>
-  ```
+## 分库、分表与身份
 
-- 组件默认尺寸必须写在组件自己的 CSS 文件中。
-- 外部页面只能通过覆盖组件公开的 CSS 变量来传入尺寸。
-- 组件内部尺寸必须从组件自己的变量或局部派生变量计算。
-- 组件内部变量应使用组件前缀，不能直接复用页面私有变量。
-
-## 全局排版与数据颜色
-
-- 全项目字号只允许使用 `ui/styles.css` 中定义的五个排版档位：`caption`、`small`、`body`、`title`、`display`。
-- 五档字号当前固定为：`caption = 11px`、`small = 13px`、`body = 15px`、`title = 20px`、`display = clamp(28px, 4vw, 48px)`；调整时只能修改全局令牌，不能在组件内重定义档位。
-- 页面和组件不得直接声明 `px`、`rem`、`clamp()` 等私有 `font-size`，必须引用对应的 `--global-typography-font-size-*` 变量。
-- ID、数量、价格、概率、孔位、技能点、武器数值和其他业务数据统一使用 `--global-theme-color-data`。
-- `--global-theme-color-data` 当前引用 `--global-theme-color-gold-bright`；调整数据颜色时只修改全局令牌，不逐页替换颜色。
-- 标题、正文、辅助说明分别使用全局主文字、次文字和弱化文字变量，不新增近似的硬编码米白色或灰棕色。
-- 正负状态、武器属性、斩味等本身具有语义的颜色可以保留，但不能只依靠颜色表达含义，必须同时保留文字、符号或标签。
-
-## 父页面与组件边界
-
-- 父页面不能直接选择组件内部 DOM class 来修改组件宽高。
-- 组件 CSS 不得使用 `.component section`、`.component button > span` 等宽泛标签或结构选择器控制业务元素；内部元素必须使用带组件前缀的明确 class，避免误伤嵌套子组件。
-- 父页面需要调整组件尺寸时，必须覆盖组件公开的 CSS 变量。
-- 如果组件需要新的可配置尺寸，应先在组件 CSS 中定义公开变量和默认值，再由父页面覆盖。
-- 不得通过提高选择器权重、`!important` 或 DOM 结构选择器绕过上述边界。
-
-## 图鉴关联对象与抽屉
-
-- 图鉴正文中的关联对象统一采用一级详情抽屉：点击道具、武器、防具、装饰品、技能、怪物、任务或狩技时，先打开对应详情抽屉，不得直接跳转或把关联点击偷换成筛选操作。
-- 抽屉内再次点击关联对象时，必须先关闭当前抽屉，再跳转到对应图鉴并定位目标；技能没有独立图鉴时，跳转到当前适用图鉴并带入技能筛选；任务没有独立入口的版本允许定位到关联任务详情。
-- 严禁从抽屉内继续打开第二层抽屉。页面同时具备多个关联入口时，打开一个抽屉前必须关闭其他抽屉状态。
-- 任务与狩技必须双向关联：任务正文点击狩技打开狩技详情抽屉，狩技正文点击解锁任务打开任务详情抽屉；抽屉内再次点击时遵守“关闭后跳转定位”，不得嵌套。
-- 关联搜索必须支持从关联对象反查主体并显示命中原因。例如任务搜索输入狩技名称时，应返回解锁该狩技的任务，并显示“命中：解锁狩技·<名称>”，不得让用户只能凭任务名猜测。
-
-## 配装器工作抽屉
-
-- 配装器中的选择武器、选择防具、编辑护石、逐件装珠和自动配装统一使用右侧一级工作抽屉；工作抽屉通过 portal 和 `position: fixed` 覆盖页面，不得进入正文 grid/flex 布局，也不得导致主页面宽度、横向位置或滚动容器发生偏移。
-- 工作抽屉复用图鉴的搜索、筛选、列表、详情和图标等核心组件，并通过 `mode="select"`、当前身份、选择回调和确认回调切换为选择模式；不得把包含路由、URL 同步和图鉴关联抽屉逻辑的整个页面组件塞入工作抽屉。
-- 同一页面同时只能存在一个活动工作抽屉。自动配装中继续选择装备时，应在同一个抽屉内切换子视图并提供返回路径，严禁嵌套工作抽屉或叠加第二层遮罩。
-- 工作抽屉内点击关联对象时，必须先关闭抽屉，再跳转对应图鉴并定位目标；不得从工作抽屉内继续打开详情抽屉。
-- 武器、防具和护石选择的单击、Enter 或 Space 只更新抽屉草稿和预览；只有固定底栏的“应用”才提交到当前配装。取消、Escape 或关闭必须恢复打开前状态并把焦点归还触发按钮。
-- 用户批准的窄例外：仅逻辑配装的逐件装珠即时添加/移除、重算并记录每一步撤销；抽屉只有关闭和撤销，关闭/Escape 不回退已发生的装珠。存档编辑中的装珠及幻化仍需显式应用，不得自动写入存档。
-- 配装与有限撤销历史按游戏保存在当前应用会话；路由离开或切换游戏不清空，重启不承诺保留。资料版本变化时先重新水合草稿及历史，失败保留原草稿并报告错误，不静默清空。
-- 配装器必须将“自然合法性”和“结构可编码性”分开。非法或未确认但可编码的手动装备、护石和装珠允许保留并给出就近警告；只有记录长度、字段位宽、身份或编码结构确实无法写入时才阻断应用。
-- 自动配装任务的生命周期归主进程任务服务所有，不得由抽屉组件或 renderer 临时状态所有。关闭工作抽屉只收起界面，不得暂停或取消任务；暂停、继续和取消必须是用户明确触发的独立操作。
-- 自动配装全局最多运行一个 Worker，其余请求进入持久队列。条件、进度、结果和终态写入 `app.getPath('userData')/state` 下的本地私有状态库；该库不得进入 Git、研究产物或公开发布资源。
-- 历史结果应用前必须使用当前 `dataVersion` 重新水合、计算并验证目标技能与编码状态；复核失败时保留历史记录并显示具体原因，不得静默应用旧资料结果。
-
-## 示例
-
-组件：`ui/components/GameCard/GameCard.tsx` 与 `GameCard.css`
-
-```css
-/* GameCard.css */
-.game-card {
-  --game-card-component-width: 280px;
-  --game-card-component-padding: 16px;
-  width: var(--game-card-component-width);
-  padding: var(--game-card-component-padding);
-}
-```
-
-页面只能这样传入尺寸：
-
-```css
-/* GameSelectorPage.css */
-.game-selector-page {
-  --game-selector-page-game-card-width: 320px;
-}
-
-.game-selector-page__card-slot {
-  --game-card-component-width: var(--game-selector-page-game-card-width);
-}
-```
-
-CSS 变量会从页面提供的容器继承到 `GameCard`。页面不得直接选择 `.game-card`，也不得修改组件内部的 `.game-card__body`、`.game-card__icon` 等 class 的尺寸。
-
-## 文档与交接存放
-
-- 计划与交接统一放在 `plan/`：当前专题使用 `plan/<专题>/README.md` 和 `handoff.md`，任务规格与进度沿用 `tasks.md`、`taskList.md`。
-- 已完成专题的交接、接入前核查、阶段验收和交付日志归入 `plan/archive/<日期>/`，保留原日期、验收依据与未知边界；不得通过归档把未验证事项记成完成。
-- `docs/` 保存长期使用的操作说明、数据／接口契约、构建与恢复方法，并按作品或用途分类；Release 说明保留在 `docs/releases/`。不再向 `docs` 新增阶段交接或执行进度文档。
-- 技术参考混有阶段进度时，将进度和交付记录拆到对应计划中，用链接互相导航；总入口分别维护 `docs/README.md` 与 `plan/README.md`。
-- 移动文档时同步检查 Markdown 链接、标题锚点、代码注释及组包脚本等引用。上述目录均不用于存放私有研究原件、数据或审计产物。
-
-## 数据源与宿主机只读访问
-
-图鉴、存档格式和游戏资源开发必须先建立可追溯的数据证据。Dex 数据与游戏本体解包是两类独立来源，不能只根据其中一类猜字段、关系或图标映射。
-
-### 宿主机入口
-
-- Windows 宿主机 SSH：`win10@172.16.10.41`。
-- Dex 原版、导出工具和导出结果：`D:\MH\DEX`。
-- 三作游戏本体解包：`D:\MH\unpack`。
-- 默认只允许只读查看。运行导出器、重新解包、覆盖文件、移动或删除宿主机内容前，必须取得用户明确授权。
-- 不在仓库中记录密码、私钥或其他凭据；使用开发机已经配置好的 SSH 访问能力。
-
-#### 宿主机完整 RomFS 的直接读取约定
-
-`D:\\MH\\unpack\\mhgu\\romfs` 是 MHGU Switch 完整 RomFS 的权威只读目录，不能把当前
-Linux `research/mhgu/romfs` 下约 92 MB 的表格子集误认为完整解包。宿主机目录已经核对到：
-
-- `nativeNX\\arc\\ui`：装备箱、商店、制作和其他 UI ARC；
-- `nativeNX\\arc\\player`：猎人装备及相关模型/资源 ARC；
-- `nativeNX\\arc\\otomo`：猎猫装备及相关资源 ARC；
-- `nativeNX\\table`、`nativeNX\\chS`、`nativeNX\\eng` 等：原生表和本地化资源。
-
-2026-09-13 通过 `ssh_admin` 只读核对：该 RomFS 共 35,531 个文件、12,311,983,212 字节；`nativeNX`
-下有 14,511 个 `.arc`、1,778 个 `.tex` 和 1,972 个 `.gui`。已确认装备/UI 相关入口包括
-`nativeNX\\eng\\GUI\\02_common\\menu\\menu_equipDetail.gui`、`menu_equipMenu.gui`、
-`nativeNX\\eng\\GUI\\02_common\\i_box.gui`、`nativeNX\\eng\\GUI\\04_lobby\\shop` 和
-`nativeNX\\eng\\GUI\\99_texture`。这些只读统计不能替代纹理/atlas 解析，但足以确认完整 UI 资源
-确实存在于宿主机目录。
-
-涉及图标、UI 图集、纹理、layout、幻化外观或其他原生资源时，优先通过本地
-`ssh_admin --connect` 进入已登记的 Windows 宿主机，直接只读查询：
-
-```text
-D:\\MH\\unpack\\mhgu\\romfs
-```
-
-查询必须限定根目录、文件类型、关键词和输出数量；不要递归输出整棵 10+ GB 目录，也不要把完整
-RomFS 拉回 Linux。只有构建器明确需要的最小元数据、文件哈希、资源路径、atlas 坐标或经过许可的
-小型派生索引，才可以复制到 `research`。如应用确实需要图片资源，可在宿主机对已确认的单个游戏
-纹理做一次受控转换，生成 PNG 主资源和可选 WebP 副本；不得把原始 TEX、ARC、纹理图集或完整
-RomFS 拉回 Linux。原始 ARC、纹理、图集、RomFS 和大体积二进制始终留在宿主机。远程只读查询失败
-时，应报告连接/挂载问题，不得据此推断“游戏没有资源”。
-
-已验证可用的 UTF-8 顶层查看命令：
-
-```bash
-ssh win10@172.16.10.41 "powershell -NoProfile -NonInteractive -Command \"[Console]::OutputEncoding=[System.Text.UTF8Encoding]::new(); Get-ChildItem -LiteralPath 'D:\MH\DEX' -Force | Select-Object Name,FullName,Mode | Format-Table -AutoSize\""
-
-ssh win10@172.16.10.41 "powershell -NoProfile -NonInteractive -Command \"[Console]::OutputEncoding=[System.Text.UTF8Encoding]::new(); Get-ChildItem -LiteralPath 'D:\MH\unpack' -Force | Select-Object Name,FullName,Mode | Format-Table -AutoSize\""
-```
-
-查看特定目录或定向搜索文件时，始终限定根目录、文件类型和输出数量：
-
-```bash
-ssh win10@172.16.10.41 "powershell -NoProfile -NonInteractive -Command \"[Console]::OutputEncoding=[System.Text.UTF8Encoding]::new(); Get-ChildItem -LiteralPath 'D:\MH\unpack\mh4g-dex\direct_sql' -File -Filter 'DB_Wpn*.csv' | Select-Object -First 200 FullName,Length | Format-Table -AutoSize\""
-
-ssh win10@172.16.10.41 "powershell -NoProfile -NonInteractive -Command \"[Console]::OutputEncoding=[System.Text.UTF8Encoding]::new(); Get-ChildItem -LiteralPath 'D:\MH\unpack\mhxx\cci_unpacked\romfs' -Recurse -File -Filter '*.arc' | Select-Object -First 200 FullName,Length | Format-Table -AutoSize\""
-```
-
-注意 Bash 会展开双引号中的 `$_`。远程 PowerShell 查询优先使用 `-LiteralPath`、`-Filter`、`Where-Object Name -Like` 等不依赖 `$_` 的写法；确需使用时必须正确转义。禁止对整个 `D:\MH` 做无过滤、无数量限制的递归输出。
-
-### Dex 目录职责
-
-原始 Dex 程序保留在以下目录，只作为权威输入，不直接修改：
-
-- MH3G：`D:\MH\DEX\MH3G_Dex_v1.0Build9`
-- MH4G：`D:\MH\DEX\MH4G_Dex_v1.0Build7`
-- MHXX：`D:\MH\DEX\xx图鉴`
-
-导出工具仍保留在 `D:\MH\DEX`。武器及后续数据分析的权威只读导出入口统一放在 `D:\MH\unpack\*-dex`；不要再把旧导出副本当正式构建输入：
-
-| 内容库 | 导出工具 | 权威只读导出结果 |
-| --- | --- | --- |
-| MH3G | `D:\MH\DEX\mh3g-weapon-dex-dump-tool` | `D:\MH\unpack\mh3g-dex` |
-| MH4G | `D:\MH\DEX\mh4g-weapon-dex-dump-tool` | `D:\MH\unpack\mh4g-dex` |
-| MHGU/XX | `D:\MH\DEX\mhxx-dex-tool` | `D:\MH\unpack\mhxx-dex` |
-
-`D:\MH\DEX` 中的 `mh3g-dex-dump\dump`、`mh3g-armor-dump\dump`、`mh3g-dex-raw`、`mh4g-dex-raw` 和 `mhxx-dex-raw` 只作为旧导出副本保留。在新旧文件数、行数和 SHA-256 闭环前，不删除、移动或覆盖这些旧结果。
-
-Dex 结果目录中：
-
-- `direct_sql` 是首选构建输入，文件名和原始 SQLite 表名一致。
-- `tables` 是反射/运行时导出的数据表；名称混淆时必须通过同目录 `manifest.json` 的列名定位，不能根据文件顺序猜表。
-- `sqlite_master.csv` 用于确认表、字段和索引是否存在，不能代替实际数据行。
-- `manifest.json`、运行日志、`failures.txt` 和输入哈希必须与 CSV 一起审计；“表结构存在”不等于“表数据已经成功导出”。
-- Dex EXE、DLL、内嵌数据库和 `.resources` 不进入 `mh-save-edit` 仓库。
-
-### 游戏本体解包目录
-
-当前 `D:\MH\unpack` 下有：
-
-```text
-D:\MH\unpack\mh3g\cci_unpacked
-D:\MH\unpack\mh4g\cci_unpacked
-D:\MH\unpack\mhgu\romfs\nativeNX
-D:\MH\unpack\mhxx\cci_unpacked
-```
-
-3DS 三作目录均保留 `partition0.cxi`、`romfs.bin`、`exefs.bin` 和已展开的 `romfs`。MHGU 是从 Switch NSP 经 Yuzu“转储 RomFS”得到的已展开资源目录。开发时优先只读查看已展开的 `romfs`：
-
-| 内容库 | 主要入口 |
+| 层次 | 本项目做法 |
 | --- | --- |
-| MH3G | `romfs\arc`、`romfs\GUI`、`romfs\quest`、`romfs\system` |
-| MH4G | `romfs\data`、`romfs\system`；另有已展开的 `exefs` |
-| MHGU（Switch） | `romfs\nativeNX\arc`、`romfs\nativeNX\table`、`romfs\nativeNX\system`；简中资源在 `nativeNX\chS`，另有 `chT`、`eng` 等本地化目录 |
-| MHXX（3DS） | `romfs\arc`、`romfs\table`、`romfs\system` |
+| 游戏内容 | 每作独立运行库：`mh3g.sqlite`、`mh4g.sqlite`、`mhgu.sqlite`、`mhp2g.sqlite`、`mhp3.sqlite`。现有 GU／XX 内容共享范围须有逐项验证，资源及存档身份仍分开。 |
+| 对象与关系 | 同作按领域追加表，复用已有对象身份；配方与材料、对象与技能点等关系显式建模，供正反向查询。独立图鉴页面不意味着另建一份数据。 |
+| 翻译与词典 | 本作原文／审定翻译及来源绑定归图鉴；跨作道具术语和别名索引放独立 `item-terminology.sqlite`，不承载游戏规则。 |
+| 用户状态 | 存档、配装会话、自动配装队列不混入内容库；持久任务库位于 `app.getPath('userData')/state`，不属于运行资产。 |
+| 研究证据 | 原始输入、探针、审阅、完整 crosswalk、manifest 与审计留在私有研究区；运行库只携带功能所需资料及版本／来源标识。 |
 
-当前 MHGU RomFS 已核对到约 35,531 个文件、12,311,983,212 字节，并包含 `nativeNX\arc\weapon`、`nativeNX\arc\ui`、`nativeNX\table` 和多语言资源，可作为 Switch 版资源权威输入。该路径目前只有 RomFS，没有 ExeFS；如果任务涉及可执行程序逻辑而非资源数据，需要另行转储 ExeFS，并单独记录来源和哈希。
+- 同作已收录对象只维护一份。P3 装饰品直接投影道具库中的珠资料；技能模块追加技能／关联表并引用原珠编号，不复制第二套名称、孔数和技能点。
+- 一对多／多对多关系保留独立路线与顺序。配方用“路线 → 材料行”表达，不能把替代路线合并成一张材料清单；技能系、各发动效果与装备带符号点数分别表达，不能混成一个“技能值”。固定嵌套详情可沿用已验证 JSON 契约，不为统一表形状重写既有库。
+- 外键、唯一约束、端点审计和反向查询需覆盖新关系。负技能点保留；零点字段不冒充贡献，胴系复制等标记独立表达，不能显示成普通 `+1`。
+- 名称只用于展示与搜索，绝不是主键。区分 Dex ID、原生资源 ID、内容 ID、存档 ID、实例和箱格号；同名、同号、同图标不意味着同一身份。未验证的映射留空，不伪造 `saveId`／`dexId`。
+- P3 道具／装饰品使用 `{ gameId: 'mhp3', itemId }`，技能使用本作 `skillId`，最小防具使用本作类型与编号。按领域扩展 `ItemCatalogGameId`、`DecorationCatalogGameId`、`SkillCatalogGameId`；不能只为了开一个页面就把 P3 加入通用 `CatalogGameId`，误开装备、配装或存档服务。
+- 查询链路为页面 → preload 白名单 → IPC/schema → 本作只读 repository。类型、schema、IPC、路由能力要一起核对，拒绝跨作、混合、越界身份，未支持游戏不得落入其他作品的默认分支。
+- 建表定义不全在 `api/db/schema/`，同时检查 `tools/` 构建器／SQL、迁移、repository 和审计。新功能在**当前完整库的副本**追加，不用早期道具子集覆盖后续资料，不顺带重构其他作品。
+- 更新后验证旧业务表与非目标作品的指纹；有意义的数据变化更新对应 schema／资料版本。只有道具身份、审定名或别名等词典绑定输入变化时才重建配套词典；无关模块追加不重建或覆盖词典。
 
-`D:\MH\unpack\mhgu` 与 `D:\MH\unpack\mhxx` 是两个独立权威输入。MHGU 与 MHXX 可以共享经过逐项验证相同的内容数据，但涉及资源路径、ID、本地化、版本差异或存档格式时必须分别验证，不能因为游戏内容相近直接复用。
+## 翻译与命名优先级
 
-#### 使用 Yuzu 转储 Switch 游戏资源
+1. **遵循用户已确认的专题命名规则。** 例如同一怪物采用已确认的后作称呼“奇怪龙”，旧称“白电／白电龙”保留搜索；这是有明确依据的覆盖规则，见 [怪物名称](docs/monster-naming.md)。
+2. **普通词条优先复用 GU 已确认简中。** 按对象类型、原生日文／稳定文本键逐条核对来源和对应关系；当前冻结证据使用 `gu-pass-02`，不回退 `gu-pass-01`。唯一同日文名只是候选，不能把批量命中数当作审定完成。
+3. **GU 无对应时，查其他后作已确认官方用词及项目已有审定术语。** 同样核对语义和来源；已有审定名与新候选冲突时逐项审阅，不批量覆盖。缺少可靠对应时按本作原文完成项目译名，尚未翻译则保留日文，不拿旧汉化或机翻冒充官方名称。
 
-Yuzu 的“转储 RomFS”就是本项目需要的 Switch 游戏资源解包方式。它利用模拟器已经配置的合法密钥和已识别游戏内容，输出解密后的文件树；适合取得表、图标、贴图、UI、音频索引和本地化资源，不必手工拆 NSP 容器。
+- 以日文原名匹配术语时，自动归一化仅允许已约定的拉丁字母／数字全半角差异；不自动忽略等级、圈号、标点、假名／汉字、大小、亚种或对象类型。搜索可以做 NFKC／大小写归一化，但搜索规则不能用于合并身份。
+- **装饰品按同用途统一根名。** 核对本作技能语义、全部正负点数和孔数后，可使用后作根名；点数或孔数不同不阻止用词统一，后缀与显示属性使用本作实际孔数，数据仍为本作原值。按用途改名标为“项目译名”，不冒充本作官方中文。
+- 同根名、同孔数的不同珠允许同名；保持本作独立编号，在列表、关联入口和详情显示主技能点与负技能标签，不增加“＋1型／＋2型”等名称后缀。旧称、日文和后作名称用于搜索。
+- **说明按本作原文翻译，术语沿用审定中文。** 名称对应不代表效果、阈值、数量、限制、配方或取得条件相同；不能复制 GU 说明。保留原文与控制码，显示时再规范化；构建校验原文绑定、控制码、数字和完整正负关系。
+- 复用前读取实际文本及审阅记录。曾有交接称可复用的说明实际仍为日文 pending；计数、字段名或旧总结不能替代内容核验。内部“待审校／待验收”不进入用户界面，可展示诚实的译名来源与资料缺口。
+- P2G／P3 审定名直接写入图鉴，可选词典补充别名，不覆盖已审定珠名；词典缺失仍保留这些名称，绑定过期时拒绝陈旧映射并提示更新。三作现有词典投影行为按 [词典契约](docs/item-terminology.md)维护，不为统一实现批量改写原库。
 
-操作约定：
+## UI 以已完成图鉴为参考
 
-1. 在 Yuzu 游戏列表中找到已识别的 MHGU。
-2. 右键游戏，选择“转储 RomFS”或对应版本中的“Dump RomFS”。有“完整/Full”和“骨架/Skeleton”选项时选择完整转储。
-3. 游戏有更新时，明确记录转储是否应用更新；基础 NSP 与更新后的 RomFS 不能混作同一数据版本。
-4. 转储完成后从 Yuzu 打开的 dump 位置复制到 `D:\MH\unpack\mhgu\romfs`，保留 `nativeNX` 根目录结构。
-5. 记录 Title ID、基础游戏/更新版本、转储时间、文件数、总大小和关键文件 SHA-256。没有这些信息时只能称为当前资源快照，不能声称可重复构建。
+- 新作先查看同类共享页与已完成的 P2G 实现：`ItemCatalogPage`、`DecorationCatalogPage`、`SkillCatalogPage` 及对应列表、筛选、详情和抽屉。复用已验收的布局、密度、工具栏、分页与操作方式，作品差异由 repository／小型专用区域承接。
+- 下拉统一使用 `ui/components/SearchableSelect`，不新增原生 `<select>`。选项支持显示名与补充关键词，技能同时提供中英日已有名称；“标签 + 下拉”沿用道具页的水平紧凑排列。
+- 视觉令牌以 `ui/styles.css` 为准：五档 `--global-typography-font-size-*`、业务数值 `--global-theme-color-data`、统一 `--global-scrollbar-*`；正文和辅助文字使用现有主题文字令牌。保持现有视觉体系，不在新图鉴引入私有字号、数据色或滚动条外观。
+- 搜索支持本作中文、日文、别名、编号及已接入关联对象；反查结果显示“命中：制作材料·…／相关防具·…”等原因，不能只返回名称让用户猜测。
+- 筛选、选择和关联定位与 URL／前进后退一致；单纯选择条目不重复查询列表、不重置滚动。保留加载、错误重试、空结果、目标不存在及缺资料提示。只读图鉴不露出未支持的存档操作。
 
-如需研究程序逻辑，再使用“转储 ExeFS / Dump ExeFS”；RomFS 与 ExeFS 必须分目录保存。不要运行来源不明的第三方 NSP 解密脚本，也不要将 keys、ticket、证书、NSP、NCA 或完整转储提交到仓库。
+### 图鉴关联与一级抽屉
 
-不得把大型 `partition0.cxi`、`romfs.bin`、完整 ROM、ExeFS 或整棵 RomFS 复制进仓库。只提取当前任务需要且许可允许分发的最小数据、图标或映射结果。
+- 正文点击道具、武器、防具、珠、技能、怪物、任务或狩技，先打开对应详情抽屉；不直接跳页，也不把关联点击替换成筛选。
+- 抽屉内再次点击关联对象，**先关闭，再跳转对应图鉴并定位**；不能叠第二层抽屉。打开任一详情前关闭其他详情状态，Escape／关闭后恢复触发焦点。
+- 没有独立图鉴时使用已接入的明确落点：技能可进入适用图鉴并带技能筛选，任务可定位关联任务详情，防具可定位当前页的最小关联预览。不能生成占位路由或调用未支持服务；同时保留返回路径。
+- 已接入关系需双向可查：材料 ↔ 产物／珠、技能 ↔ 装备／珠、任务 ↔ 怪物／道具、任务 ↔ 狩技。两个方向都遵守正文开抽屉、抽屉内关闭后定位；未知或尚未接入的方向明确标明覆盖情况。
 
-### GU/XX 武器动作资源
+### 配装与存档工作抽屉
 
-- 动作值研究固定入口为 `research/mhgu/motion-values`，不得从项目根目录、`Downloads` 或 `/tmp` 直接构建。
-- `native/mhgu`、`native/mhxx` 保存 14 类猎人武器的 `w00`～`w14`（跳过不存在的 `w05`）及 `wbc` 最小 ARC；`styles/<版本>` 保存每类 `m0`～`m5` 六风格命令包。
-- `localization` 保存简中、英文、日文 `HN_WeaponControlsMsg_*.gmd`；动作名必须按 GMD 稳定键交叉映射，不能机器翻译后冒充原生文本。
-- 用户提供的动作值图片只放在 `references/user-images` 做私有抽样，公开交叉验证快照只放 `references`；两者都不是运行时资源。
-- 动作值表述必须保留变体和顺序 Hit，不能只保存合计；HDP、HDS、LMT、FUP 或 XFS 未确认的字段保持为空并进入后续审计，不按截图或字段位置猜测。
-- 猎猫 `w15` 不进入猎人武器动作值图鉴；MH3G、MH4G 不得复用 GU/XX 动作值。
-- ARC、GMD、参考图片、真实动作值 SQLite/CSV/JSON、manifest 和 crosswalk 均为私有研究产物，不得进入 GitHub。
+- 选择武器／防具、护石、逐件装珠和自动配装使用右侧一级工作抽屉，以 portal／fixed 覆盖页面，不改变正文宽度或滚动。复用图鉴核心组件及选择模式，不把含路由与关联抽屉的整页塞进工作抽屉。
+- 同时只存在一个工作抽屉；子任务在其中切换并可返回。点击关联对象先关闭工作抽屉再定位图鉴，不继续打开详情抽屉。
+- 单击、Enter、Space 只改选择草稿；固定底栏“应用”才提交，取消／Escape／关闭恢复打开前状态并归还焦点。用户已批准的窄例外是**逻辑配装逐件装珠**：即时修改，每步可撤销，关闭不回退；存档编辑装珠及幻化仍须显式应用。
+- 配装草稿及有限撤销按游戏保存在应用会话，离页／切换游戏不清空，重启不承诺保留。资料版本变化先重新取数、计算、验证草稿与历史，失败保留原状态并报错。
+- 自然合法性与结构可编码性分开：非法／未确认但可编码的手动实例可以保留并警告；记录长度、字段位宽、身份或结构无法编码才阻断应用。自动生成候选须有相应合法性证据。
+- 自动配装任务归主进程服务；全局最多一个 Worker，其他请求进入持久队列。关闭抽屉只收起 UI，不暂停／取消任务；这些操作必须由用户明确触发。应用历史结果前按当前 `dataVersion` 重新验证，失败不静默套用。
 
-### 选择性复制到研究区
+## 构建、安装与验收经验
 
-Windows OpenSSH 路径已经验证使用 `/D:/...` 形式。只复制明确需要的小文件到 `/tmp` 或 `research`，例如：
+- 构建输出使用私有新版本目录，保留输入／输出哈希、覆盖数、差异与失败标记；`FAILED.txt` 或缺成功 manifest 的产物不安装。运行 SQLite 只读，迁移／修复在准备阶段的副本执行。
+- 安装前关闭相关连接并备份，核验库完整性、全部新增关系端点、文本绑定、数值和图标哈希；需要配套词典时成套替换／恢复。内容哈希同名图片必须内容相同，不删除其他模块仍在用的图片；更新后重启应用。
+- 修改共享接口或 UI 时覆盖已接入作品回归，重点检查 P3 原生身份隔离、中文／别名搜索、同名珠、负点、替代配方、缺库及缺／过期词典行为。公开测试使用合成资料，真实数据审计留在私有目录。
+- UI 用真实生成资料检查 1440×900、1024×768 的中文、筛选、滚动、前进后退和单层抽屉；静态浏览器验证不替代 Electron／Windows 实包或游戏运行验证，报告须区分。
+- 测试范围按改动选择；本地 Vitest 排除 `**/.runtime-assets/**`，避免扫到旧发布源码。常用入口：`pnpm typecheck`、`pnpm exec vitest run --exclude '**/.runtime-assets/**'`、`pnpm build`；私有输入缺失、跳过和偶发失败如实记录，不制造空文件绕过。
+- 存档验收另做未修改字节往返、目标字段修改、未知字节保留、备份、写后回读及对应游戏／模拟器重开。图鉴编号或程序能解析输出不证明真实存档可用。
 
-```bash
-scp "win10@172.16.10.41:/D:/MH/unpack/mh4g-dex/manifest.json" /tmp/mh4g-host-manifest.json
-```
+## 文档与私有产物边界
 
-正式研究输入按游戏放入：
+- `plan/<专题>/` 保存 `README.md`、`handoff.md`、`tasks.md`、`taskList.md`；已完成阶段归 `plan/archive/<日期>/`，保留原日期、验收与未知项。`docs/` 保存长期操作、数据契约及构建恢复，发行说明归 `docs/releases/`。
+- 进度与长期参考分开，维护 `plan/README.md`、`docs/README.md` 导航；移动文档同步检查 Markdown、锚点、代码注释和组包脚本引用。AGENTS 记录可复用规则，不堆版本进度、临时 IP 或整份审计结果。
+- 公开 Git 仅存源代码、构建器、schema、合成测试、文档及逐项获准的静态资源。研究原件、数据库、原生图标、译文集合、CSV、manifest、crosswalk、审计、截图和存档默认私有，不因能重建而获得发布授权。
+- 生成产物放 `../research/generated/mh-save-edit/`，可按已授权本地任务安装到忽略的 `data/`、图标目录等；不使用反向忽略或强制加入绕过边界。工作区外层散落资料归入对应研究专题，无法确定归属的放 `research/archive/unclassified/`。
+- 提交前检查 `git status --short`、`git diff --cached --name-only`、`git check-ignore -v`；发现受限产物被暂存，先移出暂存再继续。提交源码、推送、制作 Release 是不同操作，只执行用户授权范围。
 
-```text
-/home/alexqfmm/workPlace/mh3gabout/research/mh3u/
-/home/alexqfmm/workPlace/mh3gabout/research/mh4g/
-/home/alexqfmm/workPlace/mh3gabout/research/mhgu/
-```
+### 已确认的发行范围
 
-当前 Dex 固定快照为：
-
-```text
-research/mh3u/dex/mh3g-dex   <- D:\MH\unpack\mh3g-dex
-research/mh4g/dex/mh4g-dex   <- D:\MH\unpack\mh4g-dex
-research/mhgu/dex/mhxx-dex    <- D:\MH\unpack\mhxx-dex
-```
-
-每个目录必须整体保留 `direct_sql`、`tables`、`manifest.json`、`source-manifest.json`、日志和失败记录。三套 `source-manifest.json` 已记录 Windows 原路径、文件大小、逐文件 SHA-256、导出工具和 UTC 日期；构建器只从这些 Linux 固定快照读取。
-
-复制后记录原始 Windows 路径、文件大小、SHA-256、提取工具/命令和日期。转换器只读取 `research` 中固定下来的输入，GitHub Action 和正式应用不得在构建或运行时依赖宿主机路径。
-
-### 数据完善顺序
-
-1. 从 Dex 取得名称、数值、关系、显示枚举和 Dex 客户端已经实现的解释逻辑。
-2. 从游戏 RomFS/ExeFS 补充并交叉验证图标、贴图、原生表、资源键和版本差异。
-3. 建立 Dex ID、游戏资源 ID、存档 ID 的显式 crosswalk，禁止按行号、文件顺序或名称相似度直接等同。
-4. 为每个输入保存来源、来源 manifest 和审计报告；关系端点、图标和可读名称未闭合时不得开始对应 UI。
-5. 生成后的 SQLite、PNG、manifest、crosswalk 和审计报告也默认属于私有研究产物，只保存在 `research`；未取得用户对具体文件的明确发布授权前，不得进入 `mh-save-edit/data`、`ui/public/assets`、GitHub Action artifact 或 Release。
-
-## 研究产物与公开仓库边界
-
-- `mh-save-edit` 公开 Git 历史只保存源代码、构建器、schema、不含受限数据的测试和文档。
-- 从 Dex、游戏本体、存档或旧修改器整理出的数据库、图标、图片、CSV、JSON manifest、crosswalk、审计报告、`.resources` 和其他中间产物一律默认为私有，不得被 Git 跟踪。
-- 本地构建需要的生成产物放在 `/home/alexqfmm/workPlace/mh3gabout/research/generated/mh-save-edit/`，可按需复制到项目的已忽略路径，但不能用 `.gitignore` 反向规则强制加入。
-- 工作区最外层不得散落 `.resources`、CSV、SQLite、图标导出目录或临时分析结果；发现后应按游戏和用途归档到 `research`，无法判定归属时放入 `research/archive/unclassified/`。
-- 每次提交前必须用 `git status --short`、`git diff --cached --name-only` 和 `git check-ignore -v` 检查数据边界；发现上述文件必须停止推送。
-- 技术上可重建、可打包不等于可公开分发。只有用户明确批准的独立发布包才能包含指定数据产物，且不得由公开 Git 历史或公开 Action artifact 中转。
-- 2026-09-11 用户已明确批准私有仓库的 Windows 预览例外：三套运行时 SQLite 与内容哈希图标可保存为密码保护的私有 Release 资产，并由 Actions Secret 在临时 Windows runner 中解密后注入成员可见、短期保留的预览 artifact。此例外不包含 Dex、ROM、GMD、CSV、manifest、crosswalk、审计报告、存档或其他研究输入，也不授权公开 Release；仓库改为公开可见前必须先禁用该流程并删除相关资产。
-- 2026-10-08 用户明确批准公开发行并方便社区继续开发，取代上述运行资产的私有发布限制：`data/mh3g.sqlite`、`data/mh4g.sqlite`、`data/mhgu.sqlite`、`ui/public/assets/catalog/icons/*.png` 内容哈希图标及 `build/app-icon.ico`、`build/app-icon.png` 可作为独立的公开运行资产 Release 包和 Windows 应用包发布。公开 Actions 可下载这些已批准的运行资产进行测试和打包，无须私有资产密码。运行资产仍不得进入 Git 历史，Dex 原件、ROM、GMD、CSV、manifest、crosswalk、审计报告、存档及其他研究输入仍不在授权范围内。
-
-- 2026-10-13 用户在 P2G 应用侧验收后要求提交 GitHub、生成新 Release 并更新资源包用于实际修改测试。本次发行将 `data/mhp2g.sqlite`、`data/item-terminology.sqlite`、`data/mhp2g-save-profile.json` 与 P2G 内容哈希 PNG 图标加入独立公开运行资源 v5 和 Windows 应用包；沿用既有三作运行资产。上述文件仍不得进入 Git 历史；个人存档、研究输入、manifest、crosswalk、审计报告及自动配装状态库不包含在发行范围内。
+- 2026-10-08 的公开授权取代此前三作运行资产的私有预览限制：`data/mh3g.sqlite`、`mh4g.sqlite`、`mhgu.sqlite`、对应内容哈希 PNG 及 `build/app-icon.ico`／`app-icon.png` 可用于独立运行资产 Release 与 Windows 包，公开 Actions 可下载用于测试／打包；仍不进入 Git 历史。
+- 2026-10-13 增加 `data/mhp2g.sqlite`、`item-terminology.sqlite`、`mhp2g-save-profile.json` 及 P2G 内容哈希 PNG。后续作品／新增内容不自动继承该授权，原始 Dex／ROM／GMD、研究输入与用户状态始终不在此范围。
+- P3 数据库、扩展词典及原生图标目前仅获准本地使用，尚未授权公开发行。已单独获准提交的首页素材为 `ui/public/assets/home/p3-post.png`、`p3-bg.webp`；这不扩大为 P3 全部图片发布授权。

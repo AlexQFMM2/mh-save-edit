@@ -1,12 +1,14 @@
 # 使用说明与技术参考
 
-`docs` 保存长期使用的操作说明、数据契约、构建方法和版本说明。计划、交接、接入前核查及阶段验收统一放在 [plan](../plan/README.md)；当前接手入口为 [P3 武器交接](../plan/mhp3-weapon-catalog/handoff.md)，P2G 历史记录见[归档索引](../plan/archive/2026-10-24/mhp2g-records/README.md)。
+`docs` 保存长期使用的操作说明、数据契约、构建方法和版本说明。计划、交接、接入前核查及阶段验收统一放在 [plan](../plan/README.md)；当前接手入口为 [P3 怪物交接](../plan/mhp3-monster-catalog/handoff.md)，P2G 历史记录见[归档索引](../plan/archive/2026-10-24/mhp2g-records/README.md)。
 
 ## 按用途阅读
 
 | 用途 | 入口 |
 | --- | --- |
+| 原版解包、Dex、宿主机只读查询与冻结输入 | [资料读取说明](development/data-sources.md) |
 | P2G 插件安装、测试、图鉴、配装与存档说明 | [P2G 文档](mhp2g/README.md) |
+| P3 怪物、肉质、条件掉落、出没预览及构建恢复 | [P3 怪物图鉴](development/mhp3-monster-catalog.md) |
 | P3 武器、派生、强化对照及离线构建 | [P3 武器图鉴](development/mhp3-weapon-catalog.md) |
 | P3 防具、套装、制作、来源及离线构建 | [P3 防具图鉴](development/mhp3-armor-catalog.md) |
 | P3 技能、发动效果、防具关联与护石来源 | [P3 技能图鉴](mhp3/skill-catalog.md) |

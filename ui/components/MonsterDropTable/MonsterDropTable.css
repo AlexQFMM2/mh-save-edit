@@ -8,3 +8,8 @@
 .monster-drop-table__data { color: var(--global-theme-color-data); text-align: right; }
 .monster-drop-table__row:hover { background: var(--global-theme-color-surface-row-hover); }
 .monster-drop-table__empty { padding: var(--global-spacing-4); color: var(--global-theme-color-text-muted); }
+
+.monster-drop-table__conditions { max-width: 320px; white-space: normal; color: var(--global-theme-color-text-secondary); }
+.monster-drop-table__conditions summary { cursor: pointer; color: var(--global-theme-color-accent); }
+.monster-drop-table__conditions p { white-space: pre-wrap; overflow-wrap: anywhere; }
+.monster-drop-table__conditions summary:focus-visible { outline: 2px solid var(--global-theme-color-focus-ring); }

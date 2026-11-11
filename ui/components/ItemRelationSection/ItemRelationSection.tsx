@@ -95,8 +95,10 @@ export function ItemRelationSection({ title, relations, onSelectItem, onSelectCa
               </span>
               <small className="item-relation-section__values">
                 {['基础成功率','产量','售价','价格类型','轮换','解锁条件','材料数量','说明'].filter(key => relation.metadata[key]).map(key => <span className="item-relation-section__evidence" key={key}>{key}：{relation.metadata[key]}</span>)}
-                {relation.quantity != null ? `× ${relation.quantity}` : ''}
-                {relation.probability != null ? ` · ${relation.probability}%` : relation.metadata.evidence ? ' · 概率未知' : ''}
+                {relation.relatedMonster?.gameId === 'mhp3'
+                  ? ['每次数量', '尝试次数', '条件（日文）', '来源'].filter(key => relation.metadata[key]).map(key => <span className="item-relation-section__evidence" key={key}>{key}：{relation.metadata[key]}</span>)
+                  : relation.quantity != null ? `× ${relation.quantity}` : ''}
+                {relation.probability != null ? ` · ${relation.probability}%` : relation.metadata.evidence || relation.relatedMonster?.gameId === 'mhp3' ? ' · 概率未知' : ''}
                 {relation.metadata.probabilitySource && ` · ${relation.metadata.probabilitySource}`}
                 {relation.metadata.details && <span className="item-relation-section__evidence">{relation.metadata.details}</span>}
                 {relation.metadata.evidence && <span className="item-relation-section__evidence">{relation.metadata.evidence}</span>}
@@ -110,12 +112,13 @@ export function ItemRelationSection({ title, relations, onSelectItem, onSelectCa
 }
 
 function relationLabel(relation: ItemRelation): string {
-  const rank = relation.metadata.Rank_Name ?? relation.metadata.rankName
+  const rank = relation.metadata.Rank_Name ?? relation.metadata.rankName ?? relation.metadata['位阶／任务条件']
   const parts: string[] = []
   if (rank) parts.push(rank)
   if (relation.sourceKind === 'exchange') parts.push('山菜爷')
   parts.push(relation.metadata.Qst_Name ?? relation.relatedWeapon?.nameCn ?? relation.relatedArmor?.nameCn ?? relation.relatedMonster?.nameCn ?? relation.relatedQuest?.nameCn ?? relation.relatedPalicoWeapon?.nameCn ?? relation.relatedPalicoArmor?.nameCn ?? relation.targetName)
   if (relation.sourceKind === 'monster' && relation.metadata.Mon_GetItmType_ID) parts.push(relation.metadata.Mon_GetItmType_Name ?? '获取方式未收录')
+  else if (relation.sourceKind === 'monster' && relation.metadata['取得方式']) parts.push(relation.metadata['取得方式'])
   if (relation.sourceKind === 'location') {
     if (relation.metadata.Loc_Ara_ID) parts.push(relation.metadata.Loc_Ara_Name ?? '区域未收录')
     if (relation.metadata.Loc_GetType_ID) parts.push(relation.metadata.Loc_GetType_Name ?? '采集方式未收录')
