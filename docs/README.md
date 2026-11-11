@@ -1,6 +1,6 @@
 # 使用说明与技术参考
 
-`docs` 保存长期操作说明、数据契约、构建方法、版本说明与新任务交接。当前接手入口为 [P3 任务图鉴准备](handoffs/mhp3-quest-catalog/codex.md)；前序完成基线见 [P3 怪物交接](../plan/mhp3-monster-catalog/handoff.md)。计划导航见 [plan](../plan/README.md)，P2G 历史记录见[归档索引](../plan/archive/2026-10-24/mhp2g-records/README.md)。
+`docs` 保存长期操作说明、数据契约、构建方法、版本说明与新任务交接。当前接手入口为 [P3 任务图鉴交接](handoffs/mhp3-quest-catalog/codex.md)，最新调查见[原生续查](handoffs/mhp3-quest-catalog/native-followup.md)；前序完成基线见 [P3 怪物交接](../plan/mhp3-monster-catalog/handoff.md)。计划导航见 [plan](../plan/README.md)，P2G 历史记录见[归档索引](../plan/archive/2026-10-24/mhp2g-records/README.md)。
 
 ## 按用途阅读
 

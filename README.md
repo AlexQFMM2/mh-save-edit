@@ -14,7 +14,7 @@ P3 已接入 **PPSSPP 工作区与本地道具、装饰品、技能、防具、�
 
 Git 开发与发行使用 `release` 作为唯一基线，任务分支完成审查和检查后合入；见 [Git 工作流](docs/development/git-workflow.md)。本次基线整理不改变已发布版本。
 
-当前任务线：[P3 任务图鉴准备交接](docs/handoffs/mhp3-quest-catalog/codex.md)，分支 `feat/mhp3-quest-catalog`。已完成接手准备与[实现前核查](docs/handoffs/mhp3-quest-catalog/preflight.md)，原生任务身份已核实；报酬、条件和出场契约待补齐，完整任务图鉴尚未实施。
+当前任务线：[P3 任务图鉴准备交接](docs/handoffs/mhp3-quest-catalog/codex.md)，分支 `feat/mhp3-quest-catalog`。已完成接手准备、[实现前核查](docs/handoffs/mhp3-quest-catalog/preflight.md)与[原生续查](docs/handoffs/mhp3-quest-catalog/native-followup.md)，本体身份、奖励／支给结构、训练配置及旧出没映射已有证据；精确机制仍有未验证项，完整任务图鉴尚未实施。
 
 文档导航：[使用与技术参考](docs/README.md) · [计划与交接](plan/README.md)。既有阶段记录保留在 `plan/`；新任务交接位于 `docs/handoffs/`，外部计划路径见对应交接。
 
