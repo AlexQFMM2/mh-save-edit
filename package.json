@@ -90,8 +90,10 @@
           "mh4g.sqlite",
           "mhgu.sqlite",
           "mhp2g.sqlite",
+          "mhp3.sqlite",
           "item-terminology.sqlite",
-          "mhp2g-save-profile.json"
+          "mhp2g-save-profile.json",
+          "mhp3-save-profile.json"
         ]
       },
       {

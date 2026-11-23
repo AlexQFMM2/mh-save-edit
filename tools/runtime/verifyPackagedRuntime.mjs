@@ -3,6 +3,14 @@ import path from 'node:path'
 import { createHash } from 'node:crypto'
 import { assertNoMh4gReportBytes } from './mh4gRuntimePrivacy.mjs'
 
+/** Every data file the installer must ship. electron-builder copies these to
+ * resources/data, and the packaged app resolves them from there; anything added
+ * to the public runtime archive has to be added here and to the build filter. */
+export const RUNTIME_DATA_FILES = [
+  'mh3g.sqlite', 'mh4g.sqlite', 'mhgu.sqlite', 'mhp2g.sqlite', 'mhp3.sqlite', 'item-terminology.sqlite',
+  'mhp2g-save-profile.json', 'mhp3-save-profile.json',
+]
+
 /** Pure file-identity check after packaging. The source must already have passed
  * audit_runtime_catalog; do not load SQLite here because packaging may rebuild
  * native dependencies for Electron's ABI rather than the host Node ABI. */
@@ -10,7 +18,7 @@ export function verifyPackagedRuntime(sourceData, packagedData) {
   const source = fs.realpathSync(sourceData)
   const packaged = fs.realpathSync(packagedData)
   if (source === packaged) throw new Error('Packaged runtime verification requires a separate output directory')
-  const databases = ['mh3g.sqlite', 'mh4g.sqlite', 'mhgu.sqlite', 'mhp2g.sqlite', 'mhp3.sqlite', 'item-terminology.sqlite']
+  const databases = RUNTIME_DATA_FILES.filter(name => name.endsWith('.sqlite'))
   const allowed = new Set(databases)
   for (const directory of [source, packaged]) {
     for (const name of fs.readdirSync(directory)) {
@@ -21,7 +29,7 @@ export function verifyPackagedRuntime(sourceData, packagedData) {
       if (fs.existsSync(wal) && fs.statSync(wal).size > 0) throw new Error(`Runtime asset has a live WAL; checkpoint a consistent database before packaging: ${name}`)
     }
   }
-  const files = [...databases, 'mhp2g-save-profile.json', 'mhp3-save-profile.json'].map(name => {
+  const files = RUNTIME_DATA_FILES.map(name => {
     const input = fs.readFileSync(path.join(source, name))
     const output = fs.readFileSync(path.join(packaged, name))
     if (name === 'mh4g.sqlite') { assertNoMh4gReportBytes(input); assertNoMh4gReportBytes(output) }

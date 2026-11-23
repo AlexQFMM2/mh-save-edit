@@ -2,7 +2,7 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { verifyPackagedRuntime } from '../tools/runtime/verifyPackagedRuntime.mjs'
+import { RUNTIME_DATA_FILES, verifyPackagedRuntime } from '../tools/runtime/verifyPackagedRuntime.mjs'
 
 function fixture() {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'synthetic-runtime-copy-'))
@@ -19,6 +19,12 @@ function fixture() {
 }
 
 describe('packaged runtime identity guard', () => {
+  it('ships every audited runtime file through the electron-builder filter', () => {
+    const config = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.url), 'utf8'))
+    const data = config.build.extraResources.find(entry => entry.from === 'data')
+    expect([...data.filter].sort()).toEqual([...RUNTIME_DATA_FILES].sort())
+  })
+
   it('checks all runtime data without loading an ABI-specific SQLite module', () => {
     const f = fixture()
     try { expect(verifyPackagedRuntime(f.source, f.packaged).files.map(row => row.name)).toEqual(['mh3g.sqlite', 'mh4g.sqlite', 'mhgu.sqlite', 'mhp2g.sqlite', 'mhp3.sqlite', 'item-terminology.sqlite', 'mhp2g-save-profile.json', 'mhp3-save-profile.json']) }
