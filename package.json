@@ -1,6 +1,6 @@
 {
   "name": "mh-save-edit",
-  "version": "0.1.15",
+  "version": "0.1.16",
   "private": true,
   "description": "Monster Hunter save editor for MHP2G, MHP3, MH3G, MH4G and MHGU.",
   "type": "module",
