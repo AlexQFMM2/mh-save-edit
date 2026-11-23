@@ -93,3 +93,14 @@ B2 原设计假定护石自然性“未确认”，只允许固定/无护石并�
 3. DB-004：重新打包运行资源 v8 并发布；之后才能推送分支让 check 通过。
 
 存档写入的一个已知取舍：loadout 只选 `acquisitionStatus = obtainable` 的装备（与 `patchP3Record` 的既有守卫一致），24 件特殊用途／1 件取得未确认防具不会出现在配装候选里。
+
+## 发行记录 v0.1.17（2026-11-23）
+
+- 运行资源 v8 先发布（标签 `runtime-assets-v8`，指向 `4518d45`；37,029,451 字节、2,884 文件、SHA-256 `47e312a9…`），随后推送 `feat/mhp3-loadout-builder`，check 45149068342 通过。
+- `release` 快进到 `4518d45` 并推送；标签 `v0.1.17`；Actions 运行 45149576424 的 check 与 package-windows 全部通过。
+- Windows 包 `mh-save-editor-v0.1.17-windows-x64.tar.gz`，167,062,077 字节，SHA-256 `f5ec46e2b0c9dcfba900e7bdc10d2b6f6e9d2090cd3a16b6b4249601829d159d`；发行说明 `docs/releases/v0.1.17.md`、`docs/releases/runtime-assets-v8.md`。
+- 回滚参照上一版 `v0.1.16`（`4b21cb1`）与运行资源 v7／v8；本次未改动发行路径与资产授权范围。
+
+### 待人工验收
+
+Electron 1440×900／1024×768 的 P3 配装页、单层抽屉、Escape 归焦、自动配装与整套写入存档，以及真实原件的游戏内复测，由用户用 v0.1.17 包完成；自动化证据不能替代。
