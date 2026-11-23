@@ -16,7 +16,7 @@ export function LoadoutSlotIcon({ slot, item, size = 'medium', gameId }: Props) 
   const [failed, setFailed] = useState(false)
   const name = item?.nameCn ?? item?.classNameCn
   const accessibleName = name ? `${labels[slot]}：${name}` : `${labels[slot]}：未选择`
-  const sourcePath = item?.iconPath ?? (gameId && gameId !== 'mhp2g' ? defaultLoadoutIconPath(gameId, slot) : null)
+  const sourcePath = item?.iconPath ?? (gameId && gameId !== 'mhp2g' && gameId !== 'mhp3' ? defaultLoadoutIconPath(gameId, slot) : null)
   useEffect(() => setFailed(false), [sourcePath])
   const source = sourcePath && !failed ? assetUrl(sourcePath) : null
   const Fallback = fallbacks[slot]

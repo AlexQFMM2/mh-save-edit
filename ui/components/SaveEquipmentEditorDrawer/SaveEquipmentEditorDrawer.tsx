@@ -61,7 +61,7 @@ const palicoKinds = [{ value: 'palico-weapon', label: '猫武器' }, { value: 'p
 function initialKind(cell: SaveEquipmentCell, palico: boolean, gameId: GameId): Kind {
   if (palico) return cell.kind === 'palico-weapon' || cell.kind === 'palico-head' || cell.kind === 'palico-body' ? cell.kind : 'palico-weapon'
   if (gameId === 'mhp2g' && cell.kind === 'armor') return (['legs', 'head', 'chest', 'arms', 'waist'] as const)[cell.saveType] ?? 'head'
-  if (gameId !== 'mhp2g' && cell.kind === 'armor') return armorPartForSaveType(gameId, cell.saveType) ?? 'head'
+  if (gameId !== 'mhp2g' && gameId !== 'mhp3' && cell.kind === 'armor') return armorPartForSaveType(gameId, cell.saveType) ?? 'head'
   return cell.kind === 'weapon' || cell.kind === 'charm' ? cell.kind : 'weapon'
 }
 

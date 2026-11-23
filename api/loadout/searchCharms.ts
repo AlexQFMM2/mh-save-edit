@@ -2,10 +2,12 @@ import { applyCharmValidation } from './charm'
 import { searchMh4gCharms } from './searchMh4gCharms'
 import type { LoadoutCatalogSnapshot, LoadoutCharm, LogicalLoadout } from './types'
 import type { SearchControl } from './searchControl'
+import { enumerateP3CharmCandidates } from './p3CharmRules'
 
 /** Relevant positive skill points plus slots; never turns NULL into a slot count. */
 export async function searchCharms(snapshot: LoadoutCatalogSnapshot, relevant: Set<number>, control: SearchControl) {
   if (snapshot.gameId === 'mhp2g') return { candidates: [], warnings: [] }
+  if (snapshot.gameId === 'mhp3') return searchP3Charms(snapshot, relevant, control)
   const candidates: NonNullable<LogicalLoadout['charm']>[] = []
   const warnings = new Set<string>()
   const seen = new Set<string>()
@@ -58,4 +60,19 @@ export async function searchCharms(snapshot: LoadoutCatalogSnapshot, relevant: S
   const score = (charm: LoadoutCharm) => (charm.skill1?.points ?? 0) + (charm.skill2?.points ?? 0) + charm.slots * 2
   candidates.sort((a, b) => score(b) - score(a))
   return { candidates, warnings: [...warnings] }
+}
+
+/** P3 enumerates the native rule space instead of a fixed combination table. */
+async function searchP3Charms(snapshot: LoadoutCatalogSnapshot, relevant: Set<number>, control: SearchControl) {
+  if (!snapshot.p3CharmRules) throw new Error('缺少 P3 护石生成规则')
+  const limit = 12000
+  const generated = enumerateP3CharmCandidates(snapshot.p3CharmRules, relevant, limit)
+  const candidates: NonNullable<LogicalLoadout['charm']>[] = []
+  for (const charm of generated) {
+    await control.tick()
+    candidates.push({ ...charm, lock: 'unlocked' })
+  }
+  const warnings: string[] = []
+  if (generated.length >= limit) warnings.push(`P3 护石候选达到 ${limit} 条上限，未穷尽全部组合`)
+  return { candidates, warnings }
 }

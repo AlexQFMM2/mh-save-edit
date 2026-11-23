@@ -30,6 +30,7 @@ function Feature({item}:{item:typeof workspaceNavigation[number]['items'][number
   if(game.id==='mhp3' && item.id==='monsters')return <Suspense fallback={<div role="status">正在读取图鉴…</div>}><MonsterCatalogPage/></Suspense>
   if(game.id==='mhp3' && item.id==='weapons')return <Suspense fallback={<div role="status">正在读取图鉴…</div>}><WeaponCatalogPage/></Suspense>
   if(game.id==='mhp3' && item.id==='decorations')return <DecorationCatalogPage/>
+  if(game.id==='mhp3' && item.id==='loadout')return <Suspense fallback={<div role="status">正在读取配装资料…</div>}><LoadoutBuilderPage/></Suspense>
   if(item.id==='save-editor')return <SaveEditorPage/>
   if(!hasRuntimeWorkspace(game))return <WorkspaceFeaturePage pageId={item.id}/>
   if(item.id==='items')return <ItemCatalogPage/>

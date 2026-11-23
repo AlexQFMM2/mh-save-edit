@@ -43,6 +43,10 @@ function weaponFromSnapshot(snapshot: LoadoutCatalogSnapshot, imported: LoadoutW
     if (imported.gameId !== 'mhp2g' || catalog.weaponKey !== imported.weaponKey) throw new Error('P2G 装备身份与候选键不一致')
     return { ...clone(catalog), decorations: decorationsFromSnapshot(snapshot, imported.decorations), lock: imported.lock }
   }
+  if (catalog.gameId === 'mhp3') {
+    if (imported.gameId !== 'mhp3' || catalog.weaponKey !== (imported as { weaponKey?: string }).weaponKey) throw new Error('P3 装备身份与候选键不一致')
+    return { ...clone(catalog), decorations: decorationsFromSnapshot(snapshot, imported.decorations), lock: imported.lock }
+  }
   const editable = catalog.sourceKind === 'relicTemplate'
     ? {
         slots: imported.slots,
@@ -75,6 +79,10 @@ function armorFromSnapshot(snapshot: LoadoutCatalogSnapshot, slot: ArmorLoadoutS
   if (imported.gameId !== snapshot.gameId) throw new Error('装备游戏版本与配装不一致')
   if (catalog.gameId === 'mhp2g') {
     if (imported.gameId !== 'mhp2g' || catalog.armorKey !== imported.armorKey) throw new Error('P2G 装备身份与候选键不一致')
+    return { ...clone(catalog), decorations: decorationsFromSnapshot(snapshot, imported.decorations), lock: imported.lock }
+  }
+  if (catalog.gameId === 'mhp3') {
+    if (imported.gameId !== 'mhp3' || catalog.armorKey !== (imported as { armorKey?: string }).armorKey) throw new Error('P3 装备身份与候选键不一致')
     return { ...clone(catalog), decorations: decorationsFromSnapshot(snapshot, imported.decorations), lock: imported.lock }
   }
   const editable = catalog.sourceKind === 'relicTemplate'

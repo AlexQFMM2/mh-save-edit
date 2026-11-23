@@ -74,3 +74,22 @@ B2 原设计假定护石自然性“未确认”，只允许固定/无护石并�
 - B5 增加 TEST-008：oracle 全部 1,561,429 行必须通过，随机非成员必须拒绝，枚举候选必须落在 oracle 内。
 
 计划 r3 已写入 `../plan/mh-save-edit/mhp3-loadout-builder/`（README 的 D2 段、tasks 的 BD/B2/B5、taskList）。运行资源 v8（DB-004）仍是发行操作，执行前单独确认。
+
+## 实施进展（2026-11-23，计划 r3）
+
+本地已实现 BD 与 B1–B4，B5 的自动化部分完成。分支仍是 `feat/mhp3-loadout-builder`（基线 `4b21cb1`），全部为本机提交，尚未推送。
+
+- **BD 数据**：`tools/mhp3/charm_schema.sql` + `build_charm_generation.py`（从私有契约生成三张表，校验其它业务表指纹、写 audit/manifest、失败落 `FAILED.txt`）；`tools/audit_runtime_catalog.mjs` 增加来源映射／孔位累计／品级覆盖检查；`tests/test_mhp3_charm_generation.py`。本地构建产物在 `../research/generated/mh-save-edit/mhp3-charm-generation-20261123/`，已安装到 `data/mhp3.sqlite`（+41KB），审计通过。
+- **B1 规则层**：`api/loadout/types.ts`（LoadoutGame 加 mhp3；武器/防具候选原生键 + 原生 type/id；charm gameId 收窄）、`schemas.ts`（P3 武器/防具/装饰品/护石 schema；charm gameId 单独枚举）、`identity.ts`（itemId 身份）、`rules.ts`（mhp3 = base('mhp3', 1)）、新增 `p3Candidates.ts` / `p3Repository.ts`、`ipc.ts` 分派。
+- **B2 护石与自动配装**：新增 `api/loadout/p3CharmRules.ts`（rank 公式、来源/池/孔位/品级判定、枚举）；`charm.ts` 增加 P3 分支（confirmed/invalid，不再 unknown）；`searchCharms.ts` 增加 P3 原生枚举分支（上限 12000，超限写警告）。
+- **B3 页面**：`ui/App.tsx` 为 P3 增加 loadout 路由特判；页面与抽屉已按 `game.id` 通用化，未放宽 `hasRuntimeWorkspace`（避免误开 P3 未支持的图鉴页）。
+- **B4 写入存档**：`sessionService.prepareLoadoutWrite` 增加 P3 分支（武器/防具用原生键，护石按 grade/技能/点数/孔编码，装饰品用 itemId），`resolver.patchP3Record` 承担记录编码与技能/装饰品存在性校验；未改穿戴引用（只写空位）。
+- **B5 自动化**：新增 `tests/p3CharmRules.test.ts`、`tests/p3Loadout.test.ts`（仓储/计算/写入）、`tests/p3LoadoutUi.test.tsx`（七槽页面、护石七档、选择应用）、`tests/fixtures/p3LoadoutCatalog.ts`；`tests/p3CharmRules.test.ts` 与 UI 用例已过。私有 oracle 对照（`.runtime-assets/p3-charm-oracle/equiv.test.ts`，不提交）结果：1,561,429 行全部 confirmed、120 条抽样枚举全部可复现、200 条变异非成员全部拒绝，报告写 `../research/mhp3/charm-generation-20261123/oracle-equivalence.json`。
+
+### 剩余
+
+1. 全量本地套件与 CI（CI 需要先发运行资源 v8，否则固定哈希仍指向缺少护石表的 v7）。
+2. Electron 1440×900／1024×768 人工验收（P3 配装页、抽屉、自动配装、写入存档）。
+3. DB-004：重新打包运行资源 v8 并发布；之后才能推送分支让 check 通过。
+
+存档写入的一个已知取舍：loadout 只选 `acquisitionStatus = obtainable` 的装备（与 `patchP3Record` 的既有守卫一致），24 件特殊用途／1 件取得未确认防具不会出现在配装候选里。

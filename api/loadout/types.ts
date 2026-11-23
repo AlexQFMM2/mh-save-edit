@@ -1,7 +1,8 @@
 import type { GameId } from '../core/loadout'
+import type { P3CharmRules } from './p3CharmRules'
 import type { Mh4gCharmNativeInput, Mh4gCharmWitness } from './mh4gCharmTypes'
 
-export type LoadoutGame = GameId | 'mhp2g'
+export type LoadoutGame = GameId | 'mhp2g' | 'mhp3'
 export type LoadoutSlot = 'weapon' | 'head' | 'chest' | 'arms' | 'waist' | 'legs' | 'charm'
 export type ArmorLoadoutSlot = Exclude<LoadoutSlot, 'weapon' | 'charm'>
 export type LegalityStatus = 'confirmed' | 'invalid' | 'unknown'
@@ -29,7 +30,7 @@ export type LoadoutInstanceState = {
   patches?: { offset: number; before: number; after: number }[]
 }
 
-export type LoadoutDecoration = ({ saveId: number; gameId?: GameId; itemId?: never } | { gameId: 'mhp2g'; itemId: number; saveId?: never }) & {
+export type LoadoutDecoration = ({ saveId: number; gameId?: GameId; itemId?: never } | { gameId: 'mhp2g' | 'mhp3'; itemId: number; saveId?: never }) & {
   nameCn: string
   nameJp?: string
   iconPath?: string | null
@@ -67,7 +68,8 @@ type LoadoutWeaponFields = {
 
 export type LoadoutWeaponCandidate = LoadoutWeaponFields & (
   { gameId: GameId; saveType: number; saveId: number } |
-  { gameId: 'mhp2g'; sourceKind: 'catalog'; weaponKey: string; saveType: null; saveId: null; instance?: never }
+  { gameId: 'mhp2g'; sourceKind: 'catalog'; weaponKey: string; saveType: null; saveId: null; instance?: never } |
+  { gameId: 'mhp3'; sourceKind: 'catalog'; weaponKey: string; saveType: number; saveId: number; instance?: never }
 )
 
 type LoadoutArmorFields = {
@@ -102,14 +104,15 @@ type LoadoutArmorFields = {
 
 export type LoadoutArmorCandidate = LoadoutArmorFields & (
   { gameId: GameId; armorKey?: never } |
-  { gameId: 'mhp2g'; sourceKind: 'catalog'; armorKey: string; dexId: null; saveType: null; saveId: null; instance?: never }
+  { gameId: 'mhp2g'; sourceKind: 'catalog'; armorKey: string; dexId: null; saveType: null; saveId: null; instance?: never } |
+  { gameId: 'mhp3'; sourceKind: 'catalog'; armorKey: string; dexId: null; saveType: number; saveId: number; instance?: never }
 )
 
 export type LoadoutCharm = {
   kind: 'charm'
   /** Keeps picker identity access type-safe; charms are edited, never catalog-selected. */
   candidateKey?: undefined
-  gameId: GameId
+  gameId: Exclude<LoadoutGame, 'mhp2g'>
   classId: number
   classNameCn: string
   iconPath?: string | null
@@ -218,6 +221,8 @@ export type LoadoutCalculationSnapshot = {
   /** Exact joint rows: class, slots, first ID/points, second ID/points. */
   charmCombinations?: [number, number, number, number, number, number][]
   relicLookups: LoadoutRelicLookup[]
+  /** Native P3 charm identification rules (compact tables; the enumerated oracle is private). */
+  p3CharmRules?: P3CharmRules
 }
 
 export type LoadoutCatalogSnapshot = LoadoutCalculationSnapshot & {

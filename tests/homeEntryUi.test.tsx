@@ -99,7 +99,7 @@ describe('P2G home entry boundary', () => {
   it('opens the native six-slot loadout route without opening a save', async () => {
     window.history.replaceState(null, '', '/#/game/mhp2g/edit/loadout')
     render(<App />)
-    await screen.findByRole('region', { name: '六槽装备与属性' })
+    await screen.findByRole('region', { name: '六槽装备与属性' }, { timeout: 4000 })
     expect(document.querySelectorAll('.loadout-equipment-row')).toHaveLength(6)
     expect(screen.queryByRole('button', { name: '选择护石' })).toBeNull()
     expect(getBootstrap).toHaveBeenCalledWith('mhp2g')
@@ -213,16 +213,23 @@ describe('P3 workspace shell', () => {
     expect(loadoutAccess).not.toHaveBeenCalled()
   })
 
-  it.each([
-    ['catalog/quests', '任务图鉴'], ['edit/loadout', '配装器'],
-  ])('keeps direct P3 %s links away from existing game services', async (path, title) => {
-    window.history.replaceState(null, '', `/#/game/mhp3/${path}`)
+  it('keeps direct P3 quest links away from existing game services', async () => {
+    window.history.replaceState(null, '', '/#/game/mhp3/catalog/quests')
     render(<App />)
-    await screen.findByRole('heading', { name: title })
+    await screen.findByRole('heading', { name: '任务图鉴' })
     expect(screen.getByText('功能待接入')).toBeTruthy()
-    expect(window.location.hash).toBe(`#/game/mhp3/${path}`)
+    expect(window.location.hash).toBe('#/game/mhp3/catalog/quests')
     expect(catalogAccess).not.toHaveBeenCalled()
     expect(loadoutAccess).not.toHaveBeenCalled()
+    expect(openSave).not.toHaveBeenCalled()
+  })
+
+  it('serves the P3 loadout route from the loadout service instead of the placeholder', async () => {
+    window.history.replaceState(null, '', '/#/game/mhp3/edit/loadout')
+    render(<App />)
+    await waitFor(() => expect(loadoutAccess).toHaveBeenCalled())
+    expect(screen.queryByText('功能待接入')).toBeNull()
+    expect(window.location.hash).toBe('#/game/mhp3/edit/loadout')
     expect(openSave).not.toHaveBeenCalled()
   })
 

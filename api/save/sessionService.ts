@@ -473,6 +473,22 @@ export class SaveSessionService {
         const base = this.createCatalogEquipmentRecord(session.adapter, 'hunter-equipment', identity.saveType, identity.saveId, 0, 0)
         return this.patchEquipmentRecord(session.adapter, 'hunter-equipment', base, { decorations: this.decorationValuesForRecord(session.adapter, entry.decorations) })
       }
+      if (entry.gameId === 'mhp3') {
+        // P3 native type/id pairs are the save encoding, and the same patch routine
+        // owns weapon/armor/charm records; nothing here re-derives identities.
+        if (entry.kind === 'charm') {
+          return this.resolver.patchP3Record(Buffer.alloc(12), {
+            selection: { kind: 'charm' },
+            charm: { grade: entry.classId, skill1Id: entry.skill1?.skillId ?? 0, skill1Points: entry.skill1?.points ?? 0, skill2Id: entry.skill2?.skillId ?? 0, skill2Points: entry.skill2?.points ?? 0, slots: entry.slots },
+            decorations: this.p3DecorationIds(entry.decorations),
+          })
+        }
+        return this.resolver.patchP3Record(Buffer.alloc(12), {
+          selection: { kind: entry.kind, key: entry.kind === 'weapon' ? entry.weaponKey : entry.armorKey },
+          level: 0,
+          decorations: this.p3DecorationIds(entry.decorations),
+        })
+      }
       if (entry.instance?.formatId && entry.instance.formatId !== session.adapter.meta.formatId) throw new Error(`${entry.kind === 'charm' ? entry.classNameCn : entry.nameCn}的实例格式与当前存档不一致`)
       if (entry.kind === 'weapon') {
         const level = entry.instance ? undefined : entry.saveLevel ?? 0
@@ -532,6 +548,12 @@ export class SaveSessionService {
       if (!generated && !persisted) throw new Error('护石实例包含无法确认来源的扩展字节')
     } else if (!record.subarray(12).every(value => value === 0)) throw new Error('装备实例包含无法确认来源的扩展字节')
     return record
+  }
+  private p3DecorationIds(values: { gameId?: string; itemId?: number }[]): number[] {
+    return values.map(value => {
+      if (value.gameId !== 'mhp3' || value.itemId == null) throw new Error('装饰品游戏身份不匹配')
+      return value.itemId
+    })
   }
   private decorationValuesForRecord(adapter: SaveDocumentAdapter, values: { saveId?: number; itemId?: number; gameId?: string; fixed?: boolean }[]): number[] {
     return values.map(value => {

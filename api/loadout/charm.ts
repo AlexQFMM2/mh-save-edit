@@ -3,9 +3,11 @@ import { checkCharmSlots } from './charmSlotRules'
 import { isExactCharmCombination } from './charmCombinations'
 import { validateMh4gCharm } from './mh4gCharmValidation'
 import { validateMhguCharm } from './mhguCharmValidation'
+import { checkP3Charm } from './p3CharmRules'
 
 export function validateCharm(snapshot: LoadoutCalculationSnapshot, charm: LoadoutCharm): CharmValidationResult {
   if (snapshot.gameId === 'mhp2g') throw new Error('P2G 没有护石')
+  if (snapshot.gameId === 'mhp3') return validateP3Charm(snapshot, charm)
   const issues: LoadoutIssue[] = []
   if (!Number.isInteger(charm.classId) || charm.classId < 0 || charm.classId > 65535) issues.push({ code: 'charm.class.encoding', path: 'charm.classId', severity: 'error', message: '护石品级 ID 无法编码' })
   if (!Number.isInteger(charm.slots) || charm.slots < 0 || charm.slots > 3) issues.push({ code: 'charm.slots.encoding', path: 'charm.slots', severity: 'error', message: '护石孔位必须为 0～3' })
@@ -46,4 +48,17 @@ export function validateCharm(snapshot: LoadoutCalculationSnapshot, charm: Loado
 export function applyCharmValidation<T extends LoadoutCharm>(snapshot: LoadoutCalculationSnapshot, charm: T): T {
   const validation = validateCharm(snapshot, charm)
   return { ...charm, legality: validation.legality, encoding: validation.encoding, issues: validation.issues }
+}
+
+/** P3 uses the native identification rules; the enum-table oracle proves the
+ * compact tables accept exactly the same 1,561,429 combinations. */
+function validateP3Charm(snapshot: LoadoutCalculationSnapshot, charm: LoadoutCharm): CharmValidationResult {
+  if (!snapshot.p3CharmRules) throw new Error('缺少 P3 护石生成规则，请安装新版 P3 资料')
+  const check = checkP3Charm(snapshot.p3CharmRules, charm)
+  const ranges = [charm.skill1, charm.skill2].flatMap((skill, index) => skill
+    ? snapshot.charmRanges
+      .filter(range => range.classId === charm.classId && range.skillId === skill.skillId && range.position === (index === 0 ? 'A' : 'B'))
+      .map(range => ({ position: range.position, min: range.minPoints, max: range.maxPoints, source: range.source }))
+    : [])
+  return { legality: check.legality, encoding: check.encoding, issues: check.issues, ranges }
 }

@@ -5,6 +5,7 @@ import { createRequire } from 'node:module'
 import { join } from 'node:path'
 import { loadoutGameSchema } from './schemas'
 import { P2gLoadoutCatalogRepository } from './p2gRepository'
+import { P3LoadoutCatalogRepository } from './p3Repository'
 import type { LoadoutGame } from './types'
 import { loadoutChannels } from './channels'
 import { normalizeLegacyTransientLoadoutFields, reconcileImportedLoadout } from './file'
@@ -17,13 +18,13 @@ const require = createRequire(import.meta.url)
 const Database = require('better-sqlite3') as typeof DatabaseType
 
 export function registerLoadoutIpc(dataDir: string, stateDir: string): () => void {
-  const repositories = new Map<LoadoutGame, { db: DatabaseType.Database; repository: LoadoutCatalogRepository | P2gLoadoutCatalogRepository }>()
+  const repositories = new Map<LoadoutGame, { db: DatabaseType.Database; repository: LoadoutCatalogRepository | P2gLoadoutCatalogRepository | P3LoadoutCatalogRepository }>()
   const repository = (gameId: LoadoutGame) => {
     const cached = repositories.get(gameId)
     if (cached) return cached.repository
     const nativeBinding = process.env.MH_SAVE_EDIT_SQLITE_BINDING
     const db = new Database(join(dataDir, `${gameId}.sqlite`), { readonly: true, fileMustExist: true, ...(nativeBinding ? { nativeBinding } : {}) })
-    const value = gameId === 'mhp2g' ? new P2gLoadoutCatalogRepository(db) : new LoadoutCatalogRepository(db, gameId)
+    const value = gameId === 'mhp2g' ? new P2gLoadoutCatalogRepository(db) : gameId === 'mhp3' ? new P3LoadoutCatalogRepository(db) : new LoadoutCatalogRepository(db, gameId)
     repositories.set(gameId, { db, repository: value })
     return value
   }
