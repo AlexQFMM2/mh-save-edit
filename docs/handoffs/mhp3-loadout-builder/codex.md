@@ -63,3 +63,14 @@ B2 原设计假定护石自然性“未确认”，只允许固定/无护石并�
 2. **枚举策略**：自动配装可按原生规则枚举护石候选（品级由 rank+2*slots 反推、孔位按累计概率可达性），不再一律 `unknown`；需要在任务里明确“可达即可生成”的语义与抽样/去重上限。
 
 未获批准前 B2 标记阻塞；B1/B3/B4/B5 不受影响。批准后我会一次性改 `../plan/.../README.md` 与 `tasks.md` 的 D2 段、B2 批次和排期，并在本文件记录新图。
+
+## 计划 r3：护石表方式定稿（2026-11-23）
+
+用户指示“P3 应该也是护石表，参考 3G 的处理方式就好了”，并要求按 3G 的护石表思路落地。实测 P3 原生空间的完整枚举为 **1,561,429 行 / 58,073,088 字节**（3G 表仅 121,952 行），因此定稿为：
+
+- 运行库 `mhp3.sqlite` 只加三张紧凑规则表（生成来源、孔位累计表、品级规则，KB 级），schema `mhp3-charm-generation-v1`；构建器从私有契约生成。
+- 完整枚举表只作为**私有对照片** `../research/mhp3/charm-generation-20261123/p3-charm-combination-oracle.sqlite`（SHA-256 `252bd968…`，`oracle-manifest.json`），不进运行资产或发行包。
+- 判定与枚举按 3G 同款语义：手动护石返回 confirmed/invalid；自动配装按目标技能枚举候选；新增 `api/loadout/p3CharmRules.ts` 作为唯一规则实现，`charm.ts`／`searchCharms.ts` 只调用它。
+- B5 增加 TEST-008：oracle 全部 1,561,429 行必须通过，随机非成员必须拒绝，枚举候选必须落在 oracle 内。
+
+计划 r3 已写入 `../plan/mh-save-edit/mhp3-loadout-builder/`（README 的 D2 段、tasks 的 BD/B2/B5、taskList）。运行资源 v8（DB-004）仍是发行操作，执行前单独确认。
