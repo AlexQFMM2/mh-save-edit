@@ -66,7 +66,7 @@ jobs:
       - name: Test P3 monster builder with synthetic inputs
         run: |
           python -m pip install -r tools/mhp3/requirements.txt
-          python -m unittest tests.test_mhp3_monsters
+          python -m unittest tests.test_mhp3_monsters tests.test_mhp3_charm_generation
       - run: pnpm build
       - name: Verify compiled GU runtime search
         env:
