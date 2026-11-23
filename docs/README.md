@@ -10,6 +10,7 @@
 | 原版解包、Dex、宿主机只读查询与冻结输入 | [资料读取说明](development/data-sources.md) |
 | P2G 插件安装、测试、图鉴、配装与存档说明 | [P2G 文档](mhp2g/README.md) |
 | P3 日版 PPSSPP 存档修改、本地安装与验收 | [P3 存档交接](handoffs/mhp3-save-editor/codex.md) |
+| P3 配装器（计划与实施批次） | [P3 配装器交接](handoffs/mhp3-loadout-builder/codex.md) |
 | P3 怪物、肉质、条件掉落、出没预览及构建恢复 | [P3 怪物图鉴](development/mhp3-monster-catalog.md) |
 | P3 武器、派生、强化对照及离线构建 | [P3 武器图鉴](development/mhp3-weapon-catalog.md) |
 | P3 防具、套装、制作、来源及离线构建 | [P3 防具图鉴](development/mhp3-armor-catalog.md) |
