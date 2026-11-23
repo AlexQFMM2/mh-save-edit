@@ -28,3 +28,8 @@ python3 -B tools/mhp3/build_save_profile.py \
 - 本地 Linux Electron 在 1440×900 和 1024×768 验证了标准入口、角色选择、金钱、道具、强化、装珠、手动护石、装备换位、单层抽屉与 Escape 归焦、另存和读取副本。测试驱动只代选原生文件对话框路径。
 - 真实原件的 BIN 与 SFO 逐字节往返。独立 Python 探针验证了应用另存的文件 MAC、SFO 和内层摘要，两个图片与原件一致。角色槽 3 的明文仅变动 27 字节，其他角色和全局数据逐字节一致。样本此次换位没有命中已登记预设，预设变更由合成回归覆盖。
 - 待用户用 PPSSPP 读取测试副本，核对字段并在游戏中再保存一次后重开。实际路径、预期改动和校验日志见私有工作台 `../test/mh-save-edit/mhp3-save-editor/`。
+
+## 公开包与 P3 资料
+
+GitHub Actions 公开包只注入运行资源 v6，不含 `data/mhp3.sqlite`、`data/mhp3-save-profile.json` 和 P3 原生图标；P3 运行资料公开发行仍需单独授权。用公开包测试 P3 存档时，把这两个文件放进解压目录的 `resources/data/`，或设置 `MH_SAVE_EDIT_DATA_DIR` 指向含它们的目录（目录解析见 `api/catalog/ipc.ts` 的 `resolveCatalogDataDir`，图鉴与存档共用同一路径）。P3 图鉴图标缺失时条目图标为空，不影响读取、编辑和写入。
+
