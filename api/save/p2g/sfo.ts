@@ -1,5 +1,5 @@
 import { timingSafeEqual } from 'node:crypto'
-import type { P2gCodec } from './codec'
+import type { PspSavedataCodec } from './codec'
 
 type Entry = { offset: number; length: number; maximum: number; format: number }
 export function sfoEntries(source: Buffer): Map<string, Entry> {
@@ -17,17 +17,17 @@ export function sfoEntries(source: Buffer): Map<string, Entry> {
   }
   return result
 }
-export class P2gSfo {
+export class PspSavedataSfo {
   private readonly params: number
   private readonly mac: number
-  constructor(readonly source: Buffer, private readonly codec: P2gCodec) {
+  constructor(readonly source: Buffer, private readonly codec: PspSavedataCodec) {
     const entries = sfoEntries(source), params = entries.get('SAVEDATA_PARAMS'), files = entries.get('SAVEDATA_FILE_LIST'), directory = entries.get('SAVEDATA_DIRECTORY')
-    if (!params || params.length !== 128 || params.format !== 4 || !files || files.format !== 4 || files.length % 32 !== 0 || !directory || source.toString('ascii', directory.offset, directory.offset + directory.length).replace(/\0+$/, '') !== 'ULJM05500') throw new Error('PARAM.SFO 不是支持的 P2G 日版存档')
+    if (!params || params.length !== 128 || params.format !== 4 || !files || files.format !== 4 || files.length % 32 !== 0 || !directory || source.toString('ascii', directory.offset, directory.offset + directory.length).replace(/\0+$/, '') !== codec.format.directory) throw new Error(`PARAM.SFO 与 ${codec.format.directory} 存档身份不匹配`)
     this.params = params.offset
     if (source[this.params] !== 0x41 || !source.subarray(this.params + 0x20, this.params + 0x30).every(v => v === 1)) throw new Error('暂不支持此 PSP 实机/非 PPSSPP SFO 校验模式')
     const matches: number[] = []
-    for (let at = files.offset; at < files.offset + files.length; at += 32) if (source.toString('ascii', at, at + 13).replace(/\0+$/, '') === 'MHP2NDG.BIN') matches.push(at + 13)
-    if (matches.length !== 1) throw new Error('PARAM.SFO 缺少唯一的 MHP2NDG.BIN 校验项')
+    for (let at = files.offset; at < files.offset + files.length; at += 32) if (source.toString('ascii', at, at + 13).replace(/\0+$/, '') === codec.format.bin) matches.push(at + 13)
+    if (matches.length !== 1) throw new Error(`PARAM.SFO 缺少唯一的 ${codec.format.bin} 校验项`)
     this.mac = matches[0]
   }
   rebuild(bin: Buffer): Buffer {
@@ -43,3 +43,5 @@ export class P2gSfo {
     if (!this.rebuild(bin).equals(this.source)) throw new Error('PARAM.SFO 校验失败，当前仅支持已验证的 PPSSPP 模式')
   }
 }
+
+export { PspSavedataSfo as P2gSfo }

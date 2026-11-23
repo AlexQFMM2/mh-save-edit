@@ -222,3 +222,29 @@
     grid-template-columns: minmax(130px, 190px) minmax(130px, 190px) minmax(180px, 1fr);
   }
 }
+
+.save-equipment-editor__p3-charm {
+  display: grid;
+  gap: var(--global-spacing-3);
+}
+
+.save-equipment-editor__p3-charm label,
+.save-equipment-editor__p3-charm > div {
+  display: grid;
+  gap: var(--global-spacing-2);
+}
+
+.save-equipment-editor__p3-charm > div {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 8rem);
+  align-items: end;
+}
+
+.save-equipment-editor__p3-charm input {
+  min-width: 0;
+  min-height: var(--global-control-height);
+  padding-inline: var(--global-spacing-2);
+  border: var(--global-border-width) solid var(--global-theme-color-border);
+  border-radius: var(--global-radius-sm);
+  color: var(--global-theme-color-text-primary);
+  background: var(--global-theme-color-surface-deep);
+}

@@ -1,7 +1,7 @@
 import { Search, Sparkles } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { PalicoArmorSummary, PalicoWeaponSummary } from '../../../api/catalog/types'
-import type { SaveGameId as GameId } from '../../../api/save/types'
+import type { LoadoutGame as GameId } from '../../../api/loadout/types'
 import type { ArmorLoadoutSlot, CharmValidationResult, LoadoutArmorCandidate, LoadoutCalculationSnapshot, LoadoutFacets, LoadoutRelicLookup, LoadoutWeaponCandidate } from '../../../api/loadout/types'
 import type { SaveArmorAppearance, SaveEquipmentCell } from '../../../api/save/types'
 import { CatalogIcon } from '../CatalogIcon/CatalogIcon'

@@ -24,12 +24,12 @@ export function GameOverviewPanel({ game }: GameOverviewPanelProps) {
         <div>
           <p className="game-overview-panel__eyebrow">当前游戏工作区</p>
           <h1 className="game-overview-panel__title">{game.title}</h1>
-          <p className="game-overview-panel__description">{available ? '从这里进入资料、存档修改与配装工具。' : 'P3 道具、装饰品、技能、武器、防具与怪物图鉴已开放，支持中文检索和资料关联查询。'}</p>
+          <p className="game-overview-panel__description">{available ? '从这里进入资料、存档修改与配装工具。' : '可浏览 P3 图鉴，也可打开日版 PPSSPP 存档。'}</p>
         </div>
-        <button className="game-overview-panel__open-save" type="button" disabled={!available} onClick={() => navigate(`/game/${game.id}/edit`)}>
+        <button className="game-overview-panel__open-save" type="button" onClick={() => navigate(`/game/${game.id}/edit`)}>
           <FolderOpen size={17} aria-hidden="true" />
           打开存档
-          <span className="game-overview-panel__save-hint">{available ? '选择环境' : '待接入'}</span>
+          <span className="game-overview-panel__save-hint">选择环境</span>
         </button>
       </header>
 

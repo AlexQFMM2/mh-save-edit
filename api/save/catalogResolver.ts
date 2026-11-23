@@ -2,6 +2,8 @@ import type Database from 'better-sqlite3'
 import { createRequire } from 'node:module'
 import { join } from 'node:path'
 import type { SaveGameId as GameId } from './types'
+import { P3SaveCatalog } from './p3/catalog'
+import type { P3EquipmentChanges } from './types'
 import { P2gSaveCatalog } from './p2g/catalog'
 import type { SaveArmorAppearance, SaveArmorAppearanceFilters, SaveArmorAppearancePage, SaveEquipmentCell, SaveItemCell, SavePalicoGenerationRules } from './types'
 import { armorFallbackIconPath, charmIconPath, weaponFallbackIconPath } from './catalogIconPaths'
@@ -23,6 +25,9 @@ export type SaveCatalogEquipmentIdentity = {
 }
 
 export class SaveCatalogResolver {
+  private p3Catalog?: P3SaveCatalog
+  private p3() { return this.p3Catalog ??= new P3SaveCatalog(this.db('mhp3')) }
+  patchP3Record(source: Buffer, changes: P3EquipmentChanges) { return this.p3().patch(source, changes) }
   private p2gCatalog?: P2gSaveCatalog
   private p2g() { return this.p2gCatalog ??= new P2gSaveCatalog(this.db('mhp2g')) }
   patchP2gRecord(source: Buffer, changes: Parameters<P2gSaveCatalog['patch']>[1]) { return this.p2g().patch(source, changes) }
@@ -38,12 +43,14 @@ export class SaveCatalogResolver {
   }
   private hasTable(db: Database.Database, name: string) { return Boolean(db.prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name=?").get(name)) }
   item(gameId: GameId, cell: Omit<SaveItemCell, 'nameCn' | 'nameEn' | 'iconPath' | 'maxStack' | 'rarity' | 'diagnostics'>): SaveItemCell {
-    const row = cell.itemId ? this.db(gameId).prepare(`SELECT name_cn,name_en,icon_path,max_stack,rarity,is_placeholder FROM catalog_items WHERE game_id=? AND ${gameId === 'mhp2g' ? 'item_id' : 'save_id'}=?`).get(gameId, cell.itemId) as Row | undefined : undefined
+    const row = cell.itemId ? this.db(gameId).prepare(`SELECT name_cn,name_en,icon_path,max_stack,rarity,is_placeholder${gameId === 'mhp3' ? ',quantity_kind' : ''} FROM catalog_items WHERE game_id=? AND ${gameId === 'mhp2g' || gameId === 'mhp3' ? 'item_id' : 'save_id'}=?`).get(gameId, cell.itemId) as Row | undefined : undefined
     const diagnostics = !cell.empty && !row ? [{ code: 'item.unknown', path: `items.${cell.slot}`, severity: 'warning' as const, message: `未知道具 ID ${cell.itemId}，原值会被保留` }] : []
-    if (gameId === 'mhp2g' && !cell.empty && (cell.count < 1 || cell.count > 99)) diagnostics.push({ code: 'item.count.unusual', path: `items.${cell.slot}`, severity: 'warning', message: `数量 ${cell.count} 不在自然箱格范围 1～99 内，原值已保留` })
-    return { ...cell, nameCn: cell.empty ? '空格' : text(row?.name_cn, `未知道具 #${cell.itemId}`), nameEn: text(row?.name_en), iconPath: row?.icon_path ? text(row.icon_path) : null, maxStack: row?.max_stack == null ? null : number(row.max_stack), rarity: row?.rarity == null ? null : number(row.rarity), diagnostics }
+    if ((gameId === 'mhp2g' || gameId === 'mhp3') && !cell.empty && (cell.count < 1 || cell.count > 99)) diagnostics.push({ code: 'item.count.unusual', path: `items.${cell.slot}`, severity: 'warning', message: `数量 ${cell.count} 不在自然箱格范围 1～99 内，原值已保留` })
+    if (gameId === 'mhp3' && row && row.quantity_kind !== 'count') diagnostics.push({ code: 'item.quantity.special', path: `items.${cell.slot}`, severity: 'warning', message: '特殊道具记录，数量的自然含义与普通堆叠不同' })
+    return { ...cell, nameCn: cell.empty ? '空格' : text(row?.name_cn, `未知道具 #${cell.itemId}`), nameEn: text(row?.name_en), iconPath: row?.icon_path ? text(row.icon_path) : null, maxStack: gameId === 'mhp3' ? (row ? 99 : null) : row?.max_stack == null ? null : number(row.max_stack), rarity: row?.rarity == null ? null : number(row.rarity), diagnostics }
   }
   equipment(gameId: GameId, cell: Omit<SaveEquipmentCell, 'nameCn' | 'nameEn' | 'typeNameCn' | 'iconPath' | 'weaponKey' | 'armorDexId' | 'palicoEquipmentId' | 'decorationLabels' | 'skill1NameCn' | 'skill2NameCn' | 'diagnostics'>): SaveEquipmentCell {
+    if (gameId === 'mhp3') return this.p3().equipment(cell)
     if (gameId === 'mhp2g') return this.p2g().equipment(cell)
     const db = this.db(gameId)
     let row: Row | undefined
@@ -112,9 +119,9 @@ export class SaveCatalogResolver {
     return { appearanceId: number(row.id), nameCn: text(row.name), nameEn: text(row.english), nameJp: '', part, rarity: row.rarity == null ? null : number(row.rarity), iconPath: ARMOR_APPEARANCE_SPRITE_PATH, iconSource: 'custom-appearance-sprite', sourceStatus: 'confirmed', iconFallback: false }
   }
   resolveArmorAppearance(gameId: GameId, saveType: number, appearanceId: number): SaveArmorAppearance | null {
-    if (gameId === 'mhp2g') return null
+    if (gameId !== 'mhgu') return null
     const part = armorPartForSaveType(gameId, saveType)
-    if (gameId !== 'mhgu' || !Number.isInteger(appearanceId) || appearanceId <= 0 || !part) return null
+    if (!Number.isInteger(appearanceId) || appearanceId <= 0 || !part) return null
     const table = { head: 'cn__armor_head', chest: 'cn__armor_chest', arms: 'cn__armor_arms', waist: 'cn__armor_waist', legs: 'cn__armor_legs' }[part]
     const row = this.db(gameId).prepare(`SELECT id,name,english,rarity FROM ${table} WHERE id=?`).get(appearanceId) as Row | undefined
     if (!row) return null
@@ -141,17 +148,19 @@ export class SaveCatalogResolver {
     }
   }
   itemSearchIds(gameId: GameId, query: string): Set<number> {
+    if (gameId === 'mhp3') return this.p3().itemSearch(query)
     const like = `%${query.trim()}%`
     const rows = this.db(gameId).prepare(`SELECT ${gameId === 'mhp2g' ? 'item_id' : 'save_id'} save_id FROM catalog_items WHERE game_id=? AND (name_cn LIKE ? OR name_en LIKE ? OR name_jp LIKE ?)`).all(gameId, like, like, like) as Row[]
     return new Set(rows.map(row => number(row.save_id)))
   }
-  itemKnown(gameId: GameId, saveId: number): boolean { if (!saveId) return true; try { return Boolean(this.db(gameId).prepare(`SELECT 1 FROM catalog_items WHERE game_id=? AND ${gameId === 'mhp2g' ? 'item_id' : 'save_id'}=?`).get(gameId, saveId)) } catch { return false } }
+  itemKnown(gameId: GameId, saveId: number): boolean { if (!saveId) return true; try { return Boolean(this.db(gameId).prepare(`SELECT 1 FROM catalog_items WHERE game_id=? AND ${gameId === 'mhp2g' || gameId === 'mhp3' ? 'item_id' : 'save_id'}=?`).get(gameId, saveId)) } catch { return false } }
   requireItem(gameId: GameId, saveId: number): { maxStack: number | null; nameCn: string } {
-    const row = this.db(gameId).prepare(`SELECT name_cn,max_stack FROM catalog_items WHERE game_id=? AND ${gameId === 'mhp2g' ? 'item_id' : 'save_id'}=? AND is_placeholder=0`).get(gameId, saveId) as Row | undefined
+    const row = this.db(gameId).prepare(`SELECT name_cn,max_stack FROM catalog_items WHERE game_id=? AND ${gameId === 'mhp2g' || gameId === 'mhp3' ? 'item_id' : 'save_id'}=? AND is_placeholder=0${gameId === 'mhp3' ? " AND quantity_kind='count'" : ''}`).get(gameId, saveId) as Row | undefined
     if (!row) throw new Error(`道具 ID ${saveId} 不属于 ${gameId.toUpperCase()} 的可用图鉴资料`)
     return { maxStack: row.max_stack == null ? null : number(row.max_stack), nameCn: text(row.name_cn) }
   }
   resolveEquipmentIdentity(gameId: GameId, saveType: number, saveId: number, palico: boolean, saveLevel?: number): SaveCatalogEquipmentIdentity | null {
+    if (gameId === 'mhp3') return null
     if (gameId === 'mhp2g') return this.p2g().identity(saveType, saveId, palico)
     if (!saveType || !saveId) return null
     const db = this.db(gameId)
@@ -193,11 +202,13 @@ export class SaveCatalogResolver {
     return value
   }
   equipmentKnown(gameId: GameId, saveType: number, saveId: number, palico: boolean): boolean {
+    if (gameId === 'mhp3') return !palico && this.p3().known(saveType, saveId)
     if (gameId === 'mhp2g') return this.p2g().identity(saveType, saveId, palico) != null
     if (!saveType) return true
     try { return this.resolveEquipmentIdentity(gameId, saveType, saveId, palico) != null } catch { return false }
   }
   equipmentSearchKeys(gameId: GameId, query: string, palico: boolean): Set<string> {
+    if (gameId === 'mhp3') return palico ? new Set() : this.p3().equipmentSearch(query)
     if (gameId === 'mhp2g') return palico ? new Set() : this.p2g().search(query)
     const db = this.db(gameId); const like = `%${query.trim()}%`; const result = new Set<string>()
     if (palico) {

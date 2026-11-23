@@ -117,7 +117,7 @@ describe('P2G home entry boundary', () => {
 })
 
 describe('P3 workspace shell', () => {
-  it('opens from the keyboard with PPSSPP and pending features', async () => {
+  it('opens from the keyboard with PPSSPP and a save editor entry', async () => {
     const user = userEvent.setup()
     render(<App />)
     await user.tab() // Global dictionary.
@@ -132,7 +132,7 @@ describe('P3 workspace shell', () => {
     await screen.findByRole('heading', { name: 'Monster Hunter Portable 3rd' })
     expect(window.location.hash).toBe('#/game/mhp3/overview')
     expect(screen.getByText('PPSSPP')).toBeTruthy()
-    expect(screen.getByRole('button', { name: /打开存档/ }).hasAttribute('disabled')).toBe(true)
+    expect(screen.getByRole('button', { name: /打开存档/ }).hasAttribute('disabled')).toBe(false)
     expect(screen.queryByRole('link', { name: '狩技' })).toBeNull()
     expect(screen.queryByText('支援倾向')).toBeNull()
     await user.click(screen.getByRole('link', { name: /资料图鉴/ }))
@@ -198,8 +198,23 @@ describe('P3 workspace shell', () => {
     expect(openSave).not.toHaveBeenCalled()
   })
 
+  it('routes P3 save opens to the native PPSSPP format', async () => {
+    const user = userEvent.setup()
+    openSave.mockResolvedValueOnce({ cancelled: true })
+    window.history.replaceState(null, '', '/#/game/mhp3/overview')
+    render(<App />)
+    await user.click(await screen.findByRole('button', { name: /打开存档/ }))
+    await screen.findByRole('heading', { name: '选择存档环境' })
+    expect(openSave).not.toHaveBeenCalled()
+    await user.click(screen.getByRole('radio', { name: /P3.*PPSSPP/ }))
+    await user.click(screen.getByRole('button', { name: '选择文件并读取' }))
+    expect(openSave).toHaveBeenCalledWith({ contentGameId: 'mhp3', formatId: 'mhp3-psp-ppsspp' })
+    expect(catalogAccess).not.toHaveBeenCalled()
+    expect(loadoutAccess).not.toHaveBeenCalled()
+  })
+
   it.each([
-    ['catalog/quests', '任务图鉴'], ['edit', '存档修改'], ['edit/loadout', '配装器'],
+    ['catalog/quests', '任务图鉴'], ['edit/loadout', '配装器'],
   ])('keeps direct P3 %s links away from existing game services', async (path, title) => {
     window.history.replaceState(null, '', `/#/game/mhp3/${path}`)
     render(<App />)

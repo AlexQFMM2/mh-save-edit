@@ -20,6 +20,11 @@ export function syntheticP2gSave() {
   for (const id of [829, 830]) payload[b + L.obtained + (id >> 3)] |= 1 << (id & 7)
   payload.set([1, 0, 1, 0, 3, 0x81, 0, 0, 0, 0, 0, 0], b + L.box)
   payload.copy(payload, b + L.gear + 12, b + L.box, b + L.box + 12); payload.writeUInt16LE(0, b + L.refs + 2)
+  const codec = new P2gCodec(syntheticP2gProfile), bin = codec.encode(payload, 123, Buffer.alloc(16, 0x35))
+  return { payload, bin, sfo: syntheticPspSfo(codec, bin) }
+}
+
+export function syntheticPspSfo(codec: P2gCodec, bin: Buffer) {
   const names = ['SAVEDATA_DIRECTORY', 'SAVEDATA_FILE_LIST', 'SAVEDATA_PARAMS']
   const namesBytes = Buffer.from(names.join('\0') + '\0'), keys = 20 + 3 * 16, values = (keys + namesBytes.length + 3) & ~3
   const sfo = Buffer.alloc(values + 16 + 32 + 128)
@@ -30,7 +35,6 @@ export function syntheticP2gSave() {
     sfo.writeUInt16LE(nameOffset, at); sfo.writeUInt16LE(i === 0 ? 0x204 : 4, at + 2); sfo.writeUInt32LE(length, at + 4); sfo.writeUInt32LE(length, at + 8); sfo.writeUInt32LE(dataOffset, at + 12)
     nameOffset += names[i].length + 1; dataOffset += length
   }
-  sfo.write('ULJM05500', values); sfo.write('MHP2NDG.BIN', values + 16); sfo[values + 48] = 0x41; sfo.fill(1, values + 48 + 0x20, values + 48 + 0x30)
-  const codec = new P2gCodec(syntheticP2gProfile), bin = codec.encode(payload, 123, Buffer.alloc(16, 0x35))
-  return { payload, bin, sfo: new P2gSfo(sfo, codec).rebuild(bin) }
+  sfo.write(codec.format.directory, values); sfo.write(codec.format.bin, values + 16); sfo[values + 48] = 0x41; sfo.fill(1, values + 48 + 0x20, values + 48 + 0x30)
+  return new P2gSfo(sfo, codec).rebuild(bin)
 }

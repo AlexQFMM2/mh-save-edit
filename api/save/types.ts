@@ -1,8 +1,8 @@
 import type { GameId } from '../core/loadout'
-export type SaveGameId = GameId | 'mhp2g'
+export type SaveGameId = GameId | 'mhp2g' | 'mhp3'
 import type { LoadoutSlot, LogicalLoadout } from '../loadout/types'
 
-export type SaveFormatId = 'mhp2g-psp-ppsspp' | 'mh3g-3ds-citra' | 'mh3u-wiiu-cemu' | 'mh4g-3ds-citra' | 'mhgu-switch-yuzu' | 'mhxx-3ds-citra'
+export type SaveFormatId = 'mhp3-psp-ppsspp' | 'mhp2g-psp-ppsspp' | 'mh3g-3ds-citra' | 'mh3u-wiiu-cemu' | 'mh4g-3ds-citra' | 'mhgu-switch-yuzu' | 'mhxx-3ds-citra'
 export type SaveSectionKey = 'personal-info' | 'item-box' | 'equipment-box' | 'palico'
 export type SaveSessionState = 'closed' | 'opening' | 'selectingCharacter' | 'readyClean' | 'readyDirty' | 'validating' | 'saving' | 'closing'
 export type SaveBoxDomain = 'items' | 'hunter-equipment' | 'palico-equipment'
@@ -65,7 +65,7 @@ export type SaveCharacterSummary = {
   slot: number
   used: boolean
   name: string
-  hunterRank: number
+  hunterRank: number | null
   playTimeSeconds: number
 }
 
@@ -141,6 +141,7 @@ export type SaveEquipmentCell = {
   relic?: { templateKey: string; weaponTypeId: number | null }
   armorKey?: string | null
   equipped?: boolean
+  charmGrade?: number
   upgradeWord?: number
   upgrade?: { label: string; maximum: number; naturalMaximum: number; value: number }
   armorDexId: number | null
@@ -251,11 +252,19 @@ export type SaveOpenRequest = { contentGameId: SaveGameId; formatId: SaveFormatI
 export type SaveOpenResult = { cancelled: boolean; session: SaveSessionSnapshot | null; characters: SaveCharacterSummary[] }
 export type SaveSectionRequest = { sessionId: string; revision: number; section: SaveSectionKey; page?: number; domain?: SaveBoxDomain; selectedIndex?: number; query?: string; locateAfterSlot?: number }
 
+export type P3EquipmentChanges = {
+  selection?: { kind: 'weapon' | 'armor'; key: string } | { kind: 'charm' }
+  level?: number
+  decorations?: number[]
+  charm?: { grade: number; skill1Id: number; skill1Points: number; skill2Id: number; skill2Points: number; slots: number }
+}
+
 export type SaveCommand =
   | { kind: 'set-personal-field'; sessionId: string; revision: number; field: string; value: SaveFieldValue }
   | { kind: 'set-item'; sessionId: string; revision: number; slot: number; itemId: number; count: number }
   | { kind: 'set-equipment-record'; sessionId: string; revision: number; domain: 'hunter-equipment' | 'palico-equipment'; slot: number; recordHex: string }
   | { kind: 'set-equipment-fields'; sessionId: string; revision: number; domain: 'hunter-equipment' | 'palico-equipment'; slot: number; changes: { reset?: boolean; saveType?: number; saveId?: number; level?: number; appearanceId?: number; decorations?: number[]; skill1Id?: number; skill1Points?: number; skill2Id?: number; skill2Points?: number; slots?: number } }
+  | { kind: 'set-p3-equipment'; sessionId: string; revision: number; slot: number; changes: P3EquipmentChanges }
   | { kind: 'copy-box-slot'; sessionId: string; revision: number; domain: SaveBoxDomain; sourceSlot: number; targetSlot?: number }
   | { kind: 'clear-box-slot'; sessionId: string; revision: number; domain: SaveBoxDomain; slot: number }
   | { kind: 'swap-box-slots'; sessionId: string; revision: number; domain: SaveBoxDomain; sourceSlot: number; targetSlot: number }
@@ -316,6 +325,7 @@ export type SaveBoxWriteTarget = {
 }
 
 export const SAVE_ENVIRONMENTS: SaveEnvironment[] = [
+  { formatId: 'mhp3-psp-ppsspp', contentGameId: 'mhp3', title: 'P3 · PPSSPP', platform: 'psp', emulator: 'ppsspp', description: '日版，选择 MHP3RD.BIN。同目录须有 PARAM.SFO，保存时一起更新。' },
   { formatId: 'mhp2g-psp-ppsspp', contentGameId: 'mhp2g', title: 'P2G · PPSSPP', platform: 'psp', emulator: 'ppsspp', description: '日版 / 汉化版；选择 MHP2NDG.BIN，同目录须有 PARAM.SFO。保存时一起更新。' },
   { formatId: 'mh3g-3ds-citra', contentGameId: 'mh3g', title: 'MH3G · 3DS · Citra', platform: '3ds', emulator: 'citra', description: '选择 Citra 的 user1、user2 或 user3 单角色文件。' },
   { formatId: 'mh3u-wiiu-cemu', contentGameId: 'mh3g', title: 'MH3U · Wii U · Cemu', platform: 'wiiu', emulator: 'cemu', description: '选择 Cemu 存档目录中的 user1、user2 或 user3。' },

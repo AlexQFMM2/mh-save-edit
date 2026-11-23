@@ -1,8 +1,8 @@
 import { z } from 'zod'
 import { logicalLoadoutSchema } from '../loadout/schemas'
 
-const gameId = z.enum(['mh3g', 'mh4g', 'mhgu', 'mhp2g'])
-const formatId = z.enum(['mhp2g-psp-ppsspp', 'mh3g-3ds-citra', 'mh3u-wiiu-cemu', 'mh4g-3ds-citra', 'mhgu-switch-yuzu', 'mhxx-3ds-citra'])
+const gameId = z.enum(['mh3g', 'mh4g', 'mhgu', 'mhp2g', 'mhp3'])
+const formatId = z.enum(['mhp3-psp-ppsspp', 'mhp2g-psp-ppsspp', 'mh3g-3ds-citra', 'mh3u-wiiu-cemu', 'mh4g-3ds-citra', 'mhgu-switch-yuzu', 'mhxx-3ds-citra'])
 const sessionIdentity = z.object({ sessionId: z.string().uuid(), revision: z.number().int().positive() }).strict()
 const boxDomain = z.enum(['items', 'hunter-equipment', 'palico-equipment'])
 
@@ -38,7 +38,25 @@ const palicoChanges = z.object({
   coatColor: z.string().regex(/^[0-9a-f]{8}$/i).optional(), rightEyeColor: z.string().regex(/^[0-9a-f]{8}$/i).optional(), leftEyeColor: z.string().regex(/^[0-9a-f]{8}$/i).optional(), vestColor: z.string().regex(/^[0-9a-f]{8}$/i).optional(),
 }).strict()
 const palicoCommand = sessionIdentity.extend({ kind: z.literal('set-palico'), index: z.number().int().min(0).max(83), changes: palicoChanges }).strict()
-export const saveCommandSchema = z.discriminatedUnion('kind', [personalCommand, itemCommand, equipmentCommand, equipmentFieldsCommand, copyCommand, clearCommand, swapCommand, palicoCommand])
+const p3EquipmentCommand = sessionIdentity.extend({
+  kind: z.literal('set-p3-equipment'),
+  slot: z.number().int().min(0).max(999),
+  changes: z.object({
+    selection: z.union([
+      z.object({ kind: z.enum(['weapon', 'armor']), key: z.string().max(80) }).strict(),
+      z.object({ kind: z.literal('charm') }).strict(),
+    ]).optional(),
+    level: z.number().int().min(0).max(255).optional(),
+    decorations: z.array(z.number().int().min(0).max(65535)).max(3).optional(),
+    charm: z.object({
+      grade: z.number().int().min(0).max(6), slots: z.number().int().min(0).max(3),
+      skill1Id: z.number().int().min(0).max(127), skill2Id: z.number().int().min(0).max(127),
+      skill1Points: z.number().int().min(-30).max(33), skill2Points: z.number().int().min(-30).max(33),
+    }).strict().optional(),
+  }).strict(),
+}).strict()
+
+export const saveCommandSchema = z.discriminatedUnion('kind', [personalCommand, itemCommand, equipmentCommand, equipmentFieldsCommand, p3EquipmentCommand, copyCommand, clearCommand, swapCommand, palicoCommand])
 
 export const saveCloseSchema = sessionIdentity.extend({ discard: z.boolean().optional() }).strict()
 export const saveTransferSchema = sessionIdentity.extend({ domain: boxDomain, format: z.enum(['csv', 'full']) }).strict()

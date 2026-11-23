@@ -59,14 +59,14 @@ export function SaveEquipmentEmbeddedDetail({ gameId, cell }: { gameId: GameId; 
   return <div className={`save-equipment-embedded-detail${loading ? ' is-loading' : ''}`} aria-busy={loading}>
     {gameId === 'mhgu' && !cell.empty && cell.kind === 'armor' && (cell.appearanceId ?? 0) > 0 && <ArmorAppearanceComparison cell={cell} />}
     {gameId === 'mh4g' && cell.relic && <RelicEquipmentDetail cell={cell} />}
-    {detail?.kind === 'weapon' && detail.value.gameId === 'mhp2g' && <section className="save-equipment-embedded-detail__catalog"><WeaponDetailPanel gameId="mhp2g" weapon={detail.value} loading={false} layout="embedded" sharpnessStage="base" allowCatalogWrite={false} /></section>}
-    {detail?.kind === 'weapon' && !('nativeDetail' in detail.value) && gameId !== 'mhp2g' && <section className="save-equipment-embedded-detail__catalog"><WeaponCoreStats weapon={detail.value} compact /><WeaponTypeDetail gameId={gameId} weapon={detail.value} sharpnessStage="base" />{detail.value.specialSummary.length > 0 && <p>{detail.value.specialSummary.join(' · ')}</p>}</section>}
+    {detail?.kind === 'weapon' && (detail.value.gameId === 'mhp2g' || detail.value.gameId === 'mhp3') && <section className="save-equipment-embedded-detail__catalog"><WeaponDetailPanel gameId={detail.value.gameId} weapon={detail.value} loading={false} layout="embedded" sharpnessStage="base" allowCatalogWrite={false} /></section>}
+    {detail?.kind === 'weapon' && !('nativeDetail' in detail.value) && <section className="save-equipment-embedded-detail__catalog"><WeaponCoreStats weapon={detail.value} compact /><WeaponTypeDetail gameId={detail.value.gameId} weapon={detail.value} sharpnessStage="base" />{detail.value.specialSummary.length > 0 && <p>{detail.value.specialSummary.join(' · ')}</p>}</section>}
     {detail?.kind === 'armor' && <section className="save-equipment-embedded-detail__catalog save-equipment-embedded-detail__armor-catalog"><ArmorDetailPanel armor={detail.value} loading={false} allowCatalogWrite={false} /></section>}
     {detail?.kind === 'palico-weapon' && <PalicoWeaponStats value={detail.value} />}
     {detail?.kind === 'palico-armor' && <PalicoArmorStats value={detail.value} />}
     {!cell.relic && !detail && loading && <p role="status" className="save-equipment-embedded-detail__state">正在读取图鉴属性…</p>}
     {!cell.relic && !detail && !loading && error && <p role="alert" className="save-equipment-embedded-detail__state is-error">{error}</p>}
-    {!cell.relic && !detail && !loading && !error && !cell.empty && <p className="save-equipment-embedded-detail__state">当前实例没有可关联的图鉴属性；原始记录仍会完整保留。</p>}
+    {!cell.relic && !detail && !loading && !error && !cell.empty && cell.kind !== 'charm' && <p className="save-equipment-embedded-detail__state">当前实例没有可关联的图鉴属性；原始记录仍会完整保留。</p>}
     <details open className="save-equipment-embedded-detail__decorations"><summary>装饰品{cell.decorationLabels.length ? ` · ${cell.decorationLabels.length}` : ''}</summary>{cell.decorationLabels.length ? <ul>{cell.decorationLabels.map((value, index) => <li key={`${value.rawValue}-${index}`}><span>{value.nameCn}</span><small>{value.fixed ? '固定 / 内置' : `${value.slots ?? 0} 孔`}</small></li>)}</ul> : <p>未安装装饰品。</p>}</details>
     {cell.kind === 'charm' && <p className="save-equipment-embedded-detail__decoration-summary">技能：<span>{skill(cell.skill1NameCn, cell.skill1Id, cell.skill1Points)}</span>；<span>{skill(cell.skill2NameCn, cell.skill2Id, cell.skill2Points)}</span></p>}
   </div>

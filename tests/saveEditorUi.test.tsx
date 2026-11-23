@@ -85,8 +85,8 @@ function installSaveSession(value: SaveSessionSnapshot | null) {
 }
 
 function NavigationBlockHarness() {
-  const { setNavigationBlockReason } = useSaveSession()
-  return <><button type="button" onClick={() => setNavigationBlockReason('输入无效')}>阻止离开</button><a href="#/other-page">离开页面</a><a href="#/game/mh3g/catalog/items">同版本图鉴</a><a href="#/game/mh4g/overview">切换到 MH4G</a></>
+  const { session, setNavigationBlockReason } = useSaveSession()
+  return <><button type="button" onClick={() => setNavigationBlockReason('输入无效')}>阻止离开</button><a href="#/other-page">离开页面</a><a href={`#/game/${session?.contentGameId ?? 'mh3g'}/catalog/items`}>同版本图鉴</a><a href="#/game/mh4g/overview">切换到 MH4G</a></>
 }
 
 describe('save editor UI primitives', () => {
@@ -300,14 +300,17 @@ describe('save editor UI primitives', () => {
     expect(window.location.hash).toBe('#/game/mh3g/edit/save')
   })
 
-  it('keeps a clean session inside the same game and confirms before cross-game navigation', async () => {
-    const snapshot = session()
+  it.each(['mh3g', 'mhp3'] as const)('keeps a clean %s session inside the same game and confirms before cross-game navigation', async gameId => {
+    const snapshot = session(gameId === 'mhp3' ? { contentGameId: gameId, formatId: 'mhp3-psp-ppsspp', platform: 'psp', emulator: 'ppsspp' } : {})
     const close = vi.fn().mockResolvedValue(undefined)
-    window.location.hash = '#/game/mh3g/edit/save'
+    const editHash = `#/game/${gameId}/edit/save`
+    window.history.replaceState(null, '', editHash)
     Object.defineProperty(window, 'mhSaveEditor', { configurable: true, value: { save: { getSession: vi.fn().mockResolvedValue(snapshot), listCharacters: vi.fn().mockResolvedValue([]), close, subscribe: vi.fn(() => () => undefined) } } })
     render(<SaveSessionProvider><NavigationBlockHarness /></SaveSessionProvider>)
-    await screen.findByRole('link', { name: '同版本图鉴' })
-    fireEvent.click(screen.getByRole('link', { name: '同版本图鉴' }))
+    const sameGame = await screen.findByRole('link', { name: '同版本图鉴' })
+    await waitFor(() => expect(sameGame.getAttribute('href')).toBe(`#/game/${gameId}/catalog/items`))
+    expect(window.location.hash).toBe(editHash)
+    fireEvent.click(sameGame)
     expect(screen.queryByRole('alertdialog', { name: '离开当前游戏版本？' })).toBeNull()
     fireEvent.click(screen.getByRole('link', { name: '切换到 MH4G' }))
     expect(screen.getByRole('alertdialog', { name: '离开当前游戏版本？' })).toBeTruthy()

@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ArmorLoadoutSlot, LoadoutArmorCandidate, LoadoutDecoration, LoadoutFacets, LoadoutGame, LoadoutPage, LoadoutRelicLookup, LoadoutSlot, LoadoutWeaponCandidate } from '../../../api/loadout/types'
-import { CatalogIcon } from '../CatalogIcon/CatalogIcon'
-import { EquipmentSlotIndicator } from '../EquipmentSlotIndicator/EquipmentSlotIndicator'
+import { EquipmentPickerResults } from './EquipmentPickerResults'
 import { SearchableSelect } from '../SearchableSelect/SearchableSelect'
 import { EquipmentPickerPreview } from '../EquipmentPickerPreview/EquipmentPickerPreview'
 import './EquipmentPickerContent.css'
@@ -24,7 +23,6 @@ function displayIdentity(candidate: EquipmentPickerCandidate) {
 }
 
 export function EquipmentPickerContent({ gameId, slot, facets, relicLookups, decorations, current, onSelectionChange, onOpenCatalog }: Props) {
-  const candidateButtons = useRef<Array<HTMLButtonElement | null>>([])
   const requestSequence = useRef(0)
   const [token, setToken] = useState('')
   const [finalOnly, setFinalOnly] = useState(false)
@@ -52,14 +50,8 @@ export function EquipmentPickerContent({ gameId, slot, facets, relicLookups, dec
   useEffect(() => setPage(1), [finalOnly, combat, gender, producible, rarity, skill, slots, sort, source, token, type])
   const visible = response.items.map(item => edited[item.candidateKey] ?? item)
   const pageCount = Math.max(1, Math.ceil(response.total / response.pageSize))
-  const visibleSelected = visible.some(item => item.candidateKey === selected)
   const active = (selected ? edited[selected] : undefined) ?? selection ?? undefined
   useEffect(() => onSelectionChange(active ?? null), [active, onSelectionChange])
-  const moveCandidate = (event: React.KeyboardEvent<HTMLButtonElement>, index: number) => {
-    let next = index
-    if (event.key === 'ArrowDown') next = Math.min(visible.length - 1, index + 1); else if (event.key === 'ArrowUp') next = Math.max(0, index - 1); else if (event.key === 'Home') next = 0; else if (event.key === 'End') next = visible.length - 1; else if (event.key === 'PageDown') next = Math.min(visible.length - 1, index + 10); else if (event.key === 'PageUp') next = Math.max(0, index - 10); else if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); const candidate = visible[index]; if (candidate) setSelection(candidate); return } else return
-    event.preventDefault(); const candidate = visible[next]; if (candidate) setSelection(candidate); candidateButtons.current[next]?.focus()
-  }
   const skillOptions = useMemo(() => facets.skills.map(item => ({ value: String(item.skillId), label: item.nameCn, keywords: [item.nameEn, item.nameJp] })), [facets.skills])
 
   return <div className="equipment-picker-content">
@@ -73,7 +65,15 @@ export function EquipmentPickerContent({ gameId, slot, facets, relicLookups, dec
       <SearchableSelect ariaLabel="装备排序" value={sort} options={[{ value: 'source', label: gameId === 'mhp2g' ? '原生顺序' : '来源顺序' }, { value: 'rarity', label: '稀有度降序' }, { value: 'slots', label: '孔位降序' }, ...(slot === 'weapon' ? [{ value: 'attack', label: '攻击降序' }] : [{ value: 'defense', label: '防御降序' }, { value: 'skill', label: '指定技能点降序', disabled: skill === 'all' }])]} onChange={setSort} />
     </div>
     <div className="equipment-picker-content__layout">
-      <div className="equipment-picker-content__candidate-pane"><div className="equipment-picker-content__body" aria-busy={loading}>{error && <p className="equipment-picker-content__empty" role="alert">{error}<button className="equipment-picker-content__retry" type="button" onClick={() => setAttempt(value => value + 1)}>重试</button></p>}{!error && visible.map((item, index) => <button ref={element => { candidateButtons.current[index] = element }} type="button" tabIndex={item.candidateKey === selected || (!visibleSelected && index === 0) ? 0 : -1} className={`equipment-picker-content__item${item.candidateKey === selected ? ' equipment-picker-content__item--selected' : ''}`} aria-pressed={item.candidateKey === selected} key={item.candidateKey} onKeyDown={event => moveCandidate(event, index)} onClick={() => setSelection(item)}><CatalogIcon path={item.iconPath} name={item.nameCn} /><span className="equipment-picker-content__item-copy" title={item.nameJp || item.nameEn}><strong className="equipment-picker-content__item-name">{item.nameCn}</strong><small className="equipment-picker-content__item-detail">{item.kind === 'weapon' ? item.typeNameCn : `${item.combat === 'both' ? '通用' : item.combat === 'gunner' ? '远程' : '近战'} · ${item.gender === 'both' ? '通用' : item.gender === 'male' ? '男' : '女'}`} · {displayIdentity(item)}</small></span><EquipmentSlotIndicator slots={item.slots} /><em className="equipment-picker-content__source">{item.sourceKind === 'relicTemplate' ? '发掘模板' : item.kind === 'weapon' && item.directlyProducible ? '可生产' : ''}</em></button>)}{!loading && !error && !visible.length && <p className="equipment-picker-content__empty">没有符合条件的候选。</p>}</div><nav className="equipment-picker-content__pagination" aria-label="候选分页"><button className="equipment-picker-content__pagination-button" type="button" disabled={response.page <= 1 || loading} onClick={() => setPage(value => Math.max(1, value - 1))}>上一页</button><span>{response.page} / {pageCount}</span><button className="equipment-picker-content__pagination-button" type="button" disabled={!response.hasNext || loading} onClick={() => setPage(value => Math.min(pageCount, value + 1))}>下一页</button></nav></div>
+      <EquipmentPickerResults
+        rows={visible.map(item => ({
+          key: item.candidateKey, name: item.nameCn, tooltip: item.nameJp || item.nameEn, iconPath: item.iconPath, slots: item.slots,
+          subtitle: `${item.kind === 'weapon' ? item.typeNameCn : `${item.combat === 'both' ? '通用' : item.combat === 'gunner' ? '远程' : '近战'} · ${item.gender === 'both' ? '通用' : item.gender === 'male' ? '男' : '女'}`} · ${displayIdentity(item)}`,
+          source: item.sourceKind === 'relicTemplate' ? '发掘模板' : item.kind === 'weapon' && item.directlyProducible ? '可生产' : '',
+        }))}
+        selected={selected} loading={loading} error={error} page={response.page} pageCount={pageCount} hasNext={response.hasNext}
+        onSelect={index => setSelection(visible[index])} onPage={setPage} onRetry={() => setAttempt(value => value + 1)}
+      />
       <EquipmentPickerPreview gameId={gameId} candidate={active} current={current} relicLookups={relicLookups} decorations={decorations} onEdit={value => setEdited(values => ({ ...values, [value.candidateKey]: value }))} onOpenCatalog={onOpenCatalog} />
     </div>
   </div>

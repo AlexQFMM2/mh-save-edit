@@ -26,7 +26,7 @@ type ContextValue = {
 
 const SaveSessionContext = createContext<ContextValue | null>(null)
 const message = (cause: unknown) => cause instanceof Error ? cause.message : String(cause || '操作失败')
-const gameFromHash = (hash: string) => /^#\/game\/(mh3g|mh4g|mhgu|mhp2g)(?:\/|$)/.exec(hash)?.[1] ?? null
+const gameFromHash = (hash: string) => /^#\/game\/([^/?#]+)/.exec(hash)?.[1] ?? null
 
 export function SaveSessionProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<SaveSessionSnapshot | null>(null); const [characters, setCharacters] = useState<SaveCharacterSummary[]>([])

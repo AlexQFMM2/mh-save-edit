@@ -30,8 +30,8 @@ function Feature({item}:{item:typeof workspaceNavigation[number]['items'][number
   if(game.id==='mhp3' && item.id==='monsters')return <Suspense fallback={<div role="status">正在读取图鉴…</div>}><MonsterCatalogPage/></Suspense>
   if(game.id==='mhp3' && item.id==='weapons')return <Suspense fallback={<div role="status">正在读取图鉴…</div>}><WeaponCatalogPage/></Suspense>
   if(game.id==='mhp3' && item.id==='decorations')return <DecorationCatalogPage/>
-  if(!hasRuntimeWorkspace(game))return <WorkspaceFeaturePage pageId={item.id}/>
   if(item.id==='save-editor')return <SaveEditorPage/>
+  if(!hasRuntimeWorkspace(game))return <WorkspaceFeaturePage pageId={item.id}/>
   if(item.id==='items')return <ItemCatalogPage/>
   if(item.id==='decorations')return <DecorationCatalogPage/>
   const pages={skills:SkillCatalogPage,weapons:WeaponCatalogPage,armor:ArmorCatalogPage,monsters:MonsterCatalogPage,quests:QuestCatalogPage,'hunter-arts':HunterArtCatalogPage,'palico-types':PalicoTypesCatalogPage,'palico-support-moves':PalicoSupportMovesCatalogPage,'palico-skills':PalicoSkillsCatalogPage,'palico-equipment':PalicoEquipmentCatalogPage,loadout:LoadoutBuilderPage} as const

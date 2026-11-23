@@ -7,13 +7,14 @@ import { SaveBoxTransferDrawer } from '../../components/SaveBoxTransferDrawer/Sa
 import { SaveBoxWorkspace, type SaveBoxViewFilter } from '../../components/SaveBoxWorkspace/SaveBoxWorkspace'
 import { SaveCharacterPicker } from '../../components/SaveCharacterPicker/SaveCharacterPicker'
 import { SaveEnvironmentPicker } from '../../components/SaveEnvironmentPicker/SaveEnvironmentPicker'
+import { P3SaveEquipmentEditorDrawer } from '../../components/SaveEquipmentEditorDrawer/P3SaveEquipmentEditorDrawer'
 import { SaveEquipmentEditorDrawer } from '../../components/SaveEquipmentEditorDrawer/SaveEquipmentEditorDrawer'
 import { SaveItemPickerDrawer } from '../../components/SaveItemPickerDrawer/SaveItemPickerDrawer'
 import { SavePalicoEditor } from '../../components/SavePalicoEditor/SavePalicoEditor'
 import { SavePersonalEditor } from '../../components/SavePersonalEditor/SavePersonalEditor'
 import { SaveSessionHeader } from '../../components/SaveSessionHeader/SaveSessionHeader'
 import { useSaveSession } from '../../components/SaveSessionProvider/SaveSessionProvider'
-import type { WorkspaceOutletContext } from '../../components/WorkspaceContent/WorkspaceContent'
+import type { ShellOutletContext } from '../../components/WorkspaceContent/WorkspaceContent'
 import './SaveEditorPage.css'
 
 const tabs = [
@@ -30,7 +31,7 @@ const sectionFromUrl = (value: string | null): SaveSectionKey => sectionKeys.inc
 
 export function SaveEditorPage() {
   const navigate = useNavigate()
-  const { game } = useOutletContext<WorkspaceOutletContext>(); const api = useSaveSession(); const { session, characters, busy } = api
+  const { game } = useOutletContext<ShellOutletContext>(); const api = useSaveSession(); const { session, characters, busy } = api
   const [params, setParams] = useSearchParams(); const requestedTab = sectionFromUrl(params.get('tab')); const urlTab = requestedTab === 'palico' && game.id !== 'mhgu' ? 'personal-info' : requestedTab
   const [tab, setTab] = useState<SaveSectionKey>(urlTab)
   const [page, setPage] = useState<Record<string, number>>({ 'item-box': 1, 'hunter-equipment': 1, 'palico-equipment': 1 })
@@ -59,6 +60,7 @@ export function SaveEditorPage() {
 
   useEffect(() => {
     if (!session || session.state === 'selectingCharacter' || session.contentGameId !== game.id) { setSection(undefined); return }
+    if (session.state === 'saving') return
     const sequence = ++request.current; setLoading(true); setSectionError(undefined)
     const query = domain ? boxQuery[domain] ?? '' : undefined
     void api.getSection({ section: tab, page: currentPage, domain, selectedIndex: tab === 'palico' ? palicoIndex : undefined, query, locateAfterSlot })
@@ -89,13 +91,21 @@ export function SaveEditorPage() {
     <main className={`save-editor-page__section${loading ? ' is-loading' : ''}`}>
       {sectionError && <div role="alert" className="save-editor-page__error">{sectionError}</div>}
       {section?.kind === 'personal-info' && <SavePersonalEditor section={section} session={session} busy={busy || !session.capabilities.canEditPersonal} onDraftValidityChange={setPersonalDraftInvalid} onCommit={(field, value) => mutate({ kind: 'set-personal-field', field, value })} />}
-      {(section?.kind === 'item-box' || section?.kind === 'equipment-box') && <SaveBoxWorkspace gameId={game.id} section={section} busy={busy} editable={section.kind === 'item-box' ? session.capabilities.canEditItems : session.capabilities.canEditEquipment} itemCountMax={session.capabilities.itemCountMax} selectedSlot={boxSelection[section.domain]} query={boxQueryDraft[section.domain] ?? ''} viewFilter={boxViewFilter[section.domain] ?? 'all'} onSelectionChange={slot => setBoxSelection(current => ({ ...current, [section.domain]: slot }))} onQueryChange={query => { setBoxQueryDraft(current => ({ ...current, [section.domain]: query })); setLocateAfterSlot(undefined) }} onViewFilterChange={filter => setBoxViewFilter(current => ({ ...current, [section.domain]: filter }))} onFindNext={(query, after) => { setBoxQuery(current => ({ ...current, [section.domain]: query })); setLocateAfterSlot(after) }} onPage={next => setPage(current => ({ ...current, [section.kind === 'item-box' ? 'item-box' : section.domain]: next }))} onReplaceItem={setItemPicker} onEditEquipment={cell => setEquipmentEdit({ cell, domain: section.domain === 'palico-equipment' ? 'palico-equipment' : 'hunter-equipment' })} onSetCount={(cell, count) => void mutate({ kind: 'set-item', slot: cell.slot, itemId: cell.itemId, count })} onClear={slot => clear(section, slot)} onCopy={source => copy(section, source)} onImport={() => setTransfer({ mode: 'import', domain: section.domain })} onExport={() => setTransfer({ mode: 'export', domain: section.domain })} />}
+      {(section?.kind === 'item-box' || section?.kind === 'equipment-box') && <SaveBoxWorkspace key={`${session.sessionId}:${session.characterSlot}:${section.domain}`} gameId={game.id} section={section} busy={busy} editable={section.kind === 'item-box' ? session.capabilities.canEditItems : session.capabilities.canEditEquipment} itemCountMax={session.capabilities.itemCountMax} selectedSlot={boxSelection[section.domain]} query={boxQueryDraft[section.domain] ?? ''} viewFilter={boxViewFilter[section.domain] ?? 'all'} onSelectionChange={slot => setBoxSelection(current => ({ ...current, [section.domain]: slot }))} onQueryChange={query => { setBoxQueryDraft(current => ({ ...current, [section.domain]: query })); setLocateAfterSlot(undefined) }} onViewFilterChange={filter => setBoxViewFilter(current => ({ ...current, [section.domain]: filter }))} onFindNext={(query, after) => { setBoxQuery(current => ({ ...current, [section.domain]: query })); setLocateAfterSlot(after) }} onPage={next => setPage(current => ({ ...current, [section.kind === 'item-box' ? 'item-box' : section.domain]: next }))} onReplaceItem={setItemPicker} onEditEquipment={cell => setEquipmentEdit({ cell, domain: section.domain === 'palico-equipment' ? 'palico-equipment' : 'hunter-equipment' })} onSetCount={(cell, count) => void mutate({ kind: 'set-item', slot: cell.slot, itemId: cell.itemId, count })} onClear={slot => clear(section, slot)} onCopy={source => copy(section, source)} onSwap={game.id === 'mhp3' && (section.domain === 'items' ? session.capabilities.canSwapItems : session.capabilities.canSwapEquipment) ? (sourceSlot, targetSlot) => mutate({ kind: 'swap-box-slots', domain: section.domain, sourceSlot, targetSlot }) : undefined} onImport={() => setTransfer({ mode: 'import', domain: section.domain })} onExport={() => setTransfer({ mode: 'export', domain: section.domain })} />}
       {section?.kind === 'palico' && <SavePalicoEditor section={section} busy={busy || !session.capabilities.canEditPalicoes} onSelect={setPalicoIndex} onDraftDirtyChange={setPalicoDraftDirty} onCommit={(index, changes) => mutate({ kind: 'set-palico', index, changes })} />}
       {loading && !section && <div role="status" className="save-editor-page__loading">正在读取存档区域…</div>}
     </main>
     {(session.state === 'selectingCharacter' || characterPickerOpen) && <SaveCharacterPicker characters={characters} busy={busy} selectedSlot={session.characterSlot} onSelect={slot => void api.selectCharacter(slot).then(() => setCharacterPickerOpen(false)).catch(() => undefined)} onClose={() => session.state === 'selectingCharacter' ? void api.close(true) : setCharacterPickerOpen(false)} />}
-    {itemPicker && <SaveItemPickerDrawer gameId={game.id} selectedId={itemPicker.itemId} initialCount={itemPicker.count} onClose={() => setItemPicker(undefined)} onApply={(item, count) => { if (item.gameId === 'mhp3' || item.gameId !== game.id) throw new Error('道具身份与存档游戏不匹配'); void mutate({ kind: 'set-item', slot: itemPicker.slot, itemId: item.gameId === 'mhp2g' ? item.itemId : item.saveId, count }).then(() => setItemPicker(undefined)) }} />}
-    {equipmentEdit && <SaveEquipmentEditorDrawer gameId={game.id} domain={equipmentEdit.domain} cell={equipmentEdit.cell} onOpenCatalog={path => { setEquipmentEdit(null); navigate(path) }} onClose={() => setEquipmentEdit(null)} onApply={changes => mutate({ kind: 'set-equipment-fields', domain: equipmentEdit.domain, slot: equipmentEdit.cell.slot, changes })} onApplyRecord={recordHex => mutate({ kind: 'set-equipment-record', domain: equipmentEdit.domain, slot: equipmentEdit.cell.slot, recordHex })} />}
+    {itemPicker && <SaveItemPickerDrawer gameId={game.id} selectedId={itemPicker.itemId} initialCount={itemPicker.count} onClose={() => setItemPicker(undefined)} onApply={async (item, count) => {
+      if (item.gameId !== game.id) throw new Error('道具身份与存档游戏不匹配')
+      await mutate({ kind: 'set-item', slot: itemPicker.slot, itemId: item.gameId === 'mhp2g' || item.gameId === 'mhp3' ? item.itemId : item.saveId, count })
+      setItemPicker(undefined)
+    }} />}
+    {equipmentEdit && game.id === 'mhp3' && <P3SaveEquipmentEditorDrawer cell={equipmentEdit.cell}
+      onOpenCatalog={path => { setEquipmentEdit(null); navigate(path) }}
+      onClose={() => setEquipmentEdit(null)}
+      onApply={changes => mutate({ kind: 'set-p3-equipment', slot: equipmentEdit.cell.slot, changes })} />}
+    {equipmentEdit && game.id !== 'mhp3' && <SaveEquipmentEditorDrawer gameId={game.id} domain={equipmentEdit.domain} cell={equipmentEdit.cell} onOpenCatalog={path => { setEquipmentEdit(null); navigate(path) }} onClose={() => setEquipmentEdit(null)} onApply={changes => mutate({ kind: 'set-equipment-fields', domain: equipmentEdit.domain, slot: equipmentEdit.cell.slot, changes })} onApplyRecord={recordHex => mutate({ kind: 'set-equipment-record', domain: equipmentEdit.domain, slot: equipmentEdit.cell.slot, recordHex })} />}
     {transfer && <SaveBoxTransferDrawer domain={transfer.domain} mode={transfer.mode} busy={busy} onClose={() => setTransfer(null)} onPreview={format => window.mhSaveEditor.save.previewImport({ sessionId: session.sessionId, revision: session.revision, domain: transfer.domain, format })} onApply={async (preview, replaceAll) => { const result = await window.mhSaveEditor.save.applyImport({ sessionId: session.sessionId, revision: session.revision, token: preview.token, replaceAll }); api.notify(result.message); setTransfer(null) }} onExport={async format => { const result = await window.mhSaveEditor.save.exportBox({ sessionId: session.sessionId, revision: session.revision, domain: transfer.domain, format }); api.notify(result.message) }} />}
     {confirm && <ConfirmationDialog title={confirm.title} message={confirm.message} confirmLabel={confirm.confirmLabel} destructive onConfirm={confirm.action} onCancel={() => setConfirm(null)} />}
   </div>
