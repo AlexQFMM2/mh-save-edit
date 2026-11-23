@@ -22,7 +22,7 @@
 
 | 计划 | 状态 | 负责人 | 更新日期 | 入口 |
 | --- | --- | --- | --- | --- |
-| P3 配装器 | 草稿（计划已写，待确认 D1–D3） | 当前实施者 | 2026-11-23 | [交接](../docs/handoffs/mhp3-loadout-builder/codex.md)（计划在仓库同级 `../plan/mh-save-edit/mhp3-loadout-builder/`） |
+| P3 配装器 | 待执行（B0 护石原生探查先行） | 当前实施者 | 2026-11-23 | [交接](../docs/handoffs/mhp3-loadout-builder/codex.md)（计划在仓库同级 `../plan/mh-save-edit/mhp3-loadout-builder/`） |
 | P3 日版 PPSSPP 存档修改 | 已发行 v0.1.16，待用户游戏实测 | 当前实施者 | 2026-11-23 | [交接](../docs/handoffs/mhp3-save-editor/codex.md) |
 | P3 怪物图鉴 | 已完成（60 正常＋5 扩展，本地安装，源码已提交） | 当前实施者 | 2026-11-02 | [计划](mhp3-monster-catalog/README.md) |
 | P3 武器图鉴 | 已完成（本地安装与源码交付，未发行） | 当前实施者 | 2026-10-28 | [实施](mhp3-weapon-catalog/README.md) |

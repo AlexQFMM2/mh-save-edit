@@ -20,17 +20,18 @@
 - 护石证据边界：`p3_skill_charm_sources` 只有 A/B 位置的鉴定池点数范围，`slots` 为 null/0，note 明写“孔数及另一技能的联合条件尚未核实” → 配装端只能标“未确认自然性”，不得升级为 confirmed。
 - 存档侧：P3 装备记录 12 字节（武器 type 5..17、防具 0..4、护石 101），`api/save/adapters/mhp3.ts` 已有 `setEquipment`，`api/save/p3/catalog.ts` 有 `patch`，护石位域常量在 `api/save/p3/equipment.ts`。写入路径 `prepareLoadoutWrite` 目前对 mhp3 不可用（`catalogResolver` 的 `resolveEquipmentIdentity` 对 mhp3 返回 null）。
 
-## 待确认决策
+## 已确认决策（2026-11-23）
 
-- D1 是否包含“整套写入存档装备箱”（推荐包含，独立 B4；上限 50 分钟，超过 40 分钟阈值需确认）。
-- D2 自动配装护石策略（推荐固定护石／不装护石 + 覆盖警告，不枚举鉴定池组合）。
-- D3 护石品级显示（推荐沿用存档编辑的 7 档中文品级名，标注项目译名）。
+- D1 **包含**整套写入存档装备箱，作为独立批次 B4。
+- D2 用户裁定“这个作为阻碍，需要探查清楚才行”：护石自然生成（池↔品级、双技能联合、孔位）必须先做原生探查，新增研究批次 **B0／T-009**。结论出来前，自动配装只允许固定护石或“不装护石”并报 `unknown-charm-range` 覆盖警告，任何组合不得标 confirmed。
+- D3 护石品级沿用存档编辑的 7 档中文名（兵士／斗士／骑士／城塞／女王／王／龙），界面标注“项目译名”。
 
-确认后冻结计划，并把 `taskList.md` 改为“待执行”。
+计划据此已是 r1 确认版（`taskList.md` 状态“待执行”）。B0 超过 40 分钟阈值（40–70），已作为阻碍向用户说明并获准优先做。
 
 ## 下一动作
 
-1. 等 D1–D3 确认；如需先动手，从 B1（`api/loadout/types.ts`、`schemas.ts`、`identity.ts`、新建 `p3Candidates.ts`／`p3Repository.ts`、`ipc.ts`、`rules.ts`）开始，`tsc` 会指出所有联合分支遗漏。
+1. **先做 B0（T-009）**：读 `../research/mhp3/` 现有护石／技能专题与 `p3_skill_charm_sources` 构建脚本，确认池↔品级、双技能联合、孔位、点数上下限与胴系复制倍率；结论写私有报告，仓库只更新摘要。
+2. 然后从 B1（`api/loadout/types.ts`、`schemas.ts`、`identity.ts`、新建 `p3Candidates.ts`／`p3Repository.ts`、`ipc.ts`、`rules.ts`）开始，`tsc` 会指出所有联合分支遗漏。
 2. 实施时按批次推进，完成一批再进下一批；每批先更新 `taskList.md`，再在本文追加“已执行改动／命令／结果”。
 
 ## 本地检查命令（本机注意）
