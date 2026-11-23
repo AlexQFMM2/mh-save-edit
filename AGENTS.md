@@ -109,4 +109,5 @@
 
 - 2026-10-08 的公开授权取代此前三作运行资产的私有预览限制：`data/mh3g.sqlite`、`mh4g.sqlite`、`mhgu.sqlite`、对应内容哈希 PNG 及 `build/app-icon.ico`／`app-icon.png` 可用于独立运行资产 Release 与 Windows 包，公开 Actions 可下载用于测试／打包；仍不进入 Git 历史。
 - 2026-10-13 增加 `data/mhp2g.sqlite`、`item-terminology.sqlite`、`mhp2g-save-profile.json` 及 P2G 内容哈希 PNG。后续作品／新增内容不自动继承该授权，原始 Dex／ROM／GMD、研究输入与用户状态始终不在此范围。
-- P3 数据库、扩展词典及原生图标目前仅获准本地使用，尚未授权公开发行。已单独获准提交的首页素材为 `ui/public/assets/home/p3-post.png`、`p3-bg.webp`；这不扩大为 P3 全部图片发布授权。
+- 2026-11-23 增加 `data/mhp3.sqlite`、`mhp3-save-profile.json` 及 P3 内容哈希 PNG 图标（运行资源 v7），可用于独立运行资产 Release 与 Windows 包，公开 Actions 可下载用于测试／打包；仍不进入 Git 历史。
+- 已单独获准提交的首页素材为 `ui/public/assets/home/p3-post.png`、`p3-bg.webp`；该授权只覆盖这两个文件，不扩大为 P3 其余图片或原始解包资料的发布授权。

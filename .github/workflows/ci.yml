@@ -16,7 +16,7 @@ permissions:
   contents: read
 
 env:
-  RUNTIME_ASSETS_SHA256: f71ed1586fdec78d794b6d3575a6b92d9608cdffab8c14070437e7d499d3db51
+  RUNTIME_ASSETS_SHA256: 635fe906d3affc9b0bb3b392af4408cec9b6136dff3cdf0e2522cff168693f21
 
 jobs:
   check:
@@ -43,18 +43,19 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           mkdir -p .runtime-assets
-          gh release download runtime-assets-v6 \
+          gh release download runtime-assets-v7 \
             --repo AlexQFMM2/mh-save-edit \
-            --pattern mh-save-edit-runtime-assets-v6.zip \
+            --pattern mh-save-edit-runtime-assets-v7.zip \
             --dir .runtime-assets
-          echo "$RUNTIME_ASSETS_SHA256  .runtime-assets/mh-save-edit-runtime-assets-v6.zip" | sha256sum --check
-          unzip -q -o .runtime-assets/mh-save-edit-runtime-assets-v6.zip
+          echo "$RUNTIME_ASSETS_SHA256  .runtime-assets/mh-save-edit-runtime-assets-v7.zip" | sha256sum --check
+          unzip -q -o .runtime-assets/mh-save-edit-runtime-assets-v7.zip
           node tools/repair_runtime_catalog.mjs
-          for database in mh3g.sqlite mh4g.sqlite mhgu.sqlite mhp2g.sqlite item-terminology.sqlite; do
+          for database in mh3g.sqlite mh4g.sqlite mhgu.sqlite mhp2g.sqlite mhp3.sqlite item-terminology.sqlite; do
             test "$(head -c 15 "data/$database")" = "SQLite format 3"
           done
           test -f data/mhp2g-save-profile.json
-          test "$(find ui/public/assets/catalog/icons -maxdepth 1 -type f -name '*.png' | wc -l)" -eq 2400
+          test -f data/mhp3-save-profile.json
+          test "$(find ui/public/assets/catalog/icons -maxdepth 1 -type f -name '*.png' | wc -l)" -eq 2874
       - run: pnpm data:audit:runtime
       - run: pnpm typecheck
       - name: Test without private manifest snapshots
@@ -102,6 +103,7 @@ jobs:
           $runtimeFiles = @(
             Get-ChildItem data -Filter *.sqlite -File -ErrorAction SilentlyContinue
             Get-Item data/mhp2g-save-profile.json -ErrorAction SilentlyContinue
+            Get-Item data/mhp3-save-profile.json -ErrorAction SilentlyContinue
             Get-ChildItem ui/public/assets/catalog/icons -File -ErrorAction SilentlyContinue
             Get-ChildItem build -Filter app-icon.* -File -ErrorAction SilentlyContinue
           )
@@ -115,14 +117,14 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           New-Item -ItemType Directory -Path .runtime-assets -Force | Out-Null
-          gh release download runtime-assets-v6 `
+          gh release download runtime-assets-v7 `
             --repo AlexQFMM2/mh-save-edit `
-            --pattern mh-save-edit-runtime-assets-v6.zip `
+            --pattern mh-save-edit-runtime-assets-v7.zip `
             --dir .runtime-assets
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          $archiveHash = (Get-FileHash .runtime-assets/mh-save-edit-runtime-assets-v6.zip -Algorithm SHA256).Hash.ToLowerInvariant()
+          $archiveHash = (Get-FileHash .runtime-assets/mh-save-edit-runtime-assets-v7.zip -Algorithm SHA256).Hash.ToLowerInvariant()
           if ($archiveHash -ne $env:RUNTIME_ASSETS_SHA256) { throw 'Runtime archive identity mismatch' }
-          & 7z x .runtime-assets/mh-save-edit-runtime-assets-v6.zip `
+          & 7z x .runtime-assets/mh-save-edit-runtime-assets-v7.zip `
             "-o$PWD" `
             -y
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
@@ -133,7 +135,7 @@ jobs:
       - name: Validate injected runtime assets
         shell: pwsh
         run: |
-          $expectedDatabases = @('mh3g.sqlite', 'mh4g.sqlite', 'mhgu.sqlite', 'mhp2g.sqlite', 'item-terminology.sqlite')
+          $expectedDatabases = @('mh3g.sqlite', 'mh4g.sqlite', 'mhgu.sqlite', 'mhp2g.sqlite', 'mhp3.sqlite', 'item-terminology.sqlite')
           foreach ($database in $expectedDatabases) {
             $path = Join-Path data $database
             if (!(Test-Path $path -PathType Leaf)) { throw "Missing runtime database: $path" }
@@ -144,8 +146,9 @@ jobs:
           $unexpectedDatabases = Get-ChildItem data -Filter *.sqlite -File | Where-Object Name -NotIn $expectedDatabases
           if ($unexpectedDatabases.Count -gt 0) { throw 'Unexpected runtime database found' }
           $icons = @(Get-ChildItem ui/public/assets/catalog/icons -Filter *.png -File)
-          if ($icons.Count -ne 2400) { throw "Expected 2400 catalog icons, found $($icons.Count)" }
+          if ($icons.Count -ne 2874) { throw "Expected 2874 catalog icons, found $($icons.Count)" }
           if (!(Test-Path data/mhp2g-save-profile.json -PathType Leaf)) { throw 'Missing P2G save format profile' }
+          if (!(Test-Path data/mhp3-save-profile.json -PathType Leaf)) { throw 'Missing P3 save format profile' }
           if (!(Test-Path build/app-icon.ico -PathType Leaf)) { throw 'Missing Windows application icon' }
           if (!(Test-Path build/app-icon.png -PathType Leaf)) { throw 'Missing application icon preview' }
       - name: Verify public runtime integration on Windows

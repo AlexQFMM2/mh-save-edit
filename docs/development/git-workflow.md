@@ -38,7 +38,7 @@ git rev-list --left-right --count 'HEAD...@{upstream}'
 - 分支推送、PR 和标签推送均不发布程序。应用发行需要另行授权，更新版本及说明后按正常流程合入 `release`。
 - 在已验证、已推送的 `release` 提交上创建匹配 `package.json` 的 `vX.Y.Z` 标签；成功推送后，从 `release` 手动运行 `.github/workflows/ci.yml`，填写该标签。命令为 `gh workflow run ci.yml --ref release -f tag=vX.Y.Z`。
 - 发布校验器重新读取远端，要求工作流选中的 SHA、实际 checkout、远端 `release` tip 和版本标签解析到同一提交；同时检查干净源码、版本与发行说明。校验后先跑 `check`，再构建 Windows 包；打包前和上传前再次核对来源。期间 `release` 前移会使旧候选失败，需要重新选择并验证，不能静默换成新代码。
-- Windows 包仍只下载哈希固定的公开运行资产 v6，并执行资产白名单、数据库、图标及 Electron ABI 检查。**P3 运行资产尚未获准公开**，本次源码合入不扩大资产授权。不要从含私有 P3 数据的本地环境直接制作公开包。
+- Windows 包只下载哈希固定的公开运行资产 v7，并执行资产白名单、数据库、两份存档格式资料、图标及 Electron ABI 检查。P3 运行资产已于 2026-11-23 获准随 v7 公开，见[运行资源 v7](../releases/runtime-assets-v7.md)；其他作品和新增内容不自动继承该授权。不要从含未授权私有数据的本地环境制作公开包。
 - 记录发行 commit、标签、资产版本和 SHA-256，保留上一版程序与兼容资料的恢复路径。运行资产或插件的独立发行也只能引用已审查的 `release` 源码，并逐项核对对应授权；本次不新增这些发行。
 
 ## 基线迁移记录

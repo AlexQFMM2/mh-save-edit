@@ -8,7 +8,7 @@
 
 **维护与交接说明更新于 2026-10-24。** P2G 七类图鉴、六槽手动／自动配装及 PPSSPP 存档编辑已交付，用户修改实测已通过；本次又确认中文插件的任务、保存重开、停用／恢复实测通过，见[P2G 验收记录](plan/archive/2026-10-24/mhp2g-records/acceptance.md)。五份 P2G 计划已按交付范围[归档](plan/archive/2026-10-24/README.md)，未知资源覆盖等限制仍明确保留。公开应用／运行资源／插件为 v0.1.14／v6／test.4；奇怪龙命名修订源码纳入本次提交，test.5 运行包仍为本地成果，尚未新增发布，详见[P2G 中文资料](docs/mhp2g/localization.md)。
 
-P3 已接入 **PPSSPP 工作区与本地道具、装饰品、技能、防具、武器、怪物图鉴**。防具保留 1,131 条原生身份，默认显示 1,106 件正常条目，支持套装／单件、属性、制作材料与费用、中文检索及技能／道具双向关联；24 件特殊用途和 1 件取得未确认可单独筛选。武器图鉴已本地安装12类、987把武器，支持列表／派生、基础与强化／部件对照、专属详情及材料与弹瓶双向关系；配装及插件仍待专项。防具与武器成果已本地安装，并按追加授权交付 GitHub 源码；不创建标签或 Release，P3 运行资料仍仅限本地。怪物图鉴已本地安装：默认 60 条（40 大型＋20 小型），另有 5 条扩展，提供肉质、异常／控制、1,960 条掉落及 598 条出没观察，支持道具双向关联；无法证实的值保留未知，出没为预览而非完整任务图鉴。怪物源码已保存于 `a4e0b44`，已纳入 `release` 基线；P3 运行资产仍仅限本地。接手先读 [P3 怪物交接](plan/mhp3-monster-catalog/handoff.md)、[怪物数据与恢复](docs/development/mhp3-monster-catalog.md)，武器阶段见 [交接](plan/mhp3-weapon-catalog/handoff.md)、[武器数据与构建](docs/development/mhp3-weapon-catalog.md)，防具阶段见[交接](plan/mhp3-armor-catalog/handoff.md)，前序见[技能交接](plan/mhp3-skill-catalog/handoff.md)和[原生研究边界](plan/mhp3-investigation/handoff.md)。既有作品按具体问题维护；跨作品统一业务数据重构仍不恢复。[道具译名词典](docs/item-terminology.md)共享有依据的用词，各作编号、数值、关系与存档格式独立维护。
+P3 已接入 **PPSSPP 工作区与本地道具、装饰品、技能、防具、武器、怪物图鉴**。防具保留 1,131 条原生身份，默认显示 1,106 件正常条目，支持套装／单件、属性、制作材料与费用、中文检索及技能／道具双向关联；24 件特殊用途和 1 件取得未确认可单独筛选。武器图鉴已本地安装12类、987把武器，支持列表／派生、基础与强化／部件对照、专属详情及材料与弹瓶双向关系；配装及插件仍待专项。防具与武器成果已本地安装，并按追加授权交付 GitHub 源码。怪物图鉴已本地安装：默认 60 条（40 大型＋20 小型），另有 5 条扩展，提供肉质、异常／控制、1,960 条掉落及 598 条出没观察，支持道具双向关联；无法证实的值保留未知，出没为预览而非完整任务图鉴。怪物源码已保存于 `a4e0b44`，已纳入 `release` 基线。接手先读 [P3 怪物交接](plan/mhp3-monster-catalog/handoff.md)、[怪物数据与恢复](docs/development/mhp3-monster-catalog.md)，武器阶段见 [交接](plan/mhp3-weapon-catalog/handoff.md)、[武器数据与构建](docs/development/mhp3-weapon-catalog.md)，防具阶段见[交接](plan/mhp3-armor-catalog/handoff.md)，前序见[技能交接](plan/mhp3-skill-catalog/handoff.md)和[原生研究边界](plan/mhp3-investigation/handoff.md)。既有作品按具体问题维护；跨作品统一业务数据重构仍不恢复。[道具译名词典](docs/item-terminology.md)共享有依据的用词，各作编号、数值、关系与存档格式独立维护。
 
 本文集中记录运行方法、真实代码入口、已遇到的难点及新作品接入方法，方便接手者从一个具体问题开始。
 
@@ -33,7 +33,7 @@ Git 开发与发行使用 `release` 作为唯一基线，任务分支完成审�
 | 内容库 | 存档格式标识 | 对应环境 |
 | --- | --- | --- |
 | `mhp2g` | `mhp2g-psp-ppsspp` | MHP2G / PSP / PPSSPP |
-| `mhp3` | `mhp3-psp-ppsspp` | MHP3 日版 / PSP / PPSSPP（本地预览） |
+| `mhp3` | `mhp3-psp-ppsspp` | MHP3 日版 / PSP / PPSSPP |
 | `mh3g` | `mh3g-3ds-citra` | MH3G / 3DS / Citra |
 | `mh3g` | `mh3u-wiiu-cemu` | MH3U / Wii U / Cemu |
 | `mh4g` | `mh4g-3ds-citra` | MH4G / 3DS / Citra |
@@ -42,7 +42,7 @@ Git 开发与发行使用 `release` 作为唯一基线，任务分支完成审�
 
 这是当前代码接入的格式范围，不是对所有地区版、更新版、实体机封装存档或其他模拟器的兼容承诺。不要从界面中的系列名称推断未验证版本也能写入。
 
-P3 本地预览支持金钱、道具箱与猎人装备箱，开放两个箱域的物理换位。安装、另存和游戏内验收见 [P3 存档交接](docs/handoffs/mhp3-save-editor/codex.md)。
+P3 支持金钱、道具箱与猎人装备箱，开放两个箱域的物理换位。P3 运行资料随运行资源 v7 公开，Windows 包已内置；安装、另存和游戏内验收见 [P3 存档交接](docs/handoffs/mhp3-save-editor/codex.md)。
 
 当前需要保留的边界：
 

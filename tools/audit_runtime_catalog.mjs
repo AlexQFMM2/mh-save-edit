@@ -34,4 +34,25 @@ try {
     }
     finally { db.close() }
   }
+  // P3 keeps item icons as served /assets/... paths and has no shared
+  // decoration/skill tables, so it needs its own runtime checks.
+  const mhp3 = new Database(fileURLToPath(new URL('../data/mhp3.sqlite', import.meta.url)), { readonly: true, fileMustExist: true })
+  try {
+    if (mhp3.pragma('integrity_check', { simple: true }) !== 'ok') throw new Error('mhp3: integrity check failed')
+    if (mhp3.pragma('foreign_key_check').length) throw new Error('P3 catalog has dangling references')
+    const expected = dictionary.prepare('SELECT value FROM meta WHERE key=?').get('catalog:mhp3')?.value
+    if (!expected) throw new Error('Dictionary has no P3 catalog binding')
+    if (expected !== identityFingerprint(catalogIdentityRows(mhp3, 'mhp3'))) throw new Error('mhp3: terminology catalog identity mismatch')
+    const schemas = { catalog_schema: 'mhp3-items-v1', armor_schema: 'mhp3-armors-v1', skill_schema: 'mhp3-skills-v1', weapon_schema: 'mhp3-weapons-v1', monster_schema: 'mhp3-monsters-v1', quest_schema: 'mhp3-quests-v1' }
+    for (const [key, value] of Object.entries(schemas)) {
+      if (mhp3.prepare('SELECT value FROM meta WHERE key=?').get(key)?.value !== value) throw new Error(`P3 ${key} runtime schema missing`)
+    }
+    const missingIcons = mhp3.prepare('SELECT DISTINCT icon_path FROM catalog_items WHERE icon_path IS NOT NULL').all()
+      .map(row => row.icon_path.replace(/^\/assets\//, ''))
+      .filter(icon => !fs.existsSync(fileURLToPath(new URL(`../ui/public/assets/${icon}`, import.meta.url))))
+    if (missingIcons.length) throw new Error(`P3 catalog icons missing from runtime assets: ${missingIcons.length}`)
+    const armorIdentities = mhp3.prepare('SELECT COUNT(*) count FROM p3_armor_members').get().count
+    if (armorIdentities !== 1131) throw new Error(`P3 armor identities changed: ${armorIdentities}`)
+    console.log(`mhp3: runtime catalog, icons and terminology verified (${armorIdentities} armor identities)`)
+  } finally { mhp3.close() }
 } finally { dictionary.close() }

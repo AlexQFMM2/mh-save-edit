@@ -10,7 +10,7 @@ export function verifyPackagedRuntime(sourceData, packagedData) {
   const source = fs.realpathSync(sourceData)
   const packaged = fs.realpathSync(packagedData)
   if (source === packaged) throw new Error('Packaged runtime verification requires a separate output directory')
-  const databases = ['mh3g.sqlite', 'mh4g.sqlite', 'mhgu.sqlite', 'mhp2g.sqlite', 'item-terminology.sqlite']
+  const databases = ['mh3g.sqlite', 'mh4g.sqlite', 'mhgu.sqlite', 'mhp2g.sqlite', 'mhp3.sqlite', 'item-terminology.sqlite']
   const allowed = new Set(databases)
   for (const directory of [source, packaged]) {
     for (const name of fs.readdirSync(directory)) {
@@ -21,7 +21,7 @@ export function verifyPackagedRuntime(sourceData, packagedData) {
       if (fs.existsSync(wal) && fs.statSync(wal).size > 0) throw new Error(`Runtime asset has a live WAL; checkpoint a consistent database before packaging: ${name}`)
     }
   }
-  const files = [...databases, 'mhp2g-save-profile.json'].map(name => {
+  const files = [...databases, 'mhp2g-save-profile.json', 'mhp3-save-profile.json'].map(name => {
     const input = fs.readFileSync(path.join(source, name))
     const output = fs.readFileSync(path.join(packaged, name))
     if (name === 'mh4g.sqlite') { assertNoMh4gReportBytes(input); assertNoMh4gReportBytes(output) }

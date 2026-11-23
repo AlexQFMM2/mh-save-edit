@@ -4,6 +4,7 @@ import path from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { P2gLoadoutCatalogRepository } from '../api/loadout/p2gRepository'
 import { readP2gProfile } from '../api/save/p2g/profile'
+import { readP3SaveProfile } from '../api/save/p3/profile'
 import { p2gEquipmentKey, p2gSaveIdentity } from '../api/save/p2g/identity'
 import { ItemTermRepository } from '../api/terminology/itemTermRepository'
 
@@ -11,7 +12,7 @@ import { ItemTermRepository } from '../api/terminology/itemTermRepository'
 // or a user's save. A release must include these assets; missing files must fail.
 const dataDir = path.resolve(process.env.RUNTIME_DATA_DIR ?? 'data')
 const assetRoot = path.dirname(dataDir)
-const games = ['mh3g', 'mh4g', 'mhgu', 'mhp2g'] as const
+const games = ['mh3g', 'mh4g', 'mhgu', 'mhp2g', 'mhp3'] as const
 const open = (name: string) => new Database(path.join(dataDir, `${name}.sqlite`), { readonly: true, fileMustExist: true })
 
 describe('public runtime assets', () => {
@@ -39,6 +40,23 @@ describe('public runtime assets', () => {
         } finally { db.close() }
       }
     } finally { dictionary.close() }
+  })
+
+  it('loads the P3 save format profile and every referenced catalog icon', () => {
+    const profile = readP3SaveProfile(dataDir)
+    expect(Object.keys(profile.armorCaps)).toHaveLength(1131)
+    for (const value of Object.values(profile.armorCaps)) expect(value).toBeGreaterThanOrEqual(0)
+    const db = open('mhp3')
+    try {
+      expect(db.pragma('foreign_key_check')).toEqual([])
+      expect(db.prepare('SELECT COUNT(*) count FROM p3_armor_members').get()).toEqual({ count: 1131 })
+      const icons = db.prepare('SELECT DISTINCT icon_path FROM catalog_items WHERE icon_path IS NOT NULL').all() as { icon_path: string }[]
+      expect(icons.length).toBeGreaterThan(0)
+      for (const { icon_path: icon } of icons) {
+        expect(icon).toMatch(/^\/assets\/catalog\/icons\/[a-f0-9]{64}\.png$/)
+        expect(existsSync(path.join(assetRoot, 'ui/public/assets', icon.replace(/^\/assets\//, '')))).toBe(true)
+      }
+    } finally { db.close() }
   })
 
   it('loads the complete P2G loadout and resolves equipment identities and icons', () => {

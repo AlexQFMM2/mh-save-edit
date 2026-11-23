@@ -29,7 +29,11 @@ python3 -B tools/mhp3/build_save_profile.py \
 - 真实原件的 BIN 与 SFO 逐字节往返。独立 Python 探针验证了应用另存的文件 MAC、SFO 和内层摘要，两个图片与原件一致。角色槽 3 的明文仅变动 27 字节，其他角色和全局数据逐字节一致。样本此次换位没有命中已登记预设，预设变更由合成回归覆盖。
 - 待用户用 PPSSPP 读取测试副本，核对字段并在游戏中再保存一次后重开。实际路径、预期改动和校验日志见私有工作台 `../test/mh-save-edit/mhp3-save-editor/`。
 
-## 公开包与 P3 资料
+## 运行资料与公开包
 
-GitHub Actions 公开包只注入运行资源 v6，不含 `data/mhp3.sqlite`、`data/mhp3-save-profile.json` 和 P3 原生图标；P3 运行资料公开发行仍需单独授权。用公开包测试 P3 存档时，把这两个文件放进解压目录的 `resources/data/`，或设置 `MH_SAVE_EDIT_DATA_DIR` 指向含它们的目录（目录解析见 `api/catalog/ipc.ts` 的 `resolveCatalogDataDir`，图鉴与存档共用同一路径）。P3 图鉴图标缺失时条目图标为空，不影响读取、编辑和写入。
+2026-11-23 用户授权扩大运行资源包，P3 数据库、存档格式资料与 474 张原生图标随运行资源 v7 公开发行（[说明](../releases/runtime-assets-v7.md)）；v0.1.16 起 Windows 包内置这些文件，P3 图鉴与存档编辑开箱可用，不需要再手动放文件。
+
+源码开发按 ZIP 原目录结构解压到仓库根目录。CI 校验固定 SHA-256、六份数据库、两份存档格式资料、2,874 张图标与应用图标；P3 的库完整性、词典身份指纹、schema 与图标存在性在 `tools/audit_runtime_catalog.mjs` 中单独核对，打包前后文件身份由 `tools/runtime/verifyPackagedRuntime.mjs` 比对。
+
+目录解析见 `api/catalog/ipc.ts` 的 `resolveCatalogDataDir`：打包后读 `resources/data`，开发读仓库 `data/`，两者都可用 `MH_SAVE_EDIT_DATA_DIR` 覆盖。若只替换其中一部分资料，图鉴与存档共用同一路径，必须成套替换。
 
